@@ -1,0 +1,10 @@
+Chapter: 03
+Look: 03
+Sub-theme: The Mirror and Reflection
+Image: look_03.jpg
+
+RawAgentResult:
+TIER: high
+ACTION: KEEP
+INFO: The innovative architectural waist detail combined with ethereal sheer layering creates a sophisticated and cohesive futuristic silhouette.
+FINAL_FASHION_DESIGN: Retain the original design as a centerpiece for the collection's high-tech tailoring narrative.

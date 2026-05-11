@@ -1,0 +1,19 @@
+Chapter: 02
+Sub-theme: Sartorial Epistolary Details
+Theme: Une Lettre d’amour
+Brand: Givenchy
+ImageCount: 4
+Images:
+1. look_01.jpg
+2. look_02.jpg
+3. look_03.jpg
+4. look_04.jpg
+
+SuggestedDeleteCount: 0
+SuggestedDeleteFiles:
+- NONE
+
+RawAgentResult:
+DELETE: NONE
+FILES: NONE
+NOTES: All designs are unique and consistently feature the epistolary theme through wax seals, ink-stain prints, and script details.

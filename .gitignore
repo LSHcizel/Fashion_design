@@ -1,0 +1,39 @@
+# Node
+node_modules/
+
+# Local / generated
+.tmp_plan_pdf/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# API Keys
+.env
+*.key
+*.secret
+
+# Output files
+*.log
+*.csv
+*.json
+!requirements.txt
+

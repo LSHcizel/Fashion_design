@@ -1,0 +1,10 @@
+Chapter: 01
+Look: 04
+Sub-theme: The Androgynous Silhouette
+Image: look_04.jpg
+
+RawAgentResult:
+TIER: high
+ACTION: KEEP
+INFO: Exceptional play on proportions and a sophisticated blend of masculine tailoring with feminine romanticism.
+FINAL_FASHION_DESIGN: Maintain the original design featuring the cinched single-button blazer and pleated wide-leg trousers.

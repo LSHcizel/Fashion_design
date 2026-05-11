@@ -1,0 +1,99 @@
+# Copilot mode (human-in-the-loop)
+copilot-mode: False
+
+# Design target prompt
+design-target-prompt: "can you analyze the theme of Givenchy as a new fashion collection for Une Lettre d’amour"
+
+# Theme description
+theme: "Une Lettre d’amour"
+
+# Brand name for fashion design evaluation
+brand: "Givenchy"
+
+# API key（通过 ohmygpt 网关访问 OpenAI 兼容接口）
+# 说明：此处使用 ohmygpt 提供的密钥和网关，不再使用 SiliconFlow。
+api-key: "sk-2LUCYBIl9ddD35927697T3BLbkFJ1B4304d4b7424F00a8b3"
+
+# （可选）保留字段以兼容旧代码，但不再实际使用 SiliconFlow
+siliconflow-api-key: ""
+
+# OpenAI API key for image generation (如果有单独的 OpenAI 图片密钥可填；否则留空或复用上面的 key)
+openai-api-key: ""
+
+# LLM backend model（通过 ohmygpt 调用 OpenAI 兼容模型）
+# 当前使用 gpt-5.4
+llm-backend: "gpt-5.4-mini"
+
+# Base language
+language: "English"
+
+# Maximum steps per phase
+max-steps: 80
+
+# Number of chapters to generate in each sub-theme
+num-chapters: 1
+
+# Number of looks to generate per design concept
+num-looks: 4
+
+# Workflow index (for parallel execution of multiple workflows)
+workflow-index: 0
+
+# Load previous saved state
+load-previous: False
+
+# Raise exception on failure
+except-if-fail: False
+
+# Task notes (guidance for each phase)
+task-notes:
+  theme-analysis:
+    - "Deeply analyze Givenchy brand history and design DNA"
+    - "Focus on the cultural and aesthetic significance of the theme 'I Am Your Mirror'"
+    - "Analyze the importance of Annemarie Schwarzenbach as an inspiration source"
+  
+  concept-brainstorming:
+    - "Ensure the four chapters form a complete narrative arc"
+    - "Each chapter should have a distinct visual and emotional tone"
+    - "Consider the transition from masculine to feminine aesthetics"
+  
+  design-elements-proposal:
+    - "Design elements should align with the theme analysis"
+    - "Consider materials, colors, silhouettes, and details"
+    - "Provide sufficient diversity for each chapter"
+  
+  look-description-generation:
+    - "Look descriptions should be detailed and visually evocative"
+    - "Consider the completeness and harmony of the overall styling"
+    - "Include all necessary details"
+
+# ─── Text Evaluator ──────────────────────────────────────────────────────────
+# 启用后，每个生成的 look 描述文本在保存前会自动进行质量评估，
+# 未通过双门限（score_gate + penalty_gate）则自动进入优化流程（最多 N 轮）
+text-evaluator:
+  enabled: true
+
+  # 自适应评估门限（任一未达标即触发 optimize）
+  adaptive-min-total-score: 0.82
+  adaptive-min-quality-score: 0.75
+  adaptive-penalty-threshold: 0.15
+
+  # optimize 内部双门限（两门均通过则早停）
+  # 注意：这些值与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json 保持一致
+  score-gate-min: 0.75
+  penalty-gate-max: 0.15
+
+  # optimize 最大轮数
+  max-optimize-rounds: 5
+
+  # improve 早停阈值
+  min-score-improvement: 0.02
+  min-quality-improvement: 0.05
+
+  # evaluator API 配置（留空则从 spec 默认 / 环境变量读取）
+  # api-key:
+  # api-base:
+  # model:
+  # temperature:
+  # rewriter-temperature:
+

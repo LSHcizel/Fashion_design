@@ -1,0 +1,10 @@
+Chapter: 02
+Sub-theme: Optical Reflectivity and Luster
+RejectedCount: 1
+RejectedFiles:
+- look_04.jpg
+
+RawAgentResult:
+DELETE: 4
+FILES: look_04.jpg
+NOTES: Image 4 is an electronic device and does not conform to the fashion theme.
