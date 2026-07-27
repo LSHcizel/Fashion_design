@@ -1,0 +1,20 @@
+Chapter: 02
+Sub-theme: The Ink Palette and Monochromatic Sentimentality
+Theme: Une Lettre d’amour
+Brand: Givenchy
+ImageCount: 4
+Images:
+1. look_01.jpg
+2. look_02.jpg
+3. look_03.jpg
+4. look_04.jpg
+
+SuggestedDeleteCount: 2
+SuggestedDeleteFiles:
+- look_03.jpg
+- look_04.jpg
+
+RawAgentResult:
+DELETE: 3, 4
+FILES: look_03.jpg, look_04.jpg
+NOTES: Removed redundant styling variations and duplicate outfits to maintain a concise, high-impact collection.

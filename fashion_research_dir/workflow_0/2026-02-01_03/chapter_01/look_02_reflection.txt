@@ -1,0 +1,10 @@
+Chapter: 01
+Look: 02
+Sub-theme: Androgynous Tailoring and the Masculine-Feminine Mirror
+Image: look_02.jpg
+
+RawAgentResult:
+TIER: high
+ACTION: KEEP
+INFO: Exceptional architectural tailoring and innovative hybrid layering create a powerful, modern silhouette.
+FINAL_FASHION_DESIGN: Retain the original design as a centerpiece of the collection.

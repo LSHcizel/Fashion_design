@@ -1,0 +1,10 @@
+Chapter: 01
+Look: 01
+Sub-theme: Epistolary Tailoring
+Image: look_01.jpg
+
+RawAgentResult:
+TIER: high
+ACTION: KEEP
+INFO: Exceptional tailoring and a refined neutral palette deliver a sophisticated, high-end minimalist aesthetic.
+FINAL_FASHION_DESIGN: Retain the original design as a signature look for the luxury tailoring segment.

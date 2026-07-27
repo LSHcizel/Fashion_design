@@ -1,0 +1,19 @@
+Chapter: 01
+Sub-theme: The Androgynous Silhouette
+Theme: Une Lettre d’amour
+Brand: Givenchy
+ImageCount: 4
+Images:
+1. look_01.jpg
+2. look_02.jpg
+3. look_03.jpg
+4. look_04.jpg
+
+SuggestedDeleteCount: 0
+SuggestedDeleteFiles:
+- NONE
+
+RawAgentResult:
+DELETE: NONE
+FILES: NONE
+NOTES: All designs are distinct, high-quality variations that perfectly align with the androgynous tailoring and 'Une Lettre d’amour' theme.

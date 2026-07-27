@@ -1,0 +1,194 @@
+# Copilot mode (human-in-the-loop)
+copilot-mode: False
+
+# Design target prompt
+design-target-prompt: "Analyze the theme of Chanel Cruise 2027 collection Sous le Salon la Plage for fashion design development"
+
+# Theme description
+theme: "Sous le Salon la Plage"
+
+# Brand name for fashion design evaluation
+brand: "Chanel"
+
+# Supplementary notes about the theme (optional; fed into theme analysis)
+description: |
+  Away from the Paris salon, Chanel found in Biarritz a new way of being, a new vantage point, bodily rhythm, and forms of freedom. With this line as a prologue, creative director Matthieu Blazy formally brings Chanel back to where it all began. In 1915, Gabrielle Chanel took the bold step that would rewrite fashion history: encouraged by her lover, polo player Boy Capel, she expanded beyond her Deauville boutique and founded her first couture house in the nineteenth-century Villa Larralde. Set beside the beach, grand hotels, and casinos, the location drew an international elite and delivered Chanel's decisive victory—financial independence achieved as a powerful woman entrepreneur. More than a century later, Chanel returns to the birthplace of its enduring aesthetic.
+
+  More than a hundred years on, Chanel staged its first runway show in the beautiful Basque coastal city at Le Casino Municipal, with the Cruise 2027 collection capturing the house's lasting spirit of liberation. Though Biarritz is a historic turning point for the brand—it is where Gabrielle Chanel first met perfumer Ernest Beaux, leading to the legendary Chanel N°5—this was nevertheless the maison's first-ever runway presentation in Biarritz.
+
+  For Blazy, the location is deeply meaningful on both personal and creative levels. Having often visited the Basque Country since childhood, he understands this seaside town as a symbol of "absolute freedom" for himself and for the brand alike. To prove that classics often spring from rebellion, Blazy opened with a tribute to Gabrielle Chanel's 1926 black dress. He noted: "People often speak of a so-called 'revenge dress'; this may be the original version," and returned to the earliest archival sketches. That austere, unadorned long dress was hailed by Vogue as Chanel's "Ford"; Blazy focused on a detail overlooked in early published drawings—the large bow at the back—and translated it ingeniously into the clutch of the first look.
+
+  Chanel once made society women covet the dress of the contemporary working woman, breaking class barriers. Blazy continues that tradition throughout Cruise, elevating French workwear classics—the sailor's marinière stripe shirt, the traditional bleu de travail worker's jacket, and washed cotton-canvas tailoring—to unparalleled luxury. Under the theme of "aligning the eternal natural world with the modern world," he loosens rigid dress codes so salon elegance flows naturally onto the beach. Basque stripes thread through the entire high-craft collection. The runway rhythm keeps shifting, celebrating the pure pleasure of dressing and undressing—with swimwear in a pivotal role. Models wear flowing silk scarf sets, rustling raffia skirts, supple tweed, soft beaded knitwear, and sequins that shimmer like fish scales in a "mermaid fantasy." Even the classic Double C logo is reinterpreted: no longer mere branding, it becomes a structural, architectural element of the garments.
+
+  Accessories reinforce the collection's play across terrains. Bags range from compact luggage and waterproof flap styles to oversized striped beach paniers and traditional Basque pala carry bags. Footwear lets the wearer move freely between ballroom and sand—from elegant Art Deco heels to inventive barefoot "heel plates." Jewelry echoes the city's architecture and marine life, closing with shell earrings and a "spiritual return" of iconic Chanel pearls.
+
+  In this spirit, Blazy's Cruise 2027 elegantly reframes Chanel's early Atlantic-coast advocacy of sporty elegance through a contemporary lens. The runway is filled with modern interpretations of her revolutionary clean lines, fluid dresses, and unbound silhouettes—directly echoing Chanel's original mission to liberate women from early-twentieth-century sartorial constraints so they could dance, swim, love, and bask in the sun without heed for others' gaze.
+
+  Inside Le Casino Municipal, the atmosphere blends the relaxed grandeur of the French coast with the historical weight of a major fashion milestone. A star-studded front row—including A$AP Rocky, Nicole Kidman, Sofia Coppola, and Tilda Swinton—witnessed Blazy's luminous homage to the house's roots.
+
+  By seamlessly interweaving the heritage of 1915 with its present-day expression, Matthieu Blazy again proves that Biarritz's spirit of liberation remains vividly alive within Chanel. Cruise 2027 is not only a salute to the past but a celebration of freedom and ease—and an enduring tribute to the designer who dared to change the world.
+
+# API key（通过 ohmygpt 网关访问 OpenAI 兼容接口）
+# 说明：此处使用 ohmygpt 提供的密钥和网关，不再使用 SiliconFlow。
+api-key: "sk-cOJZgGTTA6212993cF6bT3BlBkFJA9687097Fd4b4B0db988"
+api-base: "https://api.ohmygpt.com/v1"
+
+# （可选）保留字段以兼容旧代码，但不再实际使用 SiliconFlow
+siliconflow-api-key: ""
+
+# OpenAI API key for image generation (如果有单独的 OpenAI 图片密钥可填；否则留空或复用上面的 key)
+openai-api-key: ""
+
+# LLM backend model
+# 启用 local-llm 时，主 workflow 文本生成走本地 vLLM；此处 model 名须与 local-llm.model / vLLM --served-model-name 一致
+llm-backend: "Qwen2.5-3B-Instruct"
+
+# 本地 OpenAI 兼容推理（vLLM）。需先在 GPU 上启动服务，例如：
+#   CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
+#     --model models/Qwen2.5-3B-Instruct --served-model-name Qwen2.5-3B-Instruct \
+#     --host 127.0.0.1 --port 8000 --dtype bfloat16 --max-model-len 4096
+local-llm:
+  enabled: true
+  api-base: "http://127.0.0.1:8000/v1"
+  api-key: "local"
+  model: "Qwen2.5-3B-Instruct"
+  model-path: "models/Qwen2.5-3B-Instruct"
+  timeout: 300
+  max-tokens: 4096
+  verify-ssl: false
+  use-for-workflow: true
+  use-for-parallel-k-rewrite: true
+  use-for-candidate-evaluation: true
+  use-for-text-evaluator: true
+  # 多模态 reflection（单图/章节/系列）仍走 API vision，本地 3B 不支持读图
+  workflow-vision-model: "gpt-5.5"
+
+# Base language
+language: "English"
+
+# Maximum steps per phase
+max-steps: 80
+
+# Number of chapters to generate in each sub-theme
+num-chapters: 2
+
+# Number of looks to generate per design concept
+num-looks: 4
+
+# Workflow index (for parallel execution of multiple workflows)
+workflow-index: 0
+
+# Load previous saved state
+load-previous: False
+
+# Raise exception on failure
+except-if-fail: False
+
+# Task notes (guidance for each phase)
+task-notes:
+  theme-analysis:
+    - "When description is provided, extract description-derived key elements in English before the final THEME_ANALYSIS"
+    - "Deeply analyze Chanel brand history, Gabrielle Chanel's Biarritz legacy, and Matthieu Blazy's Cruise 2027 vision"
+    - "Key aspects are holistic analysis only; produce exactly num-chapters sub-themes that synthesize across key aspects (not 1:1)"
+    - "Focus on liberation, salon-to-beach duality, Basque craft references, and sporty elegance reframed for today"
+  
+  concept-brainstorming:
+    - "Ensure the four chapters form a complete narrative arc"
+    - "Each chapter should have a distinct visual and emotional tone"
+    - "Consider the transition from masculine to feminine aesthetics"
+  
+  design-elements-proposal:
+    - "Design elements should align with the theme analysis"
+    - "Consider materials, colors, silhouettes, and details"
+    - "Provide sufficient diversity for each chapter"
+  
+  look-description-generation:
+    - "Look descriptions should be detailed and visually evocative"
+    - "Consider the completeness and harmony of the overall styling"
+    - "Include all necessary details"
+
+# ─── Text Evaluator ──────────────────────────────────────────────────────────
+# 启用后，每个生成的 look 描述文本在保存前会自动进行质量评估；
+# 是否通过以双门限（score_gate + penalty_gate，见 score-gate-min / penalty-gate-max）为准。
+# penalty 仅参与 penalty_gate，不扣减 S_fp / R_content 总分。
+text-evaluator:
+  enabled: true
+  # true 时评判走 local-llm（vLLM）；显式配置 api-key/api-base/model 则强制用 API
+  use-local: true
+
+  # optimize 内部双门限（两门均通过则早停）
+  # 注意：与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json optimization_gates 保持一致
+  score-gate-min: 0.7
+  penalty-gate-max: 0.5
+
+  # evaluator API 配置（留空则从 spec 默认 / 环境变量读取）
+  # api-key:
+  # api-base:
+  # model:
+  # temperature:
+  # rewriter-temperature:
+
+# ─── Image Inverse Parser / 图片 → text_description ─────────────────────────
+# 将输入图片逆解析为描述充分、覆盖关键服装要素的 text_description 文档。
+# api-key / api-base 留空时继承根级 api-key / api-base；model 需为支持图片输入的多模态模型。
+# temperature：逆解析采样温度沿用固定值；当前网关对部分视觉/推理模型仅接受默认采样（1.0）。
+image-inverse-parser:
+  enabled: true
+  api-key: ""
+  api-base: ""
+  model: "gpt-5.5"
+  temperature: 1.0
+  top-p: 1.0
+  max-tokens: 2200
+  timeout: 120
+  verify-ssl: true
+  language: "English"
+  output-dir: "outputs/image_inverse_parser"
+
+# ─── GRPO 采数 / DesignTextEvaluator(ApiLLMJudge) / 并行 K / 训练落盘 ─────────
+# 优先级（高→低）：函数显式参数 > 环境变量 AI_* > 本段 design-text-evaluator > 根级 api-key / llm-backend > spec llm.default_model
+# R_content 定义仍见 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json（r_content_for_rl）
+grpo:
+  design-text-evaluator:
+    # 留空字符串表示继承根级 api-key、api-base
+    api-key: ""
+    api-base: ""
+    model: "gpt-5.4-mini"
+    # 图像逆解析（多模态）；优先生效，其次环境变量 AI_API_MODEL_VISION
+    vision-model: "gpt-5.5"
+    max-tokens: 1600
+    timeout: 120
+    temperature: 0.0
+    verify-ssl: true
+
+  # 本地 HF SFT / GRPO 权重目录（与 local-llm.model-path 对齐）
+  hf-local-training:
+    model: "models/Qwen2.5-3B-Instruct"
+
+  parallel-k-rewrite:
+    # 并行改写候选条数（generate_k_parallel_rewrites 的 k；调用方未显式传入时使用）
+    k: 10
+    max-workers: 4
+    eval-max-workers: 5
+    temperature-floor: 0.15
+    temperature-step: 0.05
+    temperature-cap: 0.55
+    evaluate-candidates: true
+    eval-source-prefix: parallel_k
+    # 生成 / 候选评判走 local-llm（vLLM）
+    use-local-rewrite: true
+    use-local-evaluation: true
+    rewrite-temperature: 0.3
+    rewrite-max-tokens: 2048
+    rewrite-timeout: 300
+
+  training-data:
+    # 相对本仓库根目录；TrainingRunLogger 默认 base 目录
+    runs-dir: training/runs
+    # 可选：两阶段导出默认子目录名（供 default_grpo_export_dir 拼接 runs-dir/<run_id>/…）
+    export-subdir: export
+    # EMNLP 2025 Rewarding the Unlikely：导出 phase_b 时用 π_old 对每条 completion 算平均 logprob 排序，
+    # 再 r_i = R × (1 − β_rank × (G − rank)/G)。留空则不自动排名（除非脚本显式传 pi_old_model_for_ranking）。
+    # pi-old-model-for-ranking: ""
+    # rank-correction-beta: 0.25
+

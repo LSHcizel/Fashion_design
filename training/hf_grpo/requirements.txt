@@ -1,0 +1,6 @@
+# 可选：真 GRPO / SFT 本地训练（pip install -r training/hf_grpo/requirements.txt）
+torch>=2.1.0
+transformers>=4.38.0
+accelerate>=0.27.0
+datasets>=2.18.0
+safetensors>=0.4.0

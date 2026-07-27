@@ -1,0 +1,10 @@
+Chapter: 01
+Look: 03
+Sub-theme: Androgynous Tailoring and the Masculine-Feminine Mirror
+Image: look_03.jpg
+
+RawAgentResult:
+TIER: high
+ACTION: KEEP
+INFO: A masterful blend of traditional tailoring and avant-garde silhouette with a sophisticated color palette.
+FINAL_FASHION_DESIGN: The original design is retained for its impeccable construction and striking architectural elegance.
