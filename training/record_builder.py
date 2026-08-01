@@ -166,7 +166,7 @@ def build_training_record(
         "hyperparameters": {
             "gamma_penalty": rcfg.get("gamma_penalty"),
             "beta_z_len": rcfg.get("beta_z_len"),
-            "r_content_formula": rcfg.get("formula"),
+            "r_content_penalty_merge": rcfg.get("penalty_merge", "multiply"),
             "length_use_log": None,
         },
         "grpo": {

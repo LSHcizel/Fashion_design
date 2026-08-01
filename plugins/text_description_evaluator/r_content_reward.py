@@ -27,18 +27,10 @@ def _clip01(x: float) -> float:
     return max(0.0, min(1.0, float(x)))
 
 
-def _soft_penalty_merge(
-    r: float,
-    total_penalty: float,
-    gamma: float,
-    formula: str,
-) -> float:
-    """方案第 2 步：R ∋ 冗长通道 — 乘性并入 P̄ 或 clip 减法。"""
+def _soft_penalty_merge(r: float, total_penalty: float, gamma: float) -> float:
+    """方案第 2 步：R ∋ 冗长通道 — 乘性并入 P̄：clip(r · (1 - γ·P̄))。"""
     p = float(total_penalty or 0.0)
     g = float(gamma)
-    if formula == "subtract_clip":
-        return _clip01(r - g * p)
-    # default: multiply
     return _clip01(r * (1.0 - g * p))
 
 
@@ -71,7 +63,6 @@ def build_r_content_payload(
         return {"enabled": False}
 
     gamma = float(cfg.get("gamma_penalty", 0.0))
-    formula = str(cfg.get("formula", "multiply"))
     beta_z = float(cfg.get("beta_z_len", 0.0))
     hold = cfg.get("holdout_regression") or {}
 
@@ -87,12 +78,22 @@ def build_r_content_payload(
     elif bool(hold.get("enabled")) and bool(cfg.get("length_already_applied")):
         r_after_resid = float(S_fp)
 
-    r_soft = _soft_penalty_merge(r_after_resid, total_penalty, gamma, formula)
+    r_soft = _soft_penalty_merge(r_after_resid, total_penalty, gamma)
 
     z_applied = z_len if (z_len is not None and beta_z != 0.0) else None
     r_final = r_soft
     if z_applied is not None:
         r_final = _clip01(r_soft - beta_z * float(z_applied))
+
+    if not gamma:
+        penalty_note = "γ=0，P̄ 不进 R_content（仅 penalty_gate）。"
+    else:
+        penalty_note = "r_soft = clip(S_fp·(1 - γ·P̄))。"
+    if z_applied is not None:
+        z_note = f"R_content = clip(r_soft - β·z_len)，z_len={float(z_applied):.4f}。"
+    else:
+        z_note = "无组内 z_len：R_content = r_soft。"
+    interpretation_zh = f"{penalty_note}{z_note}"
 
     return {
         "enabled": True,
@@ -101,7 +102,7 @@ def build_r_content_payload(
         "S_fp": round(float(S_fp), 6),
         "total_penalty": round(float(total_penalty or 0.0), 6),
         "gamma_penalty": gamma,
-        "formula": formula,
+        "penalty_merge": "multiply",
         "beta_z_len": beta_z,
         "char_len": c_len,
         "log_len": round(ll, 6),
@@ -111,6 +112,7 @@ def build_r_content_payload(
         "r_after_soft_penalty": round(r_soft, 6),
         "z_len": None if z_applied is None else round(float(z_applied), 6),
         "R_content": round(r_final, 6),
+        "interpretation_zh": interpretation_zh,
     }
 
 
@@ -169,6 +171,7 @@ def apply_group_z_len_r_content(evaluations: Sequence[Dict[str, Any]], cfg: Opti
             cfg,
             z_len=zs[i],
         )
+        refresh_score_formula_r_content(ev)
 
 
 def fit_holdout_length_regression(

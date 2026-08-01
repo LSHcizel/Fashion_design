@@ -18,6 +18,9 @@ def summarize_evaluation_row(
     pen = qual.get("penalties") or {}
     gates = full.get("gates") or {}
     rc = full.get("r_content") or {}
+    sf = full.get("score_formula") or {}
+    length_step = next((s for s in (sf.get("steps") or []) if s.get("id") == "length_disentangle"), {})
+    length_info = length_step.get("length") or {}
     row = {
         "source_name": full.get("source_name"),
         "evaluator_spec": full.get("name"),
@@ -38,13 +41,18 @@ def summarize_evaluation_row(
         "quality_penalized_score": qual.get("penalized_score"),
         "s_fp_base": scores.get("s_fp_base"),
         "length_disentangle_applied": (scores.get("length_disentangle") or {}).get("applied"),
-        "length_component": (scores.get("length_disentangle") or {}).get("length_component"),
         "penalties_total_penalty_mean": pen.get("total_penalty"),
         "metric_totals": full.get("metric_totals"),
         "R_content_scalar": rc.get("R_content") if rc.get("enabled") else None,
         "r_content_enabled": bool(rc.get("enabled", False)),
         "prompt_char_len": len((full.get("text_description") or "").strip()),
         "eval_prose_char_len": len((full.get("eval_prose") or "").strip()),
+        "length_reference_char_len": length_info.get("reference_char_len"),
+        "length_component": length_info.get("length_component") or (scores.get("length_disentangle") or {}).get("length_component"),
+        "length_interpretation_zh": length_info.get("interpretation_zh"),
+        "length_adjustment_per_1000_chars": (length_info.get("substitution") or {}).get("per_1000_chars"),
+        "score_formula_one_liner": sf.get("formula_one_liner"),
+        "r_content_interpretation_zh": rc.get("interpretation_zh"),
     }
     if extra:
         row.update(extra)
@@ -154,6 +162,74 @@ def render_evaluation_markdown(full: Dict[str, Any]) -> str:
         f"- Both passed: **{gates.get('both_passed')}**",
         "",
     ]
+
+    sf = full.get("score_formula") or {}
+    if sf.get("steps"):
+        lines.extend(["## 得分公式分解 (Score formula)", ""])
+        chain = sf.get("formula_chain_symbolic") or sf.get("formula_chain_zh") or []
+        if chain:
+            lines.append("**符号公式链：**")
+            for i, ln in enumerate(chain, start=1):
+                lines.append(f"{i}. `{ln}`")
+            lines.append("")
+        if sf.get("formula_one_liner"):
+            lines.append(f"**一行式：** `{sf['formula_one_liner']}`")
+            lines.append("")
+        modes = sf.get("mode_explanations") or {}
+        if modes:
+            lines.append("**模式说明：**")
+            ld = modes.get("length_disentangle") or {}
+            if ld:
+                lines.append(
+                    f"- **长度去相关 · {ld.get('active_mode')}（{ld.get('name_zh', '')}）**："
+                    f"{ld.get('interpretation_zh', '')}"
+                )
+            pm = modes.get("r_content_penalty_merge") or {}
+            if pm:
+                lines.append(
+                    f"- **R_content 惩罚并入 · multiply（{pm.get('name_zh', '')}）**："
+                    f"{pm.get('effective_note_zh', '')} {pm.get('interpretation_zh', '')}"
+                )
+            ctx = modes.get("r_content_evaluation_context") or {}
+            grpo = ctx.get("grpo_group") or {}
+            single = ctx.get("single_sample") or {}
+            lines.append(f"- **单条评分**：{single.get('interpretation_zh', '')}")
+            lines.append(f"- **GRPO 组内**：{grpo.get('interpretation_zh', '')}")
+            lines.append("")
+        params = sf.get("parameters") or {}
+        if params:
+            lines.append("**本 spec 参数：**")
+            for k, v in params.items():
+                lines.append(f"- `{k}` = {v}")
+            lines.append("")
+        outputs = sf.get("outputs") or {}
+        if outputs:
+            lines.append(
+                f"**输出：** S_fp = **{outputs.get('S_fp')}**，"
+                f"R_content = **{outputs.get('R_content')}**，P̄ = **{outputs.get('P̄')}**"
+            )
+            lines.append("")
+        lines.extend(
+            [
+                "| 步骤 | 名称 | 符号公式 | 本条结果 |",
+                "| ---: | --- | --- | ---: |",
+            ]
+        )
+        for st in sf["steps"]:
+            formula = (st.get("formula") or st.get("formula_symbolic") or "").replace("|", "\\|")
+            val = st.get("value")
+            lines.append(f"| {st.get('step')} | {st.get('label_zh')} | `{formula}` | {val} |")
+        lines.append("")
+        lines.append("**本条代入（substitution）见各步 JSON 或 evaluation.json → score_formula.steps[].substitution**")
+        lines.append("")
+        length_step = next((s for s in sf["steps"] if s.get("id") == "length_disentangle"), None)
+        if length_step:
+            length = length_step.get("length") or {}
+            if length.get("interpretation_zh"):
+                lines.append(f"- **长度：** {length['interpretation_zh']}")
+        if rc.get("interpretation_zh"):
+            lines.append(f"- **R_content：** {rc['interpretation_zh']}")
+        lines.append("")
 
     def _metric_table(title: str, axis: str) -> None:
         rows = list(_iter_metrics_by_axis(metric_results, axis))

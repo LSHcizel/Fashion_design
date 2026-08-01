@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 import yaml
 
 from .r_content_reward import apply_length_disentangle, build_r_content_payload
+from .score_formula import build_score_formula_breakdown
 
 
 def _load_env_file() -> None:
@@ -1005,6 +1006,23 @@ class DesignTextEvaluator:
             quality_penalties["total_penalty"],
             rcfg,
             z_len=None,
+        )
+        out["score_formula"] = build_score_formula_breakdown(
+            spec=self.spec,
+            coverage_score=coverage_score,
+            quality_axis_unweighted=quality_axis_score,
+            quality_weighted=quality_weighted,
+            quality_effective=quality_effective,
+            quality_cap=quality_cap,
+            total_penalty=float(quality_penalties["total_penalty"] or 0.0),
+            weights=weights,
+            s_fp_base=s_fp_base,
+            total_cap=total_cap,
+            char_len=char_len,
+            length_disentangle=length_disentangle,
+            fashion_prompt_score=fashion_prompt_score,
+            r_content=out["r_content"],
+            module_scores=module_scores,
         )
         return out
 

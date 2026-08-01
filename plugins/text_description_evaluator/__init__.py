@@ -18,6 +18,16 @@ from .r_content_reward import (
     fit_holdout_length_centered,
     fit_holdout_length_regression,
 )
+from .score_formula import (
+    LENGTH_DISENTANGLE_MODES,
+    R_CONTENT_PENALTY_MERGE,
+    build_score_formula_breakdown,
+    build_mode_explanations,
+    explain_length_mode,
+    explain_penalty_merge,
+    interpret_length_disentangle,
+    refresh_score_formula_r_content,
+)
 
 __all__ = [
     "DEFAULT_HF_LOCAL_GRPO_MODEL",
@@ -32,6 +42,14 @@ __all__ = [
     "apply_group_z_len_r_content",
     "apply_length_disentangle",
     "build_r_content_payload",
+    "build_score_formula_breakdown",
+    "build_mode_explanations",
+    "explain_length_mode",
+    "explain_penalty_merge",
     "fit_holdout_length_centered",
     "fit_holdout_length_regression",
+    "interpret_length_disentangle",
+    "LENGTH_DISENTANGLE_MODES",
+    "R_CONTENT_PENALTY_MERGE",
+    "refresh_score_formula_r_content",
 ]
