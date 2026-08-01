@@ -84,6 +84,10 @@ load-previous: False
 # Raise exception on failure
 except-if-fail: False
 
+# 仅跑文本链路：主题分析 → 概念/元素/Look 文本生成 → Text Evaluator 评分；
+# 跳过单图 reflect、章节图片淘汰、系列 collection reflection（无需导入图片）
+text-only-mode: False
+
 # Task notes (guidance for each phase)
 task-notes:
   theme-analysis:

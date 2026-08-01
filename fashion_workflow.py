@@ -118,6 +118,7 @@ class FashionWorkflow:
         except_if_fail=False,
         num_chapters=4,
         num_looks=1,
+        text_only_mode: bool = False,
         text_evaluator_config: TextEvaluatorConfig | None = None,
     ):
         """
@@ -145,6 +146,7 @@ class FashionWorkflow:
         self.description = description or ""
         self.num_chapters = num_chapters
         self.num_looks = num_looks
+        self.text_only_mode = bool(text_only_mode)
         self.model_backbone = agent_model_backbone
         self.notes = notes
         self.human_in_loop_flag = human_in_loop_flag if human_in_loop_flag else {
@@ -283,6 +285,8 @@ class FashionWorkflow:
             workflow = pickle.load(f)
 
         # 向后兼容：旧的 pkl 可能没有新增字段/Agent，这里补齐，避免后续调用报错
+        if not hasattr(workflow, "text_only_mode"):
+            workflow.text_only_mode = False
         if not hasattr(workflow, "brand"):
             workflow.brand = None
         if not hasattr(workflow, "description"):
@@ -1127,7 +1131,12 @@ class FashionWorkflow:
 
                 if (subtask not in self.phase_status or not self.phase_status[subtask]) and subtask == "concept brainstorming":
                     # 按子主题顺序逐章处理：每个子主题就是一个章节
-                    self.process_chapters_sequentially()
+                    if self.text_only_mode and self.verbose:
+                        print("[text-only-mode] 跳过单图 reflect / 章节图片淘汰 / 系列 collection reflection")
+                    self.process_chapters_sequentially(
+                        skip_image_eval=self.text_only_mode,
+                        skip_collection_reflection=self.text_only_mode,
+                    )
                     self.phase_status[subtask] = True
 
                 # 保存状态
@@ -1874,6 +1883,11 @@ def parse_yaml(yaml_file_loc):
         parser.except_if_fail = config_data["except-if-fail"]
     else:
         parser.except_if_fail = False
+
+    if "text-only-mode" in config_data:
+        parser.text_only_mode = config_data["text-only-mode"]
+    else:
+        parser.text_only_mode = False
     
     if "task-notes" in config_data:
         parser.task_notes = config_data["task-notes"]
@@ -1935,6 +1949,11 @@ if __name__ == "__main__":
     human_mode = args.copilot_mode.lower() == "true" if isinstance(args.copilot_mode, str) else args.copilot_mode
     load_previous = args.load_previous.lower() == "true" if isinstance(args.load_previous, str) else args.load_previous
     except_if_fail = args.except_if_fail.lower() == "true" if isinstance(args.except_if_fail, str) else args.except_if_fail
+    text_only_mode = (
+        args.text_only_mode.lower() == "true"
+        if isinstance(args.text_only_mode, str)
+        else args.text_only_mode
+    )
 
     # 获取 API 密钥
     # 优先顺序：YAML 中的 api-key -> 环境变量 OHMYGPT_API_KEY -> OPENAI_API_KEY
@@ -2039,6 +2058,7 @@ if __name__ == "__main__":
             except_if_fail=except_if_fail,
             num_chapters=args.num_chapters,
             num_looks=args.num_looks,
+            text_only_mode=text_only_mode,
             text_evaluator_config=evaluator_cfg,
         )
 
