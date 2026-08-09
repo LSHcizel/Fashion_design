@@ -67,7 +67,7 @@ def resolve_local_llm_endpoint() -> Optional[Dict[str, Any]]:
         return None
     timeout = int(cfg.get("timeout", 300))
     max_tokens = int(cfg.get("max-tokens", 4096))
-    judge_max_tokens = int(cfg.get("judge-max-tokens", 512))
+    judge_max_tokens = int(cfg.get("judge-max-tokens", 1600))
     verify_ssl = bool(cfg.get("verify-ssl", False))
     return {
         "api_base": api_base.rstrip("/"),
@@ -248,7 +248,7 @@ def build_local_api_judge(**overrides: Any) -> Any:
         "api_base": ep["api_base"],
         "model": ep["model"],
         "temperature": float(grpo_ev.get("temperature", 0.0)),
-        "max_tokens": ep["judge_max_tokens"],
+        "max_tokens": int(grpo_ev.get("max-tokens", ep["judge_max_tokens"])),
         "timeout": int(grpo_ev.get("timeout", ep["timeout"])),
         "verify_ssl": ep["verify_ssl"],
     }
@@ -323,9 +323,10 @@ def build_workflow_text_evaluator(
             model=resolve_local_llm_endpoint()["model"],
             temperature=float(te.get("temperature", temperature)),
             max_new_tokens=int(
-                te.get("judge-max-tokens")
-                or te.get("max-tokens")
-                or resolve_local_llm_endpoint()["judge_max_tokens"]
+                te.get("max-tokens")
+                or (_load_fashion_config().get("grpo") or {})
+                .get("design-text-evaluator", {})
+                .get("max-tokens", resolve_local_llm_endpoint()["judge_max_tokens"])
             ),
             timeout=int(
                 te.get("timeout")

@@ -61,8 +61,8 @@ local-llm:
   use-for-parallel-k-rewrite: true
   use-for-candidate-evaluation: true
   use-for-text-evaluator: true
-  # 本地 judge 单次 JSON 回复通常 <512 token；须与 vLLM --max-model-len 配合（input+output ≤ max_model_len）
-  judge-max-tokens: 512
+  # judge 输出上限，与 grpo.design-text-evaluator.max-tokens 对齐；须 input+output ≤ max-model-len
+  judge-max-tokens: 1600
   # 多模态 reflection（单图/章节/系列）仍走 API vision，本地 3B 不支持读图
   workflow-vision-model: "gpt-5.5"
 
