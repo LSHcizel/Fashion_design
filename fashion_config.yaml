@@ -60,8 +60,8 @@ local-llm:
   verify-ssl: false
   use-for-workflow: true
   use-for-parallel-k-rewrite: true
-  use-for-candidate-evaluation: true
-  use-for-text-evaluator: true
+  use-for-candidate-evaluation: true   # K 路候选评分走本地 7B
+  use-for-text-evaluator: true         # workflow 门限评分走本地 7B
   # judge 输出上限，与 grpo.design-text-evaluator.max-tokens 对齐；须 input+output ≤ max-model-len
   judge-max-tokens: 2048
   # 多模态 reflection（单图/章节/系列）仍走 API vision，本地 7B 不支持读图
@@ -119,21 +119,28 @@ task-notes:
 # 启用后，每个生成的 look 描述文本在保存前会自动进行质量评估；
 # 是否通过以双门限（score_gate + penalty_gate，见 score-gate-min / penalty-gate-max）为准。
 # penalty 仅参与 penalty_gate，不扣减 S_fp / R_content 总分。
+#
+# 当前模式：本地 7B judge（vLLM）。解析管线与 GPT teacher 相同（同一 spec / system prompt / 聚合公式），
+# 仅 backend 为 local-llm。grpo.design-text-evaluator 仍保留 gpt-5.4-mini 供对照评测与后续 judge 蒸馏。
+# 启动 vLLM：VLLM_GPU=2 bash scripts/restart_local_vllm.sh
 text-evaluator:
   enabled: true
-  # true 时评判走 local-llm（vLLM）；显式配置 api-key/api-base/model 则强制用 API
   use-local: true
+
+  # 与 grpo.design-text-evaluator 对齐，保证 judge 调用参数一致
+  temperature: 0.0
+  max-tokens: 2048
+  timeout: 120
 
   # optimize 内部双门限（两门均通过则早停）
   # 注意：与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json optimization_gates 保持一致
   score-gate-min: 0.7
   penalty-gate-max: 0.5
 
-  # evaluator API 配置（留空则从 spec 默认 / 环境变量读取）
+  # 若需临时切回 GPT 评判：use-local: false，并留空下面三项（继承 grpo.design-text-evaluator）
   # api-key:
   # api-base:
   # model:
-  # temperature:
   # rewriter-temperature:
 
 # ─── Image Inverse Parser / 图片 → text_description ─────────────────────────
@@ -158,7 +165,7 @@ image-inverse-parser:
 # R_content 定义仍见 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json（r_content_for_rl）
 grpo:
   design-text-evaluator:
-    # 留空字符串表示继承根级 api-key、api-base
+    # GPT teacher（本地 7B 评判时仅作对照 / 采数基准；workflow 实际 judge 见 text-evaluator.use-local）
     api-key: ""
     api-base: ""
     model: "gpt-5.4-mini"
@@ -183,7 +190,7 @@ grpo:
     temperature-cap: 0.55
     evaluate-candidates: true
     eval-source-prefix: parallel_k
-    # 生成 / 候选评判走 local-llm（vLLM）
+    # 改写走本地 7B；候选评判走本地 7B（与 text-evaluator.use-local 一致）
     use-local-rewrite: true
     use-local-evaluation: true
     rewrite-temperature: 0.3
