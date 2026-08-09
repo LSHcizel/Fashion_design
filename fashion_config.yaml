@@ -62,7 +62,7 @@ local-llm:
   use-for-candidate-evaluation: true
   use-for-text-evaluator: true
   # judge 输出上限，与 grpo.design-text-evaluator.max-tokens 对齐；须 input+output ≤ max-model-len
-  judge-max-tokens: 1600
+  judge-max-tokens: 2048
   # 多模态 reflection（单图/章节/系列）仍走 API vision，本地 3B 不支持读图
   workflow-vision-model: "gpt-5.5"
 
@@ -163,7 +163,7 @@ grpo:
     model: "gpt-5.4-mini"
     # 图像逆解析（多模态）；优先生效，其次环境变量 AI_API_MODEL_VISION
     vision-model: "gpt-5.5"
-    max-tokens: 1600
+    max-tokens: 2048
     timeout: 120
     temperature: 0.0
     verify-ssl: true

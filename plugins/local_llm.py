@@ -67,7 +67,7 @@ def resolve_local_llm_endpoint() -> Optional[Dict[str, Any]]:
         return None
     timeout = int(cfg.get("timeout", 300))
     max_tokens = int(cfg.get("max-tokens", 4096))
-    judge_max_tokens = int(cfg.get("judge-max-tokens", 1600))
+    judge_max_tokens = int(cfg.get("judge-max-tokens", 2048))
     verify_ssl = bool(cfg.get("verify-ssl", False))
     return {
         "api_base": api_base.rstrip("/"),
