@@ -21,7 +21,23 @@ PY
 
 HOST="${VLLM_HOST:-127.0.0.1}"
 PORT="${VLLM_PORT:-$API_BASE}"
-GPU="${CUDA_VISIBLE_DEVICES:-0}"
+
+pick_freest_gpu() {
+  nvidia-smi --query-gpu=index,memory.free --format=csv,noheader,nounits 2>/dev/null \
+    | awk -F', ' '{gsub(/ /, "", $1); gsub(/ /, "", $2); print $2, $1}' \
+    | sort -rn | awk 'NR==1 {print $2}'
+}
+
+if [ -n "${VLLM_GPU:-}" ]; then
+  GPU="$VLLM_GPU"
+elif [ -n "${CUDA_VISIBLE_DEVICES:-}" ]; then
+  GPU="$CUDA_VISIBLE_DEVICES"
+elif command -v nvidia-smi >/dev/null 2>&1; then
+  GPU="$(pick_freest_gpu || true)"
+  GPU="${GPU:-0}"
+else
+  GPU="0"
+fi
 if [ -z "${PYTHON:-}" ]; then
   if [ -x "${ROOT}/venv/bin/python" ]; then
     PYTHON="${ROOT}/venv/bin/python"
@@ -33,7 +49,7 @@ LOG_DIR="${ROOT}/logs"
 LOG_FILE="${LOG_DIR}/vllm.log"
 DTYPE="${VLLM_DTYPE:-bfloat16}"
 MAX_LEN="${VLLM_MAX_MODEL_LEN:-4096}"
-GPU_MEM_UTIL="${VLLM_GPU_MEMORY_UTILIZATION:-0.85}"
+GPU_MEM_UTIL="${VLLM_GPU_MEMORY_UTILIZATION:-0.75}"
 MIN_FREE_MB="${VLLM_MIN_FREE_MB:-8192}"
 ENFORCE_EAGER="${VLLM_ENFORCE_EAGER:-1}"
 
@@ -59,7 +75,7 @@ fi
 mkdir -p "$LOG_DIR"
 
 if command -v nvidia-smi >/dev/null 2>&1; then
-  echo "[0/6] GPU 状态 (CUDA_VISIBLE_DEVICES=${GPU}):"
+  echo "[0/6] GPU 状态 (选用 GPU ${GPU}，可通过 VLLM_GPU=1 或 CUDA_VISIBLE_DEVICES=1 指定):"
   nvidia-smi --query-gpu=index,memory.used,memory.free,memory.total --format=csv,noheader | sed 's/^/  /' || true
   show_gpu_pids
 fi
@@ -138,6 +154,10 @@ for i in $(seq 1 90); do
   if curl -sf "http://${HOST}:${PORT}/v1/models" >/dev/null 2>&1; then
     echo "[5/6] OK — vLLM 已就绪: http://${HOST}:${PORT}/v1"
     curl -s "http://${HOST}:${PORT}/v1/models" | python -m json.tool 2>/dev/null || true
+    if command -v nvidia-smi >/dev/null 2>&1; then
+      USED_MB="$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits -i "$GPU" 2>/dev/null | tr -d ' ' || echo '?')"
+      echo "  GPU ${GPU} 当前已用显存约 ${USED_MB} MiB（vLLM 会预分配 KV cache，接近 gpu-memory-utilization 上限属正常）"
+    fi
     echo "[6/6] 日志: tail -f ${LOG_FILE}"
     exit 0
   fi
