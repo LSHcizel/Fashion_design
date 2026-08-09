@@ -1,0 +1,4 @@
+# 本地 vLLM 推理服务（GPU 服务器）
+# 用法: conda activate prompt_env && pip install -r scripts/requirements-vllm.txt
+# 需 NVIDIA GPU + 对应 CUDA 驱动；首次安装可能较慢。
+vllm>=0.4.0
