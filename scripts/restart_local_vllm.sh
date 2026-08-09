@@ -26,7 +26,7 @@ PYTHON="${PYTHON:-python}"
 LOG_DIR="${ROOT}/logs"
 LOG_FILE="${LOG_DIR}/vllm.log"
 DTYPE="${VLLM_DTYPE:-bfloat16}"
-MAX_LEN="${VLLM_MAX_MODEL_LEN:-2048}"
+MAX_LEN="${VLLM_MAX_MODEL_LEN:-4096}"
 GPU_MEM_UTIL="${VLLM_GPU_MEMORY_UTILIZATION:-0.90}"
 
 if ! "$PYTHON" -c "import vllm" 2>/dev/null; then
