@@ -3,6 +3,7 @@ node_modules/
 
 # Local / generated
 .tmp_plan_pdf/
+fashion_research_dir/
 
 # Python
 __pycache__/

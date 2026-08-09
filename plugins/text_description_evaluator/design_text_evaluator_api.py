@@ -203,10 +203,11 @@ Judging principles:
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
-10. For DesignMerit metrics, be STRICT against formula cruise/resort combinations, brand-symbol-only memory points, mood/essay prose, and generic layering anchors without craft observation. Apply explicit score caps stated in each metric rule (e.g. formula combination ≤0.25).
-11. For ConcisenessAndDensity metrics, penalize repeated mood/transition framing and long essay prose that dilute visible garment facts—judge holistically, not by document layout or bullet formatting.
-12. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
-13. Output strict JSON only. Do not output markdown fences or extra commentary.
+10. For DesignMerit metrics, be STRICT against brand-symbol-only memory points, mood/essay prose, and generic layering anchors without craft observation. Apply explicit score caps stated in each metric rule (e.g. ≥3 mood/essay sentences → design_signal_purity ≤0.25).
+11. For ConcisenessAndDensity (visibility_priority only), judge whether visible, image-dominant garment facts are prioritized over hidden interior, low-visibility details, and mood/essay/brand narrative—apply the five-level rubric and explicit caps in the metric rule; judge holistically, not by document layout or bullet formatting.
+12. For StructuralClarity, judge macro block order (information_ordering: trunk → silhouette/structure → material/color → accessories) and, when multiple garments/layers exist, garment-scope grouping (garment_scope_grouping: attributes stay with their garment/layer)—apply each metric's five-level rubric holistically.
+13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
+14. Output strict JSON only. Do not output markdown fences or extra commentary.
 
 Return format:
 {
@@ -428,7 +429,7 @@ Return format:
             scale_rules = (
                 "Scoring scale for each quality metric:\n"
                 "- Use the metric-specific five-level rubric in quality_scoring_rubric as the first reference.\n"
-                "- Also obey explicit score caps in each metric's rule field (e.g. formula template ≤0.25).\n"
+                "- Also obey explicit score caps in each metric's rule field (e.g. ≥3 mood/essay sentences → design_signal_purity ≤0.25).\n"
                 "- 1.0 = near-perfect for that metric and quality dimension\n"
                 "- 0.75 = strong with only minor issues for that metric\n"
                 "- 0.5 = partially good but with clear room for improvement for that metric\n"
@@ -438,17 +439,20 @@ Return format:
             )
             if module_name == "DesignMerit":
                 scale_rules += (
+                    "\nDesignMerit module — soft reference (inverse-parsed runway captions, wgsn_batch 20260524T044337Z):\n"
+                    "- When soft_rules are provided per metric, use them as positive scoring guidance alongside the rubric; they do NOT override hard caps in rule fields.\n"
+                    "- Prefer texts that read like image-faithful runway captions: spatial layering, specific craft paths, concrete color/material cues, optional one-sentence closing mood.\n"
                     "\nDesignMerit module — STRICT caps:\n"
                     "- Brand symbols alone (Double C, Chanel finish, etc.) do NOT count as design memory points.\n"
-                    "- Formula trunk (cropped jacket + stripe/shirt + tailored short/trouser + belt + flat sandal/loafer): silhouette_combination_originality and design_distinctiveness must be ≤0.25.\n"
                     "- ≥3 mood/essay sentences (salon, promenade, seaworthy, as if, suggesting, reads as, identity, transition): design_signal_purity ≤0.25; visual_observation_grounding ≤0.5.\n"
                 )
             elif module_name == "ConcisenessAndDensity":
                 scale_rules += (
-                    "\nConcisenessAndDensity module — STRICT caps:\n"
-                    "- ≥3 mood/stance/essay sentences or eval_prose >2200 chars with repeated framing: core_information_density ≤0.5.\n"
-                    "- Long essay prose with low design-fact ratio: core_information_density ≤0.25.\n"
-                    "- Mood/essay or transition framing dominates visible facts: visibility_priority ≤0.5.\n"
+                    "\nConcisenessAndDensity module (visibility_priority only) — STRICT caps:\n"
+                    "- Mood/stance/identity essay occupies noticeable space: visibility_priority ≤0.5.\n"
+                    "- Hidden or low-visibility details, or repeated transition framing, overshadow visible trunk facts: visibility_priority ≤0.25.\n"
+                    "- ≥3 mood/stance/salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition sentences diluting visible subject: visibility_priority ≤0.25.\n"
+                    "- eval_prose >2200 chars with repeated framing while visible subject still readable: visibility_priority ≤0.5.\n"
                 )
         else:
             scale_rules = (
@@ -925,9 +929,6 @@ class DesignTextEvaluator:
             4,
         )
         total_cap = 1.0
-        if module_scores.get("GarmentCore", {}).get("score", 1.0) < 0.5 or module_scores.get("MaterialColor", {}).get("score", 1.0) < 0.4:
-            total_cap = min(total_cap, 0.7)
-        s_fp_base = round(min(s_fp_base, total_cap), 4)
 
         rcfg = self.spec.get("r_content_for_rl") or {}
         hold_cfg = rcfg.get("holdout_regression") or {}
@@ -1126,6 +1127,12 @@ class DesignTextEvaluator:
                         "quality_scoring_rubric": dimension_cfg.get("scoring_rubric", {}),
                     }
                 )
+                soft_rules = dimension_cfg.get("soft_rules")
+                if soft_rules:
+                    metric_spec["soft_rules"] = soft_rules
+                reference_corpus = dimension_cfg.get("reference_corpus")
+                if reference_corpus:
+                    metric_spec["reference_corpus"] = reference_corpus
             metric_specs.append(metric_spec)
         return metric_specs
 

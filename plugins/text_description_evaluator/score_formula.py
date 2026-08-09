@@ -334,10 +334,6 @@ def build_score_formula_breakdown(
     if module_scores:
         if module_scores.get("BindingAccuracy", {}).get("score", 1.0) < 0.5:
             cap_reasons.append("BindingAccuracy 模块分 < 0.5 → cap_q 收紧")
-        if module_scores.get("GarmentCore", {}).get("score", 1.0) < 0.5:
-            cap_reasons.append("GarmentCore 模块分 < 0.5 → cap_t 收紧")
-        if module_scores.get("MaterialColor", {}).get("score", 1.0) < 0.4:
-            cap_reasons.append("MaterialColor 模块分 < 0.4 → cap_t 收紧")
 
     uncapped = _r(w_cov * coverage_score + w_qual * quality_effective, 4)
     length_component = float(length_disentangle.get("length_component") or 0.0)
@@ -370,14 +366,6 @@ def build_score_formula_breakdown(
         },
         {
             "step": 2,
-            "id": "quality_axis_unweighted",
-            "label_zh": "质量轴（未加权）Q_u",
-            "formula": "Q_u = (1/n_q) · Σ quality_i",
-            "value": _r(quality_axis_unweighted),
-            "substitution": {"Q_u": _r(quality_axis_unweighted)},
-        },
-        {
-            "step": 3,
             "id": "quality_weighted",
             "label_zh": "质量模块加权 Q_w",
             "formula": "Q_w = (Σ w_i · m_i) / (Σ w_i)",
@@ -385,7 +373,7 @@ def build_score_formula_breakdown(
             "substitution": {"Q_w": _r(quality_weighted)},
         },
         {
-            "step": 4,
+            "step": 3,
             "id": "quality_effective",
             "label_zh": "质量有效分 Q",
             "formula": "Q = min(Q_w, cap_q)",
@@ -394,7 +382,7 @@ def build_score_formula_breakdown(
             "cap_reasons": cap_reasons or None,
         },
         {
-            "step": 5,
+            "step": 4,
             "id": "s_fp_base",
             "label_zh": "内容主分 s_fp_base",
             "formula": "s_fp_base = min(w_c · C + w_q · Q, cap_t)",
@@ -410,7 +398,7 @@ def build_score_formula_breakdown(
             },
         },
         {
-            "step": 6,
+            "step": 5,
             "id": "length_disentangle",
             "label_zh": "长度去相关",
             "formula": (
@@ -437,14 +425,14 @@ def build_score_formula_breakdown(
             "length": length_interp,
         },
         {
-            "step": 7,
+            "step": 6,
             "id": "S_fp",
             "label_zh": "最终 S_fp",
             "formula": "S_fp = total_score",
             "value": _r(fashion_prompt_score),
         },
         {
-            "step": 8,
+            "step": 7,
             "id": "penalty_gate",
             "label_zh": "惩罚门限（不进 S_fp）",
             "formula": "penalty_gate: P̄ ≤ τ_p",
@@ -454,7 +442,7 @@ def build_score_formula_breakdown(
     ]
 
     r_steps = build_r_content_formula_steps(r_content)
-    for i, st in enumerate(r_steps, start=9):
+    for i, st in enumerate(r_steps, start=8):
         st["step"] = i
         steps.append(st)
 

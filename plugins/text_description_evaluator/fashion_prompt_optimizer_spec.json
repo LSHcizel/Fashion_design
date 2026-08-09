@@ -1,6 +1,6 @@
 {
   "name": "fashion_text_prompt_optimizer",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "input_type": "text_description",
   "output_type": [
     "optimized_prompt",
@@ -64,16 +64,16 @@
     }
   },
   "quality_module_weights": {
-    "DesignMerit": 5.0,
-    "ConcisenessAndDensity": 3.0,
-    "GenerationReadiness": 1.0,
+    "DesignMerit": 10.0,
+    "ConcisenessAndDensity": 5.0,
+    "GenerationReadiness": 5.0,
     "BindingAccuracy": 1.0,
     "LanguageClarity": 1.0,
     "StructuralClarity": 1.0
   },
   "score_composition": {
     "default_module_weight": 1.0,
-    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit 与 ConcisenessAndDensity 增强权重，其余模块统一 1.0。已移除 Specificity（术语具体度）模块。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
+    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0、ConcisenessAndDensity=5.0、GenerationReadiness=5.0 增强权重，其余模块统一 1.0。已移除 Specificity（术语具体度）与 core_information_density 指标。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
   },
   "coverage_modules": [
     {
@@ -144,7 +144,8 @@
     {
       "name": "StructuralClarity",
       "metrics": [
-        "information_ordering"
+        "information_ordering",
+        "garment_scope_grouping"
       ]
     },
     {
@@ -158,7 +159,6 @@
     {
       "name": "ConcisenessAndDensity",
       "metrics": [
-        "core_information_density",
         "visibility_priority"
       ]
     },
@@ -198,99 +198,139 @@
     },
     "StructuralClarity": {
       "zh_name": "结构清晰度",
-      "description": "看主体、结构、材质颜色、配件与完成度的组织顺序是否清楚可解析。",
+      "description": "看文本是否按「主干主体 → 廓形结构 → 材质颜色 → 配件完成度」递进组织；多单品/多层时，同一单品的属性是否聚合、层次关系是否先立后分述。",
       "scoring_rubric": {
-        "1.0": "顺序自然，层级清楚，读完可以稳定重建服装结构与信息层级。",
-        "0.75": "整体清楚，局部略有跳跃或压缩，但主线仍容易跟随。",
-        "0.5": "信息基本都有，但顺序较乱，阅读时需要主动整理结构。",
-        "0.25": "信息堆砌明显，跨句跳转多，阅读负担大。",
-        "0.0": "结构严重混乱，主体和细节关系难以解析。"
+        "1.0": "遵循主体→结构→材质颜色→配件的递进；多层时先交代层次再分述；同一单品属性聚合，读完可稳定重建服装结构与信息层级。",
+        "0.75": "主线清楚，局部略有跳跃、压缩或个别配件细节略前置，但不影响整体跟随与重建。",
+        "0.5": "信息基本齐全，但块序较乱（如材质/配件与主体交错），或需读者主动整理才能还原结构。",
+        "0.25": "多单品属性跨句穿插、层次关系滞后于细节；信息堆砌明显，跨句跳转多。",
+        "0.0": "无法判断主干、层次与细节归属；结构严重混乱，主体和细节关系难以解析。"
       }
     },
     "GenerationReadiness": {
       "zh_name": "生成适配度",
       "description": "看文本是否已经接近可直接喂给图像模型的 prompt 形态。",
       "scoring_rubric": {
-        "1.0": "几乎可直接作为生成 prompt，结构、重点和视觉逻辑都高度适配。",
+        "1.0": "几乎可直接作为生图 prompt，结构、重点和视觉逻辑都高度适配。",
         "0.75": "轻微整理后即可直接使用，仍保留较强 prompt 可用性。",
-        "0.5": "信息有价值，但整体仍偏说明文或设计解说，不够 prompt-ready。",
-        "0.25": "更像分析文本、概念说明或风格评论，而不是生成 prompt。",
+        "0.5": "信息有价值，但整体仍偏说明文或设计解说，不够「可直接生图」。",
+        "0.25": "更像分析文本、概念说明或风格评论，而不是生图提示词。",
         "0.0": "无法直接用于生成，文本形态与目标用途明显不匹配。"
       }
     },
     "ConcisenessAndDensity": {
-      "zh_name": "信息密度与简洁性",
-      "description": "看单位长度里有效 fashion 信息有多少，以及可见主体信息是否优先；对 mood/essay 冗长与低成像密度从严。",
+      "zh_name": "可见性优先级",
+      "description": "看可见且决定成像结果的主体信息，是否稳定优先于隐藏/内部/低可见度细节，以及氛围、姿态、品牌评论等非成像内容。",
       "scoring_rubric": {
-        "1.0": "信息密度高，几乎无废话，主体可见信息被高效组织和优先表达。",
-        "0.75": "有少量冗余，但整体仍然高效，主次关系基本稳定。",
-        "0.5": "冗余明显；或 eval_prose 明显偏长（>2200 字符）且含 repeated mood/transition 句。",
-        "0.25": "大量背景、解释、mood/stance/identity 或 repeated framing 稀释核心服装信息。",
-        "0.0": "冗长松散（>3000 字符 essay 型），主体信息被淹没，难以作为高效 prompt 使用。"
+        "1.0": "廓形、品类、层次、主色、关键工艺与可见配件始终排在前面且占主导；隐藏/内里信息仅作轻量补充；几乎无氛围或评论句抢镜。",
+        "0.75": "可见主体信息明确优先；可有少量次要细节或 1 处轻量氛围句，但不分散生图焦点。",
+        "0.5": "可见主体仍可辨，但氛围/姿态/过渡铺垫占明显篇幅，或低可见/内部细节与主体争抢注意力；或评估正文 >2200 字符且含重复铺垫。",
+        "0.25": "氛围/身份/品牌评论，或不可见/低可见细节明显喧宾夺主；或 ≥3 处 salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition 类句稀释可见主体。",
+        "0.0": "几乎不以可见服装为主体；隐藏信息、内部推测或评论长文淹没成像信息，难以作为生图 prompt 使用。"
       }
     },
     "DesignDistinctiveness": {
       "zh_name": "设计独特性",
-      "description": "看 look 是否具备可记忆、非公式化的设计锚点，而非仅品类+颜色+材质或品牌符号的安全组合。",
+      "description": "看造型是否具备可记忆、非公式化的设计锚点，而非仅品类+颜色+材质或品牌符号的安全组合。",
+      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
+      "soft_rules": [
+        "优先识别「沿具体部位路径展开」的工艺/装饰锚点（如 appliqué/trim 沿 neckline、front edges、cuffs、hem、pocket edges 下行），而非仅列品类名。",
+        "逆解析偏好将异材质碰撞、非常规比例、强识别图案/印花、手工感肌理写清为记忆点（如 shaggy chevron、painterly scenic print、bold graphic stripes）。",
+        "结构亮点（boxy/oversized、及腰 cropped、dropped waist、深 V、asymmetric panels）若具造型主导性，可与工艺并列计为锚点。",
+        "金属扣、吊坠 pendant、链饰 chain 等若写清位置与视觉作用，可作辅助识别点；纯 gold-tone hardware 泛称加分有限。",
+        "参考语料：高分记忆点应能区分「这一件造型」，而非换色/换材质词即可套用的巡航公式组合。"
+      ],
       "scoring_rubric": {
-        "1.0": "至少两个清晰、非套路的设计锚点，且至少一个来自工艺、结构或非常规组合；品牌符号 alone 不算。",
-        "0.75": "一个明确、非 formula 的记忆点（craft/trim/appliqué/非常规比例），足以区分同类 look。",
-        "0.5": "细节偏常规 luxury 或 resort 语言，识别点弱。",
-        "0.25": "几乎全是可互换 cruise/resort 公式，仅换材质或颜色词。",
+        "1.0": "至少两个清晰、非套路的设计锚点，且至少一个来自工艺、结构或非常规组合；纯品牌符号不算。",
+        "0.75": "一个明确、非公式化的记忆点（工艺/饰边/贴花/非常规比例），足以区分同类造型。",
+        "0.5": "细节偏常规奢华或度假语言，识别点弱。",
+        "0.25": "几乎全是可互换的巡航/度假公式，仅换材质或颜色词。",
         "0.0": "纯品类堆叠或仅品牌符号（Double C、Chanel finish 等），换词即可套用。"
       }
     },
     "VisualGrounding": {
-      "zh_name": "视觉观察 grounded",
-      "description": "看描述是否像从可见 look 观察而来，而非概念组装、theme essay 或套路化生成 prose。",
+      "zh_name": "视觉观察锚定",
+      "description": "看描述是否像从可见造型观察而来，而非概念组装、主题散文或套路化生成 prose。",
+      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
+      "soft_rules": [
+        "逆解析正文按「主干单品 → 内外层次 → 下装/鞋配 → 造型配件」空间递进；符合此观察流的可倾向高分。",
+        "高分文本常见部位锚定：neckline/collar、shoulders、sleeves、waist、hem/length、center front、cuffs、pockets；应点名至少 3 类具体部位。",
+        "层次关系用 worn open over / beneath / underneath / partly obscured / visible at 等可见语言区分内外（语料约 77% 含叠搭表述）。",
+        "对不可见/不确定信息用 appears、could be、not confirmed 等诚实推断，或留给 uncertainty_notes；优于编造不可见细节。",
+        "段末 1 句 overall mood/palette 收尾在逆解析中常见（约 1/3），可接受；中段大量氛围/散文句仍应低分。"
+      ],
       "scoring_rubric": {
-        "1.0": "多处具体部位锚定，可见/不可见层次清楚，几乎无 mood/essay 句，读感像 runway caption。",
-        "0.75": "主要结构有可见锚定，concept 句极少（≤1 处轻量）。",
-        "0.5": "观察与 concept/mood 混合；锚定尚可但 craft 观察不足。",
-        "0.25": "以 theme/mood/salon/promenade/as if/suggesting 为主；或仅有 layering/hem 等泛锚定而无具体 craft 观察。",
-        "0.0": "纯概念叙事或套路化生成 prose，无法对应可见 look。"
+        "1.0": "多处具体部位锚定，可见/不可见层次清楚，几乎无氛围/散文句，读感像秀场 caption。",
+        "0.75": "主要结构有可见锚定，概念句极少（≤1 处轻量）。",
+        "0.5": "观察与概念/氛围句混合；锚定尚可但工艺观察不足。",
+        "0.25": "以主题/氛围/salon/promenade/as if/suggesting 为主；或仅有 layering/hem 等泛锚定而无具体工艺观察。",
+        "0.0": "纯概念叙事或套路化生成 prose，无法对应可见造型。"
       }
     },
     "CraftSalience": {
       "zh_name": "工艺装饰显著度",
-      "description": "看工艺、装饰、结构亮点是否被写清为 look 主识别点，而非 hardware 泛称。",
+      "description": "看工艺、装饰、结构亮点是否被写清为造型主识别点，而非五金/装饰泛称。",
+      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
+      "soft_rules": [
+        "工艺/装饰须写清「类型 + 路径/位置 + 视觉作用」三要素，如 braid trim outlines front opening, cuffs, hem, and pocket edges。",
+        "逆解析偏好具体工艺词：appliqué、braid trim、fringe/feather-like trim、piping、embellishment、woven pattern、panel graphic、print placement。",
+        "当工艺为造型主识别点时，应在正文前 2/3 即展开，而非仅在段末一笔带过。",
+        "肌理 texture 若具识别性（shaggy、bouclé-like、openwork crochet、glossy leather-like）应连位置与作用一起写，而非单独形容词。",
+        "仅 refined finish / hardware / embellishment 泛称而不绑部位路径，低于逆解析参考水平。"
+      ],
       "scoring_rubric": {
-        "1.0": "工艺/装饰的类型、具体位置与视觉作用均清晰，且为 look 主 hook 之一。",
-        "0.75": "主要 craft 点清楚，少量泛化。",
-        "0.5": "提到 craft 但偏泛（topstitching、hardware、refined finish 等），难作生成锚点。",
+        "1.0": "工艺/装饰的类型、具体位置与视觉作用均清晰，且为造型主识别点之一。",
+        "0.75": "主要工艺点清楚，少量泛化。",
+        "0.5": "提到工艺但偏泛（明线 topstitching、五金 hardware、精致饰面 refined finish 等），难作生成锚点。",
         "0.25": "仅 embellishment/hardware 级泛称。",
-        "0.0": "应写 craft 处完全缺失或空泛。"
+        "0.0": "应写工艺处完全缺失或空泛。"
       }
     },
     "CombinationOriginality": {
       "zh_name": "组合原创性",
-      "description": "看廓形、品类、鞋配组合是否超越常见 formula template。",
+      "description": "看廓形、品类、鞋配组合是否超越常见公式模板。",
+      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
+      "soft_rules": [
+        "逆解析常以外穿 + 内搭 + 下装 + 包鞋配的完整四层组合描述造型；组合分看各层是否具体且互相塑造读感。",
+        "高分组合会用对比语言点明关系：structured vs sporty、voluminous outer vs flat graphic inner、monochrome vs multicolor accent。",
+        "即使品类偏常规，若叠搭逻辑具体（如 open coat frames burgundy dress with asymmetric white panels）仍可得中高分。",
+        "鞋、包、首饰若写入组合逻辑（echoing red embellishments、stripe palette contrast），视为组合的一部分而非孤立罗列。",
+        "按「换一件主干单品是否会改变整体读感」区分强弱，而非仅看是否奢华/度假公式。"
+      ],
       "scoring_rubric": {
         "1.0": "组合高度具体且难预测，换一件主干单品会改变整体读感。",
         "0.75": "组合有明确取向，但仍有部分常规元素。",
-        "0.5": "安全 luxury 组合，可预测；或 layering 略增趣但仍属 resort 公式。",
-        "0.25": "典型 formula（cropped jacket + stripe shirt + tailored short/trouser + belt + flat sandal/loafer）；命中即不应高于 0.25。",
-        "0.0": "最常见 cruise/workwear 模板拼接，8 条 look 间可互换主干。"
+        "0.5": "安全奢华组合，可预测；或叠搭略增趣但仍属度假公式。",
+        "0.25": "典型公式组合，可预测；或主干单品可互换而不改变整体读感。",
+        "0.0": "最常见巡航/工装模板拼接，多条造型间可互换主干。"
       }
     },
     "DesignSignalPurity": {
       "zh_name": "设计信号纯度",
-      "description": "看硬设计事实相对氛围、姿态、品牌 essay 的占比。",
+      "description": "看硬设计事实相对氛围、姿态、品牌评论/散文的占比。",
+      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
+      "soft_rules": [
+        "逆解析正文以可成像设计事实为主：品类、廓形、材质线索、颜色、pattern、工艺位置、层次、配件位置。",
+        "Styling includes / carries / worn with 引导的配件与鞋履描述计为设计事实，不算氛围散文。",
+        "段末 1 句 overall mood / overall palette / giving the look a ... mood 在参考语料中可接受；≥2 句或中段反复氛围铺垫则降分。",
+        "不写品牌名、不编造不可见背面 / 隐藏门襟——违背逆解析「仅写可见支持」原则，亦稀释设计信号。",
+        "颜色写法偏好具体色名 + 作用（golden beige and dark flecks、wine red and crisp white accents），优于抽象奢华/度假评论。"
+      ],
       "scoring_rubric": {
-        "1.0": "几乎全是可成像的设计事实，无 mood/stance/identity essay。",
-        "0.75": "设计事实为主，mood/stance ≤1 句。",
-        "0.5": "设计与叙事各占一半；或 repeated mood framing。",
+        "1.0": "几乎全是可成像的设计事实，无氛围/姿态/身份评论散文。",
+        "0.75": "设计事实为主，氛围/姿态句 ≤1 句。",
+        "0.5": "设计与叙事各占一半；或重复氛围铺垫。",
         "0.25": "≥3 处 salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition 类修辞稀释设计信号。",
-        "0.0": "主要是 essay/评论，设计事实被淹没。"
+        "0.0": "主要是评论/散文，设计事实被淹没。"
       }
     }
   },
   "penalty_registry": {
     "generation_content_penalty": {
       "zh_name": "非生成导向内容综合惩罚",
-      "description": "综合衡量冗余重复、无关稀释、分析/概念阐释与评论性表达等降低 prompt 效率、削弱可直接生成成像的信息密度与导向性的内容。另：长串风格标签或符号清单（军装、东方领、大翻领、护臂、腿带等）若未先交代主干廓形与层次，导致读者无法还原可见 look，亦视为削弱生成导向。",
+      "description": "综合衡量冗余重复、无关稀释、分析/概念阐释与评论性表达等降低生图提示词效率、削弱可直接生成成像的信息密度与导向性的内容。另：长串风格标签或符号清单（军装、东方领、大翻领、护臂、腿带等）若未先交代主干廓形与层次，导致读者无法还原可见造型，亦视为削弱生成导向。",
       "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-      "judge_guidance": "当同一视觉信息或修辞被多处重复、文本明显偏向概念阐释/历史类比/runway essay/评论性语言、或隐藏与低可见/弱成像贡献信息占据明显篇幅时提高该惩罚。**≥3 处 mood/stance/salon/promenade/seaworthy/as if/suggesting 句，至少 0.5**；若再叠加可互换 cruise/resort 公式组合、品牌符号堆叠而无 craft 识别点、或冗长 repeated framing，**至少 0.75**。若文本以大量互异风格符号堆叠为主、缺少可成像的主干品类与层次顺序，使 prompt 难以聚焦，应提高档位。按综合严重程度在 0、0.25、0.5、0.75、1.0 中选档。",
+      "judge_guidance": "当同一视觉信息或修辞被多处重复、文本明显偏向概念阐释/历史类比/秀场散文/评论性语言、或隐藏与低可见/弱成像贡献信息占据明显篇幅时提高该惩罚。**≥3 处 salon/promenade/seaworthy/as if/suggesting 类氛围句，至少 0.5**；若再叠加可互换巡航/度假公式组合、品牌符号堆叠而无工艺识别点、或冗长重复铺垫，**至少 0.75**。若文本以大量互异风格符号堆叠为主、缺少可成像的主干品类与层次顺序，使生图 prompt 难以聚焦，应提高档位。按综合严重程度在 0、0.25、0.5、0.75、1.0 中选档。",
       "optimizer_target": "压缩重复表达，删除主题阐释与抽象评论，移除弱成像贡献的背景与元指令，优先保留一次性、可视化、可直接用于生成的服装信息。",
       "round_strategy_target": "进一步合并重复、去除解释性措辞并删除弱可见与无关稀释，提高主体可视化信息占比。",
       "strategy_note_threshold": 0.25,
@@ -299,9 +339,9 @@
     },
     "consistency_penalty": {
       "zh_name": "一致性惩罚",
-      "description": "【不对称/一致性统一规定】本惩罚仅针对「主干造型层」的结构与身份一致性：主干=全部衣裤鞋，含外穿与内搭——外套/夹克、内搭上装（衬衫、T 恤、背心、连衣裙式一体上装等）、裤装/裙裤、鞋履凡被描述为穿着主体的层级均算主干，内外层分别作为单品描述时各自也算主干。文本若明确写出外套/大衣里布、裤装内衬或开衩内露衬里等，该里衬/内衬与外壳、裤面同属主干造型语义的一部分，左右或壳-衬互斥、双套里衬叙事对撞等从严，与衣裤鞋同等处理。若任一件主干单品存在左右或同件内部互斥品类、互斥材质/结构语义，视为强缺陷——裁判从严；优化须「向一侧对齐」或「删除互斥分支」。配饰（腰带、手套、戒指、耳环、包袋、领巾、袜、单侧重小配件等）仅小幅度左右或细节不一致、且未把任一件主干衣裤鞋写成两套互斥体系时，不因该项单独提高本惩罚。——典型主干互斥：单件上装左右两套品类/材质；同一外套上立领裹身、大翻领风衣、肩章、单侧金属护臂等与主体呢料无统一语法硬拼等。——**多部位并列左右主干分裂**：同一 look 内同时保留上装左右袖态/有无袖对撞、裤装左右腿异料或异裤型、左右脚异鞋族，且再叠加单手手套与对侧裸手等，视为多条互斥「主体身份」并列，对文生图极不友好；不得以仅一句「解构一体」「刻意 split system」即大幅降档至 0.25，除非文本已明显收束为单一可读主干语法或已删去次要支路。",
+      "description": "【不对称/一致性统一规定】本惩罚仅针对「主干造型层」的结构与身份一致性：主干=全部衣裤鞋，含外穿与内搭——外套/夹克、内搭上装（衬衫、T 恤、背心、连衣裙式一体上装等）、裤装/裙裤、鞋履凡被描述为穿着主体的层级均算主干，内外层分别作为单品描述时各自也算主干。文本若明确写出外套/大衣里布、裤装内衬或开衩内露衬里等，该里衬/内衬与外壳、裤面同属主干造型语义的一部分，左右或壳-衬互斥、双套里衬叙事对撞等从严，与衣裤鞋同等处理。若任一件主干单品存在左右或同件内部互斥品类、互斥材质/结构语义，视为强缺陷——裁判从严；优化须「向一侧对齐」或「删除互斥分支」。配饰（腰带、手套、戒指、耳环、包袋、领巾、袜、单侧重小配件等）仅小幅度左右或细节不一致、且未把任一件主干衣裤鞋写成两套互斥体系时，不因该项单独提高本惩罚。——典型主干互斥：单件上装左右两套品类/材质；同一外套上立领裹身、大翻领风衣、肩章、单侧金属护臂等与主体呢料无统一语法硬拼等。——**多部位并列左右主干分裂**：同一造型内同时保留上装左右袖态/有无袖对撞、裤装左右腿异料或异裤型、左右脚异鞋族，且再叠加单手手套与对侧裸手等，视为多条互斥「主体身份」并列，对文生图极不友好；不得以仅一句「解构一体」「刻意 split system」即大幅降档至 0.25，除非文本已明显收束为单一可读主干语法或已删去次要支路。",
       "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-      "judge_guidance": "先区分冲突是否落在主干上（外穿与内搭上装、裤装、鞋，凡构成穿着主体的衣裤鞋层；以及文本明确写出的外套里布、裤装内衬/开衩内露衬里等与壳面一体的结构叙事）。任一件主干出现左右割裂、互斥品类/材质/结构身份或多重矛盾绑定时提高本惩罚；期望为整件向一侧对齐或删去互斥描述。外套或内搭单件「半件正装半件另一语汇」且无统一语法时显著提档。大衣堆叠互斥符号且无分层叙事、多双鞋、内外层同时互斥、壳与里衬写成两套互斥身份而无清晰分层等同理。**若同时列举≥2 类主干层级的左右互斥事实**（例如上装袖态对撞 + 裤腿异料/异型 + 左右脚异鞋族，或再叠加手套与裸手形成第二条主干对比），即使作者声称 intentional deconstruction，**consistency 至少 0.5**，直至叙述收敛为单一主干语法或明确删支；仅当已合并为一句轻描的不对称或已删掉较弱整支、主干单一可读时，才可降至 0.25 及以下。若左右不对称仅体现在腰带、手套、首饰、包等小配件且轻度、所有主干衣裤鞋已单一可读，则不因此提高本惩罚。按主干互斥严重程度在 0、0.25、0.5、0.75、1.0 中选档。",
+      "judge_guidance": "先区分冲突是否落在主干上（外穿与内搭上装、裤装、鞋，凡构成穿着主体的衣裤鞋层；以及文本明确写出的外套里布、裤装内衬/开衩内露衬里等与壳面一体的结构叙事）。任一件主干出现左右割裂、互斥品类/材质/结构身份或多重矛盾绑定时提高本惩罚；期望为整件向一侧对齐或删去互斥描述。外套或内搭单件「半件正装半件另一语汇」且无统一语法时显著提档。大衣堆叠互斥符号且无分层叙事、多双鞋、内外层同时互斥、壳与里衬写成两套互斥身份而无清晰分层等同理。**若同时列举≥2 类主干层级的左右互斥事实**（例如上装袖态对撞 + 裤腿异料/异型 + 左右脚异鞋族，或再叠加手套与裸手形成第二条主干对比），即使作者声称刻意解构，**一致性惩罚至少 0.5**，直至叙述收敛为单一主干语法或明确删支；仅当已合并为一句轻描的不对称或已删掉较弱整支、主干单一可读时，才可降至 0.25 及以下。若左右不对称仅体现在腰带、手套、首饰、包等小配件且轻度、所有主干衣裤鞋已单一可读，则不因此提高本惩罚。按主干互斥严重程度在 0、0.25、0.5、0.75、1.0 中选档。",
       "optimizer_target": "对主干（外穿与内搭上装、裤装、鞋，以及文本已写出的外套里布、裤装内衬/开衩内衬）：强消除不一致——任一件主干左右或同件互斥须收敛。禁止在最终 prompt 中长期并列多条左右主干对打（多袖态+双腿异料+双脚异鞋+单手套等叠加）。第1步合并为单一可读袖线/裤型/鞋族+至多一笔轻描不对称；第2步若 checklist 仍指多区对撞，**必须整支删除**较弱侧（整侧袖叙述、整腿异料叙述、整只异鞋叙述、或叠多条时的手套线等），不得以「保留解构感」为由保留对打长句。第3轮起（第2轮结束后）若仍因不对称被判，强制二选一。配饰可小不一致。互斥领型/符号宜分件或删减至单一主干语法。",
       "round_strategy_target": "各轮优先用合并/轻描/重述消除主干对撞；同一冲突在多轮中递进加强——先穷尽合并再删一侧。统一外套、内搭、裤、鞋的设计语法；主干互斥先对齐再处理边缘细节；配饰不对称可轻微保留。",
       "strategy_note_threshold": 0.25,
@@ -310,9 +350,9 @@
     },
     "coordination_penalty": {
       "zh_name": "协调性惩罚",
-      "description": "【与 consistency 对齐的协调统一规定】本惩罚对主干（外穿与内搭上装、裤装、鞋，含内外层；以及明确写出的外套里布、裤装内衬/开衩内衬与外壳一体的造型叙事）之间的造型气质/场域互斥从严：任一件主干半精裁半舞台化、鞋与上装严重气质冲突、内外层完全无衔接的场域对撞等，应从严。腿带/harness 与阔腿未交代固定、腰胯多层束系打架、内里与外壳完全无锚点的高对比、里衬材质/光泽与壳面写成两套无关场域等仍从严。**左右脚鞋类气质严重分裂**（如正装牛津 vs 绑带凉鞋）与上装/裤装分裂**同时**出现时，整体协调从严，不得仅因「解构 look」降至低档位。仅当违和仅来自小配饰（左右手套不同色、单侧耳环、腰带略偏置等）且轻微、所有主干衣裤鞋已统一语气时，不因纯配饰小不一致提高本惩罚。",
+      "description": "【与一致性惩罚对齐的协调统一规定】本惩罚对主干（外穿与内搭上装、裤装、鞋，含内外层；以及明确写出的外套里布、裤装内衬/开衩内衬与外壳一体的造型叙事）之间的造型气质/场域互斥从严：任一件主干半精裁半舞台化、鞋与上装严重气质冲突、内外层完全无衔接的场域对撞等，应从严。腿带/harness 与阔腿未交代固定、腰胯多层束系打架、内里与外壳完全无锚点的高对比、里衬材质/光泽与壳面写成两套无关场域等仍从严。**左右脚鞋类气质严重分裂**（如正装牛津 vs 绑带凉鞋）与上装/裤装分裂**同时**出现时，整体协调从严，不得仅因「解构造型」降至低档位。仅当违和仅来自小配饰（左右手套不同色、单侧耳环、腰带略偏置等）且轻微、所有主干衣裤鞋已统一语气时，不因纯配饰小不一致提高本惩罚。",
       "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-      "judge_guidance": "先判断气质冲突是否落在主干（外穿与内搭、裤、鞋，以及已描述的外套里布、裤装内衬与壳面的衔接）。同一件上装左右互斥场域、内搭与外套语气完全打架、鞋与套装严重冲突、裤与 harness 结构违和、多腰带层次不清、壳与里衬场域完全脱节等提高档位。**上装/裤装已分裂且左右脚鞋履场域仍严重互斥**时，coordination **至少 0.5**，除非文本已收束为统一造型语气或删掉一侧鞋/裤/袖的极端描写。若仅小配件轻微左右差异且所有主干衣裤鞋已统一，不提高本惩罚。哑光外套与单侧高光金属护臂写在同一件主干上且无收束仍从严。按主干与整体违和度在 0、0.25、0.5、0.75、1.0 中选档。",
+      "judge_guidance": "先判断气质冲突是否落在主干（外穿与内搭、裤、鞋，以及已描述的外套里布、裤装内衬与壳面的衔接）。同一件上装左右互斥场域、内搭与外套语气完全打架、鞋与套装严重冲突、裤与 harness 结构违和、多腰带层次不清、壳与里衬场域完全脱节等提高档位。**上装/裤装已分裂且左右脚鞋履场域仍严重互斥**时，**协调性惩罚至少 0.5**，除非文本已收束为统一造型语气或删掉一侧鞋/裤/袖的极端描写。若仅小配件轻微左右差异且所有主干衣裤鞋已统一，不提高本惩罚。哑光外套与单侧高光金属护臂写在同一件主干上且无收束仍从严。按主干与整体违和度在 0、0.25、0.5、0.75、1.0 中选档。",
       "optimizer_target": "优先统一外套、内搭、裤、鞋及已描述的外套里布/裤装内衬与壳面的造型场域与层次衔接；主干强违和须收敛。合并失败则删支：双脚鞋族须收为一种主导鞋型（删较弱一只的描写），避免正装鞋与凉鞋长期对打；与上装/裤装分裂叠加时优先删鞋或删一侧裤/袖的极端场域描写。第3轮起涉左右主干仍判 coordination 则强制二选一。配饰可轻微不一致。下装与腿带/腰带层次须可成像或删减冲突。",
       "round_strategy_target": "各轮先通过合并/改写压低主干场域对撞；递进加强——合并优先、删除次之。使外穿、内搭、裤、鞋回扣同一氛围后再处理腰胯附件；避免用配饰掩盖主干冲突。",
       "strategy_note_threshold": 0.25,
@@ -332,11 +372,11 @@
     },
     "formula_template_penalty": {
       "zh_name": "公式模板惩罚",
-      "description": "总领性衡量文本是否落入高度可预测的 cruise/resort 公式组合、品牌符号堆叠而无工艺识别点、以及 mood/essay 主导的套路化 look 描述——不针对特定段落标题或子弹点格式，而看整体是否像可互换的生成公式稿。",
+      "description": "总领性衡量文本是否落入高度可预测的巡航/度假公式组合、品牌符号堆叠而无工艺识别点、以及氛围/散文主导的套路化造型描述——不针对特定段落标题或子弹点格式，而看整体是否像可互换的生成公式稿。",
       "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-      "judge_guidance": "总领性分档，不按段落标题或子弹点计数。综合看：(1) 主干是否为可互换 cruise/resort 公式（如 cropped jacket + stripe/shirt + tailored short/trouser + belt + flat shoe）；(2) 是否仅有品牌符号/泛 hardware 而无 craft/trim/appliqué 识别点；(3) mood/stance/salon/promenade/seaworthy/as if/suggesting 是否显著稀释设计事实；(4) 换材质词即可套用到其他 look 的可迁移性。命中 1 项明显 → 0.25~0.5；2 项 → 0.5~0.75；3 项及以上或全面公式化 → 0.75~1.0。紧凑 grounded prose 且无上述特征 → 0~0.25。",
-      "optimizer_target": "删除套路化 essay 与氛围堆砌，保留具体可见设计事实；打破 formula 组合，突出 1–2 个非套路 craft/结构/比例锚点。",
-      "round_strategy_target": "压缩为紧凑 grounded prose，删品牌 essay，强化独特工艺或组合识别点。",
+      "judge_guidance": "总领性分档，不按段落标题或子弹点计数。综合看：(1) 主干是否为可互换巡航/度假公式（如 cropped jacket + stripe/shirt + tailored short/trouser + belt + flat shoe）；(2) 是否仅有品牌符号/泛五金而无 craft/trim/appliqué 识别点；(3) salon/promenade/seaworthy/as if/suggesting 是否显著稀释设计事实；(4) 换材质词即可套用到其他造型的可迁移性。命中 1 项明显 → 0.25~0.5；2 项 → 0.5~0.75；3 项及以上或全面公式化 → 0.75~1.0。紧凑、锚定可见事实的 prose 且无上述特征 → 0~0.25。",
+      "optimizer_target": "删除套路化散文与氛围堆砌，保留具体可见设计事实；打破公式组合，突出 1–2 个非套路工艺/结构/比例锚点。",
+      "round_strategy_target": "压缩为紧凑、可见事实锚定的 prose，删品牌散文，强化独特工艺或组合识别点。",
       "strategy_note_threshold": 0.25,
       "strategy_note": "打破公式模板，突出非套路设计锚点。",
       "counts_for_unresolved_stop": true
@@ -591,16 +631,28 @@
       "source_keypoints": [
         40
       ],
-      "rule": "描述应按主体到细节的顺序组织",
+      "rule": "描述须按主体到细节递进，理想块序为：主干/主体 → 廓形与结构 → 材质颜色 → 配件与完成度（对齐 rewrite_order）。**评分层级**：1.0=四段递进自然，主干先立；0.75=主线清楚，≤1 处局部逆序或压缩；0.5=块序交错（材质/配件与主体穿插）但尚可整理；0.25=配件/氛围/评论明显先于主干，或主体锚点滞后；0.0=无清晰主干递进，无法还原结构。",
       "applicability": "always",
       "quality_dimension": "StructuralClarity"
     },
-    "core_information_density": {
+    "garment_scope_grouping": {
       "axis": "quality_score",
       "source_keypoints": [
+        26,
+        30,
         40
       ],
-      "rule": "服装主体信息应占主要篇幅；**≥3 处 mood/stance/salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition 类修辞，或 eval_prose >2200 字符且 repeated framing，封顶 0.5**；**冗长 essay 型 prose 且设计事实占比低，封顶 0.25**。多风格符号并列时须先确立可成像主干，再写配件；符号堆砌稀释 prompt 主干从严。",
+      "rule": "多单品或多层叠搭时，同一单品的品类/廓形/材质/颜色/细节应尽量聚合表述，避免 A 件属性与 B 件属性跨句穿插；内外层须先交代层次关系再分述各层。**评分层级**：1.0=按单品或层次分块/连贯分述，无跨件穿插；0.75=整体按件可分，仅少量属性轻微交叉；0.5=2–3 处跨件穿插，读者需来回对照；0.25=多单品属性频繁交错，层次关系不清或滞后；0.0=无法判断属性归属哪一件/哪一层。",
+      "applicability": "when_multiple_garments_exist",
+      "quality_dimension": "StructuralClarity"
+    },
+    "visibility_priority": {
+      "axis": "quality_score",
+      "source_keypoints": [
+        18,
+        40
+      ],
+      "rule": "可见且决定成像结果的主体信息须优先于隐藏、内部、低可见度细节，以及氛围/散文/品牌叙事。**评分层级**：1.0=可见主体（廓形/品类/层次/主色/关键工艺/可见配件）始终居前且占主导，隐藏信息仅轻量补充；0.75=主体优先，≤1 处轻量氛围句；0.5=氛围/姿态/过渡铺垫明显，或低可见细节与主体争抢，或评估正文 >2200 字符且重复铺垫；0.25=氛围/身份/品牌评论或不可见细节喧宾夺主，或 ≥3 处 salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition 类句；0.0=几乎不以可见服装为主体，评论/隐藏信息淹没成像信息。**硬封顶**：氛围/姿态/身份评论散文占显著篇幅 → ≤0.5；不可见信息或重复过渡铺垫喧宾夺主 → ≤0.25。",
       "applicability": "always",
       "quality_dimension": "ConcisenessAndDensity"
     },
@@ -609,7 +661,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "文本应可直接转为图像生成 prompt；须以可见廓形、品类与层次为先，多文化/多时代风格符号混用时应能收束为单一 look 身份，否则视为生成导向不足",
+      "rule": "文本应可直接转为图像生成 prompt；须以可见廓形、品类与层次为先，多文化/多时代风格符号混用时应能收束为单一造型身份，否则视为生成导向不足",
       "applicability": "always",
       "quality_dimension": "GenerationReadiness"
     },
@@ -619,7 +671,7 @@
         29,
         40
       ],
-      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与惩罚分一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为左右一致性与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
       "applicability": "when_bilateral_difference_exists",
       "quality_dimension": "GenerationReadiness"
     },
@@ -634,22 +686,12 @@
       "applicability": "when_spatial_relation_exists",
       "quality_dimension": "GenerationReadiness"
     },
-    "visibility_priority": {
-      "axis": "quality_score",
-      "source_keypoints": [
-        18,
-        40
-      ],
-      "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部、低可见度细节，以及 mood/essay/品牌叙事。**mood/stance/identity essay 占显著篇幅时封顶 0.5**；不可见信息或 repeated transition framing 喧宾夺主时封顶 0.25。",
-      "applicability": "always",
-      "quality_dimension": "ConcisenessAndDensity"
-    },
     "design_distinctiveness": {
       "axis": "quality_score",
       "source_keypoints": [
         40
       ],
-      "rule": "须呈现至少一个可独立识别的非 formula 设计记忆点（非常规工艺、trim/appliqué、异材质碰撞、强识别配色/图案、非常规比例或结构）。**品牌符号 alone（Double C、Chanel finish 等）不算**；仅写 cropped jacket / navy short / belt / flat sandal 等 cruise-resort 公式组合 **≤0.25**；换材质词即可套用的 formula **≤0.25**。",
+      "rule": "须呈现至少一个可独立识别的非公式化设计记忆点（非常规工艺、饰边/贴花 trim/appliqué、异材质碰撞、强识别配色/图案、非常规比例或结构）。**纯品牌符号（Double C、Chanel finish 等）不算**；仅写 cropped jacket / navy short / belt / flat sandal 等巡航度假公式组合 **≤0.25**；换材质词即可套用的公式 **≤0.25**。",
       "applicability": "always",
       "quality_dimension": "DesignDistinctiveness"
     },
@@ -658,7 +700,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "须体现从可见 look 读取的观察：部位锚定（neckline/cuff/hem/center front 等）、可见/不可见层次区分、或诚实的推断标注。**纯 concept/mood 组装（翻译 workwear、salon piece reworked 等）无可见锚点 ≤0.25**；**≥3 处 mood/essay 句且缺乏具体 craft 观察，封顶 0.5**。仅有 layering/hem 等泛锚定而无具体 craft 观察 **≤0.5**。",
+      "rule": "须体现从可见造型读取的观察：部位锚定（neckline/cuff/hem/center front 等）、可见/不可见层次区分、或诚实的推断标注。**纯概念/氛围组装（如翻译 workwear、salon piece reworked 等）无可见锚点 ≤0.25**；**≥3 处氛围/散文句且缺乏具体工艺观察，封顶 0.5**。仅有 layering/hem 等泛锚定而无具体工艺观察 **≤0.5**。",
       "applicability": "always",
       "quality_dimension": "VisualGrounding"
     },
@@ -667,7 +709,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "当涉及工艺、装饰、结构亮点时，须写清类型、位置与视觉作用（如 appliqué 沿 neckline 下行、braid trim 沿 pocket/hem）。**仅 hardware/embellishment/topstitching/refined finish 泛称 ≤0.5**；应写 craft 处完全缺失 **≤0.25**。",
+      "rule": "当涉及工艺、装饰、结构亮点时，须写清类型、位置与视觉作用（如 appliqué 沿 neckline 下行、braid trim 沿 pocket/hem）。**仅 hardware/embellishment/topstitching/refined finish 泛称 ≤0.5**；应写工艺处完全缺失 **≤0.25**。",
       "applicability": "when_craft_or_embellishment_is_salient",
       "quality_dimension": "CraftSalience"
     },
@@ -676,7 +718,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "上装廓形、下装品类、鞋型与配饰的组合须超出常见 formula template。**命中 cropped structured jacket + striped/shirt + tailored short/trouser + narrow belt + flat sandal/loafer 公式，强制 ≤0.25**；主干单品可互换而不改变 formula 读感 **≤0.25**。",
+      "rule": "上装廓形、下装品类、鞋型与配饰的组合须超出常见公式模板。主干单品可互换而不改变公式读感时酌情低分。",
       "applicability": "always",
       "quality_dimension": "CombinationOriginality"
     },
@@ -685,7 +727,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "有效设计信息（品类/廓形/材质/颜色/工艺/位置/层次）应占主体篇幅。**≥3 处 salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition 类修辞稀释设计信号，封顶 0.25**；设计与 mood/stance essay 各占一半 **≤0.5**。本项专评设计事实 vs 非设计叙事比例。",
+      "rule": "有效设计信息（品类/廓形/材质/颜色/工艺/位置/层次）应占主体篇幅。**≥3 处 salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition 类修辞稀释设计信号，封顶 0.25**；设计与氛围/姿态散文各占一半 **≤0.5**。本项专评设计事实与非设计叙事比例。",
       "applicability": "always",
       "quality_dimension": "DesignSignalPurity"
     },
@@ -746,17 +788,17 @@
   ],
   "diagnosis_output": {
     "missing_information": [
-      "coverage gaps"
+      "覆盖缺口"
     ],
     "quality_issues": [
-      "specificity issues",
-      "binding issues",
-      "clarity issues",
-      "generation readiness issues",
-      "design merit issues"
+      "具体度问题",
+      "属性绑定问题",
+      "语言清晰度问题",
+      "生成适配问题",
+      "设计价值问题"
     ],
     "bonus_opportunities": [
-      "optional concept enrichments"
+      "可选概念增强项"
     ]
   }
 }
