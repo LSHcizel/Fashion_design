@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-read -r MODEL MODEL_PATH API_BASE <<< "$(python - <<'PY'
+read -r MODEL MODEL_PATH API_BASE MAX_LEN_CFG <<< "$(python - <<'PY'
 import yaml
 from pathlib import Path
 from urllib.parse import urlparse
@@ -15,7 +15,8 @@ llm = cfg.get("local-llm") or {}
 api_base = (llm.get("api-base") or "http://127.0.0.1:8000/v1").rstrip("/")
 parsed = urlparse(api_base)
 port = parsed.port or (443 if parsed.scheme == "https" else 80)
-print(llm.get("model", "Qwen2.5-3B-Instruct"), llm.get("model-path", "models/Qwen2.5-3B-Instruct"), port)
+max_len = llm.get("max-model-len", 8192)
+print(llm.get("model", "Qwen2.5-3B-Instruct"), llm.get("model-path", "models/Qwen2.5-3B-Instruct"), port, max_len)
 PY
 )"
 
@@ -48,7 +49,7 @@ fi
 LOG_DIR="${ROOT}/logs"
 LOG_FILE="${LOG_DIR}/vllm.log"
 DTYPE="${VLLM_DTYPE:-bfloat16}"
-MAX_LEN="${VLLM_MAX_MODEL_LEN:-4096}"
+MAX_LEN="${VLLM_MAX_MODEL_LEN:-$MAX_LEN_CFG}"
 GPU_MEM_UTIL="${VLLM_GPU_MEMORY_UTILIZATION:-0.75}"
 MIN_FREE_MB="${VLLM_MIN_FREE_MB:-8192}"
 ENFORCE_EAGER="${VLLM_ENFORCE_EAGER:-1}"

@@ -46,13 +46,14 @@ llm-backend: "Qwen2.5-3B-Instruct"
 # 本地 OpenAI 兼容推理（vLLM）。需先在 GPU 上启动服务，例如：
 #   CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
 #     --model models/Qwen2.5-3B-Instruct --served-model-name Qwen2.5-3B-Instruct \
-#     --host 127.0.0.1 --port 8000 --dtype bfloat16 --max-model-len 4096
+#     --host 127.0.0.1 --port 8000 --dtype bfloat16 --max-model-len 8192
 local-llm:
   enabled: true
   api-base: "http://127.0.0.1:8000/v1"
   api-key: "local"
   model: "Qwen2.5-3B-Instruct"
   model-path: "models/Qwen2.5-3B-Instruct"
+  max-model-len: 8192
   timeout: 300
   max-tokens: 4096
   verify-ssl: false
