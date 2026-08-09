@@ -22,49 +22,104 @@ PY
 HOST="${VLLM_HOST:-127.0.0.1}"
 PORT="${VLLM_PORT:-$API_BASE}"
 GPU="${CUDA_VISIBLE_DEVICES:-0}"
-PYTHON="${PYTHON:-python}"
+if [ -z "${PYTHON:-}" ]; then
+  if [ -x "${ROOT}/venv/bin/python" ]; then
+    PYTHON="${ROOT}/venv/bin/python"
+  else
+    PYTHON="python"
+  fi
+fi
 LOG_DIR="${ROOT}/logs"
 LOG_FILE="${LOG_DIR}/vllm.log"
 DTYPE="${VLLM_DTYPE:-bfloat16}"
 MAX_LEN="${VLLM_MAX_MODEL_LEN:-4096}"
-GPU_MEM_UTIL="${VLLM_GPU_MEMORY_UTILIZATION:-0.90}"
+GPU_MEM_UTIL="${VLLM_GPU_MEMORY_UTILIZATION:-0.85}"
+MIN_FREE_MB="${VLLM_MIN_FREE_MB:-8192}"
+ENFORCE_EAGER="${VLLM_ENFORCE_EAGER:-1}"
+
+gpu_free_mb() {
+  nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i "$GPU" 2>/dev/null | tr -d ' ' || echo 0
+}
+
+show_gpu_pids() {
+  echo "  GPU ${GPU} 计算进程:"
+  nvidia-smi --query-compute-apps=pid,process_name,used_gpu_memory --format=csv,noheader -i "$GPU" 2>/dev/null | sed 's/^/    /' || echo "    (无)"
+}
 
 if ! "$PYTHON" -c "import vllm" 2>/dev/null; then
   echo "错误: 当前 Python 未安装 vllm: $("$PYTHON" -c 'import sys; print(sys.executable)')"
-  echo "请先执行:"
-  echo "  conda activate prompt_env"
-  echo "  pip install -r scripts/requirements-vllm.txt"
-  echo "或指定已安装 vllm 的解释器: PYTHON=/path/to/python bash scripts/restart_local_vllm.sh"
+  echo "本项目 vllm 通常在: ${ROOT}/venv/bin/python"
+  echo "请执行:"
+  echo "  source venv/bin/activate && pip install -r scripts/requirements-vllm.txt"
+  echo "或指定解释器:"
+  echo "  PYTHON=${ROOT}/venv/bin/python bash scripts/restart_local_vllm.sh"
   exit 1
 fi
 
 mkdir -p "$LOG_DIR"
 
 if command -v nvidia-smi >/dev/null 2>&1; then
-  echo "[0/5] GPU 状态 (CUDA_VISIBLE_DEVICES=${GPU}):"
+  echo "[0/6] GPU 状态 (CUDA_VISIBLE_DEVICES=${GPU}):"
   nvidia-smi --query-gpu=index,memory.used,memory.free,memory.total --format=csv,noheader | sed 's/^/  /' || true
+  show_gpu_pids
 fi
 
-echo "[1/5] 停止旧 vLLM 进程 (port=${PORT})..."
+echo "[1/6] 停止旧 vLLM 进程 (port=${PORT})..."
 if command -v fuser >/dev/null 2>&1; then
   fuser -k "${PORT}/tcp" 2>/dev/null || true
 fi
-pkill -f "vllm.entrypoints.openai.api_server" 2>/dev/null || true
-pkill -f "vllm.v1.engine" 2>/dev/null || true
-pkill -f "EngineCore" 2>/dev/null || true
+pkill -9 -f "vllm.entrypoints.openai.api_server" 2>/dev/null || true
+pkill -9 -f "vllm.v1.engine" 2>/dev/null || true
+pkill -9 -f "EngineCore" 2>/dev/null || true
 sleep 3
 
 if command -v nvidia-smi >/dev/null 2>&1; then
-  FREE_MB="$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i "$GPU" 2>/dev/null | tr -d ' ' || echo 0)"
-  if [ "${FREE_MB:-0}" -lt 4096 ] 2>/dev/null; then
-    echo "警告: GPU ${GPU} 空闲显存仅约 ${FREE_MB} MiB，可能仍有其它进程占用。"
-    echo "  请执行 nvidia-smi 查看 PID，必要时: kill -9 <PID>"
-    echo "  或换卡: CUDA_VISIBLE_DEVICES=1 bash scripts/restart_local_vllm.sh"
-    echo "  或降显存: VLLM_MAX_MODEL_LEN=1024 VLLM_GPU_MEMORY_UTILIZATION=0.85 bash scripts/restart_local_vllm.sh"
+  FREE_MB="$(gpu_free_mb)"
+  if [ "${FREE_MB:-0}" -lt "$MIN_FREE_MB" ] 2>/dev/null; then
+    echo "[2/6] 警告: GPU ${GPU} 空闲显存仅约 ${FREE_MB} MiB (< ${MIN_FREE_MB} MiB)"
+    show_gpu_pids
+    if [ "${VLLM_FORCE_GPU_CLEAN:-0}" = "1" ]; then
+      echo "  VLLM_FORCE_GPU_CLEAN=1：尝试结束 GPU ${GPU} 上所有计算进程..."
+      while IFS= read -r pid; do
+        pid="$(echo "$pid" | tr -d ' ')"
+        [ -n "$pid" ] || continue
+        kill -9 "$pid" 2>/dev/null || true
+      done < <(nvidia-smi --query-compute-apps=pid --format=csv,noheader -i "$GPU" 2>/dev/null || true)
+      sleep 3
+    else
+      echo "  请先手动释放显存，例如:"
+      echo "    nvidia-smi"
+      echo "    kill -9 <PID>   # 如日志中的 3884608 / 3892890"
+      echo "  或强制清理: VLLM_FORCE_GPU_CLEAN=1 bash scripts/restart_local_vllm.sh"
+      exit 1
+    fi
   fi
+
+  for _ in $(seq 1 15); do
+    FREE_MB="$(gpu_free_mb)"
+    if [ "${FREE_MB:-0}" -ge "$MIN_FREE_MB" ] 2>/dev/null; then
+      break
+    fi
+    sleep 2
+  done
+  FREE_MB="$(gpu_free_mb)"
+  if [ "${FREE_MB:-0}" -lt "$MIN_FREE_MB" ] 2>/dev/null; then
+    echo "错误: GPU ${GPU} 空闲显存仍不足 (${FREE_MB} MiB)。"
+    show_gpu_pids
+    exit 1
+  fi
+  echo "[2/6] GPU ${GPU} 空闲显存约 ${FREE_MB} MiB，可启动"
 fi
 
-echo "[2/5] 启动 vLLM: model=${MODEL}, path=${MODEL_PATH}, port=${PORT}, GPU=${GPU}, max_len=${MAX_LEN}, gpu_mem=${GPU_MEM_UTIL}"
+EXTRA_ARGS=()
+if [ "$ENFORCE_EAGER" = "1" ]; then
+  EXTRA_ARGS+=(--enforce-eager)
+fi
+
+echo "[3/6] 启动 vLLM"
+echo "  python=${PYTHON}"
+echo "  model=${MODEL} path=${MODEL_PATH} port=${PORT} gpu=${GPU}"
+echo "  max_len=${MAX_LEN} gpu_mem=${GPU_MEM_UTIL} enforce_eager=${ENFORCE_EAGER}"
 export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 CUDA_VISIBLE_DEVICES="$GPU" nohup "$PYTHON" -m vllm.entrypoints.openai.api_server \
   --model "$MODEL_PATH" \
@@ -74,15 +129,16 @@ CUDA_VISIBLE_DEVICES="$GPU" nohup "$PYTHON" -m vllm.entrypoints.openai.api_serve
   --dtype "$DTYPE" \
   --max-model-len "$MAX_LEN" \
   --gpu-memory-utilization "$GPU_MEM_UTIL" \
+  "${EXTRA_ARGS[@]}" \
   >> "$LOG_FILE" 2>&1 &
 echo $! > "${LOG_DIR}/vllm.pid"
 
-echo "[3/5] 等待服务就绪 (最多 180s)..."
+echo "[4/6] 等待服务就绪 (最多 180s)..."
 for i in $(seq 1 90); do
   if curl -sf "http://${HOST}:${PORT}/v1/models" >/dev/null 2>&1; then
-    echo "[4/5] OK — vLLM 已就绪: http://${HOST}:${PORT}/v1"
+    echo "[5/6] OK — vLLM 已就绪: http://${HOST}:${PORT}/v1"
     curl -s "http://${HOST}:${PORT}/v1/models" | python -m json.tool 2>/dev/null || true
-    echo "[5/5] 日志: tail -f ${LOG_FILE}"
+    echo "[6/6] 日志: tail -f ${LOG_FILE}"
     exit 0
   fi
   sleep 2
