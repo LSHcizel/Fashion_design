@@ -130,11 +130,11 @@ APPLICABILITY_HINTS = {
     "when_spatial_relation_exists": "Only applicable when the text describes layering, front/back, inside/outside, attached position, crossing paths, or other explicit spatial relations.",
     "when_multiple_garments_exist": "Only applicable when the text includes multiple garments or multi-item relations.",
     "when_quantity_is_used": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
-    "when_style_goal_is_explicit": "Only applicable when the text explicitly expresses aesthetic or style vocabulary.",
-    "when_reference_is_grounded": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+    "when_style_goal_is_explicit": "Applicable when the text expresses aesthetic or style vocabulary—including styling tone, mood, or collection-context phrases common in inverse-parsed runway captions (e.g. sporty-luxe, polished, cruise resort).",
+    "when_reference_is_grounded": "Applicable when the text provides cultural, historical, or setting context that is self-contained in the prose (e.g. resort, Biarritz, workwear heritage)—external user background is not required.",
     "when_gender_expression_is_relevant": "Only applicable when the text explicitly mentions gender expression or androgyny.",
-    "when_series_theme_is_known": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
-    "when_brand_goal_is_explicit": "Only applicable when the text explicitly targets brand language or brand identity.",
+    "when_series_theme_is_known": "Applicable when the text includes theme, setting, mood, or collection-context narrative—even a single closing overall mood/palette sentence in inverse-parsed captions counts.",
+    "when_brand_goal_is_explicit": "Applicable when the text reflects brand-consistent craft, silhouette, or palette language—even without naming the brand or stating an explicit brand task.",
     "when_absence_is_important": "Only applicable when absence or exclusion of an element matters in the text.",
     "when_craft_or_embellishment_is_salient": "Only applicable when the text mentions or clearly implies craft, embellishment, trim, appliqué, braid, quilting, embroidery, deconstruction, patch decoration, or similar salient construction/detail—not mere generic hardware or finish words.",
 }
@@ -150,6 +150,20 @@ TOTAL_SCORE_BANDS = [
 ]
 
 _T2I_MANDATORY_LINE = "Please generate female models and the matching clothing for them."
+_T2I_MANDATORY_PATTERNS = (
+    re.compile(
+        r"^please\s+generate\s+(?:female\s+)?models?\s+and\s+the\s+matching\s+clothing\s+for\s+them\.?\s*$",
+        re.IGNORECASE,
+    ),
+    re.compile(r"^请生成(?:女(?:性|士)?)?模(?:特)?(?:及|和)?(?:其)?(?:对应)?(?:的)?(?:服装|穿搭|造型)?。?\s*$"),
+)
+
+
+def _is_t2i_preamble(line: str) -> bool:
+    stripped = (line or "").strip()
+    if stripped == _T2I_MANDATORY_LINE:
+        return True
+    return any(p.match(stripped) for p in _T2I_MANDATORY_PATTERNS)
 _SECTION_HEADER_RE = re.compile(r"^\s*\d+\.\s+The\s+", re.IGNORECASE)
 _LOOK_TITLE_RE = re.compile(r"^Look\s+\d+\s*:", re.IGNORECASE)
 
@@ -170,7 +184,7 @@ def strip_eval_boilerplate(text: str) -> str:
             if kept_lines and kept_lines[-1] != "":
                 kept_lines.append("")
             continue
-        if stripped == _T2I_MANDATORY_LINE:
+        if _is_t2i_preamble(stripped):
             continue
         if stripped.lower() == "look textual description":
             continue
@@ -203,9 +217,9 @@ Judging principles:
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
-10. For DesignMerit metrics, be STRICT against brand-symbol-only memory points, mood/essay prose, and generic layering anchors without craft observation. Apply explicit score caps stated in each metric rule (e.g. ≥3 mood/essay sentences → design_signal_purity ≤0.25).
-11. For ConcisenessAndDensity (visibility_priority only), judge whether visible, image-dominant garment facts are prioritized over hidden interior, low-visibility details, and mood/essay/brand narrative—apply the five-level rubric and explicit caps in the metric rule; judge holistically, not by document layout or bullet formatting.
-12. For StructuralClarity, judge macro block order (information_ordering: trunk → silhouette/structure → material/color → accessories) and, when multiple garments/layers exist, garment-scope grouping (garment_scope_grouping: attributes stay with their garment/layer)—apply each metric's five-level rubric holistically.
+10. For DesignMerit metrics, score by **imaging content value** only—never by paragraph/section/list layout or source/category. Reward visible garment facts, spatial layering (worn open over/beneath), and craft type+path+role; penalize abstract editorial/mood/identity prose that does not map to pixels. One closing mood/palette sentence is acceptable. Apply score caps in each metric rule.
+11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
+12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
 14. Output strict JSON only. Do not output markdown fences or extra commentary.
 
@@ -306,8 +320,8 @@ Return format:
         user_prompt = (
             f"Text to evaluate:\n{text_description}\n\n"
             "Judge local penalty items for this fashion description as a generation prompt.\n"
-            "Focus on generation_content_penalty (redundant, irrelevant, analytical or conceptual prose that hurts prompt efficiency; also long lists of style symbols without a clear imaging trunk), "
-            "formula_template_penalty (predictable cruise/resort formula combinations, brand-symbol stacking without craft anchors, mood/essay-dominated interchangeable look prose—judge holistically, not by section headers or bullet lists), "
+            "Focus on generation_content_penalty (non-imaging content: model pose/stance, redundant repeated facts, abstract editorial dilution—not the standard T2I preamble line), "
+            "formula_template_penalty (cruise formula, brand-symbol-only, mood/essay dilution of visible design facts—content semantics only, not layout), "
             "trunk-level consistency, styling coordination, and rationality under realistic material and wearing conditions.\n"
             "For formula_template_penalty: score holistically by overall formula severity—formula trunk, brand-symbol-only, mood/essay dilution, interchangeability across looks—not by counting paragraph titles or bullets.\n"
             "UNIFIED RULE for consistency_penalty and coordination_penalty (asymmetry-related): be STRICT when inconsistency sits on trunk garments—outerwear, inner/base tops (shirts, tees, inner knit layers), bottoms, footwear; inner and outer upper-body layers are both trunk when each is a described garment. "
@@ -333,7 +347,7 @@ Return format:
         return {
             "generation_content_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-                "judge_guidance": "Raise this when redundancy, irrelevant or low-imaging-value detail, or analytical/conceptual/runway-essay prose materially hurts prompt efficiency; also when many conflicting style symbols are listed without a clear silhouette/layering trunk so the prompt cannot focus. Pick one discrete level by overall severity.",
+                "judge_guidance": "Score by imaging content value. IGNORE standard T2I preamble (Please generate female models and the matching clothing for them. / 请生成女模…)—never raise penalty for it alone. ≥0.5 for: model stance/pose/psychology, repeated facts without new pixels, abstract salon/promenade/identity essay outweighing visible anchors. ≥0.75 if non-imaging layers stack and visible facts are sparse.",
             },
             "consistency_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -349,7 +363,7 @@ Return format:
             },
             "formula_template_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-                "judge_guidance": "Holistic formula penalty—do NOT score by section headers or bullet lists. Weigh together: (1) interchangeable cruise/resort trunk formula, (2) brand-symbol-only without craft/trim/appliqué anchors, (3) mood/essay dilution of design facts, (4) look reads swappable by material-word swap. One clear signal → 0.25~0.5; two → 0.5~0.75; three+ or fully formulaic → 0.75~1.0. Compact grounded prose → 0~0.25.",
+                "judge_guidance": "Content-only formula penalty—never for section/bullet layout alone. Weigh: cruise/resort interchangeable trunk, brand-symbol-only, abstract mood/identity dilution vs visible craft facts, swappable-by-material-word. Concrete trim/appliqué/pattern/proportion anchors → 0~0.25 even if cruise trunk is mild.",
             },
         }
 
@@ -429,7 +443,7 @@ Return format:
             scale_rules = (
                 "Scoring scale for each quality metric:\n"
                 "- Use the metric-specific five-level rubric in quality_scoring_rubric as the first reference.\n"
-                "- Also obey explicit score caps in each metric's rule field (e.g. ≥3 mood/essay sentences → design_signal_purity ≤0.25).\n"
+                "- Also obey explicit score caps in each metric's rule field (e.g. ≥4 mood/essay sentences → design_signal_purity ≤0.25; ≥3 → ≤0.5).\n"
                 "- 1.0 = near-perfect for that metric and quality dimension\n"
                 "- 0.75 = strong with only minor issues for that metric\n"
                 "- 0.5 = partially good but with clear room for improvement for that metric\n"
@@ -439,20 +453,24 @@ Return format:
             )
             if module_name == "DesignMerit":
                 scale_rules += (
-                    "\nDesignMerit module — soft reference (inverse-parsed runway captions, wgsn_batch 20260524T044337Z):\n"
-                    "- When soft_rules are provided per metric, use them as positive scoring guidance alongside the rubric; they do NOT override hard caps in rule fields.\n"
-                    "- Prefer texts that read like image-faithful runway captions: spatial layering, specific craft paths, concrete color/material cues, optional one-sentence closing mood.\n"
-                    "\nDesignMerit module — STRICT caps:\n"
-                    "- Brand symbols alone (Double C, Chanel finish, etc.) do NOT count as design memory points.\n"
-                    "- ≥3 mood/essay sentences (salon, promenade, seaworthy, as if, suggesting, reads as, identity, transition): design_signal_purity ≤0.25; visual_observation_grounding ≤0.5.\n"
+                    "\nDesignMerit module — imaging content for T2I (not layout):\n"
+                    "- REWARD: visible garment facts, worn open over/beneath layering, craft type+path+role, specific color/material on body zones.\n"
+                    "- PENALIZE: abstract editorial/identity/field commentary without visible anchors; brand symbols alone.\n"
+                    "- Concrete craft/trim anchors → design_distinctiveness ≥0.75 even with cruise trunk or 'runway look built around' opening.\n"
+                    "- Model pose/stance/psychology or abstract editorial dilutes visual grounding (NOT the standard Please generate… preamble).\n"
                 )
-            elif module_name == "ConcisenessAndDensity":
+            elif module_name in ("ConcisenessAndDensity", "GenerationReadiness", "StructuralClarity"):
                 scale_rules += (
-                    "\nConcisenessAndDensity module (visibility_priority only) — STRICT caps:\n"
-                    "- Mood/stance/identity essay occupies noticeable space: visibility_priority ≤0.5.\n"
-                    "- Hidden or low-visibility details, or repeated transition framing, overshadow visible trunk facts: visibility_priority ≤0.25.\n"
-                    "- ≥3 mood/stance/salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition sentences diluting visible subject: visibility_priority ≤0.25.\n"
-                    "- eval_prose >2200 chars with repeated framing while visible subject still readable: visibility_priority ≤0.5.\n"
+                    f"\n{module_name} module — T2I content priority (ignore layout):\n"
+                    "- High: sentences map to visible pixels (garment form, material, color, trim path, layering, accessory placement).\n"
+                    "- Low: model stance/pose, abstract salon/promenade/identity essay dominating over visible facts.\n"
+                    "- IGNORE standard T2I preamble: Please generate female models and the matching clothing for them.\n"
+                    "- Do NOT penalize numbered sections or bullet lists if content is imaging-rich and semantically ordered.\n"
+                )
+            elif module_name == "ConceptBonus":
+                scale_rules += (
+                    "\nConceptBonus module — optional bonus only; do not inflate main quality scores.\n"
+                    "- Infer applicability from text; compact captions may have zero applicable bonus metrics.\n"
                 )
         else:
             scale_rules = (
