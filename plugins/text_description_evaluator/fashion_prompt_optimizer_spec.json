@@ -1,6 +1,6 @@
 {
   "name": "fashion_text_prompt_optimizer",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "input_type": "text_description",
   "output_type": [
     "optimized_prompt",
@@ -73,7 +73,7 @@
   },
   "score_composition": {
     "default_module_weight": 1.0,
-    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0 侧重紧凑 caption prose；ConcisenessAndDensity=5.0、GenerationReadiness=5.0 增强权重，其余模块统一 1.0。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
+    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0 侧重造型是否有不可替换的设计想法（与规格完整度解耦）；ConcisenessAndDensity=5.0、GenerationReadiness=5.0 增强权重，其余模块统一 1.0。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
   },
   "coverage_modules": [
     {
@@ -248,57 +248,57 @@
     },
     "DesignDistinctiveness": {
       "zh_name": "设计独特性",
-      "description": "是否有可成像、可区分的工艺/结构/组合记忆点，而非品牌符号或度假泛语言。",
+      "description": "造型是否有不可替换的可见记忆点。规格写全不算独特。",
       "scoring_rubric": {
-        "1.0": "≥2 个清晰锚点，至少一个来自工艺路径、结构或非常规组合；纯品牌符号不算。",
-        "0.75": "一个明确、非公式化的记忆点（工艺/饰边/贴花/非常规比例），足以区分同类造型。",
-        "0.5": "细节偏常规或仅有 hardware/refined finish 级泛称；品牌/度假评论代替工艺锚点。",
-        "0.25": "典型巡航公式，换材质或颜色词即可套用。",
-        "0.0": "纯品类堆叠或仅品牌符号（Double C、Chanel finish 等）。"
+        "1.0": "≥2 个可成像锚点，且至少一处来自工艺路径、结构或非常规组合；换一件主干会改变造型身份。",
+        "0.75": "有一个非通用记忆点（具体工艺路径/非常规比例/非常规组合），足以从同类造型中认出。",
+        "0.5": "细节常规；或记忆点主要是品牌五金/finish 称谓，换品牌词后造型仍成立。",
+        "0.25": "可互换套装：换颜色、面料或品牌词即可套用到另一套同品类组合。",
+        "0.0": "只有品类堆叠，没有可成像的设计想法。"
       }
     },
     "VisualGrounding": {
       "zh_name": "视觉观察锚定",
-      "description": "prose 是否为连续可见观察的 runway caption，而非分节模板散文。",
+      "description": "可见事实是否落在身体部位与层次上，而不是用评论句代替观察。",
       "scoring_rubric": {
-        "1.0": "连续观察句；多处部位锚定；叠搭用 worn open over/beneath 等可见语言；无中段 essay；无编号分节或 bullet 脚手架。",
-        "0.75": "主要结构有可见锚定；≤1 句轻量 mood/palette 收尾；**无**编号 garment 分节块或 bullet recap。",
-        "0.5": "观察与 essay/品牌评论混合；或有 1–2 处分节标题/bullet 打断观察流。",
-        "0.25": "编号 garment 分节（Outerwear/Foundation/Details/Finish）+ bullet recap 为主；或以 as if/promenade/salon/stance should/brand finish 等散文连接事实，部位锚定稀疏。",
-        "0.0": "纯 editorial 叙事，无法对应可见造型。"
+        "1.0": "多处部位锚定；叠搭用 worn open over / beneath 等可见关系写出。",
+        "0.75": "主干部位与层次可还原；允许一句 mood/palette 收尾。",
+        "0.5": "观察与评论混写，部位或层次要靠猜测。",
+        "0.25": "评论、场域或姿态句代替观察，部位锚定稀疏。",
+        "0.0": "无法对应到可见造型。"
       }
     },
     "CraftSalience": {
       "zh_name": "工艺装饰显著度",
-      "description": "工艺/装饰是否写清类型、部位路径与视觉作用，而非泛称。",
+      "description": "工艺/装饰是否写清类型、部位路径与视觉作用，并构成造型识别点。",
       "scoring_rubric": {
-        "1.0": "工艺的类型、路径/位置与视觉作用均清晰，且为造型主识别点之一。",
+        "1.0": "类型、路径/位置与视觉作用都清楚，且是造型主识别点之一。",
         "0.75": "主要工艺点清楚，少量泛化。",
-        "0.5": "提到工艺但偏泛（topstitching、hardware、refined finish），或工艺仅在 bullet 摘要中重复正文。",
+        "0.5": "提到工艺但偏泛，或该工艺不能把这套造型和其他套区分开。",
         "0.25": "仅 embellishment/hardware 级泛称。",
         "0.0": "应写工艺处完全缺失。"
       }
     },
     "CombinationOriginality": {
       "zh_name": "组合原创性",
-      "description": "组合关系是否用可见对比/叠搭写清，而非抽象公式或 translate-into 散文。",
+      "description": "组合是否由可见对比构成；换一件主干是否会改变读感。",
       "scoring_rubric": {
         "1.0": "组合由具体可见对比定义（异料/异廓形/配色对撞有锚点），换一件主干会改变读感。",
-        "0.75": "组合取向明确，仍有部分常规元素。",
-        "0.5": "巡航公式，或 abstract translate/balance X into Y 无可见组合锚点。",
-        "0.25": "典型模板组合，主干可互换。",
-        "0.0": "最常见巡航/工装模板拼接。"
+        "0.75": "组合取向明确，仍含部分常规元素。",
+        "0.5": "同品类常规搭配；或只用抽象主题句解释组合，没有可见对比。",
+        "0.25": "主干可互换的常见套装，换颜色/面料后仍是同一套组合逻辑。",
+        "0.0": "最常见的品类拼接，没有组合想法。"
       }
     },
     "DesignSignalPurity": {
       "zh_name": "设计信号纯度",
-      "description": "可成像设计事实相对 editorial/姿态/品牌散文的占比。",
+      "description": "可成像设计事实相对评论、姿态、品牌称谓的占比。",
       "scoring_rubric": {
-        "1.0": "几乎全是可成像设计事实，caption 式密度；无分节脚手架。",
-        "0.75": "设计事实为主；段末 ≤1 句 mood/palette 收尾；**无**独立 Footwear & Stance / stance should 段。",
-        "0.5": "事实与 essay/品牌/姿态指令各半；或分节+bullet 重复摘要稀释密度。",
-        "0.25": "essay/场域/stance/brand commentary 明显多于可见设计事实；或有独立姿态/stance 指令块。",
-        "0.0": "设计事实被 editorial 淹没。"
+        "1.0": "几乎全是可成像设计事实。",
+        "0.75": "设计事实为主；允许一句 mood/palette 收尾。",
+        "0.5": "事实与评论/姿态/品牌称谓各占相当比重。",
+        "0.25": "评论、场域、姿态或品牌称谓明显压过可见设计事实。",
+        "0.0": "设计事实被叙述淹没。"
       }
     }
   },
@@ -668,7 +668,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "须有可成像的设计记忆点（工艺路径/结构/非常规组合）；纯品牌符号（Double C、Chanel finish 等）不算，不应 ≥0.75。",
+      "rule": "须有不可替换的可成像记忆点；品牌五金/finish 称谓或换色即可套用的套装不算。",
       "applicability": "always",
       "quality_dimension": "DesignDistinctiveness"
     },
@@ -677,7 +677,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "须为连续可见观察、部位锚定、层次区分。有编号 garment 分节或 bullet recap 时不应 ≥0.75。",
+      "rule": "可见事实须落在部位与层次上；评论句不能代替观察。",
       "applicability": "always",
       "quality_dimension": "VisualGrounding"
     },
@@ -686,7 +686,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "工艺/装饰须写清类型、部位路径与视觉作用；hardware/refined finish 泛称倾向低分。",
+      "rule": "工艺/装饰须写清类型、部位路径与视觉作用，并能把这套造型和其他套区分开。",
       "applicability": "when_craft_or_embellishment_is_salient",
       "quality_dimension": "CraftSalience"
     },
@@ -695,7 +695,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "组合须用可见对比/叠搭写清；abstract translate/balance 无可见锚点倾向低分。",
+      "rule": "组合须由可见对比构成；换一件主干仍成立的常见套装倾向低分。",
       "applicability": "always",
       "quality_dimension": "CombinationOriginality"
     },
@@ -704,7 +704,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "可成像设计事实应占主体；段末一句 mood 可接受。分节+bullet 脚手架、独立 stance 段或 editorial 散文占相当篇幅时应 ≤0.5。",
+      "rule": "可成像设计事实应占主体；评论、姿态或品牌称谓占相当篇幅时降低。",
       "applicability": "always",
       "quality_dimension": "DesignSignalPurity"
     },
