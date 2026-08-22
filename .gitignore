@@ -4,6 +4,15 @@ node_modules/
 # Local / generated
 .tmp_plan_pdf/
 
+# workflow_0 model comparison runs (local only, not versioned)
+fashion_research_dir/workflow_0/BA/
+fashion_research_dir/workflow_0/Gemini/
+fashion_research_dir/workflow_0/Gimini-Thinking/
+fashion_research_dir/workflow_0/givenchy-springsummer-2019-original/
+fashion_research_dir/workflow_0/GPT/
+fashion_research_dir/workflow_0/Qwen/
+fashion_research_dir/workflow_0/Qwen-Thinking/
+
 # Python
 __pycache__/
 *.py[cod]
