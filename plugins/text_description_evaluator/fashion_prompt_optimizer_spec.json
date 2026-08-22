@@ -1,6 +1,6 @@
 {
   "name": "fashion_text_prompt_optimizer",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "input_type": "text_description",
   "output_type": [
     "optimized_prompt",
@@ -65,15 +65,15 @@
   },
   "quality_module_weights": {
     "DesignMerit": 10.0,
-    "ConcisenessAndDensity": 5.0,
-    "GenerationReadiness": 5.0,
+    "ConcisenessAndDensity": 3.0,
+    "GenerationReadiness": 3.0,
     "BindingAccuracy": 1.0,
     "LanguageClarity": 1.0,
     "StructuralClarity": 1.0
   },
   "score_composition": {
     "default_module_weight": 1.0,
-    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0 侧重造型是否有不可替换的设计想法（与规格完整度解耦）；ConcisenessAndDensity=5.0、GenerationReadiness=5.0 增强权重，其余模块统一 1.0。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
+    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0 侧重造型是否有不可替换的设计想法（与规格完整度解耦）；ConcisenessAndDensity=3.0、GenerationReadiness=3.0，其余模块统一 1.0。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
   },
   "coverage_modules": [
     {
@@ -251,8 +251,8 @@
       "description": "造型是否有不可替换的可见记忆点。规格写全不算独特。",
       "scoring_rubric": {
         "1.0": "≥2 个可成像锚点，且至少一处来自工艺路径、结构或非常规组合；换一件主干会改变造型身份。",
-        "0.75": "有一个非通用记忆点（具体工艺路径/非常规比例/非常规组合），足以从同类造型中认出。",
-        "0.5": "细节常规；或记忆点主要是品牌五金/finish 称谓，换品牌词后造型仍成立。",
+        "0.75": "换色/换料/换品牌词后仍能认出这一套；写全常规剪裁细节不等于 0.75。",
+        "0.5": "细节常规，或记忆点主要是品牌五金/finish 称谓；换品牌词后造型仍成立。",
         "0.25": "可互换套装：换颜色、面料或品牌词即可套用到另一套同品类组合。",
         "0.0": "只有品类堆叠，没有可成像的设计想法。"
       }
@@ -295,7 +295,7 @@
       "description": "可成像设计事实相对评论、姿态、品牌称谓的占比。",
       "scoring_rubric": {
         "1.0": "几乎全是可成像设计事实。",
-        "0.75": "设计事实为主；允许一句 mood/palette 收尾。",
+        "0.75": "设计事实为主；允许一句 mood 收尾。理由已写 mood/姿态稀释时用 0.5。",
         "0.5": "事实与评论/姿态/品牌称谓各占相当比重。",
         "0.25": "评论、场域、姿态或品牌称谓明显压过可见设计事实。",
         "0.0": "设计事实被叙述淹没。"

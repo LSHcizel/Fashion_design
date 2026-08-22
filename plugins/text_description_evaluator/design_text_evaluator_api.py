@@ -235,7 +235,7 @@ Judging principles:
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
-10. For DesignMerit, score the LOOK's design idea, not specification completeness (coverage already does that). High: a non-substitutable visible move (craft type+path, unusual proportion, trunk combination that would collapse if one piece were swapped). Low: an interchangeable kit whose identity is brand hardware, setting/mood talk, or a theme sentence. Ignore layout and T2I preamble.
+10. For DesignMerit, score the look's design idea, not how fully it is specified. One test: after swapping color, fabric, and brand words, does a visible move still identify this look? If yes → 0.75–1.0; if it remains the same silhouette family → 0.25–0.5. 0.75 is not a 'detailed description' score. If the reason says conventional, interchangeable, or mood-diluted, output 0.5. Ignore layout and T2I preamble.
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
 12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
@@ -498,12 +498,11 @@ Return format:
             )
             if module_name == "DesignMerit":
                 scale_rules += (
-                    "\nDesignMerit — judge the look's design idea, not how completely it is specified:\n"
-                    "- Completeness, length, and tidy garment lists are not high DesignMerit by themselves.\n"
-                    "- High: a visible move that identifies this look (craft type+path, unusual proportion, "
-                    "or a trunk combination that would collapse if one piece were swapped).\n"
-                    "- Low: interchangeable kit (same silhouette family with swapped color/fabric/brand words), "
-                    "brand-named hardware/finish as the signature, or mood/identity/pose commentary in place of a visual move.\n"
+                    "\nDesignMerit — one test, not completeness:\n"
+                    "After swapping color, fabric, and brand words, does a visible design move still identify this look "
+                    "(craft type+path, unusual proportion, or a trunk contrast that would collapse if one piece were swapped)?\n"
+                    "- Yes → 0.75 or 1.0. No (same silhouette family / standard tailoring / brand hardware as the signature / mood-theme sentences) → 0.25 or 0.5.\n"
+                    "0.75 is not a 'detailed specification' score. If the reason already says conventional, interchangeable, or mood-diluted, output 0.5, not 0.75.\n"
                 )
             elif module_name in ("ConcisenessAndDensity", "GenerationReadiness", "StructuralClarity"):
                 scale_rules += (
