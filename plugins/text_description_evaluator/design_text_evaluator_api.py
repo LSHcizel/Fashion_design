@@ -184,6 +184,46 @@ def _is_t2i_preamble(line: str) -> bool:
     return any(p.match(stripped) for p in _T2I_MANDATORY_PATTERNS)
 _SECTION_HEADER_RE = re.compile(r"^\s*\d+\.\s+The\s+", re.IGNORECASE)
 _LOOK_TITLE_RE = re.compile(r"^Look\s+\d+\s*:", re.IGNORECASE)
+_DESIGN_MERIT_SECTION_BLOCK_RE = re.compile(
+    r"^\s*\d+\.\s+The\s+(?:Outerwear|Foundation|Details|Finish)\b",
+    re.IGNORECASE | re.MULTILINE,
+)
+_DESIGN_MERIT_BULLET_RECAP_RE = re.compile(
+    r"^\s*[\*\-•]\s*(?:Key Structure|Material & Finish|Hardware Focus|Waist Treatment|Fit & Line|Top:|Bottom:|Shoe:)\b",
+    re.IGNORECASE | re.MULTILINE,
+)
+_DESIGN_MERIT_STANCE_BLOCK_RE = re.compile(
+    r"(?:Footwear\s*&\s*Stance|stance\s+should|model'?s?\s+stance)",
+    re.IGNORECASE,
+)
+_DESIGN_MERIT_ESSAY_BRIDGE_RE = re.compile(
+    r"\b(?:as if|suggesting|promenade|salon(?:\s+line)?|seaworthy|translate(?:s|d)?\s+.+\s+into|"
+    r"restoring|brand finish|modern luxury|private (?:thought|correspondence|message)|love letter|"
+    r"reads as|feels like|whispered|confession)\b",
+    re.IGNORECASE,
+)
+
+
+def summarize_design_merit_prose_signals(text: str) -> str:
+    """Summarize lookbook-template prose cues for DesignMerit judging (soft hint only)."""
+    raw = text or ""
+    signals: List[str] = []
+    section_blocks = len(_DESIGN_MERIT_SECTION_BLOCK_RE.findall(raw))
+    if section_blocks:
+        signals.append(f"numbered garment section blocks ({section_blocks})")
+    bullet_recaps = len(_DESIGN_MERIT_BULLET_RECAP_RE.findall(raw))
+    if bullet_recaps:
+        signals.append(f"bullet recap lists after sections ({bullet_recaps})")
+    if _DESIGN_MERIT_STANCE_BLOCK_RE.search(raw):
+        signals.append("model-direction / Footwear & Stance language")
+    essay_bridges = len(_DESIGN_MERIT_ESSAY_BRIDGE_RE.findall(raw))
+    if essay_bridges >= 2:
+        signals.append(f"editorial essay bridges between facts ({essay_bridges})")
+    elif essay_bridges == 1:
+        signals.append("one editorial essay bridge")
+    if not signals:
+        return "compact caption-style prose (no major template scaffolding detected)"
+    return "; ".join(signals)
 
 
 def strip_eval_boilerplate(text: str, *, preserve_structure: bool = False) -> str:
@@ -235,7 +275,7 @@ Judging principles:
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
-10. For DesignMerit, grade whether the text reads as dense runway caption prose: continuous visible observation, body-zone anchors, craft type+path, layering (worn open over/beneath). Lower when padded editorial template prose dominates—numbered sections, bullet recaps, essay bridges (as if/suggesting/promenade/salon/brand finish/stance should) between facts. One closing mood sentence is fine. Ignore T2I preamble.
+10. For DesignMerit, reward compact runway caption prose (single continuous block, body-zone anchors, craft type+path, worn open over/beneath). Lower lookbook-template prose: numbered garment sections, bullet recaps, editorial essay bridges, brand-symbol commentary, model-direction blocks. Do not give ≥0.75 on DesignMerit metrics when section blocks or bullet recaps scaffold the text. One closing mood sentence is fine. Ignore T2I preamble.
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
 12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
@@ -328,8 +368,22 @@ Return format:
         if not self.model:
             raise ValueError("Missing judge model. Set AI_API_MODEL/AI_MODEL or pass model explicitly.")
 
-    def judge_module(self, text_description: str, module_name: str, metric_specs: List[Dict], axis_name: str) -> Dict:
-        user_prompt = self._build_user_prompt(text_description, module_name, metric_specs, axis_name)
+    def judge_module(
+        self,
+        text_description: str,
+        module_name: str,
+        metric_specs: List[Dict],
+        axis_name: str,
+        *,
+        extra_guidance: str = "",
+    ) -> Dict:
+        user_prompt = self._build_user_prompt(
+            text_description,
+            module_name,
+            metric_specs,
+            axis_name,
+            extra_guidance=extra_guidance,
+        )
         raw_output = self._generate(self.DEFAULT_SYSTEM_PROMPT, user_prompt)
         parsed = self._parse_json(raw_output)
         return self._normalize_module_result(module_name, metric_specs, parsed, axis_name)
@@ -455,7 +509,15 @@ Return format:
             max_tokens=max_tokens,
         )
 
-    def _build_user_prompt(self, text_description: str, module_name: str, metric_specs: List[Dict], axis_name: str) -> str:
+    def _build_user_prompt(
+        self,
+        text_description: str,
+        module_name: str,
+        metric_specs: List[Dict],
+        axis_name: str,
+        *,
+        extra_guidance: str = "",
+    ) -> str:
         serialized_specs = json.dumps(metric_specs, ensure_ascii=False, indent=2)
         if axis_name == "quality_score":
             cap_line = (
@@ -476,13 +538,19 @@ Return format:
             )
             if module_name == "DesignMerit":
                 scale_rules += (
-                    "\nDesignMerit — caption prose quality (judge the text only):\n"
-                    "- Prefer: one continuous block; facts on body zones; craft type+path; worn open over/beneath; "
-                    "≤1 closing mood/contrast sentence.\n"
-                    "- Lower: numbered sections, bullet recaps, essay bridges "
-                    "(as if/suggesting/promenade/salon/seaworthy/translate into/brand finish/stance should), "
-                    "brand-symbol commentary without visible craft.\n"
+                    "\nDesignMerit — caption vs lookbook-template prose (judge the text only):\n"
+                    "- High (0.75–1.0): single continuous block; craft type+path on body zones; "
+                    "worn open over/beneath; ≤1 closing mood/contrast sentence; no section scaffolding.\n"
+                    "- Low (0.25–0.5): numbered garment sections (Outerwear/Foundation/Details/Finish), "
+                    "bullet recaps (Key Structure / Material & Finish / Hardware Focus), editorial bridges "
+                    "(as if/suggesting/promenade/salon/translate/restoring/brand finish/stance should), "
+                    "or brand-symbol details without craft path.\n"
+                    "- Do NOT award ≥0.75 on visual_observation_grounding or design_signal_purity when "
+                    "section blocks or bullet recaps are present.\n"
+                    "- Brand-named hardware/finish alone (Double C, Chanel/Givenchy finish) is not a design anchor.\n"
                 )
+                if extra_guidance:
+                    scale_rules += f"\nProse signals in this text: {extra_guidance}\n"
             elif module_name in ("ConcisenessAndDensity", "GenerationReadiness", "StructuralClarity"):
                 scale_rules += (
                     f"\n{module_name} module — T2I content priority (ignore layout):\n"
@@ -926,7 +994,18 @@ class DesignTextEvaluator:
             for module in self.spec[module_group]:
                 metric_specs = self._build_metric_specs(module["metrics"])
                 judge_text = design_merit_for_judge if module["name"] == "DesignMerit" else text_for_judge
-                module_output = self.judge.judge_module(judge_text, module["name"], metric_specs, axis_name)
+                extra_guidance = (
+                    summarize_design_merit_prose_signals(judge_text)
+                    if module["name"] == "DesignMerit"
+                    else ""
+                )
+                module_output = self.judge.judge_module(
+                    judge_text,
+                    module["name"],
+                    metric_specs,
+                    axis_name,
+                    extra_guidance=extra_guidance,
+                )
                 raw_module_outputs[module["name"]] = module_output
                 for result in module_output["results"]:
                     metric_name = result["metric"]

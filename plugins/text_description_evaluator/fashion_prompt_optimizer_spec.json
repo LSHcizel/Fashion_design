@@ -1,6 +1,6 @@
 {
   "name": "fashion_text_prompt_optimizer",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "input_type": "text_description",
   "output_type": [
     "optimized_prompt",
@@ -261,10 +261,10 @@
       "zh_name": "视觉观察锚定",
       "description": "prose 是否为连续可见观察的 runway caption，而非分节模板散文。",
       "scoring_rubric": {
-        "1.0": "连续观察句；多处部位锚定；叠搭用 worn open over/beneath 等可见语言；无中段 essay。",
-        "0.75": "主要结构有可见锚定；≤1 句轻量 mood/palette 收尾。",
-        "0.5": "观察与 essay/品牌评论混合；或有分节标题、要点 bullet 打断观察流。",
-        "0.25": "以 as if/promenade/salon/stance should/brand finish 等散文连接事实为主，部位锚定稀疏。",
+        "1.0": "连续观察句；多处部位锚定；叠搭用 worn open over/beneath 等可见语言；无中段 essay；无编号分节或 bullet 脚手架。",
+        "0.75": "主要结构有可见锚定；≤1 句轻量 mood/palette 收尾；**无**编号 garment 分节块或 bullet recap。",
+        "0.5": "观察与 essay/品牌评论混合；或有 1–2 处分节标题/bullet 打断观察流。",
+        "0.25": "编号 garment 分节（Outerwear/Foundation/Details/Finish）+ bullet recap 为主；或以 as if/promenade/salon/stance should/brand finish 等散文连接事实，部位锚定稀疏。",
         "0.0": "纯 editorial 叙事，无法对应可见造型。"
       }
     },
@@ -294,10 +294,10 @@
       "zh_name": "设计信号纯度",
       "description": "可成像设计事实相对 editorial/姿态/品牌散文的占比。",
       "scoring_rubric": {
-        "1.0": "几乎全是可成像设计事实，caption 式密度。",
-        "0.75": "设计事实为主；段末 ≤1 句 mood/palette 收尾。",
+        "1.0": "几乎全是可成像设计事实，caption 式密度；无分节脚手架。",
+        "0.75": "设计事实为主；段末 ≤1 句 mood/palette 收尾；**无**独立 Footwear & Stance / stance should 段。",
         "0.5": "事实与 essay/品牌/姿态指令各半；或分节+bullet 重复摘要稀释密度。",
-        "0.25": "essay/场域/stance/brand commentary 明显多于可见设计事实。",
+        "0.25": "essay/场域/stance/brand commentary 明显多于可见设计事实；或有独立姿态/stance 指令块。",
         "0.0": "设计事实被 editorial 淹没。"
       }
     }
@@ -668,7 +668,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "须有可成像的设计记忆点（工艺路径/结构/非常规组合）；纯品牌符号不算。",
+      "rule": "须有可成像的设计记忆点（工艺路径/结构/非常规组合）；纯品牌符号（Double C、Chanel finish 等）不算，不应 ≥0.75。",
       "applicability": "always",
       "quality_dimension": "DesignDistinctiveness"
     },
@@ -677,7 +677,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "须为连续可见观察、部位锚定、层次区分；非分节模板散文。",
+      "rule": "须为连续可见观察、部位锚定、层次区分。有编号 garment 分节或 bullet recap 时不应 ≥0.75。",
       "applicability": "always",
       "quality_dimension": "VisualGrounding"
     },
@@ -704,7 +704,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "可成像设计事实应占主体；段末一句 mood 可接受。editorial/姿态/品牌散文占相当篇幅时应低分。",
+      "rule": "可成像设计事实应占主体；段末一句 mood 可接受。分节+bullet 脚手架、独立 stance 段或 editorial 散文占相当篇幅时应 ≤0.5。",
       "applicability": "always",
       "quality_dimension": "DesignSignalPurity"
     },
