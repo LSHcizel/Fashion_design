@@ -1,6 +1,6 @@
 {
   "name": "fashion_text_prompt_optimizer",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "input_type": "text_description",
   "output_type": [
     "optimized_prompt",
@@ -73,7 +73,7 @@
   },
   "score_composition": {
     "default_module_weight": 1.0,
-    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0、ConcisenessAndDensity=5.0、GenerationReadiness=5.0 增强权重，其余模块统一 1.0。评分以生图内容价值为准：可见服装事实、工艺路径、层次与空间关系优先；不因段落/分节/列表等排版形态单独升降档。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
+    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0 侧重紧凑 caption prose；ConcisenessAndDensity=5.0、GenerationReadiness=5.0 增强权重，其余模块统一 1.0。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
   },
   "coverage_modules": [
     {
@@ -248,97 +248,57 @@
     },
     "DesignDistinctiveness": {
       "zh_name": "设计独特性",
-      "description": "看造型是否具备可记忆、非公式化的设计锚点，而非仅品类+颜色+材质或品牌符号的安全组合。",
-      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
-      "soft_rules": [
-        "优先识别「沿具体部位路径展开」的工艺/装饰锚点（如 appliqué/trim 沿 neckline、front edges、cuffs、hem、pocket edges 下行），而非仅列品类名。",
-        "逆解析偏好将异材质碰撞、非常规比例、强识别图案/印花、手工感肌理写清为记忆点（如 shaggy chevron、painterly scenic print、bold graphic stripes）。",
-        "结构亮点（boxy/oversized、及腰 cropped、dropped waist、深 V、asymmetric panels）若具造型主导性，可与工艺并列计为锚点。",
-        "金属扣、吊坠 pendant、链饰 chain 等若写清位置与视觉作用，可作辅助识别点；纯 gold-tone hardware 泛称加分有限。",
-        "参考语料：高分记忆点应能区分「这一件造型」，而非换色/换材质词即可套用的巡航公式组合。"
-      ],
+      "description": "是否有可成像、可区分的工艺/结构/组合记忆点，而非品牌符号或度假泛语言。",
       "scoring_rubric": {
-        "1.0": "至少两个清晰、非套路的设计锚点，且至少一个来自工艺、结构或非常规组合；纯品牌符号不算。",
+        "1.0": "≥2 个清晰锚点，至少一个来自工艺路径、结构或非常规组合；纯品牌符号不算。",
         "0.75": "一个明确、非公式化的记忆点（工艺/饰边/贴花/非常规比例），足以区分同类造型。",
-        "0.5": "细节偏常规奢华或度假语言，识别点弱。",
-        "0.25": "几乎全是可互换的巡航/度假公式，仅换材质或颜色词。",
-        "0.0": "纯品类堆叠或仅品牌符号（Double C、Chanel finish 等），换词即可套用。"
+        "0.5": "细节偏常规或仅有 hardware/refined finish 级泛称；品牌/度假评论代替工艺锚点。",
+        "0.25": "典型巡航公式，换材质或颜色词即可套用。",
+        "0.0": "纯品类堆叠或仅品牌符号（Double C、Chanel finish 等）。"
       }
     },
     "VisualGrounding": {
       "zh_name": "视觉观察锚定",
-      "description": "看描述是否像从可见造型观察而来，而非概念组装、主题散文或套路化生成 prose。",
-      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
-      "soft_rules": [
-        "逆解析正文按「主干单品 → 内外层次 → 下装/鞋配 → 造型配件」空间递进；符合此观察流的可倾向高分。",
-        "高分文本常见部位锚定：neckline/collar、shoulders、sleeves、waist、hem/length、center front、cuffs、pockets；应点名至少 3 类具体部位。",
-        "层次关系用 worn open over / beneath / underneath / partly obscured / visible at 等可见语言区分内外（语料约 77% 含叠搭表述）。",
-        "对不可见/不确定信息用 appears、could be、not confirmed 等诚实推断，或留给 uncertainty_notes；优于编造不可见细节。",
-        "段末 1 句 overall mood/palette 收尾在逆解析中常见（约 1/3），可接受；中段大量氛围/散文句仍应低分。"
-      ],
+      "description": "prose 是否为连续可见观察的 runway caption，而非分节模板散文。",
       "scoring_rubric": {
-        "1.0": "多处具体部位锚定，可见/不可见层次清楚，几乎无氛围/散文句，读感像秀场 caption。",
-        "0.75": "主要结构有可见锚定，概念句极少（≤1 处轻量）。",
-        "0.5": "观察与概念/氛围句混合；锚定尚可但工艺观察不足；或 ≥4 处氛围/散文句且工艺观察偏弱。",
-        "0.25": "以主题/氛围/salon/promenade/as if/suggesting 为主，且缺乏可见部位锚定；或仅有 layering/hem 等泛锚定而无任何具体工艺观察。",
-        "0.0": "纯概念叙事或套路化生成 prose，无法对应可见造型。"
+        "1.0": "连续观察句；多处部位锚定；叠搭用 worn open over/beneath 等可见语言；无中段 essay。",
+        "0.75": "主要结构有可见锚定；≤1 句轻量 mood/palette 收尾。",
+        "0.5": "观察与 essay/品牌评论混合；或有分节标题、要点 bullet 打断观察流。",
+        "0.25": "以 as if/promenade/salon/stance should/brand finish 等散文连接事实为主，部位锚定稀疏。",
+        "0.0": "纯 editorial 叙事，无法对应可见造型。"
       }
     },
     "CraftSalience": {
       "zh_name": "工艺装饰显著度",
-      "description": "看工艺、装饰、结构亮点是否被写清为造型主识别点，而非五金/装饰泛称。",
-      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
-      "soft_rules": [
-        "工艺/装饰须写清「类型 + 路径/位置 + 视觉作用」三要素，如 braid trim outlines front opening, cuffs, hem, and pocket edges。",
-        "逆解析偏好具体工艺词：appliqué、braid trim、fringe/feather-like trim、piping、embellishment、woven pattern、panel graphic、print placement。",
-        "当工艺为造型主识别点时，应在正文前 2/3 即展开，而非仅在段末一笔带过。",
-        "肌理 texture 若具识别性（shaggy、bouclé-like、openwork crochet、glossy leather-like）应连位置与作用一起写，而非单独形容词。",
-        "仅 refined finish / hardware / embellishment 泛称而不绑部位路径，低于逆解析参考水平。"
-      ],
+      "description": "工艺/装饰是否写清类型、部位路径与视觉作用，而非泛称。",
       "scoring_rubric": {
-        "1.0": "工艺/装饰的类型、具体位置与视觉作用均清晰，且为造型主识别点之一。",
+        "1.0": "工艺的类型、路径/位置与视觉作用均清晰，且为造型主识别点之一。",
         "0.75": "主要工艺点清楚，少量泛化。",
-        "0.5": "提到工艺但偏泛（明线 topstitching、五金 hardware、精致饰面 refined finish 等），难作生成锚点。",
+        "0.5": "提到工艺但偏泛（topstitching、hardware、refined finish），或工艺仅在 bullet 摘要中重复正文。",
         "0.25": "仅 embellishment/hardware 级泛称。",
-        "0.0": "应写工艺处完全缺失或空泛。"
+        "0.0": "应写工艺处完全缺失。"
       }
     },
     "CombinationOriginality": {
       "zh_name": "组合原创性",
-      "description": "看廓形、品类、鞋配组合是否超越常见公式模板。",
-      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
-      "soft_rules": [
-        "逆解析常以外穿 + 内搭 + 下装 + 包鞋配的完整四层组合描述造型；组合分看各层是否具体且互相塑造读感。",
-        "高分组合会用对比语言点明关系：structured vs sporty、voluminous outer vs flat graphic inner、monochrome vs multicolor accent。",
-        "即使品类偏常规，若叠搭逻辑具体（如 open coat frames burgundy dress with asymmetric white panels）仍可得中高分。",
-        "鞋、包、首饰若写入组合逻辑（echoing red embellishments、stripe palette contrast），视为组合的一部分而非孤立罗列。",
-        "按「换一件主干单品是否会改变整体读感」区分强弱，而非仅看是否奢华/度假公式。"
-      ],
+      "description": "组合关系是否用可见对比/叠搭写清，而非抽象公式或 translate-into 散文。",
       "scoring_rubric": {
-        "1.0": "组合高度具体且难预测，换一件主干单品会改变整体读感。",
-        "0.75": "组合有明确取向，但仍有部分常规元素。",
-        "0.5": "安全奢华组合，可预测；或叠搭略增趣但仍属度假公式。",
-        "0.25": "典型公式组合，可预测；或主干单品可互换而不改变整体读感。",
-        "0.0": "最常见巡航/工装模板拼接，多条造型间可互换主干。"
+        "1.0": "组合由具体可见对比定义（异料/异廓形/配色对撞有锚点），换一件主干会改变读感。",
+        "0.75": "组合取向明确，仍有部分常规元素。",
+        "0.5": "巡航公式，或 abstract translate/balance X into Y 无可见组合锚点。",
+        "0.25": "典型模板组合，主干可互换。",
+        "0.0": "最常见巡航/工装模板拼接。"
       }
     },
     "DesignSignalPurity": {
       "zh_name": "设计信号纯度",
-      "description": "看硬设计事实相对氛围、姿态、品牌评论/散文的占比。",
-      "reference_corpus": "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z（Chanel Pre-Summer 2027 逆解析 text_description，n≈79）",
-      "soft_rules": [
-        "逆解析正文以可成像设计事实为主：品类、廓形、材质线索、颜色、pattern、工艺位置、层次、配件位置。",
-        "Styling includes / carries / worn with 引导的配件与鞋履描述计为设计事实，不算氛围散文。",
-        "段末 1 句 overall mood / overall palette / giving the look a ... mood 在参考语料中可接受；≥2 句或中段反复氛围铺垫则降分。",
-        "不写品牌名、不编造不可见背面 / 隐藏门襟——违背逆解析「仅写可见支持」原则，亦稀释设计信号。",
-        "颜色写法偏好具体色名 + 作用（golden beige and dark flecks、wine red and crisp white accents），优于抽象奢华/度假评论。"
-      ],
+      "description": "可成像设计事实相对 editorial/姿态/品牌散文的占比。",
       "scoring_rubric": {
-        "1.0": "几乎全是可成像的设计事实，无氛围/姿态/身份评论散文。",
-        "0.75": "设计事实为主，氛围/姿态句 ≤1 句。",
-        "0.5": "设计与叙事各占一半；或 ≥3 处（≤4 处）氛围/姿态句；或重复氛围铺垫。",
-        "0.25": "≥4 处 salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition 类修辞稀释设计信号；或 ≥3 处且设计事实已明显不足。",
-        "0.0": "主要是评论/散文，设计事实被淹没。"
+        "1.0": "几乎全是可成像设计事实，caption 式密度。",
+        "0.75": "设计事实为主；段末 ≤1 句 mood/palette 收尾。",
+        "0.5": "事实与 essay/品牌/姿态指令各半；或分节+bullet 重复摘要稀释密度。",
+        "0.25": "essay/场域/stance/brand commentary 明显多于可见设计事实。",
+        "0.0": "设计事实被 editorial 淹没。"
       }
     }
   },
@@ -708,7 +668,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "须呈现可成像的设计记忆点（工艺/饰边/图案/非常规比例/结构）。**纯品牌符号不算**。有具体 trim/appliqué/图案/比例锚点 → ≥0.75；仅巡航公式且无工艺锚点 ≤0.5。不因开场套话 alone 封顶。",
+      "rule": "须有可成像的设计记忆点（工艺路径/结构/非常规组合）；纯品牌符号不算。",
       "applicability": "always",
       "quality_dimension": "DesignDistinctiveness"
     },
@@ -717,7 +677,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "须体现从**可见**造型读取的观察：部位锚定、层次区分、具体工艺。**纯概念/氛围组装无可见锚点 ≤0.25**。部位锚定 + worn open over/beneath + 工艺路径 → ≥0.75；段末 1 句 mood 不计入散文。**≤0.5（内容）**：姿态/走位/心理描写，或 salon/promenade 类抽象评论贯穿全文且削弱可见观察。**标准 T2I 开场白不计入**。",
+      "rule": "须为连续可见观察、部位锚定、层次区分；非分节模板散文。",
       "applicability": "always",
       "quality_dimension": "VisualGrounding"
     },
@@ -726,7 +686,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "当涉及工艺、装饰、结构亮点时，须写清类型、位置与视觉作用（如 appliqué 沿 neckline 下行、braid trim 沿 pocket/hem）。**仅 hardware/embellishment/topstitching/refined finish 泛称 ≤0.5**；应写工艺处完全缺失 **≤0.25**。",
+      "rule": "工艺/装饰须写清类型、部位路径与视觉作用；hardware/refined finish 泛称倾向低分。",
       "applicability": "when_craft_or_embellishment_is_salient",
       "quality_dimension": "CraftSalience"
     },
@@ -735,7 +695,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "上装廓形、下装品类、鞋型与配饰的组合须超出常见公式模板。主干单品可互换而不改变公式读感时酌情低分。",
+      "rule": "组合须用可见对比/叠搭写清；abstract translate/balance 无可见锚点倾向低分。",
       "applicability": "always",
       "quality_dimension": "CombinationOriginality"
     },
@@ -744,7 +704,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "有效**可成像**设计信息（品类/廓形/材质/颜色/工艺位置/层次/配件位置）应占主体。**≥4 处** salon/promenade/seaworthy/as if/suggesting/reads as/identity/transition **且可见设计事实不足**，封顶 0.25；≥3 处封顶 0.5。段末 1 句 mood/palette 可接受。**标准 T2I 开场白**（Please generate female models… / 请生成女模…）不计入稀释。",
+      "rule": "可成像设计事实应占主体；段末一句 mood 可接受。editorial/姿态/品牌散文占相当篇幅时应低分。",
       "applicability": "always",
       "quality_dimension": "DesignSignalPurity"
     },
@@ -753,7 +713,7 @@
       "source_keypoints": [
         31
       ],
-      "rule": "文本含造型气质/风格取向词即可（如 sporty-luxe、polished、cruise resort、tailored、artisanal）；逆解析 caption 中常见的 styling tone 或段末 mood 词可计为轻度命中，不要求单独声明 style goal。",
+      "rule": "文本含造型气质/风格取向词即可（如 sporty-luxe、polished、cruise resort、tailored、artisanal）；styling tone 或段末 mood 词可计为轻度命中，不要求单独声明 style goal。",
       "applicability": "when_style_goal_is_explicit"
     },
     "cultural_reference": {
@@ -777,7 +737,7 @@
       "source_keypoints": [
         34
       ],
-      "rule": "出现场景/系列/氛围叙事即可；逆解析 caption 段末 1 句 overall mood/palette/styling contrast 收尾可计为命中，不要求显式系列主题任务。",
+      "rule": "出现场景/系列/氛围叙事即可；段末 1 句 overall mood/palette/styling contrast 收尾可计为命中，不要求显式系列主题任务。",
       "applicability": "when_series_theme_is_known"
     },
     "brand_alignment": {

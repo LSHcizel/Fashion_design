@@ -77,6 +77,11 @@ def grpo_parallel_k_rewrite_config() -> Dict[str, Any]:
     return dict(grpo_config().get("parallel-k-rewrite") or {})
 
 
+def grpo_rewriter_llm_config() -> Dict[str, Any]:
+    """改写专用 vLLM / HF 权重（``grpo.rewriter-llm``）。"""
+    return dict(grpo_config().get("rewriter-llm") or {})
+
+
 def grpo_training_data_config() -> Dict[str, Any]:
     return dict(grpo_config().get("training-data") or {})
 
@@ -90,11 +95,24 @@ def grpo_hf_local_training_config() -> Dict[str, Any]:
 
 
 def default_hf_local_grpo_model() -> str:
-    """读取 ``fashion_config.yaml`` → ``grpo.hf-local-training.model``；缺省为 ``DEFAULT_HF_LOCAL_GRPO_MODEL``。"""
-    m = grpo_hf_local_training_config().get("model")
+    """SFT/GRPO 训练对象：``grpo.hf-local-training.model`` → ``grpo.rewriter-llm.model-path``。"""
+    hf = grpo_hf_local_training_config()
+    m = hf.get("model")
     if isinstance(m, str) and m.strip():
         return m.strip()
+    rw = grpo_rewriter_llm_config().get("model-path")
+    if isinstance(rw, str) and rw.strip():
+        return rw.strip()
     return DEFAULT_HF_LOCAL_GRPO_MODEL
+
+
+def default_hf_local_grpo_ref_model() -> str:
+    """GRPO KL 锚点：``grpo.hf-local-training.ref-model``，缺省同 ``default_hf_local_grpo_model()``。"""
+    hf = grpo_hf_local_training_config()
+    ref = hf.get("ref-model")
+    if isinstance(ref, str) and ref.strip():
+        return ref.strip()
+    return default_hf_local_grpo_model()
 
 
 def _yaml_opt_str(value: Any) -> Optional[str]:
@@ -130,10 +148,10 @@ APPLICABILITY_HINTS = {
     "when_spatial_relation_exists": "Only applicable when the text describes layering, front/back, inside/outside, attached position, crossing paths, or other explicit spatial relations.",
     "when_multiple_garments_exist": "Only applicable when the text includes multiple garments or multi-item relations.",
     "when_quantity_is_used": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
-    "when_style_goal_is_explicit": "Applicable when the text expresses aesthetic or style vocabulary—including styling tone, mood, or collection-context phrases common in inverse-parsed runway captions (e.g. sporty-luxe, polished, cruise resort).",
+    "when_style_goal_is_explicit": "Applicable when the text expresses aesthetic or style vocabulary—including styling tone, mood, or collection-context phrases (e.g. sporty-luxe, polished, cruise resort).",
     "when_reference_is_grounded": "Applicable when the text provides cultural, historical, or setting context that is self-contained in the prose (e.g. resort, Biarritz, workwear heritage)—external user background is not required.",
     "when_gender_expression_is_relevant": "Only applicable when the text explicitly mentions gender expression or androgyny.",
-    "when_series_theme_is_known": "Applicable when the text includes theme, setting, mood, or collection-context narrative—even a single closing overall mood/palette sentence in inverse-parsed captions counts.",
+    "when_series_theme_is_known": "Applicable when the text includes theme, setting, mood, or collection-context narrative—even a single closing overall mood/palette sentence counts.",
     "when_brand_goal_is_explicit": "Applicable when the text reflects brand-consistent craft, silhouette, or palette language—even without naming the brand or stating an explicit brand task.",
     "when_absence_is_important": "Only applicable when absence or exclusion of an element matters in the text.",
     "when_craft_or_embellishment_is_salient": "Only applicable when the text mentions or clearly implies craft, embellishment, trim, appliqué, braid, quilting, embroidery, deconstruction, patch decoration, or similar salient construction/detail—not mere generic hardware or finish words.",
@@ -168,8 +186,8 @@ _SECTION_HEADER_RE = re.compile(r"^\s*\d+\.\s+The\s+", re.IGNORECASE)
 _LOOK_TITLE_RE = re.compile(r"^Look\s+\d+\s*:", re.IGNORECASE)
 
 
-def strip_eval_boilerplate(text: str) -> str:
-    """Remove T2I boilerplate, titles, section headers, and key-element lists for judging."""
+def strip_eval_boilerplate(text: str, *, preserve_structure: bool = False) -> str:
+    """Remove T2I boilerplate, titles, and optionally section headers / key-element lists."""
     raw = (text or "").strip()
     if not raw:
         return ""
@@ -190,9 +208,9 @@ def strip_eval_boilerplate(text: str) -> str:
             continue
         if _LOOK_TITLE_RE.match(stripped):
             continue
-        if _SECTION_HEADER_RE.match(stripped):
+        if not preserve_structure and _SECTION_HEADER_RE.match(stripped):
             continue
-        if re.match(r"^\s*[\*\-•]\s+", line):
+        if not preserve_structure and re.match(r"^\s*[\*\-•]\s+", line):
             continue
         kept_lines.append(stripped)
 
@@ -217,7 +235,7 @@ Judging principles:
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
-10. For DesignMerit metrics, score by **imaging content value** only—never by paragraph/section/list layout or source/category. Reward visible garment facts, spatial layering (worn open over/beneath), and craft type+path+role; penalize abstract editorial/mood/identity prose that does not map to pixels. One closing mood/palette sentence is acceptable. Apply score caps in each metric rule.
+10. For DesignMerit, grade whether the text reads as dense runway caption prose: continuous visible observation, body-zone anchors, craft type+path, layering (worn open over/beneath). Lower when padded editorial template prose dominates—numbered sections, bullet recaps, essay bridges (as if/suggesting/promenade/salon/brand finish/stance should) between facts. One closing mood sentence is fine. Ignore T2I preamble.
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
 12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
@@ -440,10 +458,15 @@ Return format:
     def _build_user_prompt(self, text_description: str, module_name: str, metric_specs: List[Dict], axis_name: str) -> str:
         serialized_specs = json.dumps(metric_specs, ensure_ascii=False, indent=2)
         if axis_name == "quality_score":
+            cap_line = (
+                "- Also obey explicit score caps in each metric's rule field when present.\n"
+                if module_name != "DesignMerit"
+                else ""
+            )
             scale_rules = (
                 "Scoring scale for each quality metric:\n"
                 "- Use the metric-specific five-level rubric in quality_scoring_rubric as the first reference.\n"
-                "- Also obey explicit score caps in each metric's rule field (e.g. ≥4 mood/essay sentences → design_signal_purity ≤0.25; ≥3 → ≤0.5).\n"
+                f"{cap_line}"
                 "- 1.0 = near-perfect for that metric and quality dimension\n"
                 "- 0.75 = strong with only minor issues for that metric\n"
                 "- 0.5 = partially good but with clear room for improvement for that metric\n"
@@ -453,11 +476,12 @@ Return format:
             )
             if module_name == "DesignMerit":
                 scale_rules += (
-                    "\nDesignMerit module — imaging content for T2I (not layout):\n"
-                    "- REWARD: visible garment facts, worn open over/beneath layering, craft type+path+role, specific color/material on body zones.\n"
-                    "- PENALIZE: abstract editorial/identity/field commentary without visible anchors; brand symbols alone.\n"
-                    "- Concrete craft/trim anchors → design_distinctiveness ≥0.75 even with cruise trunk or 'runway look built around' opening.\n"
-                    "- Model pose/stance/psychology or abstract editorial dilutes visual grounding (NOT the standard Please generate… preamble).\n"
+                    "\nDesignMerit — caption prose quality (judge the text only):\n"
+                    "- Prefer: one continuous block; facts on body zones; craft type+path; worn open over/beneath; "
+                    "≤1 closing mood/contrast sentence.\n"
+                    "- Lower: numbered sections, bullet recaps, essay bridges "
+                    "(as if/suggesting/promenade/salon/seaworthy/translate into/brand finish/stance should), "
+                    "brand-symbol commentary without visible craft.\n"
                 )
             elif module_name in ("ConcisenessAndDensity", "GenerationReadiness", "StructuralClarity"):
                 scale_rules += (
@@ -884,7 +908,11 @@ class DesignTextEvaluator:
     ) -> Dict:
         raw_text = (text_description or "").strip()
         eval_prose = strip_eval_boilerplate(raw_text)
+        design_merit_text = strip_eval_boilerplate(raw_text, preserve_structure=True)
         text_for_judge = eval_prose if len(eval_prose) >= self.MIN_VALIDATED_TEXT_LENGTH else raw_text
+        design_merit_for_judge = (
+            design_merit_text if len(design_merit_text) >= self.MIN_VALIDATED_TEXT_LENGTH else raw_text
+        )
 
         metric_results = {}
         raw_module_outputs = {}
@@ -897,7 +925,8 @@ class DesignTextEvaluator:
             }[module_group]
             for module in self.spec[module_group]:
                 metric_specs = self._build_metric_specs(module["metrics"])
-                module_output = self.judge.judge_module(text_for_judge, module["name"], metric_specs, axis_name)
+                judge_text = design_merit_for_judge if module["name"] == "DesignMerit" else text_for_judge
+                module_output = self.judge.judge_module(judge_text, module["name"], metric_specs, axis_name)
                 raw_module_outputs[module["name"]] = module_output
                 for result in module_output["results"]:
                     metric_name = result["metric"]
@@ -1145,12 +1174,20 @@ class DesignTextEvaluator:
                         "quality_scoring_rubric": dimension_cfg.get("scoring_rubric", {}),
                     }
                 )
-                soft_rules = dimension_cfg.get("soft_rules")
-                if soft_rules:
-                    metric_spec["soft_rules"] = soft_rules
-                reference_corpus = dimension_cfg.get("reference_corpus")
-                if reference_corpus:
-                    metric_spec["reference_corpus"] = reference_corpus
+                # DesignMerit: style preference lives in module prompt + rubric; omit soft_rules/corpus noise.
+                if dimension_key not in (
+                    "DesignDistinctiveness",
+                    "VisualGrounding",
+                    "CraftSalience",
+                    "CombinationOriginality",
+                    "DesignSignalPurity",
+                ):
+                    soft_rules = dimension_cfg.get("soft_rules")
+                    if soft_rules:
+                        metric_spec["soft_rules"] = soft_rules
+                    reference_corpus = dimension_cfg.get("reference_corpus")
+                    if reference_corpus:
+                        metric_spec["reference_corpus"] = reference_corpus
             metric_specs.append(metric_spec)
         return metric_specs
 

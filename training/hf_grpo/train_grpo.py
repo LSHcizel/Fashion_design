@@ -17,7 +17,10 @@ from transformers import (
     TrainingArguments,
 )
 
-from plugins.text_description_evaluator.design_text_evaluator_api import default_hf_local_grpo_model
+from plugins.text_description_evaluator.design_text_evaluator_api import (
+    default_hf_local_grpo_model,
+    default_hf_local_grpo_ref_model,
+)
 
 from .data import completion_token_start, load_phase_b_rows, messages_from_phase_b_row, render_chat_text
 from .modeling import grpo_loss, sequence_completion_log_probs
@@ -165,8 +168,7 @@ def main() -> None:
         type=str,
         default="",
         help=(
-            "冻结参考策略 π_ref（KL 锚点）。留空时与初始化时的 --model 同源路径各加载一份。"
-            "推荐流水线：与 SFT 前的基座相同，例如 run_recommended_training.py 传入的 --base-model。"
+            "冻结参考策略 π_ref（KL 锚点）。留空时读 grpo.hf-local-training.ref-model（改写器训练前快照）。"
         ),
     )
     p.add_argument("--out", type=Path, required=True)
@@ -209,7 +211,7 @@ def main() -> None:
     if hasattr(policy.config, "use_cache"):
         policy.config.use_cache = False
 
-    ref_path = args.ref_model.strip() or model_id
+    ref_path = args.ref_model.strip() or default_hf_local_grpo_ref_model()
     ref = AutoModelForCausalLM.from_pretrained(ref_path, **common_kw)
     ref.requires_grad_(False)
     ref.eval()

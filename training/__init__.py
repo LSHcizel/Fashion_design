@@ -2,7 +2,7 @@
 训练过程数据目录（《改进方案》第 4 步）。
 
 - **runs/**：路径由 ``fashion_config.yaml`` 的 ``grpo.training-data.runs-dir`` 控制，默认 ``training/runs``。
-- **hf_grpo/**：可选依赖（PyTorch / transformers）下对 ``phase_a_sft.jsonl``、``phase_b_grpo.jsonl`` 做 **SFT** 与 **GRPO**；见 ``pip install -r training/hf_grpo/requirements.txt``。
+- **hf_grpo/**：可选依赖（PyTorch / transformers）下对 ``phase_a_sft.jsonl``、``phase_b_grpo.jsonl`` 做 **SFT** 与 **GRPO**（仅更新 ``grpo.rewriter-llm`` 改写器权重；基座 judge 冻结）；见 ``pip install -r training/hf_grpo/requirements.txt``。
 - 使用 ``TrainingRunLogger`` 追加记录；使用 ``record_builder.summarize_jsonl_file`` 做离线汇总。
 
 **第 5 步（阶段 A / B）**：``grpo_pipeline.export_two_phase_from_samples`` 从 ``samples.jsonl`` 生成

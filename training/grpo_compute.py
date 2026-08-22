@@ -175,6 +175,8 @@ def build_group_training_rows(
                 "old_policy_mean_logprob": rr_mean_lp,
             },
             "gates_compact": rec.get("gates_compact"),
+            "scores_compact": rec.get("scores_compact"),
+            "penalties": rec.get("penalties"),
             "r_content": rec.get("r_content"),
             "training_filter": rec.get("training_filter"),
             "kl_constraint": {

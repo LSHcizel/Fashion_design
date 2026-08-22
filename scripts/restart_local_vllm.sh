@@ -1,29 +1,39 @@
 #!/usr/bin/env bash
-# 停止并重启本地 vLLM（Qwen2.5-7B-Instruct；读取 fashion_config.yaml → local-llm）
-# 用法: bash scripts/restart_local_vllm.sh
-#       VLLM_GPU=2 bash scripts/restart_local_vllm.sh   # 指定空闲 GPU（推荐避开已占显存的卡）
+# 停止并重启本地 vLLM（读取 fashion_config.yaml）
+# 基座（生成+评判）: VLLM_GPU=0 bash scripts/restart_local_vllm.sh
+# 改写器（K 路改写）: VLLM_GPU=1 VLLM_PROFILE=rewriter bash scripts/restart_local_vllm.sh
+# 双实例: bash scripts/restart_local_vllm.sh && VLLM_PROFILE=rewriter VLLM_GPU=1 bash scripts/restart_local_vllm.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-read -r MODEL MODEL_PATH API_BASE MAX_LEN_CFG <<< "$(python - <<'PY'
+PROFILE="${VLLM_PROFILE:-base}"
+
+read -r MODEL MODEL_PATH PORT MAX_LEN_CFG <<< "$(python - <<PY
 import yaml
 from pathlib import Path
 from urllib.parse import urlparse
 
+profile = "${PROFILE}"
 cfg = yaml.safe_load(Path("fashion_config.yaml").read_text(encoding="utf-8")) or {}
-llm = cfg.get("local-llm") or {}
-api_base = (llm.get("api-base") or "http://127.0.0.1:8000/v1").rstrip("/")
+if profile == "rewriter":
+    llm = (cfg.get("grpo") or {}).get("rewriter-llm") or {}
+    default_model = "Qwen2.5-7B-Rewriter"
+    default_path = "models/Qwen2.5-7B-Rewriter"
+    default_port = 8001
+else:
+    llm = cfg.get("local-llm") or {}
+    default_model = "Qwen2.5-7B-Instruct"
+    default_path = "models/Qwen2.5-7B-Instruct"
+    default_port = 8000
+api_base = (llm.get("api-base") or f"http://127.0.0.1:{default_port}/v1").rstrip("/")
 parsed = urlparse(api_base)
-port = parsed.port or (443 if parsed.scheme == "https" else 80)
+port = parsed.port or (443 if parsed.scheme == "https" else default_port)
 max_len = llm.get("max-model-len", 8192)
-print(llm.get("model", "Qwen2.5-7B-Instruct"), llm.get("model-path", "models/Qwen2.5-7B-Instruct"), port, max_len)
+print(llm.get("model", default_model), llm.get("model-path", default_path), port, max_len)
 PY
 )"
-
-HOST="${VLLM_HOST:-127.0.0.1}"
-PORT="${VLLM_PORT:-$API_BASE}"
 
 pick_freest_gpu() {
   nvidia-smi --query-gpu=index,memory.free --format=csv,noheader,nounits 2>/dev/null \
@@ -48,8 +58,11 @@ if [ -z "${PYTHON:-}" ]; then
     PYTHON="python"
   fi
 fi
+HOST="${VLLM_HOST:-127.0.0.1}"
+PORT="${VLLM_PORT:-$PORT}"
 LOG_DIR="${ROOT}/logs"
-LOG_FILE="${LOG_DIR}/vllm.log"
+LOG_FILE="${LOG_DIR}/vllm_${PROFILE}.log"
+PID_FILE="${LOG_DIR}/vllm_${PROFILE}.pid"
 DTYPE="${VLLM_DTYPE:-bfloat16}"
 MAX_LEN="${VLLM_MAX_MODEL_LEN:-$MAX_LEN_CFG}"
 GPU_MEM_UTIL="${VLLM_GPU_MEMORY_UTILIZATION:-0.85}"
@@ -83,13 +96,15 @@ if command -v nvidia-smi >/dev/null 2>&1; then
   show_gpu_pids
 fi
 
-echo "[1/6] 停止旧 vLLM 进程 (port=${PORT})..."
+echo "[1/6] 停止旧 vLLM 进程 (profile=${PROFILE}, port=${PORT})..."
 if command -v fuser >/dev/null 2>&1; then
   fuser -k "${PORT}/tcp" 2>/dev/null || true
 fi
-pkill -9 -f "vllm.entrypoints.openai.api_server" 2>/dev/null || true
-pkill -9 -f "vllm.v1.engine" 2>/dev/null || true
-pkill -9 -f "EngineCore" 2>/dev/null || true
+if [ "$PROFILE" = "base" ]; then
+  pkill -9 -f "vllm.entrypoints.openai.api_server" 2>/dev/null || true
+  pkill -9 -f "vllm.v1.engine" 2>/dev/null || true
+  pkill -9 -f "EngineCore" 2>/dev/null || true
+fi
 sleep 3
 
 if command -v nvidia-smi >/dev/null 2>&1; then
@@ -135,7 +150,7 @@ if [ "$ENFORCE_EAGER" = "1" ]; then
   EXTRA_ARGS+=(--enforce-eager)
 fi
 
-echo "[3/6] 启动 vLLM"
+echo "[3/6] 启动 vLLM (profile=${PROFILE})"
 echo "  python=${PYTHON}"
 echo "  model=${MODEL} path=${MODEL_PATH} port=${PORT} gpu=${GPU}"
 echo "  max_len=${MAX_LEN} gpu_mem=${GPU_MEM_UTIL} enforce_eager=${ENFORCE_EAGER}"
@@ -150,7 +165,7 @@ CUDA_VISIBLE_DEVICES="$GPU" nohup "$PYTHON" -m vllm.entrypoints.openai.api_serve
   --gpu-memory-utilization "$GPU_MEM_UTIL" \
   "${EXTRA_ARGS[@]}" \
   >> "$LOG_FILE" 2>&1 &
-echo $! > "${LOG_DIR}/vllm.pid"
+echo $! > "$PID_FILE"
 
 echo "[4/6] 等待服务就绪 (最多 180s)..."
 for i in $(seq 1 90); do

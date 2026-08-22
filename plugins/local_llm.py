@@ -1,10 +1,9 @@
 """
 本地 OpenAI 兼容推理（vLLM 等）配置与路由。
 
-``fashion_config.yaml`` → ``local-llm:`` 段可控制：
-- 主 workflow 文本生成
-- K 路改写生成与候选评判
-- workflow ``text-evaluator`` 评判
+``fashion_config.yaml`` 双模型约定：
+- ``local-llm:`` — **基座 7B**：workflow 生成 + 评判（权重冻结）
+- ``grpo.rewriter-llm:`` — **改写器 7B**：K 路改写 + SFT/GRPO 训练对象
 
 多模态 vision（reflection / 图片逆解析）仍走远程 API。
 """
@@ -33,6 +32,49 @@ def _load_fashion_config() -> Dict[str, Any]:
 
 def local_llm_config() -> Dict[str, Any]:
     return dict(_load_fashion_config().get("local-llm") or {})
+
+
+def rewriter_llm_config() -> Dict[str, Any]:
+    """``grpo.rewriter-llm`` — 改写专用 vLLM / HF 权重。"""
+    grpo = _load_fashion_config().get("grpo") or {}
+    return dict(grpo.get("rewriter-llm") or {})
+
+
+def rewriter_llm_enabled() -> bool:
+    return bool(rewriter_llm_config().get("enabled", True))
+
+
+def resolve_local_rewriter_endpoint() -> Optional[Dict[str, Any]]:
+    """解析改写器 vLLM 端点；未启用时返回 None。"""
+    if not rewriter_llm_enabled():
+        return None
+    cfg = rewriter_llm_config()
+    api_base = (
+        _opt_str(os.environ.get("REWRITER_LLM_API_BASE"))
+        or _opt_str(cfg.get("api-base"))
+    )
+    api_key = (
+        _opt_str(os.environ.get("REWRITER_LLM_API_KEY"))
+        or _opt_str(cfg.get("api-key"))
+        or "local"
+    )
+    model = (
+        _opt_str(os.environ.get("REWRITER_LLM_MODEL"))
+        or _opt_str(cfg.get("model"))
+    )
+    if not api_base or not model:
+        return None
+    timeout = int(cfg.get("timeout", 300))
+    max_tokens = int(cfg.get("max-tokens", 2048))
+    verify_ssl = bool(cfg.get("verify-ssl", False))
+    return {
+        "api_base": api_base.rstrip("/"),
+        "api_key": api_key,
+        "model": model,
+        "timeout": timeout,
+        "max_tokens": max_tokens,
+        "verify_ssl": verify_ssl,
+    }
 
 
 def local_llm_enabled() -> bool:
@@ -94,8 +136,12 @@ def use_local_for_parallel_k_rewrite() -> bool:
     cfg = local_llm_config()
     pk = (_load_fashion_config().get("grpo") or {}).get("parallel-k-rewrite") or {}
     if "use-local-rewrite" in pk:
-        return bool(pk["use-local-rewrite"])
-    return local_llm_enabled() and bool(cfg.get("use-for-parallel-k-rewrite", True))
+        if not bool(pk["use-local-rewrite"]):
+            return False
+        return rewriter_llm_enabled() and resolve_local_rewriter_endpoint() is not None
+    if rewriter_llm_enabled() and resolve_local_rewriter_endpoint():
+        return True
+    return local_llm_enabled() and bool(cfg.get("use-for-parallel-k-rewrite", False))
 
 
 def use_local_for_candidate_evaluation() -> bool:
@@ -235,7 +281,7 @@ class HybridGenerationJudge:
 
 
 def build_local_api_judge(**overrides: Any) -> Any:
-    """构造指向本地 vLLM 的 ``ApiLLMJudge``。"""
+    """构造指向**基座** local-llm vLLM 的 ``ApiLLMJudge``（生成 / 评判）。"""
     from .text_description_evaluator.design_text_evaluator_api import ApiLLMJudge
 
     ep = resolve_local_llm_endpoint()
@@ -256,6 +302,28 @@ def build_local_api_judge(**overrides: Any) -> Any:
     return ApiLLMJudge(**defaults)
 
 
+def build_local_rewriter_api_judge(**overrides: Any) -> Any:
+    """构造指向**改写器** grpo.rewriter-llm vLLM 的 ``ApiLLMJudge``。"""
+    from .text_description_evaluator.design_text_evaluator_api import ApiLLMJudge
+
+    ep = resolve_local_rewriter_endpoint()
+    if not ep:
+        raise RuntimeError("grpo.rewriter-llm 未启用或未配置 api-base / model")
+
+    pk = (_load_fashion_config().get("grpo") or {}).get("parallel-k-rewrite") or {}
+    defaults: Dict[str, Any] = {
+        "api_key": ep["api_key"],
+        "api_base": ep["api_base"],
+        "model": ep["model"],
+        "temperature": float(pk.get("rewrite-temperature", 0.3)),
+        "max_tokens": int(pk.get("rewrite-max-tokens", ep["max_tokens"])),
+        "timeout": int(pk.get("rewrite-timeout", ep["timeout"])),
+        "verify_ssl": ep["verify_ssl"],
+    }
+    defaults.update(overrides)
+    return ApiLLMJudge(**defaults)
+
+
 def _explicit_api_overrides(
     *,
     api_key: Optional[str],
@@ -266,31 +334,30 @@ def _explicit_api_overrides(
 
 
 def build_parallel_k_evaluator() -> Any:
-    """K 路改写：生成 / 候选评判按 ``local-llm`` 与 ``parallel-k-rewrite`` 路由。"""
+    """K 路改写：改写 → rewriter-llm；评判 → local-llm 基座（冻结）。"""
     from .text_description_evaluator.design_text_evaluator_api import DesignTextEvaluator
 
     evaluator = DesignTextEvaluator()
-    if not local_llm_enabled() or not resolve_local_llm_endpoint():
-        return evaluator
+    pk = (_load_fashion_config().get("grpo") or {}).get("parallel-k-rewrite") or {}
 
     use_rewrite = use_local_for_parallel_k_rewrite()
     use_eval = use_local_for_candidate_evaluation()
+
     if not use_rewrite and not use_eval:
         return evaluator
 
     api_judge = evaluator.judge
-    pk = (_load_fashion_config().get("grpo") or {}).get("parallel-k-rewrite") or {}
 
     rewrite_judge = (
-        build_local_api_judge(
-            temperature=float(pk.get("rewrite-temperature", 0.3)),
-            max_tokens=int(pk.get("rewrite-max-tokens", resolve_local_llm_endpoint()["max_tokens"])),
-            timeout=int(pk.get("rewrite-timeout", resolve_local_llm_endpoint()["timeout"])),
-        )
+        build_local_rewriter_api_judge()
         if use_rewrite
         else api_judge
     )
-    eval_judge = build_local_api_judge() if use_eval else api_judge
+    eval_judge = (
+        build_local_api_judge()
+        if use_eval and local_llm_enabled() and resolve_local_llm_endpoint()
+        else api_judge
+    )
 
     if rewrite_judge is eval_judge:
         evaluator.judge = rewrite_judge

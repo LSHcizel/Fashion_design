@@ -8,16 +8,22 @@
     # 全量（WGSN 79 条 + workflow 8 条 = 87 条）
     python scripts/run_wgsn_inverse_batch_eval.py
 
-    # 先试 3 条（仅 WGSN 前 3 条）
-    python scripts/run_wgsn_inverse_batch_eval.py --limit 3
+    # 仅逆解析 md
+    python scripts/run_wgsn_inverse_batch_eval.py --sources inverse
 
-    # 不含 workflow 八张描述
-    python scripts/run_wgsn_inverse_batch_eval.py --no-workflow-extra
+    # 仅 workflow look 描述（生成图文本）
+    python scripts/run_wgsn_inverse_batch_eval.py --sources workflow
+
+    # 各跑 1 条对比（逆解析 1 + workflow 1）
+    python scripts/run_wgsn_inverse_batch_eval.py --sources both --limit-inverse 1 --limit-workflow 1
 
     # 指定目录与输出
     python scripts/run_wgsn_inverse_batch_eval.py \\
       --inverse-dir fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z \\
       --out-dir fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/eval_local_qwen3b_20260809
+
+    # 兼容旧参数：等价于 --sources inverse
+    python scripts/run_wgsn_inverse_batch_eval.py --no-workflow-extra
 """
 
 from __future__ import annotations
@@ -110,14 +116,29 @@ def iter_workflow_look_candidates(workflow_dir: Path) -> Iterable[EvalCandidate]
 
 
 def collect_candidates(
-    inverse_dir: Path,
+    inverse_dir: Path | None,
     workflow_extra_dir: Path | None,
     *,
-    include_workflow_extra: bool,
+    include_inverse: bool,
+    include_workflow: bool,
+    limit_inverse: int = -1,
+    limit_workflow: int = -1,
 ) -> List[EvalCandidate]:
-    candidates = list(iter_inverse_candidates(inverse_dir))
-    if include_workflow_extra and workflow_extra_dir is not None:
-        candidates.extend(iter_workflow_look_candidates(workflow_extra_dir))
+    candidates: List[EvalCandidate] = []
+    if include_inverse:
+        if inverse_dir is None:
+            raise ValueError("include_inverse 需要 inverse_dir")
+        inverse_list = list(iter_inverse_candidates(inverse_dir))
+        if limit_inverse >= 0:
+            inverse_list = inverse_list[: max(0, limit_inverse)]
+        candidates.extend(inverse_list)
+    if include_workflow:
+        if workflow_extra_dir is None:
+            raise ValueError("include_workflow 需要 workflow_extra_dir")
+        workflow_list = list(iter_workflow_look_candidates(workflow_extra_dir))
+        if limit_workflow >= 0:
+            workflow_list = workflow_list[: max(0, limit_workflow)]
+        candidates.extend(workflow_list)
     return candidates
 
 
@@ -134,21 +155,50 @@ def candidate_extra_fields(candidate: EvalCandidate) -> dict:
     return extra
 
 
+def resolve_path(path: Path) -> Path:
+    if not path.is_absolute():
+        path = REPO_ROOT / path
+    return path.resolve()
+
+
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="WGSN 逆解析 text_description 批量评分（local-llm）")
+    p = argparse.ArgumentParser(description="WGSN 逆解析 / workflow look 文本批量评分（local-llm）")
+    p.add_argument(
+        "--sources",
+        choices=("inverse", "workflow", "both"),
+        default="both",
+        help="评分来源：inverse=*_text_description.md；workflow=chapter_*/look_*.txt；both=两者（默认）",
+    )
     p.add_argument(
         "--inverse-dir",
         type=Path,
         default=DEFAULT_INVERSE_DIR,
-        help=f"逆解析输出目录（默认 {DEFAULT_INVERSE_DIR.relative_to(REPO_ROOT).as_posix()}）",
+        help=f"逆解析 md 目录（--sources inverse|both 时必需；默认 {DEFAULT_INVERSE_DIR.relative_to(REPO_ROOT).as_posix()}）",
     )
     p.add_argument(
         "--out-dir",
         type=Path,
         default=None,
-        help="评分产物目录；默认在 inverse-dir 下 eval_local_<UTC>",
+        help="评分产物目录；默认在输入目录下 eval_local_<UTC>",
     )
-    p.add_argument("--limit", type=int, default=-1, help="最多处理 N 条；-1 表示全量")
+    p.add_argument(
+        "--limit",
+        type=int,
+        default=-1,
+        help="合并列表后最多 N 条（-1 全量）；在 --limit-inverse/--limit-workflow 之后生效",
+    )
+    p.add_argument(
+        "--limit-inverse",
+        type=int,
+        default=-1,
+        help="逆解析 md 最多 N 条（-1 全量；仅 --sources inverse|both 时有效）",
+    )
+    p.add_argument(
+        "--limit-workflow",
+        type=int,
+        default=-1,
+        help="workflow look 最多 N 条（-1 全量；仅 --sources workflow|both 时有效）",
+    )
     p.add_argument(
         "--skip-if-exists",
         action="store_true",
@@ -164,14 +214,14 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_WORKFLOW_EXTRA_DIR,
         help=(
-            "追加评分的 workflow 目录（默认含 chapter_*/look_*.txt；"
+            "workflow look 目录（--sources workflow|both 时必需；默认 "
             f"{DEFAULT_WORKFLOW_EXTRA_DIR.relative_to(REPO_ROOT).as_posix()}）"
         ),
     )
     p.add_argument(
         "--no-workflow-extra",
         action="store_true",
-        help="不追加 workflow 目录下的 look 描述（默认会追加 8 条）",
+        help="等价于 --sources inverse（保留兼容）",
     )
     return p.parse_args()
 
@@ -181,20 +231,29 @@ def main() -> None:
     logger = logging.getLogger(__name__)
     args = parse_args()
 
-    inverse_dir = args.inverse_dir
-    if not inverse_dir.is_absolute():
-        inverse_dir = REPO_ROOT / inverse_dir
-    inverse_dir = inverse_dir.resolve()
-    if not inverse_dir.is_dir():
-        raise SystemExit(f"找不到逆解析目录：{inverse_dir}")
+    sources = "inverse" if args.no_workflow_extra else args.sources
+    include_inverse = sources in ("inverse", "both")
+    include_workflow = sources in ("workflow", "both")
+
+    inverse_dir: Path | None = None
+    if include_inverse:
+        inverse_dir = resolve_path(args.inverse_dir)
+        if not inverse_dir.is_dir():
+            raise SystemExit(f"找不到逆解析目录：{inverse_dir}")
+
+    workflow_extra_dir: Path | None = None
+    if include_workflow:
+        workflow_extra_dir = resolve_path(args.workflow_extra_dir)
+        if not workflow_extra_dir.is_dir():
+            raise SystemExit(f"找不到 workflow 目录：{workflow_extra_dir}")
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_dir = args.out_dir
     if out_dir is None:
-        out_dir = inverse_dir / f"eval_local_{stamp}"
-    elif not out_dir.is_absolute():
-        out_dir = REPO_ROOT / out_dir
-    out_dir = out_dir.resolve()
+        base = inverse_dir if include_inverse else workflow_extra_dir
+        out_dir = base / f"eval_local_{stamp}"  # type: ignore[operator]
+    else:
+        out_dir = resolve_path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     ep = resolve_local_llm_endpoint()
@@ -204,34 +263,30 @@ def main() -> None:
             "且 vLLM 已在 api-base 地址运行。"
         )
 
-    include_workflow_extra = not args.no_workflow_extra
-    workflow_extra_dir = args.workflow_extra_dir
-    if not workflow_extra_dir.is_absolute():
-        workflow_extra_dir = REPO_ROOT / workflow_extra_dir
-    workflow_extra_dir = workflow_extra_dir.resolve()
-    if include_workflow_extra and not workflow_extra_dir.is_dir():
-        logger.warning("找不到 workflow 追加目录，将仅评 WGSN：%s", workflow_extra_dir)
-        include_workflow_extra = False
-        workflow_extra_dir = None
-
     candidates = collect_candidates(
         inverse_dir,
-        workflow_extra_dir if include_workflow_extra else None,
-        include_workflow_extra=include_workflow_extra,
+        workflow_extra_dir,
+        include_inverse=include_inverse,
+        include_workflow=include_workflow,
+        limit_inverse=args.limit_inverse,
+        limit_workflow=args.limit_workflow,
     )
-    if not candidates:
-        raise SystemExit(f"没有可评分的文本：{inverse_dir}")
     if args.limit >= 0:
         candidates = candidates[: max(0, args.limit)]
+    if not candidates:
+        raise SystemExit(
+            f"没有可评分的文本（sources={sources}，inverse={inverse_dir}，workflow={workflow_extra_dir}）"
+        )
 
     workflow_count = sum(1 for c in candidates if c.source_kind == "workflow_txt")
     inverse_count = len(candidates) - workflow_count
 
     evaluator = build_workflow_text_evaluator()
     logger.info(
-        "逆解析目录=%s | workflow追加=%s | 输出=%s | 待评 %d 条（WGSN %d + workflow %d）| judge=%s @ %s",
-        inverse_dir,
-        workflow_extra_dir if include_workflow_extra else "(disabled)",
+        "sources=%s | 逆解析目录=%s | workflow目录=%s | 输出=%s | 待评 %d 条（inverse %d + workflow %d）| judge=%s @ %s",
+        sources,
+        inverse_dir if include_inverse else "(disabled)",
+        workflow_extra_dir if include_workflow else "(disabled)",
         out_dir,
         len(candidates),
         inverse_count,
@@ -241,9 +296,11 @@ def main() -> None:
     )
 
     run_meta = {
-        "inverse_dir": str(inverse_dir),
-        "workflow_extra_dir": str(workflow_extra_dir) if include_workflow_extra else None,
-        "include_workflow_extra": include_workflow_extra,
+        "sources": sources,
+        "inverse_dir": str(inverse_dir) if include_inverse else None,
+        "workflow_extra_dir": str(workflow_extra_dir) if include_workflow else None,
+        "limit_inverse": args.limit_inverse if include_inverse else None,
+        "limit_workflow": args.limit_workflow if include_workflow else None,
         "out_dir": str(out_dir),
         "judge_model": ep["model"],
         "judge_api_base": ep["api_base"],

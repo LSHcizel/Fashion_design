@@ -2,7 +2,7 @@
 推荐训练顺序（编排执行）：
 
 1. **SFT**（``train_sft.py``）：基座模型 + ``phase_a_sft.jsonl`` → 写入 ``<work-dir>/sft/``。
-2. **GRPO**（``train_grpo.py``）：**policy** = 上一步 SFT 目录，**ref** = 与 SFT 相同的**基座**（KL 锚点），数据 ``phase_b_grpo.jsonl`` → 写入 ``<work-dir>/grpo/``。
+2. **GRPO**（``train_grpo.py``）：**policy** = 上一步 SFT 目录，**ref** = ``grpo.hf-local-training.ref-model``（改写器训练前快照），数据 ``phase_b_grpo.jsonl`` → 写入 ``<work-dir>/grpo/``。
 
 SFT 默认启用 **训练 loss（EMA）平台早停**（见 ``train_sft.py``），满足「连续若干次 log 未显著下降」则结束 SFT 并开始 GRPO；可用 ``--sft-no-early-stop`` 关闭。
 
@@ -40,7 +40,7 @@ def _run(cmd: Sequence[str], *, dry_run: bool) -> None:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(
-        description="按推荐顺序执行 SFT → GRPO（policy=SFT 输出，ref=基座）",
+        description="按推荐顺序执行 SFT → GRPO（policy=改写器 SFT 输出，ref=hf-local-training.ref-model）",
     )
     p.add_argument("--phase-a", type=Path, required=True, help="phase_a_sft.jsonl")
     p.add_argument("--phase-b", type=Path, required=True, help="phase_b_grpo.jsonl")
@@ -54,7 +54,7 @@ def main() -> None:
         "--base-model",
         type=str,
         default="",
-        help="基座 HF id 或路径（SFT 起点 + GRPO 的 ref）；空则读 fashion_config → grpo.hf-local-training.model",
+        help="基座 HF id 或路径（SFT 起点）；空则读 grpo.hf-local-training.model（改写器）",
     )
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--max-length", type=int, default=2048)
@@ -97,6 +97,7 @@ def main() -> None:
     try:
         from plugins.text_description_evaluator.design_text_evaluator_api import (
             default_hf_local_grpo_model,
+            default_hf_local_grpo_ref_model,
         )
     except Exception as exc:  # noqa: BLE001
         raise SystemExit(
@@ -104,6 +105,7 @@ def main() -> None:
         ) from exc
 
     base = (args.base_model or "").strip() or default_hf_local_grpo_model()
+    ref = default_hf_local_grpo_ref_model()
     work = args.work_dir.resolve()
     sft_out = work / "sft"
     grpo_out = work / "grpo"
@@ -175,7 +177,7 @@ def main() -> None:
         "--model",
         str(sft_out.resolve()),
         "--ref-model",
-        base,
+        ref,
         "--out",
         str(grpo_out),
         "--max-length",

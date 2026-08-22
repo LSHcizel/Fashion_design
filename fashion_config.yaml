@@ -43,11 +43,9 @@ openai-api-key: ""
 # 启用 local-llm 时，主 workflow 文本生成走本地 vLLM；此处 model 名须与 local-llm.model / vLLM --served-model-name 一致
 llm-backend: "Qwen2.5-7B-Instruct"
 
-# 本地 OpenAI 兼容推理（vLLM）。需先在 GPU 上启动服务，例如：
-#   VLLM_GPU=2 bash scripts/restart_local_vllm.sh
-#   # 或手动：CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server \
-#   #   --model models/Qwen2.5-7B-Instruct --served-model-name Qwen2.5-7B-Instruct \
-#   #   --host 127.0.0.1 --port 8000 --dtype bfloat16 --max-model-len 8192
+# 本地 OpenAI 兼容推理（vLLM）— **基座 7B**：workflow 文本生成 + 评判，权重冻结不参与 GRPO。
+# 启动：VLLM_GPU=0 bash scripts/restart_local_vllm.sh
+# 改写专用副本见 grpo.rewriter-llm（端口 8001，SFT/GRPO 训练对象）。
 local-llm:
   enabled: true
   api-base: "http://127.0.0.1:8000/v1"
@@ -59,9 +57,9 @@ local-llm:
   max-tokens: 4096
   verify-ssl: false
   use-for-workflow: true
-  use-for-parallel-k-rewrite: true
-  use-for-candidate-evaluation: true   # K 路候选评分走本地 7B
-  use-for-text-evaluator: true         # workflow 门限评分走本地 7B
+  use-for-parallel-k-rewrite: false     # 改写走 grpo.rewriter-llm，基座仅生成+评分
+  use-for-candidate-evaluation: true   # K 路候选评分 / workflow judge 走基座 7B
+  use-for-text-evaluator: true         # workflow 门限评分走基座 7B
   # judge 输出上限，与 grpo.design-text-evaluator.max-tokens 对齐；须 input+output ≤ max-model-len
   judge-max-tokens: 2048
   # 多模态 reflection（单图/章节/系列）仍走 API vision，本地 7B 不支持读图
@@ -176,9 +174,25 @@ grpo:
     temperature: 0.0
     verify-ssl: true
 
-  # 本地 HF SFT / GRPO 权重目录（与 local-llm.model-path 对齐）
+  # 改写专用 7B（与基座同架构，独立权重目录；SFT/GRPO 只更新此模型）
+  # 首次使用：cp -r models/Qwen2.5-7B-Instruct models/Qwen2.5-7B-Rewriter
+  # 启动 vLLM：VLLM_GPU=1 VLLM_PROFILE=rewriter bash scripts/restart_local_vllm.sh
+  rewriter-llm:
+    enabled: true
+    api-base: "http://127.0.0.1:8001/v1"
+    api-key: "local"
+    model: "Qwen2.5-7B-Rewriter"
+    model-path: "models/Qwen2.5-7B-Rewriter"
+    max-model-len: 8192
+    timeout: 300
+    max-tokens: 2048
+    verify-ssl: false
+
+  # 本地 HF SFT / GRPO：仅针对 rewriter-llm.model-path
   hf-local-training:
-    model: "models/Qwen2.5-7B-Instruct"
+    model: "models/Qwen2.5-7B-Rewriter"
+    # KL 锚点 = 训练前改写器快照（勿指向基座 judge 目录）
+    ref-model: "models/Qwen2.5-7B-Rewriter"
 
   parallel-k-rewrite:
     # 并行改写候选条数（generate_k_parallel_rewrites 的 k；调用方未显式传入时使用）
@@ -190,7 +204,7 @@ grpo:
     temperature-cap: 0.55
     evaluate-candidates: true
     eval-source-prefix: parallel_k
-    # 改写走本地 7B；候选评判走本地 7B（与 text-evaluator.use-local 一致）
+    # 改写 → rewriter-llm；评判 → local-llm 基座（冻结，提供 R_content / 评分详情）
     use-local-rewrite: true
     use-local-evaluation: true
     rewrite-temperature: 0.3

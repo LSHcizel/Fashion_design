@@ -5,7 +5,7 @@ HuggingFace 本地 SFT + GRPO（组相对优势 + 对参考策略的 KL 惩罚�
 
     pip install -r training/hf_grpo/requirements.txt
 
-**推荐顺序（基座 → SFT → GRPO）**：使用编排脚本，一次跑完两段训练（policy=SFT 目录，ref=基座）::
+**推荐顺序（改写器：基座快照 → SFT → GRPO）**：使用编排脚本，一次跑完两段训练（policy=SFT 目录，ref=hf-local-training.ref-model）::
 
     python training/hf_grpo/run_recommended_training.py --help
 
