@@ -242,7 +242,7 @@ Judging principles:
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
-10. For DesignMerit, ignore completeness, layout, theme, and garment family. High (0.75–1.0): the look is identified by at least one of: craft that traces a readable path along edges (neckline/front/cuff/hem), layering that creates a second visible identity (worn open over / extending beneath), or a look-specific contrast of surface, volume, or graphic placement. 1.0 when that move is explicit and would change if removed. Low (0.25–0.5): after ignoring theme and category names, only generic tailoring remains. Do not lower for cruise/shore theme or for being a jacket/shorts kit. Ignore T2I preamble.
+10. For DesignMerit, ignore completeness, layout, theme, and garment family. High (0.75–1.0): decorative/contrast craft that draws the silhouette, or worn-open layering that reveals a second garment identity, or a surface/volume contrast that would change the look if removed. Not a design move: seam topstitching, hidden/concealed placket, tonal piping, notch lapel, lining/cuff peek in motion, brand buckle/finish, metaphor or theme sentences. Those score 0.25. Tucked shirt under jacket is ordinary dressing, not a second identity. 1.0 when the identifying move is explicit. Ignore T2I preamble.
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
 12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
@@ -490,14 +490,19 @@ Return format:
             if module_name == "DesignMerit":
                 scale_rules = (
                     "Scoring scale: 1.0 / 0.75 / 0.5 / 0.25 / 0.0. Judge the design idea, not completeness.\n"
-                    "\nDesignMerit — does the look have a visible identifying move?\n"
-                    "High (0.75–1.0) if at least one is explicit; 1.0 if removing it would change the look:\n"
-                    "- craft traces a path along edges (neckline, front opening, cuff, hem, pocket),\n"
-                    "- layering creates a second visible identity (worn open over / extending beneath),\n"
-                    "- a look-specific contrast of surface, volume, or graphic placement.\n"
-                    "Low (0.25–0.5): after ignoring theme words and category names, only generic tailoring remains.\n"
-                    "Do not lower for collection theme or garment family.\n"
-                    "Reason: quote the move, or say none remains. Do not paste rubric sentences.\n"
+                    "\nDesignMerit — is there a visible identifying move?\n"
+                    "High (0.75–1.0); 1.0 if removing the move would change the look:\n"
+                    "- decorative/contrast craft that draws the silhouette (appliqué, frayed graphic trim, ruffle path, "
+                    "cutwork, sequin field),\n"
+                    "- worn open over / extending beneath so the inner garment is a second readable identity,\n"
+                    "- a surface, volume, or graphic contrast that belongs to this look.\n"
+                    "Score 0.25 when the look has no design sense beyond construction finishing and theme language: "
+                    "seam topstitching, hidden/concealed placket, tonal piping, notch lapel, lining or cuff peek in motion, "
+                    "brand buckle/finish, or metaphor (envelope, promenade, confession) standing in for a visual move. "
+                    "A tucked shirt under a jacket is ordinary dressing, not a second identity.\n"
+                    "0.5 only if there is one weak real move mixed with the above. "
+                    "Do not lower merely because the look is a coat, cropped jacket, or shorts.\n"
+                    "Reason: quote the identifying move, or quote the construction/theme-only details.\n"
                 )
             else:
                 scale_rules = (
