@@ -1,0 +1,13 @@
+{
+  "run_utc": "20260628T160711Z",
+  "inverse_dir": "fashion_research_dir\\wgsn_batch_image_inverse\\20260524T044337Z",
+  "processed": 79,
+  "failed_parse_or_eval": 0,
+  "judge_model": "gpt-5.4-mini",
+  "mean_total_score": 0.843408,
+  "min_total_score": 0.7329,
+  "max_total_score": 0.935,
+  "gates_both_passed_count": 79,
+  "gates_both_passed_rate": 1.0,
+  "mean_R_content": 0.822661
+}

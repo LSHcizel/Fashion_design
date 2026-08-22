@@ -1,0 +1,10 @@
+Chapter: 01
+Look: 01
+Sub-theme: The Androgynous Silhouette
+Image: look_01.jpg
+
+RawAgentResult:
+TIER: high
+ACTION: KEEP
+INFO: Exceptional use of dramatic silhouette and architectural tailoring creates a sophisticated avant-garde statement.
+FINAL_FASHION_DESIGN: The current design is retained for its masterful play on proportions and high-end construction.

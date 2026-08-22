@@ -1,0 +1,1890 @@
+{
+  "name": "fashion_text_prompt_optimizer",
+  "version": "0.2.0",
+  "source_name": "03_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__003_media_cha_biarritz_ps27_008_text_description.md",
+  "input_type": "text_description",
+  "judge_backend": "openai_compatible_api",
+  "judge_model": "gpt-5.4-mini",
+  "judge_api_base": "https://api.ohmygpt.com/v1",
+  "text_description": "Cropped runway look shown from head to lower thigh, built around an oversized, boxy outer jacket in pale grey and off-white narrow vertical striping with a coarse woven surface. The jacket is worn open over a matching warm khaki/tan button-front inner layer; it has a high turned-up collar with dark speckled/fringed edging, dropped shoulders, wide short sleeves ending around the upper arms, and heavily frayed black-and-navy trim along the sleeve edges, front opening, hem, and patch-pocket edges. Small dark horizontal toggle-like tabs and scattered gold-tone buttons punctuate the front, while the jacket falls to about upper-thigh length and reads structured but relaxed. Underneath, a tan utility-like top or vest sits close to the torso with a V opening, gold round buttons down the center, and visible patch pockets near the lower front, extending over a coordinating tan skirt. The skirt is slim and knee-length or just above the knee in the visible crop, with a softly tailored front, a pocket where one hand is tucked, and a decorative chain-like trim along the hem edge. A slouchy tan shoulder bag with burgundy side panels is carried under the left arm, suspended from a gold chain strap over the shoulder; the bag surface appears soft and slightly crumpled. The palette is muted and earthy—grey, black, tan, khaki, burgundy, and gold accents—with a layered, textured, deconstructed-luxe mood.",
+  "eval_prose": "Cropped runway look shown from head to lower thigh, built around an oversized, boxy outer jacket in pale grey and off-white narrow vertical striping with a coarse woven surface. The jacket is worn open over a matching warm khaki/tan button-front inner layer; it has a high turned-up collar with dark speckled/fringed edging, dropped shoulders, wide short sleeves ending around the upper arms, and heavily frayed black-and-navy trim along the sleeve edges, front opening, hem, and patch-pocket edges. Small dark horizontal toggle-like tabs and scattered gold-tone buttons punctuate the front, while the jacket falls to about upper-thigh length and reads structured but relaxed. Underneath, a tan utility-like top or vest sits close to the torso with a V opening, gold round buttons down the center, and visible patch pockets near the lower front, extending over a coordinating tan skirt. The skirt is slim and knee-length or just above the knee in the visible crop, with a softly tailored front, a pocket where one hand is tucked, and a decorative chain-like trim along the hem edge. A slouchy tan shoulder bag with burgundy side panels is carried under the left arm, suspended from a gold chain strap over the shoulder; the bag surface appears soft and slightly crumpled. The palette is muted and earthy—grey, black, tan, khaki, burgundy, and gold accents—with a layered, textured, deconstructed-luxe mood.",
+  "total_score": 0.7973,
+  "gates": {
+    "score_gate": {
+      "name": "score_gate",
+      "description": "最终 S_fp（quality 用 weighted base_score，不含 penalty 扣减；已做 holdout 长度去相关）",
+      "value": 0.7973,
+      "threshold": 0.7,
+      "passed": true,
+      "weights": {
+        "coverage": 0.2,
+        "quality": 0.8
+      },
+      "components": {
+        "coverage_axis_score": 1.0,
+        "quality_effective": 0.7462
+      },
+      "total_cap_applied": 1.0
+    },
+    "penalty_gate": {
+      "name": "penalty_gate",
+      "description": "仅依据 penalties.total_penalty（各 penalty 分值的算术平均）",
+      "total_penalty": 0.2,
+      "threshold": 0.5,
+      "passed": true
+    },
+    "both_passed": true
+  },
+  "score_band": "Strong",
+  "metric_totals": {
+    "total_defined_metrics": 47,
+    "total_applicable_metrics": 36,
+    "total_hit_metrics": 34,
+    "total_skipped_metrics": 11
+  },
+  "skipped_metrics": [
+    {
+      "metric": "construction_technique",
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "reason": "No specific fabrication technique like quilting, pleating, embroidery, cut-outs, or engineered panel work is clearly identified."
+    },
+    {
+      "metric": "footwear",
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "reason": "No footwear is mentioned in the text."
+    },
+    {
+      "metric": "jewelry",
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "reason": "No salient jewelry or body ornament is described."
+    },
+    {
+      "metric": "belt",
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "reason": "No visible belt, sash, or waist strap/harness is mentioned; waist shaping comes from garment cut only."
+    },
+    {
+      "metric": "asymmetry",
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "reason": "No clear asymmetrical design, one-shoulder, uneven hem, or similar structure is described."
+    },
+    {
+      "metric": "bilateral_coherence",
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "reason": "No explicit left-right bilateral contrast is described for sleeves, legs, shoes, or other paired trunk elements."
+    },
+    {
+      "metric": "cultural_reference",
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "reason": "No clear cultural, historical, or brand-specific reference is provided."
+    },
+    {
+      "metric": "gender_expression",
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "reason": "The description does not explicitly discuss gender expression or androgyny."
+    },
+    {
+      "metric": "theme_narrative",
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "reason": "No series theme or conceptual narrative is explicitly stated."
+    },
+    {
+      "metric": "brand_alignment",
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "reason": "There is no explicit brand language or brand identity target."
+    },
+    {
+      "metric": "negation_control",
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "reason": "The text does not emphasize exclusions or absence of elements."
+    }
+  ],
+  "scores": {
+    "coverage_score": {
+      "applicable_metrics": 19,
+      "hit_metrics": 19,
+      "score_sum": 19.0,
+      "score": 1.0
+    },
+    "quality_score": {
+      "applicable_metrics": 16,
+      "hit_metrics": 14,
+      "score_sum": 12.5,
+      "score": 0.7812,
+      "base_score": 0.7462,
+      "axis_score_unweighted": 0.7812,
+      "penalized_score": 0.7462,
+      "penalties": {
+        "items": {
+          "generation_content_penalty": {
+            "score": 0.25,
+            "evidence": [
+              "“layered, textured, deconstructed-luxe mood”",
+              "“reads structured but relaxed”",
+              "long attribute stack: “coarse woven surface… dark speckled/fringed edging… heavily frayed black-and-navy trim… toggle-like tabs… scattered gold-tone buttons”"
+            ],
+            "reason": "Mostly imageable, but it leans into stylistic commentary and dense symbolic detailing, which slightly reduces prompt efficiency."
+          },
+          "consistency_penalty": {
+            "score": 0.25,
+            "evidence": [
+              "“matching warm khaki/tan button-front inner layer”",
+              "“Underneath, a tan utility-like top or vest sits close to the torso”",
+              "“extending over a coordinating tan skirt”"
+            ],
+            "reason": "The trunk is broadly coherent, but the inner layer is described with some identity ambiguity (“top or vest”) and the outfit stacks multiple tan layers without a sharp separation."
+          },
+          "coordination_penalty": {
+            "score": 0.25,
+            "evidence": [
+              "“oversized, boxy outer jacket”",
+              "“tan utility-like top or vest sits close to the torso”",
+              "“slim and knee-length or just above the knee”"
+            ],
+            "reason": "The silhouette mixes boxy outerwear, fitted mid-layer, and slim skirt in a way that is still workable, but the styling language is slightly mixed rather than fully unified."
+          },
+          "rationality_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "“coarse woven surface”",
+              "“heavily frayed black-and-navy trim”",
+              "“soft and slightly crumpled”"
+            ],
+            "reason": "No clearly impossible materials or physically implausible garment construction are asserted."
+          },
+          "formula_template_penalty": {
+            "score": 0.25,
+            "evidence": [
+              "“Cropped runway look shown from head to lower thigh”",
+              "“The palette is muted and earthy”",
+              "“layered, textured, deconstructed-luxe mood”"
+            ],
+            "reason": "It follows a common runway-description formula with silhouette, materials, palette, and mood sections, though not in a rigid fixed template."
+          }
+        },
+        "reasons": {
+          "generation_content_penalty": "Mostly imageable, but it leans into stylistic commentary and dense symbolic detailing, which slightly reduces prompt efficiency.",
+          "consistency_penalty": "The trunk is broadly coherent, but the inner layer is described with some identity ambiguity (“top or vest”) and the outfit stacks multiple tan layers without a sharp separation.",
+          "coordination_penalty": "The silhouette mixes boxy outerwear, fitted mid-layer, and slim skirt in a way that is still workable, but the styling language is slightly mixed rather than fully unified.",
+          "rationality_penalty": "No clearly impossible materials or physically implausible garment construction are asserted.",
+          "formula_template_penalty": "It follows a common runway-description formula with silhouette, materials, palette, and mood sections, though not in a rigid fixed template."
+        },
+        "generation_content_penalty": 0.25,
+        "consistency_penalty": 0.25,
+        "coordination_penalty": 0.25,
+        "rationality_penalty": 0.0,
+        "formula_template_penalty": 0.25,
+        "total_penalty": 0.2
+      },
+      "cap": 1.0
+    },
+    "bonus_score": {
+      "applicable_metrics": 1,
+      "hit_metrics": 1,
+      "score_sum": 1.0,
+      "score": 1.0
+    },
+    "fashion_prompt_score": 0.7973,
+    "s_fp_base": 0.797,
+    "length_disentangle": {
+      "adjusted_score": 0.7973,
+      "length_component": -0.000291,
+      "log_len": 7.249215,
+      "slope_a": 0.002948,
+      "mode": "centered_slope",
+      "applied": true,
+      "log_len_center": 7.3478
+    },
+    "weights": {
+      "coverage": 0.2,
+      "quality": 0.8
+    },
+    "total_cap": 1.0,
+    "module_scores": {
+      "GarmentCore": {
+        "applicable_metrics": 5,
+        "hit_metrics": 5,
+        "score_sum": 5.0,
+        "score": 1.0
+      },
+      "MaterialColor": {
+        "applicable_metrics": 6,
+        "hit_metrics": 6,
+        "score_sum": 6.0,
+        "score": 1.0
+      },
+      "ConstructionDetail": {
+        "applicable_metrics": 4,
+        "hit_metrics": 4,
+        "score_sum": 4.0,
+        "score": 1.0
+      },
+      "StylingSet": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "Composition": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "Specificity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "BindingAccuracy": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "LanguageClarity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "StructuralClarity": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 0.75,
+        "score": 0.75
+      },
+      "GenerationReadiness": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "ConcisenessAndDensity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 1,
+        "score_sum": 1.25,
+        "score": 0.625
+      },
+      "DesignMerit": {
+        "applicable_metrics": 5,
+        "hit_metrics": 4,
+        "score_sum": 4.0,
+        "score": 0.8
+      },
+      "ConceptBonus": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 1.0,
+        "score": 1.0
+      }
+    }
+  },
+  "diagnosis": {
+    "missing_information": [],
+    "quality_issues": [
+      {
+        "metric": "core_information_density",
+        "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+        "score_value": 0.5,
+        "matched_terms": [
+          "“oversized, boxy outer jacket”",
+          "“matching warm khaki/tan button-front inner layer”",
+          "“slim and knee-length”",
+          "“slouchy tan shoulder bag with burgundy side panels”"
+        ],
+        "reason": "主体服装轮廓和关键细节很完整，但描述偏长，层层堆叠材质、边缘、扣件和装饰信息，信息密度中等偏高但不够精炼。"
+      },
+      {
+        "metric": "silhouette_combination_originality",
+        "rule": "上装廓形、下装品类、鞋型与配饰的组合须超出常见 formula template（如 cropped structured jacket + striped shirt + tailored short + narrow belt + flat sandal）。若组合高度可预测、且主干单品可互换而不改变整体 formula 读感，应低分。",
+        "score_value": 0.5,
+        "matched_terms": [
+          "\"oversized, boxy outer jacket\"",
+          "\"tan utility-like top or vest\"",
+          "\"coordinating tan skirt\"",
+          "\"slouchy tan shoulder bag\""
+        ],
+        "reason": "The silhouette is coherent and layered, but the overall combination remains fairly legible and fashion-standard: structured jacket, slim skirt, shoulder bag. The deconstructed trim adds interest without fully escaping a predictable luxury template."
+      }
+    ],
+    "bonus_opportunities": []
+  },
+  "metric_results": {
+    "garment_category": {
+      "axis": "coverage_score",
+      "rule": "文本需明确给出服装主体品类",
+      "source_keypoints": [
+        1
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"oversized, boxy outer jacket\"",
+        "\"button-front inner layer\"",
+        "\"coordinating tan skirt\""
+      ],
+      "reason": "The text clearly names the main garment categories.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "silhouette": {
+      "axis": "coverage_score",
+      "rule": "文本需给出整体轮廓或结构趋势",
+      "source_keypoints": [
+        2
+      ],
+      "applicability_code": "when_shape_is_salient",
+      "applicability_hint": "Only applicable when the text clearly mentions silhouette, shape, or structural contour.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"oversized, boxy\"",
+        "\"structured but relaxed\"",
+        "\"slim and knee-length\""
+      ],
+      "reason": "Overall shape and structural contour are explicitly described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "length_hemline": {
+      "axis": "coverage_score",
+      "rule": "文本需给出长度或下摆信息",
+      "source_keypoints": [
+        3
+      ],
+      "applicability_code": "when_length_or_hem_is_salient",
+      "applicability_hint": "Only applicable when the text mentions length, hemline, slit, or garment length.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"falls to about upper-thigh length\"",
+        "\"knee-length or just above the knee\"",
+        "\"along the hem edge\""
+      ],
+      "reason": "Garment lengths and hem details are directly stated.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "shoulder_architecture": {
+      "axis": "coverage_score",
+      "rule": "当肩线设计显著（如强调垫肩/结构肩、落肩、宽肩、单肩或露肩、无肩带抹胸等）时，文本须点明该肩部结构语言，而非仅写「上装」或笼统廓形",
+      "source_keypoints": [
+        4
+      ],
+      "applicability_code": "when_shoulder_is_salient",
+      "applicability_hint": "Only applicable when the text implies prominent shoulder design: pads/structured shoulders, dropped shoulder, one-shoulder/off-shoulder, strapless neckline, or other salient shoulder/sleeve anchor cues.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"dropped shoulders\"",
+        "\"wide short sleeves\""
+      ],
+      "reason": "Shoulder construction is clearly specified.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "body_coverage": {
+      "axis": "coverage_score",
+      "rule": "文本需描述显著裸露或包裹区域",
+      "source_keypoints": [
+        5
+      ],
+      "applicability_code": "when_exposure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions exposure, coverage, cutout, or body reveal.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"shown from head to lower thigh\"",
+        "\"worn open\"",
+        "\"V opening\""
+      ],
+      "reason": "The text describes visible coverage and exposure zones.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "fabric_family": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主体材质类别",
+      "source_keypoints": [
+        6
+      ],
+      "applicability_code": "when_material_is_inferable",
+      "applicability_hint": "Only applicable when the text provides enough information about the main material.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"coarse woven surface\"",
+        "\"soft and slightly crumpled\""
+      ],
+      "reason": "The text clearly indicates a woven textile family and a soft bag material, enough to infer fabric category.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "surface_finish": {
+      "axis": "coverage_score",
+      "rule": "文本需给出光泽、哑光、垂坠或硬挺等表面性质",
+      "source_keypoints": [
+        7
+      ],
+      "applicability_code": "when_surface_trait_is_salient",
+      "applicability_hint": "Only applicable when the text mentions gloss, matte, drape, stiffness, pleats, or surface traits.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"coarse woven surface\"",
+        "\"structured but relaxed\"",
+        "\"soft and slightly crumpled\""
+      ],
+      "reason": "Surface qualities are explicitly described, including texture, structure, and softness/crumpling.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "primary_color": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主色",
+      "source_keypoints": [
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"pale grey\"",
+        "\"warm khaki/tan\""
+      ],
+      "reason": "The main palette is clearly stated, with pale grey and tan/khaki as dominant colors.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "secondary_color": {
+      "axis": "coverage_score",
+      "rule": "有明显副色时需描述；若为大衣内里、开衩内衬等高对比色块，应说明可见条件（如行走、开片时）或与主色区的衔接，避免孤立撞色无锚点、不利生成",
+      "source_keypoints": [
+        12
+      ],
+      "applicability_code": "when_secondary_color_is_salient",
+      "applicability_hint": "Only applicable when the text clearly includes secondary color or color relationship information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"black-and-navy trim\"",
+        "\"burgundy side panels\"",
+        "\"gold accents\""
+      ],
+      "reason": "Distinct secondary accent colors are explicitly described on the garment and bag.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "color_relationship_logic": {
+      "axis": "coverage_score",
+      "rule": "当存在多色块、强对比内搭/外搭、条纹或印花与底色关系、或明显的同色系/补色/撞色叙事时，文本须交代配色逻辑（如单色、同色系层次、补色对比、主次色块关系之一），使生成可还原色彩关系；仅罗列颜色词但未体现关系则不计为覆盖",
+      "source_keypoints": [
+        13
+      ],
+      "applicability_code": "when_multi_tone_or_strong_color_story",
+      "applicability_hint": "Only applicable when the text implies multiple color blocks, strong inner/outer contrast, stripe-vs-ground relations, tonal vs accented palette, or another non-trivial color story beyond a single flat hue.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"The palette is muted and earthy\"",
+        "\"grey, black, tan, khaki, burgundy, and gold accents\"",
+        "\"with a layered\""
+      ],
+      "reason": "The text explains the color logic as a muted, earthy layered palette with accent colors, not just isolated hue listing.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "pattern_type": {
+      "axis": "coverage_score",
+      "rule": "有图案时需给出图案类型",
+      "source_keypoints": [
+        14
+      ],
+      "applicability_code": "when_pattern_exists",
+      "applicability_hint": "Only applicable when the text describes pattern or print information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"narrow vertical striping\""
+      ],
+      "reason": "A clear stripe pattern is specified.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "closure": {
+      "axis": "coverage_score",
+      "rule": "显著开合方式应被提到",
+      "source_keypoints": [
+        17
+      ],
+      "applicability_code": "when_closure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions button, zipper, tie, buckle, or closure details.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“button-front inner layer”",
+        "“gold round buttons down the center”"
+      ],
+      "reason": "Clear closure details are described through button-front construction and centered button fastening.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "functional_detail": {
+      "axis": "coverage_score",
+      "rule": "显著口袋、挂带或功能细节应被提到",
+      "source_keypoints": [
+        18
+      ],
+      "applicability_code": "when_functional_detail_is_salient",
+      "applicability_hint": "Only applicable when the text mentions pockets, straps, utility parts, or functional details.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“patch-pocket edges”",
+        "“visible patch pockets near the lower front”",
+        "“A slouchy tan shoulder bag ... suspended from a gold chain strap”"
+      ],
+      "reason": "The text explicitly mentions pockets and a functional shoulder strap, both salient utility details.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "construction_technique": {
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "source_keypoints": [
+        9
+      ],
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No specific fabrication technique like quilting, pleating, embroidery, cut-outs, or engineered panel work is clearly identified.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "deconstruction": {
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "source_keypoints": [
+        20
+      ],
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“deconstructed-luxe mood”",
+        "“heavily frayed”"
+      ],
+      "reason": "The description explicitly frames the look as deconstructed and reinforces it with frayed finishing.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "hardware_embellishment": {
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "source_keypoints": [
+        21
+      ],
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“small dark horizontal toggle-like tabs”",
+        "“scattered gold-tone buttons”",
+        "“gold chain strap”"
+      ],
+      "reason": "Multiple hardware elements are clearly present, including buttons, toggle-like tabs, and a chain strap.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "bag": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "source_keypoints": [
+        22
+      ],
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"A slouchy tan shoulder bag with burgundy side panels\"",
+        "\"suspended from a gold chain strap over the shoulder\""
+      ],
+      "reason": "Bag type, carrying method, shape, and material/color details are clearly described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "footwear": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "source_keypoints": [
+        23
+      ],
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No footwear is mentioned in the text.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "jewelry": {
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "source_keypoints": [
+        24
+      ],
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No salient jewelry or body ornament is described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "belt": {
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "source_keypoints": [
+        25
+      ],
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No visible belt, sash, or waist strap/harness is mentioned; waist shaping comes from garment cut only.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "layering": {
+      "axis": "coverage_score",
+      "rule": "多层叠搭时应给出层次关系；外套、内搭、腰带、腿带与裤装之间的遮盖与固定顺序应可还原为可见层次，服务生成导向",
+      "source_keypoints": [
+        26
+      ],
+      "applicability_code": "when_layering_exists",
+      "applicability_hint": "Only applicable when the text describes layering or multi-layer garment relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"worn open over a matching warm khaki/tan button-front inner layer\"",
+        "\"Underneath, a tan utility-like top or vest sits close to the torso ... extending over a coordinating tan skirt\""
+      ],
+      "reason": "The text clearly establishes a multi-layer outfit with readable outer jacket, inner layer, and skirt relationships.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "top_bottom_proportion": {
+      "axis": "coverage_score",
+      "rule": "明显上下比例关系应被提到；长外套、阔腿或宽松下装、厚底鞋与腿带/harness 等叠加时，应交代主干剪影主次，避免仅堆砌元素导致下盘过重、prompt 失焦",
+      "source_keypoints": [
+        27
+      ],
+      "applicability_code": "when_proportion_is_salient",
+      "applicability_hint": "Only applicable when the text describes top-bottom proportion, waist position, or visual balance.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“Cropped runway look shown from head to lower thigh”",
+        "“The jacket falls to about upper-thigh length”",
+        "“The skirt is slim and knee-length or just above the knee”"
+      ],
+      "reason": "The text clearly describes the overall vertical proportion and the relative lengths of the jacket and skirt, making the top-bottom balance imageable.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "asymmetry": {
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "source_keypoints": [
+        29
+      ],
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No clear asymmetrical design, one-shoulder, uneven hem, or similar structure is described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cross_garment_binding": {
+      "axis": "coverage_score",
+      "rule": "多单品时应能区分属性属于哪件单品",
+      "source_keypoints": [
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“The jacket is worn open over a matching warm khaki/tan button-front inner layer”",
+        "“Underneath, a tan utility-like top or vest sits close to the torso”",
+        "“extending over a coordinating tan skirt”"
+      ],
+      "reason": "The description distinguishes which features belong to the jacket, inner layer, and skirt, so the multi-garment relationships are clearly bound to specific items.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "specific_noun_usage": {
+      "axis": "quality_score",
+      "rule": "使用具体服装或配件名词而非泛词",
+      "source_keypoints": [
+        1,
+        22,
+        23
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "oversized, boxy outer jacket",
+        "button-front inner layer",
+        "slouchy tan shoulder bag",
+        "patch pockets",
+        "gold chain strap"
+      ],
+      "reason": "Uses highly specific fashion nouns and garment-part terms throughout, with clear item identities and accessory construction.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "fine_grained_attribute_usage": {
+      "axis": "quality_score",
+      "rule": "颜色、材质、结构词应尽量细粒度",
+      "source_keypoints": [
+        6,
+        7,
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "pale grey and off-white narrow vertical striping",
+        "coarse woven surface",
+        "dark speckled/fringed edging",
+        "heavily frayed black-and-navy trim",
+        "burgundy side panels",
+        "gold-tone buttons"
+      ],
+      "reason": "Color, material, texture, and construction details are consistently fine-grained and visually actionable, with strong specificity across the outfit.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "attribute_entity_binding": {
+      "axis": "quality_score",
+      "rule": "属性必须绑定到正确实体；腰带、腿带、harness、护臂/护手等须明确归属外套、裤装或身体附件，避免腰胯多重束系指代漂移",
+      "source_keypoints": [
+        10,
+        39
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“oversized, boxy outer jacket in pale grey and off-white narrow vertical striping”",
+        "“matching warm khaki/tan button-front inner layer”",
+        "“A slouchy tan shoulder bag with burgundy side panels ... suspended from a gold chain strap”"
+      ],
+      "reason": "Most attributes are clearly attached to the correct garment or accessory, and the layering is understandable. Minor ambiguity remains in phrases like “top or vest” and some overlapping trim/pocket descriptions, but they do not seriously confuse the main bindings.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "multi_garment_binding": {
+      "axis": "quality_score",
+      "rule": "多单品描述时不得将属性归错单品",
+      "source_keypoints": [
+        12,
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“outer jacket ... worn open over a matching ... inner layer”",
+        "“extends over a coordinating tan skirt”",
+        "“A slouchy tan shoulder bag ... suspended from a gold chain strap”"
+      ],
+      "reason": "The text keeps the jacket, inner layer, skirt, and bag mostly distinct and correctly related. There is slight fuzziness around whether the close-fitting tan piece is a top or vest, but the multi-item binding is still strong and usable.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "quantity_accuracy": {
+      "axis": "quality_score",
+      "rule": "数量词应准确且不冲突",
+      "source_keypoints": [
+        37
+      ],
+      "applicability_code": "when_quantity_is_used",
+      "applicability_hint": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“one hand is tucked”",
+        "“from head to lower thigh”",
+        "“wide short sleeves”"
+      ],
+      "reason": "Quantity and extent references are mostly clear and internally consistent, with only minor ambiguity in the cropped visibility and garment layering.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "reference_clarity": {
+      "axis": "quality_score",
+      "rule": "代词和省略指向必须清晰",
+      "source_keypoints": [
+        38
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“The jacket is worn open over a matching warm khaki/tan button-front inner layer”",
+        "“Underneath, a tan utility-like top or vest sits close to the torso”",
+        "“A slouchy tan shoulder bag ... is carried under the left arm”"
+      ],
+      "reason": "Pronouns and omitted subjects are generally easy to track, and the garment references remain coherent, though the layered outfit description is somewhat dense.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "information_ordering": {
+      "axis": "quality_score",
+      "rule": "描述应按主体到细节的顺序组织",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "Cropped runway look shown from head to lower thigh",
+        "built around an oversized, boxy outer jacket",
+        "Underneath, a tan utility-like top or vest",
+        "The skirt is slim and knee-length or just above the knee",
+        "A slouchy tan shoulder bag ... is carried under the left arm"
+      ],
+      "reason": "The description follows a mostly natural body-to-garment-to-accessory order and makes the outfit structure easy to reconstruct. There is some density and a few layered detail clusters, but the main visual hierarchy remains clear.",
+      "quality_dimension": "StructuralClarity",
+      "quality_dimension_zh": "结构清晰度"
+    },
+    "generation_readiness": {
+      "axis": "quality_score",
+      "rule": "文本应可直接转为图像生成 prompt；须以可见廓形、品类与层次为先，多文化/多时代风格符号混用时应能收束为单一 look 身份，否则视为生成导向不足",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“Cropped runway look shown from head to lower thigh”",
+        "“oversized, boxy outer jacket in pale grey and off-white narrow vertical striping”",
+        "“worn open over a matching warm khaki/tan button-front inner layer”",
+        "“slim and knee-length or just above the knee”",
+        "“slouchy tan shoulder bag with burgundy side panels”"
+      ],
+      "reason": "The text is highly visual and already close to a generation prompt, with clear silhouette, layering, materials, colors, and accessories. It is slightly more descriptive than prompt-tight, but still readily convertible with minimal editing.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "bilateral_coherence": {
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "source_keypoints": [
+        29,
+        40
+      ],
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit left-right bilateral contrast is described for sleeves, legs, shoes, or other paired trunk elements.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "spatial_coherence": {
+      "axis": "quality_score",
+      "rule": "层次、前后、内外、上下、附着位置等空间关系必须清晰且视觉上合理；大衣与腰带、腰下吊带、腿带/harness 与裤管之间的遮盖、穿入与固定点须可还原，禁止腰胯多层束系含糊不可成像",
+      "source_keypoints": [
+        26,
+        30,
+        40
+      ],
+      "applicability_code": "when_spatial_relation_exists",
+      "applicability_hint": "Only applicable when the text describes layering, front/back, inside/outside, attached position, crossing paths, or other explicit spatial relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“worn open over”",
+        "“underneath”",
+        "“extends over a coordinating tan skirt”",
+        "“carried under the left arm, suspended from a gold chain strap over the shoulder”"
+      ],
+      "reason": "Layering and attachment positions are clearly stated and visually reconstructable. The spatial logic is coherent, with only minor verbosity rather than any real ambiguity.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "core_information_density": {
+      "axis": "quality_score",
+      "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.5,
+      "hit": 0,
+      "matched_terms": [
+        "“oversized, boxy outer jacket”",
+        "“matching warm khaki/tan button-front inner layer”",
+        "“slim and knee-length”",
+        "“slouchy tan shoulder bag with burgundy side panels”"
+      ],
+      "reason": "主体服装轮廓和关键细节很完整，但描述偏长，层层堆叠材质、边缘、扣件和装饰信息，信息密度中等偏高但不够精炼。",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "visibility_priority": {
+      "axis": "quality_score",
+      "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部或低可见度细节，避免不可见信息喧宾夺主",
+      "source_keypoints": [
+        18,
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“shown from head to lower thigh”",
+        "“oversized, boxy outer jacket”",
+        "“The skirt is slim and knee-length or just above the knee”",
+        "“A slouchy tan shoulder bag ... is carried under the left arm”"
+      ],
+      "reason": "可见主体轮廓、层次和配色优先写出，整体以外观可见信息为主；虽有少量较细的装饰与结构描述，但没有明显让隐藏信息喧宾夺主。",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "design_distinctiveness": {
+      "axis": "quality_score",
+      "rule": "文本须呈现至少一个可独立识别的设计记忆点（非常规工艺、异材质碰撞、强识别配色/图案、非常规比例或结构），且该记忆点不能仅由「品类+颜色+材质」的常规组合替代。仅写 cropped jacket / navy short / belt / flat sandal 等常见 cruise-resort 公式而不给出额外识别点，不算命中。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"oversized, boxy outer jacket\"",
+        "\"heavily frayed black-and-navy trim\"",
+        "\"slouchy tan shoulder bag with burgundy side panels\""
+      ],
+      "reason": "The look has a clear memory anchor in the frayed trim and deconstructed-luxe layering, plus an unusual bag color-blocking. Distinctive, though still grounded in a somewhat wearable luxury formula.",
+      "quality_dimension": "DesignDistinctiveness",
+      "quality_dimension_zh": "设计独特性"
+    },
+    "visual_observation_grounding": {
+      "axis": "quality_score",
+      "rule": "文本须体现从可见 look 读取的观察特征：部位锚定（neckline/cuff/hem/center front 等）、可见/不可见层次区分、或诚实的推断标注（appears/inferred/visible）。纯概念组装（如「翻译 workwear」「salon piece reworked」）而无可见锚点，不算命中。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"shown from head to lower thigh\"",
+        "\"high turned-up collar\"",
+        "\"wide short sleeves ending around the upper arms\"",
+        "\"visible patch pockets near the lower front\""
+      ],
+      "reason": "The description is strongly anchored to visible garment parts and placement, with careful visible/inferred language throughout.",
+      "quality_dimension": "VisualGrounding",
+      "quality_dimension_zh": "视觉观察 grounded"
+    },
+    "craft_embellishment_salience": {
+      "axis": "quality_score",
+      "rule": "当文本涉及工艺、装饰、结构亮点时，须写清其类型、位置与视觉作用（如 appliqué 沿 neckline 下行、braid trim 沿 pocket/hem）。仅写 hardware/embellishment 泛称或「精致细节」而不说明何为 look 识别点，不算命中。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "when_craft_or_embellishment_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies craft, embellishment, trim, appliqué, braid, quilting, embroidery, deconstruction, patch decoration, or similar salient construction/detail—not mere generic hardware or finish words.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"heavily frayed black-and-navy trim along the sleeve edges, front opening, hem, and patch-pocket edges\"",
+        "\"dark speckled/fringed edging\"",
+        "\"decorative chain-like trim along the hem edge\""
+      ],
+      "reason": "Craft and trim details are clearly identified with location and visual effect, though the description is more about surface treatment than a single dominant craft technique.",
+      "quality_dimension": "CraftSalience",
+      "quality_dimension_zh": "工艺装饰显著度"
+    },
+    "silhouette_combination_originality": {
+      "axis": "quality_score",
+      "rule": "上装廓形、下装品类、鞋型与配饰的组合须超出常见 formula template（如 cropped structured jacket + striped shirt + tailored short + narrow belt + flat sandal）。若组合高度可预测、且主干单品可互换而不改变整体 formula 读感，应低分。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.5,
+      "hit": 0,
+      "matched_terms": [
+        "\"oversized, boxy outer jacket\"",
+        "\"tan utility-like top or vest\"",
+        "\"coordinating tan skirt\"",
+        "\"slouchy tan shoulder bag\""
+      ],
+      "reason": "The silhouette is coherent and layered, but the overall combination remains fairly legible and fashion-standard: structured jacket, slim skirt, shoulder bag. The deconstructed trim adds interest without fully escaping a predictable luxury template.",
+      "quality_dimension": "CombinationOriginality",
+      "quality_dimension_zh": "组合原创性"
+    },
+    "design_signal_purity": {
+      "axis": "quality_score",
+      "rule": "有效设计信息（品类/廓形/材质/颜色/工艺/位置/层次）应占主体篇幅；氛围、姿态、场景、品牌 essay、「as if / suggesting / reads as」类修辞不应稀释核心设计信号。本项专评设计事实 vs 非设计叙事比例，而非 general 冗余。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"built around\"",
+        "\"has a high turned-up collar\"",
+        "\"visible patch pockets\"",
+        "\"The palette is muted and earthy\""
+      ],
+      "reason": "The text is overwhelmingly composed of concrete design facts, with only a brief mood summary at the end. Design signal is very high and not diluted by essay-like narration.",
+      "quality_dimension": "DesignSignalPurity",
+      "quality_dimension_zh": "设计信号纯度"
+    },
+    "aesthetic_vocabulary": {
+      "axis": "bonus_score",
+      "rule": "适度加入设计风格词汇",
+      "source_keypoints": [
+        31
+      ],
+      "applicability_code": "when_style_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly expresses aesthetic or style vocabulary.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“structured but relaxed”",
+        "“layered, textured, deconstructed-luxe mood”"
+      ],
+      "reason": "The text explicitly uses style-language to frame the look’s aesthetic.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cultural_reference": {
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "source_keypoints": [
+        32
+      ],
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No clear cultural, historical, or brand-specific reference is provided.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "gender_expression": {
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "source_keypoints": [
+        33
+      ],
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The description does not explicitly discuss gender expression or androgyny.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "theme_narrative": {
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "source_keypoints": [
+        34
+      ],
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No series theme or conceptual narrative is explicitly stated.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "brand_alignment": {
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "source_keypoints": [
+        35
+      ],
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "There is no explicit brand language or brand identity target.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "negation_control": {
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "source_keypoints": [
+        36
+      ],
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text does not emphasize exclusions or absence of elements.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    }
+  },
+  "context_summary": {
+    "evaluated_modules": [
+      "GarmentCore",
+      "MaterialColor",
+      "ConstructionDetail",
+      "StylingSet",
+      "Composition",
+      "Specificity",
+      "BindingAccuracy",
+      "LanguageClarity",
+      "StructuralClarity",
+      "GenerationReadiness",
+      "ConcisenessAndDensity",
+      "DesignMerit",
+      "ConceptBonus"
+    ],
+    "semantic_judging_enabled": true,
+    "quality_penalties_enabled": true,
+    "skipped_metrics_enabled": true,
+    "optimization_gates_enabled": true
+  },
+  "raw_module_outputs": {
+    "GarmentCore": {
+      "module": "GarmentCore",
+      "results": [
+        {
+          "metric": "garment_category",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"oversized, boxy outer jacket\"",
+            "\"button-front inner layer\"",
+            "\"coordinating tan skirt\""
+          ],
+          "reason": "The text clearly names the main garment categories."
+        },
+        {
+          "metric": "silhouette",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"oversized, boxy\"",
+            "\"structured but relaxed\"",
+            "\"slim and knee-length\""
+          ],
+          "reason": "Overall shape and structural contour are explicitly described."
+        },
+        {
+          "metric": "length_hemline",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"falls to about upper-thigh length\"",
+            "\"knee-length or just above the knee\"",
+            "\"along the hem edge\""
+          ],
+          "reason": "Garment lengths and hem details are directly stated."
+        },
+        {
+          "metric": "shoulder_architecture",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"dropped shoulders\"",
+            "\"wide short sleeves\""
+          ],
+          "reason": "Shoulder construction is clearly specified."
+        },
+        {
+          "metric": "body_coverage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"shown from head to lower thigh\"",
+            "\"worn open\"",
+            "\"V opening\""
+          ],
+          "reason": "The text describes visible coverage and exposure zones."
+        }
+      ]
+    },
+    "MaterialColor": {
+      "module": "MaterialColor",
+      "results": [
+        {
+          "metric": "fabric_family",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"coarse woven surface\"",
+            "\"soft and slightly crumpled\""
+          ],
+          "reason": "The text clearly indicates a woven textile family and a soft bag material, enough to infer fabric category."
+        },
+        {
+          "metric": "surface_finish",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"coarse woven surface\"",
+            "\"structured but relaxed\"",
+            "\"soft and slightly crumpled\""
+          ],
+          "reason": "Surface qualities are explicitly described, including texture, structure, and softness/crumpling."
+        },
+        {
+          "metric": "primary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"pale grey\"",
+            "\"warm khaki/tan\""
+          ],
+          "reason": "The main palette is clearly stated, with pale grey and tan/khaki as dominant colors."
+        },
+        {
+          "metric": "secondary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"black-and-navy trim\"",
+            "\"burgundy side panels\"",
+            "\"gold accents\""
+          ],
+          "reason": "Distinct secondary accent colors are explicitly described on the garment and bag."
+        },
+        {
+          "metric": "color_relationship_logic",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"The palette is muted and earthy\"",
+            "\"grey, black, tan, khaki, burgundy, and gold accents\"",
+            "\"with a layered\""
+          ],
+          "reason": "The text explains the color logic as a muted, earthy layered palette with accent colors, not just isolated hue listing."
+        },
+        {
+          "metric": "pattern_type",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"narrow vertical striping\""
+          ],
+          "reason": "A clear stripe pattern is specified."
+        }
+      ]
+    },
+    "ConstructionDetail": {
+      "module": "ConstructionDetail",
+      "results": [
+        {
+          "metric": "closure",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“button-front inner layer”",
+            "“gold round buttons down the center”"
+          ],
+          "reason": "Clear closure details are described through button-front construction and centered button fastening."
+        },
+        {
+          "metric": "functional_detail",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“patch-pocket edges”",
+            "“visible patch pockets near the lower front”",
+            "“A slouchy tan shoulder bag ... suspended from a gold chain strap”"
+          ],
+          "reason": "The text explicitly mentions pockets and a functional shoulder strap, both salient utility details."
+        },
+        {
+          "metric": "construction_technique",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No specific fabrication technique like quilting, pleating, embroidery, cut-outs, or engineered panel work is clearly identified."
+        },
+        {
+          "metric": "deconstruction",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“deconstructed-luxe mood”",
+            "“heavily frayed”"
+          ],
+          "reason": "The description explicitly frames the look as deconstructed and reinforces it with frayed finishing."
+        },
+        {
+          "metric": "hardware_embellishment",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“small dark horizontal toggle-like tabs”",
+            "“scattered gold-tone buttons”",
+            "“gold chain strap”"
+          ],
+          "reason": "Multiple hardware elements are clearly present, including buttons, toggle-like tabs, and a chain strap."
+        }
+      ]
+    },
+    "StylingSet": {
+      "module": "StylingSet",
+      "results": [
+        {
+          "metric": "bag",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"A slouchy tan shoulder bag with burgundy side panels\"",
+            "\"suspended from a gold chain strap over the shoulder\""
+          ],
+          "reason": "Bag type, carrying method, shape, and material/color details are clearly described."
+        },
+        {
+          "metric": "footwear",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No footwear is mentioned in the text."
+        },
+        {
+          "metric": "jewelry",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No salient jewelry or body ornament is described."
+        },
+        {
+          "metric": "belt",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No visible belt, sash, or waist strap/harness is mentioned; waist shaping comes from garment cut only."
+        },
+        {
+          "metric": "layering",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"worn open over a matching warm khaki/tan button-front inner layer\"",
+            "\"Underneath, a tan utility-like top or vest sits close to the torso ... extending over a coordinating tan skirt\""
+          ],
+          "reason": "The text clearly establishes a multi-layer outfit with readable outer jacket, inner layer, and skirt relationships."
+        }
+      ]
+    },
+    "Composition": {
+      "module": "Composition",
+      "results": [
+        {
+          "metric": "top_bottom_proportion",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“Cropped runway look shown from head to lower thigh”",
+            "“The jacket falls to about upper-thigh length”",
+            "“The skirt is slim and knee-length or just above the knee”"
+          ],
+          "reason": "The text clearly describes the overall vertical proportion and the relative lengths of the jacket and skirt, making the top-bottom balance imageable."
+        },
+        {
+          "metric": "asymmetry",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No clear asymmetrical design, one-shoulder, uneven hem, or similar structure is described."
+        },
+        {
+          "metric": "cross_garment_binding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“The jacket is worn open over a matching warm khaki/tan button-front inner layer”",
+            "“Underneath, a tan utility-like top or vest sits close to the torso”",
+            "“extending over a coordinating tan skirt”"
+          ],
+          "reason": "The description distinguishes which features belong to the jacket, inner layer, and skirt, so the multi-garment relationships are clearly bound to specific items."
+        }
+      ]
+    },
+    "Specificity": {
+      "module": "Specificity",
+      "results": [
+        {
+          "metric": "specific_noun_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "oversized, boxy outer jacket",
+            "button-front inner layer",
+            "slouchy tan shoulder bag",
+            "patch pockets",
+            "gold chain strap"
+          ],
+          "reason": "Uses highly specific fashion nouns and garment-part terms throughout, with clear item identities and accessory construction."
+        },
+        {
+          "metric": "fine_grained_attribute_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "pale grey and off-white narrow vertical striping",
+            "coarse woven surface",
+            "dark speckled/fringed edging",
+            "heavily frayed black-and-navy trim",
+            "burgundy side panels",
+            "gold-tone buttons"
+          ],
+          "reason": "Color, material, texture, and construction details are consistently fine-grained and visually actionable, with strong specificity across the outfit."
+        }
+      ]
+    },
+    "BindingAccuracy": {
+      "module": "BindingAccuracy",
+      "results": [
+        {
+          "metric": "attribute_entity_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“oversized, boxy outer jacket in pale grey and off-white narrow vertical striping”",
+            "“matching warm khaki/tan button-front inner layer”",
+            "“A slouchy tan shoulder bag with burgundy side panels ... suspended from a gold chain strap”"
+          ],
+          "reason": "Most attributes are clearly attached to the correct garment or accessory, and the layering is understandable. Minor ambiguity remains in phrases like “top or vest” and some overlapping trim/pocket descriptions, but they do not seriously confuse the main bindings."
+        },
+        {
+          "metric": "multi_garment_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“outer jacket ... worn open over a matching ... inner layer”",
+            "“extends over a coordinating tan skirt”",
+            "“A slouchy tan shoulder bag ... suspended from a gold chain strap”"
+          ],
+          "reason": "The text keeps the jacket, inner layer, skirt, and bag mostly distinct and correctly related. There is slight fuzziness around whether the close-fitting tan piece is a top or vest, but the multi-item binding is still strong and usable."
+        }
+      ]
+    },
+    "LanguageClarity": {
+      "module": "LanguageClarity",
+      "results": [
+        {
+          "metric": "quantity_accuracy",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“one hand is tucked”",
+            "“from head to lower thigh”",
+            "“wide short sleeves”"
+          ],
+          "reason": "Quantity and extent references are mostly clear and internally consistent, with only minor ambiguity in the cropped visibility and garment layering."
+        },
+        {
+          "metric": "reference_clarity",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“The jacket is worn open over a matching warm khaki/tan button-front inner layer”",
+            "“Underneath, a tan utility-like top or vest sits close to the torso”",
+            "“A slouchy tan shoulder bag ... is carried under the left arm”"
+          ],
+          "reason": "Pronouns and omitted subjects are generally easy to track, and the garment references remain coherent, though the layered outfit description is somewhat dense."
+        }
+      ]
+    },
+    "StructuralClarity": {
+      "module": "StructuralClarity",
+      "results": [
+        {
+          "metric": "information_ordering",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "Cropped runway look shown from head to lower thigh",
+            "built around an oversized, boxy outer jacket",
+            "Underneath, a tan utility-like top or vest",
+            "The skirt is slim and knee-length or just above the knee",
+            "A slouchy tan shoulder bag ... is carried under the left arm"
+          ],
+          "reason": "The description follows a mostly natural body-to-garment-to-accessory order and makes the outfit structure easy to reconstruct. There is some density and a few layered detail clusters, but the main visual hierarchy remains clear."
+        }
+      ]
+    },
+    "GenerationReadiness": {
+      "module": "GenerationReadiness",
+      "results": [
+        {
+          "metric": "generation_readiness",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“Cropped runway look shown from head to lower thigh”",
+            "“oversized, boxy outer jacket in pale grey and off-white narrow vertical striping”",
+            "“worn open over a matching warm khaki/tan button-front inner layer”",
+            "“slim and knee-length or just above the knee”",
+            "“slouchy tan shoulder bag with burgundy side panels”"
+          ],
+          "reason": "The text is highly visual and already close to a generation prompt, with clear silhouette, layering, materials, colors, and accessories. It is slightly more descriptive than prompt-tight, but still readily convertible with minimal editing."
+        },
+        {
+          "metric": "bilateral_coherence",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit left-right bilateral contrast is described for sleeves, legs, shoes, or other paired trunk elements."
+        },
+        {
+          "metric": "spatial_coherence",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“worn open over”",
+            "“underneath”",
+            "“extends over a coordinating tan skirt”",
+            "“carried under the left arm, suspended from a gold chain strap over the shoulder”"
+          ],
+          "reason": "Layering and attachment positions are clearly stated and visually reconstructable. The spatial logic is coherent, with only minor verbosity rather than any real ambiguity."
+        }
+      ]
+    },
+    "ConcisenessAndDensity": {
+      "module": "ConcisenessAndDensity",
+      "results": [
+        {
+          "metric": "core_information_density",
+          "applicable": true,
+          "score": 0.5,
+          "hit": 0,
+          "evidence": [
+            "“oversized, boxy outer jacket”",
+            "“matching warm khaki/tan button-front inner layer”",
+            "“slim and knee-length”",
+            "“slouchy tan shoulder bag with burgundy side panels”"
+          ],
+          "reason": "主体服装轮廓和关键细节很完整，但描述偏长，层层堆叠材质、边缘、扣件和装饰信息，信息密度中等偏高但不够精炼。"
+        },
+        {
+          "metric": "visibility_priority",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“shown from head to lower thigh”",
+            "“oversized, boxy outer jacket”",
+            "“The skirt is slim and knee-length or just above the knee”",
+            "“A slouchy tan shoulder bag ... is carried under the left arm”"
+          ],
+          "reason": "可见主体轮廓、层次和配色优先写出，整体以外观可见信息为主；虽有少量较细的装饰与结构描述，但没有明显让隐藏信息喧宾夺主。"
+        }
+      ]
+    },
+    "DesignMerit": {
+      "module": "DesignMerit",
+      "results": [
+        {
+          "metric": "design_distinctiveness",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"oversized, boxy outer jacket\"",
+            "\"heavily frayed black-and-navy trim\"",
+            "\"slouchy tan shoulder bag with burgundy side panels\""
+          ],
+          "reason": "The look has a clear memory anchor in the frayed trim and deconstructed-luxe layering, plus an unusual bag color-blocking. Distinctive, though still grounded in a somewhat wearable luxury formula."
+        },
+        {
+          "metric": "visual_observation_grounding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"shown from head to lower thigh\"",
+            "\"high turned-up collar\"",
+            "\"wide short sleeves ending around the upper arms\"",
+            "\"visible patch pockets near the lower front\""
+          ],
+          "reason": "The description is strongly anchored to visible garment parts and placement, with careful visible/inferred language throughout."
+        },
+        {
+          "metric": "craft_embellishment_salience",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"heavily frayed black-and-navy trim along the sleeve edges, front opening, hem, and patch-pocket edges\"",
+            "\"dark speckled/fringed edging\"",
+            "\"decorative chain-like trim along the hem edge\""
+          ],
+          "reason": "Craft and trim details are clearly identified with location and visual effect, though the description is more about surface treatment than a single dominant craft technique."
+        },
+        {
+          "metric": "silhouette_combination_originality",
+          "applicable": true,
+          "score": 0.5,
+          "hit": 0,
+          "evidence": [
+            "\"oversized, boxy outer jacket\"",
+            "\"tan utility-like top or vest\"",
+            "\"coordinating tan skirt\"",
+            "\"slouchy tan shoulder bag\""
+          ],
+          "reason": "The silhouette is coherent and layered, but the overall combination remains fairly legible and fashion-standard: structured jacket, slim skirt, shoulder bag. The deconstructed trim adds interest without fully escaping a predictable luxury template."
+        },
+        {
+          "metric": "design_signal_purity",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"built around\"",
+            "\"has a high turned-up collar\"",
+            "\"visible patch pockets\"",
+            "\"The palette is muted and earthy\""
+          ],
+          "reason": "The text is overwhelmingly composed of concrete design facts, with only a brief mood summary at the end. Design signal is very high and not diluted by essay-like narration."
+        }
+      ]
+    },
+    "ConceptBonus": {
+      "module": "ConceptBonus",
+      "results": [
+        {
+          "metric": "aesthetic_vocabulary",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“structured but relaxed”",
+            "“layered, textured, deconstructed-luxe mood”"
+          ],
+          "reason": "The text explicitly uses style-language to frame the look’s aesthetic."
+        },
+        {
+          "metric": "cultural_reference",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No clear cultural, historical, or brand-specific reference is provided."
+        },
+        {
+          "metric": "gender_expression",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The description does not explicitly discuss gender expression or androgyny."
+        },
+        {
+          "metric": "theme_narrative",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No series theme or conceptual narrative is explicitly stated."
+        },
+        {
+          "metric": "brand_alignment",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "There is no explicit brand language or brand identity target."
+        },
+        {
+          "metric": "negation_control",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text does not emphasize exclusions or absence of elements."
+        }
+      ]
+    }
+  },
+  "r_content": {
+    "enabled": true,
+    "odin_reference": "ICML 2024 ODIN (disentangled reward): RL uses content-dominant scalar; length diagnostics + soft penalty channel reduce length hacking vs. raw S_fp alone.",
+    "S_fp": 0.7973,
+    "total_penalty": 0.2,
+    "gamma_penalty": 0.35,
+    "formula": "multiply",
+    "beta_z_len": 0.05,
+    "char_len": 1406,
+    "log_len": 7.249215,
+    "est_tokens_char_div_4": 351.5,
+    "holdout_length_prediction": null,
+    "r_after_length_residual": 0.7973,
+    "r_after_soft_penalty": 0.741489,
+    "z_len": null,
+    "R_content": 0.741489
+  }
+}

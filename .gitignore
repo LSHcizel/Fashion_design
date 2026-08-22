@@ -3,7 +3,6 @@ node_modules/
 
 # Local / generated
 .tmp_plan_pdf/
-fashion_research_dir/
 
 # Python
 __pycache__/
@@ -38,6 +37,8 @@ Thumbs.db
 *.json
 !requirements.txt
 !plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json
+!fashion_research_dir/**/*.json
+!fashion_research_dir/**/*.jsonl
 
 # Training run logs (JSONL can be large)
 training/runs/

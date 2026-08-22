@@ -1,0 +1,20 @@
+Chapter: 03
+Sub-theme: The Mirror and Reflection
+Theme: Une Lettre d’amour
+Brand: Givenchy
+ImageCount: 4
+Images:
+1. look_01.jpg
+2. look_02.jpg
+3. look_03.jpg
+4. look_04.jpg
+
+SuggestedDeleteCount: 2
+SuggestedDeleteFiles:
+- look_01.jpg
+- look_02.jpg
+
+RawAgentResult:
+DELETE: 1, 2
+FILES: look_01.jpg, look_02.jpg
+NOTES: Removing redundant images; looks 03 and 04 provide stronger thematic focus on reflection and mirrors.

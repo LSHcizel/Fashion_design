@@ -1,0 +1,18 @@
+{
+  "image_path": "E:\\fashion_agents_project\\downloads\\wgsn_latest_batch\\01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装\\032_media_cha_biarritz_ps27_013.jpg",
+  "text_description": "Cropped full-body fashion look centered on a voluminous, high-waisted midi skirt worn with a relaxed cream knit top featuring bold black horizontal stripes; the top is slightly bloused at the waist with sleeves pushed up, creating a casual contrast to the dramatic skirt. The skirt has a wide black waistband and a full A-line silhouette with deep pleating or gathered volume, extending to mid-calf and moving outward in a bell-like shape. Its surface is covered in large graphic red, white, and black motifs resembling abstract butterfly-wing or floral paneling, outlined in black with irregular white spots and vertical red sections. Side seam pockets are visible, with the wearer’s hands tucked into them. The lower edge of the skirt is finished with dense, long, layered fringe in black, red, and dark tones, adding heavy texture and motion around the hem. Styling is completed with black high-heeled pumps featuring contrasting pale/white toe caps, giving the look a polished but playful graphic finish.",
+  "key_elements": [
+    "cream and black striped relaxed top",
+    "high-waisted black waistband",
+    "voluminous printed midi skirt",
+    "red, white, and black abstract wing-like motif",
+    "visible side pockets with hands inserted",
+    "dense multicolor fringe hem",
+    "black heels with pale toe caps"
+  ],
+  "uncertainty_notes": [
+    "Skirt print motif appears wing-like or abstract floral but is not definitively identifiable."
+  ],
+  "raw_model_output": "{\"text_description\":\"Cropped full-body fashion look centered on a voluminous, high-waisted midi skirt worn with a relaxed cream knit top featuring bold black horizontal stripes; the top is slightly bloused at the waist with sleeves pushed up, creating a casual contrast to the dramatic skirt. The skirt has a wide black waistband and a full A-line silhouette with deep pleating or gathered volume, extending to mid-calf and moving outward in a bell-like shape. Its surface is covered in large graphic red, white, and black motifs resembling abstract butterfly-wing or floral paneling, outlined in black with irregular white spots and vertical red sections. Side seam pockets are visible, with the wearer’s hands tucked into them. The lower edge of the skirt is finished with dense, long, layered fringe in black, red, and dark tones, adding heavy texture and motion around the hem. Styling is completed with black high-heeled pumps featuring contrasting pale/white toe caps, giving the look a polished but playful graphic finish.\",\"key_elements\":[\"cream and black striped relaxed top\",\"high-waisted black waistband\",\"voluminous printed midi skirt\",\"red, white, and black abstract wing-like motif\",\"visible side pockets with hands inserted\",\"dense multicolor fringe hem\",\"black heels with pale toe caps\"],\"uncertainty_notes\":[\"Skirt print motif appears wing-like or abstract floral but is not definitively identifiable.\"]}",
+  "model": "gpt-5.5"
+}

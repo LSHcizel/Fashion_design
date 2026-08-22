@@ -1,0 +1,21 @@
+# 004_media_cha_biarritz_ps27_012 text_description
+
+## text_description
+
+Cropped runway look focused from waist to feet: the model wears close-fitting cream shorts with a smooth, minimal surface and black piping tracing the mid-thigh leg openings, creating a sporty, body-skimming silhouette. Below, tall cream boots rise to the lower thigh with a clean cylindrical shaft, accented by a pale blue band around the top edge and darker toe area visible at the foot; a small green detail appears near one outer lower leg. In the hand, the model carries or drapes a cream textile piece, possibly a coat or wrap, hanging vertically beside the leg and decorated along the edge with scattered red, black, yellow, and neutral appliqué or embroidery-like motifs plus small fringe details. A plush bright yellow mini bag with a soft fuzzy texture hangs near the hand, adding a saturated accent against the cream palette. At the side edge of the frame, a red-and-black fringed textile layer is partially visible, suggesting additional layered styling above the cropped view. The overall impression is graphic cream sportswear mixed with ornate handcrafted trim, plush accessory texture, and statement thigh-high boots.
+
+## key_elements
+
+- cream fitted mid-thigh shorts
+- black piping at shorts hems
+- cream thigh-high boots
+- pale blue trim at boot tops
+- dark toe area on boots
+- cream draped textile with multicolor appliqué or embroidery
+- bright yellow fuzzy mini bag
+- partial red-and-black fringed layer
+
+## uncertainty_notes
+
+- Upper garment and full bag structure are cropped and only partially visible
+- Draped cream textile may be a coat, wrap, or carried garment

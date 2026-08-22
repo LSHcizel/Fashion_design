@@ -1,0 +1,21 @@
+{
+  "image_path": "E:\\fashion_agents_project\\downloads\\wgsn_latest_batch\\01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装\\049_media_cha_biarritz_ps27_040.jpg",
+  "text_description": "A monochrome pale butter-cream runway look built around a smooth, close-fitting sleeveless upper dress or top and a matching ribbed midi skirt, layered with a short capelet draped over the shoulders. The capelet sits high at the neck and is gathered/fastened at the center front with an ornate metallic floral brooch, spreading horizontally across the collarbones and upper arms while leaving long vertical openings at the sides so the bare arms show through. Beneath it, the bodice appears clean and minimally detailed with a soft round neckline obscured by the cape, skimming the torso before meeting a high-waisted knit-looking skirt with fine vertical ribbing. The skirt falls to below the knee/mid-calf in a gently flared A-line shape with a soft, slightly wavy hem, creating a fluid lower silhouette against the more composed shoulder cape. The palette is tonal beige/cream throughout the clothing, contrasted by black open-toe strappy heeled sandals with a narrow toe strap and ankle strap. Accessories include long earrings, the decorative central brooch, a light tan woven/raffia-like handbag carried at one side, and a partially visible dark handheld item or bag on the opposite side. The overall styling is elegant, minimal, and refined, with soft knit texture, cape-like draping, and delicate evening-leaning accessories.",
+  "key_elements": [
+    "pale cream monochrome outfit",
+    "short shoulder capelet with side arm openings",
+    "ornate metallic brooch at center neckline",
+    "smooth fitted sleeveless bodice",
+    "fine vertical ribbed midi skirt",
+    "soft flared below-knee hem",
+    "black strappy heeled sandals",
+    "light tan woven handbag",
+    "long earrings"
+  ],
+  "uncertainty_notes": [
+    "The exact garment construction under the cape is partly obscured.",
+    "The woven bag material and the dark handheld item are not fully clear from the image."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"A monochrome pale butter-cream runway look built around a smooth, close-fitting sleeveless upper dress or top and a matching ribbed midi skirt, layered with a short capelet draped over the shoulders. The capelet sits high at the neck and is gathered/fastened at the center front with an ornate metallic floral brooch, spreading horizontally across the collarbones and upper arms while leaving long vertical openings at the sides so the bare arms show through. Beneath it, the bodice appears clean and minimally detailed with a soft round neckline obscured by the cape, skimming the torso before meeting a high-waisted knit-looking skirt with fine vertical ribbing. The skirt falls to below the knee/mid-calf in a gently flared A-line shape with a soft, slightly wavy hem, creating a fluid lower silhouette against the more composed shoulder cape. The palette is tonal beige/cream throughout the clothing, contrasted by black open-toe strappy heeled sandals with a narrow toe strap and ankle strap. Accessories include long earrings, the decorative central brooch, a light tan woven/raffia-like handbag carried at one side, and a partially visible dark handheld item or bag on the opposite side. The overall styling is elegant, minimal, and refined, with soft knit texture, cape-like draping, and delicate evening-leaning accessories.\",\n  \"key_elements\": [\n    \"pale cream monochrome outfit\",\n    \"short shoulder capelet with side arm openings\",\n    \"ornate metallic brooch at center neckline\",\n    \"smooth fitted sleeveless bodice\",\n    \"fine vertical ribbed midi skirt\",\n    \"soft flared below-knee hem\",\n    \"black strappy heeled sandals\",\n    \"light tan woven handbag\",\n    \"long earrings\"\n  ],\n  \"uncertainty_notes\": [\n    \"The exact garment construction under the cape is partly obscured.\",\n    \"The woven bag material and the dark handheld item are not fully clear from the image.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

@@ -1,0 +1,10 @@
+Chapter: 01
+Look: 04
+Sub-theme: The Androgynous Silhouette
+Image: look_04.jpg
+
+RawAgentResult:
+TIER: high
+ACTION: KEEP
+INFO: A masterful blend of architectural tailoring and avant-garde hardware that creates a powerful, contemporary silhouette.
+FINAL_FASHION_DESIGN: Retain original design.

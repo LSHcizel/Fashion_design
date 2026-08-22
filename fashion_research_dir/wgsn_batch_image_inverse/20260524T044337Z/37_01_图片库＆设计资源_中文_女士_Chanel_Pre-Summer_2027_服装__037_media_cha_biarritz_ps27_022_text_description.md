@@ -1,0 +1,21 @@
+# 037_media_cha_biarritz_ps27_022 text_description
+
+## text_description
+
+Cropped runway view of a coordinated striped look built around a cream-white base with bold vertical black stripes and narrower pale yellow striping. The top layer is a short, boxy, open-front jacket or cardigan with a deep V opening, long straight sleeves, dropped-to-natural shoulders, and a cropped hem ending around the waist; the front edges, neckline, hem, and cuffs are finished with thick black-and-white textured fringe or bouclé-like trim. Small round gold buttons sit in pairs along the front panels and sleeves, adding a polished contrast to the graphic striping. Beneath the open jacket, a black lace or openwork bralette/camisole is visible at the chest, creating a sheer, lingerie-inspired layer under the structured outer piece. The lower half appears to be a high-waisted matching slim skirt in the same vertical black, cream, and yellow stripe pattern, close to the body, with a front slit edged in the same fuzzy black-and-white trim. Layered necklaces of pearls, dark beads, and green-toned beads hang over the deep neckline, reinforcing the ornate, dressed-up styling. The overall mood is tailored yet decorative: graphic monochrome-and-yellow striping, cropped proportions, textured trim, gold button accents, and visible lingerie layered with a matching skirt set.
+
+## key_elements
+
+- cream base with vertical black and pale yellow stripes
+- cropped open-front jacket/cardigan
+- black-and-white textured fringe trim
+- small round gold buttons
+- visible black lace bralette or camisole
+- matching high-waisted striped skirt
+- front slit with textured trim
+- layered pearl and bead necklaces
+
+## uncertainty_notes
+
+- Lower garment appears to be a skirt, but its full length is not visible.
+- Exact fabric content is not identifiable; texture only suggests a bouclé or tweed-like surface.

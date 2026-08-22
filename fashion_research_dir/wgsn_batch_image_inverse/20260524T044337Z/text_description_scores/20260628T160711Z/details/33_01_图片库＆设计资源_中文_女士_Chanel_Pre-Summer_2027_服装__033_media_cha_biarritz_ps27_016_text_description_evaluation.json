@@ -1,0 +1,1665 @@
+{
+  "name": "fashion_text_prompt_optimizer",
+  "version": "0.1.0",
+  "source_name": "33_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__033_media_cha_biarritz_ps27_016_text_description.md",
+  "input_type": "text_description",
+  "judge_backend": "openai_compatible_api",
+  "judge_model": "gpt-5.4-mini",
+  "judge_api_base": "https://api.ohmygpt.com/v1",
+  "text_description": "A cream and vivid red coordinated look shown from the lower torso to the feet, built around a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt. The top is cream with sleeves pushed or cropped to the forearm, finished with bold red cuffs; its neckline and full upper shape are out of frame. The skirt sits high on the waist with a horizontal red waistband and a cream body that falls to below the knee in a gently straight-to-slightly-flared silhouette. A red front trim runs down from the waistband and curves around a dramatic high front slit, exposing most of one thigh, with three small round gold buttons placed along the red placket near the upper front. The skirt hem is finished with a red border, including a wider red accent along the lower edge. Styling is polished and resort-like: chunky brown and gold bracelets on both wrists, a small woven straw handbag carried at the side, and neutral beige pointed or almond-toe heels visible at the bottom. The color palette is warm cream contrasted sharply with saturated red and gold hardware, creating a refined nautical or Riviera-inspired mood.",
+  "eval_prose": "A cream and vivid red coordinated look shown from the lower torso to the feet, built around a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt. The top is cream with sleeves pushed or cropped to the forearm, finished with bold red cuffs; its neckline and full upper shape are out of frame. The skirt sits high on the waist with a horizontal red waistband and a cream body that falls to below the knee in a gently straight-to-slightly-flared silhouette. A red front trim runs down from the waistband and curves around a dramatic high front slit, exposing most of one thigh, with three small round gold buttons placed along the red placket near the upper front. The skirt hem is finished with a red border, including a wider red accent along the lower edge. Styling is polished and resort-like: chunky brown and gold bracelets on both wrists, a small woven straw handbag carried at the side, and neutral beige pointed or almond-toe heels visible at the bottom. The color palette is warm cream contrasted sharply with saturated red and gold hardware, creating a refined nautical or Riviera-inspired mood.",
+  "total_score": 0.852,
+  "gates": {
+    "score_gate": {
+      "name": "score_gate",
+      "description": "最终 S_fp（quality 用 weighted base_score，不含 penalty 扣减；已做 holdout 长度去相关）",
+      "value": 0.852,
+      "threshold": 0.7,
+      "passed": true,
+      "weights": {
+        "coverage": 0.3,
+        "quality": 0.7
+      },
+      "components": {
+        "coverage_axis_score": 0.9412,
+        "quality_effective": 0.8125
+      },
+      "total_cap_applied": 1.0
+    },
+    "penalty_gate": {
+      "name": "penalty_gate",
+      "description": "仅依据 penalties.total_penalty（各 penalty 分值的算术平均）",
+      "total_penalty": 0.0,
+      "threshold": 0.5,
+      "passed": true
+    },
+    "both_passed": true
+  },
+  "score_band": "Strong",
+  "metric_totals": {
+    "total_defined_metrics": 42,
+    "total_applicable_metrics": 30,
+    "total_hit_metrics": 29,
+    "total_skipped_metrics": 12
+  },
+  "skipped_metrics": [
+    {
+      "metric": "shoulder_architecture",
+      "axis": "coverage_score",
+      "rule": "当肩线设计显著（如强调垫肩/结构肩、落肩、宽肩、单肩或露肩、无肩带抹胸等）时，文本须点明该肩部结构语言，而非仅写「上装」或笼统廓形",
+      "applicability_code": "when_shoulder_is_salient",
+      "applicability_hint": "Only applicable when the text implies prominent shoulder design: pads/structured shoulders, dropped shoulder, one-shoulder/off-shoulder, strapless neckline, or other salient shoulder/sleeve anchor cues.",
+      "reason": "No salient shoulder structure is described; the neckline and upper shape are explicitly out of frame."
+    },
+    {
+      "metric": "fabric_family",
+      "axis": "coverage_score",
+      "rule": "文本需给出主体材质类别",
+      "applicability_code": "when_material_is_inferable",
+      "applicability_hint": "Only applicable when the text provides enough information about the main material.",
+      "reason": "The text describes colors and garment shapes but does not specify a main fabric family/material."
+    },
+    {
+      "metric": "pattern_type",
+      "axis": "coverage_score",
+      "rule": "有图案时需给出图案类型",
+      "applicability_code": "when_pattern_exists",
+      "applicability_hint": "Only applicable when the text describes pattern or print information.",
+      "reason": "No pattern or print is described."
+    },
+    {
+      "metric": "functional_detail",
+      "axis": "coverage_score",
+      "rule": "显著口袋、挂带或功能细节应被提到",
+      "applicability_code": "when_functional_detail_is_salient",
+      "applicability_hint": "Only applicable when the text mentions pockets, straps, utility parts, or functional details.",
+      "reason": "No pockets, straps, or other functional utility details are described for the garment."
+    },
+    {
+      "metric": "construction_technique",
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "reason": "The text describes silhouette and trim, but not a specific construction technique such as pleating, quilting, embroidery, cut-outs, or engineered panel work."
+    },
+    {
+      "metric": "deconstruction",
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "reason": "No deconstruction, splicing, displacement, or reconstruction language is present."
+    },
+    {
+      "metric": "belt",
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "reason": "No actual belt, sash, waist strap, or harness accessory is described; the waistband is part of the skirt construction, not a separate belt."
+    },
+    {
+      "metric": "bilateral_coherence",
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "reason": "The text does not explicitly distinguish left/right sides or other bilateral asymmetries in sleeves, legs, shoes, or hands."
+    },
+    {
+      "metric": "gender_expression",
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "reason": "No explicit gender expression or androgyny is mentioned."
+    },
+    {
+      "metric": "theme_narrative",
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "reason": "No series theme or conceptual narrative is provided."
+    },
+    {
+      "metric": "brand_alignment",
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "reason": "No brand language or brand identity is referenced."
+    },
+    {
+      "metric": "negation_control",
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "reason": "The text does not emphasize exclusions or absences as a meaningful design constraint."
+    }
+  ],
+  "scores": {
+    "coverage_score": {
+      "applicable_metrics": 17,
+      "hit_metrics": 16,
+      "score_sum": 16.0,
+      "score": 0.9412
+    },
+    "quality_score": {
+      "applicable_metrics": 11,
+      "hit_metrics": 11,
+      "score_sum": 9.25,
+      "score": 0.8409,
+      "base_score": 0.8125,
+      "axis_score_unweighted": 0.8409,
+      "penalized_score": 0.8125,
+      "penalties": {
+        "items": {
+          "generation_content_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "soft, close-fitting long-sleeve top",
+              "matching high-waisted midi skirt",
+              "chunky brown and gold bracelets",
+              "small woven straw handbag",
+              "neutral beige pointed or almond-toe heels"
+            ],
+            "reason": "The description stays focused on a clear, imageable outfit with concise garment and accessory details; there is little redundant or conceptual prose."
+          },
+          "consistency_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "cream and vivid red coordinated look",
+              "matching high-waisted midi skirt",
+              "neutral beige pointed or almond-toe heels"
+            ],
+            "reason": "No trunk-level contradictions are present; the top, skirt, and shoes read as a coherent single outfit."
+          },
+          "coordination_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "polished and resort-like",
+              "warm cream contrasted sharply with saturated red and gold hardware",
+              "refined nautical or Riviera-inspired mood"
+            ],
+            "reason": "The styling language is unified and consistent across garments and accessories, with no major coordination clash."
+          },
+          "rationality_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "high front slit, exposing most of one thigh",
+              "three small round gold buttons",
+              "chunky brown and gold bracelets"
+            ],
+            "reason": "All described elements are physically plausible and consistent with ordinary fashion construction."
+          }
+        },
+        "reasons": {
+          "generation_content_penalty": "The description stays focused on a clear, imageable outfit with concise garment and accessory details; there is little redundant or conceptual prose.",
+          "consistency_penalty": "No trunk-level contradictions are present; the top, skirt, and shoes read as a coherent single outfit.",
+          "coordination_penalty": "The styling language is unified and consistent across garments and accessories, with no major coordination clash.",
+          "rationality_penalty": "All described elements are physically plausible and consistent with ordinary fashion construction."
+        },
+        "generation_content_penalty": 0.0,
+        "consistency_penalty": 0.0,
+        "coordination_penalty": 0.0,
+        "rationality_penalty": 0.0,
+        "total_penalty": 0.0
+      },
+      "cap": 1.0
+    },
+    "bonus_score": {
+      "applicable_metrics": 2,
+      "hit_metrics": 2,
+      "score_sum": 2.0,
+      "score": 1.0
+    },
+    "fashion_prompt_score": 0.852,
+    "s_fp_base": 0.8511,
+    "length_disentangle": {
+      "adjusted_score": 0.852,
+      "length_component": -0.000942,
+      "log_len": 7.028201,
+      "slope_a": 0.002948,
+      "mode": "centered_slope",
+      "applied": true,
+      "log_len_center": 7.3478
+    },
+    "weights": {
+      "coverage": 0.3,
+      "quality": 0.7
+    },
+    "total_cap": 1.0,
+    "module_scores": {
+      "GarmentCore": {
+        "applicable_metrics": 4,
+        "hit_metrics": 4,
+        "score_sum": 4.0,
+        "score": 1.0
+      },
+      "MaterialColor": {
+        "applicable_metrics": 4,
+        "hit_metrics": 3,
+        "score_sum": 3.0,
+        "score": 0.75
+      },
+      "ConstructionDetail": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "StylingSet": {
+        "applicable_metrics": 4,
+        "hit_metrics": 4,
+        "score_sum": 4.0,
+        "score": 1.0
+      },
+      "Composition": {
+        "applicable_metrics": 3,
+        "hit_metrics": 3,
+        "score_sum": 3.0,
+        "score": 1.0
+      },
+      "Specificity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "BindingAccuracy": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "LanguageClarity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "StructuralClarity": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 0.75,
+        "score": 0.75
+      },
+      "GenerationReadiness": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "ConcisenessAndDensity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "ConceptBonus": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      }
+    }
+  },
+  "diagnosis": {
+    "missing_information": [
+      {
+        "metric": "surface_finish",
+        "rule": "文本需给出光泽、哑光、垂坠或硬挺等表面性质",
+        "score_value": 0.0,
+        "matched_terms": [
+          "\"soft, close-fitting long-sleeve top\"",
+          "\"falls to below the knee in a gently straight-to-slightly-flared silhouette\""
+        ],
+        "reason": "It gives fit and silhouette, but not a clear surface trait like matte, glossy, drapey, or stiff."
+      }
+    ],
+    "quality_issues": [],
+    "bonus_opportunities": []
+  },
+  "metric_results": {
+    "garment_category": {
+      "axis": "coverage_score",
+      "rule": "文本需明确给出服装主体品类",
+      "source_keypoints": [
+        1
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+        "“neutral beige pointed or almond-toe heels”"
+      ],
+      "reason": "The text clearly identifies the main garment categories: top, skirt, and heels.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "silhouette": {
+      "axis": "coverage_score",
+      "rule": "文本需给出整体轮廓或结构趋势",
+      "source_keypoints": [
+        2
+      ],
+      "applicability_code": "when_shape_is_salient",
+      "applicability_hint": "Only applicable when the text clearly mentions silhouette, shape, or structural contour.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“gently straight-to-slightly-flared silhouette”",
+        "“soft, close-fitting”"
+      ],
+      "reason": "The overall shape is explicitly described, including fit and skirt silhouette.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "length_hemline": {
+      "axis": "coverage_score",
+      "rule": "文本需给出长度或下摆信息",
+      "source_keypoints": [
+        3
+      ],
+      "applicability_code": "when_length_or_hem_is_salient",
+      "applicability_hint": "Only applicable when the text mentions length, hemline, slit, or garment length.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“high-waisted midi skirt”",
+        "“falls to below the knee”",
+        "“dramatic high front slit”",
+        "“finished with a red border”"
+      ],
+      "reason": "The text gives clear length and hemline information for the skirt, including slit detail.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "shoulder_architecture": {
+      "axis": "coverage_score",
+      "rule": "当肩线设计显著（如强调垫肩/结构肩、落肩、宽肩、单肩或露肩、无肩带抹胸等）时，文本须点明该肩部结构语言，而非仅写「上装」或笼统廓形",
+      "source_keypoints": [
+        4
+      ],
+      "applicability_code": "when_shoulder_is_salient",
+      "applicability_hint": "Only applicable when the text implies prominent shoulder design: pads/structured shoulders, dropped shoulder, one-shoulder/off-shoulder, strapless neckline, or other salient shoulder/sleeve anchor cues.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No salient shoulder structure is described; the neckline and upper shape are explicitly out of frame.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "body_coverage": {
+      "axis": "coverage_score",
+      "rule": "文本需描述显著裸露或包裹区域",
+      "source_keypoints": [
+        5
+      ],
+      "applicability_code": "when_exposure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions exposure, coverage, cutout, or body reveal.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“exposing most of one thigh”",
+        "“high front slit”",
+        "“sleeves pushed or cropped to the forearm”"
+      ],
+      "reason": "The text clearly describes body exposure through the high slit and partial arm coverage.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "fabric_family": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主体材质类别",
+      "source_keypoints": [
+        6
+      ],
+      "applicability_code": "when_material_is_inferable",
+      "applicability_hint": "Only applicable when the text provides enough information about the main material.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text describes colors and garment shapes but does not specify a main fabric family/material.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "surface_finish": {
+      "axis": "coverage_score",
+      "rule": "文本需给出光泽、哑光、垂坠或硬挺等表面性质",
+      "source_keypoints": [
+        7
+      ],
+      "applicability_code": "when_surface_trait_is_salient",
+      "applicability_hint": "Only applicable when the text mentions gloss, matte, drape, stiffness, pleats, or surface traits.",
+      "applicable": true,
+      "score_value": 0.0,
+      "hit": 0,
+      "matched_terms": [
+        "\"soft, close-fitting long-sleeve top\"",
+        "\"falls to below the knee in a gently straight-to-slightly-flared silhouette\""
+      ],
+      "reason": "It gives fit and silhouette, but not a clear surface trait like matte, glossy, drapey, or stiff.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "primary_color": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主色",
+      "source_keypoints": [
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"A cream and vivid red coordinated look\"",
+        "\"The top is cream\""
+      ],
+      "reason": "Cream is clearly established as the dominant base color.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "secondary_color": {
+      "axis": "coverage_score",
+      "rule": "有明显副色时需描述；若为大衣内里、开衩内衬等高对比色块，应说明可见条件（如行走、开片时）或与主色区的衔接，避免孤立撞色无锚点、不利生成",
+      "source_keypoints": [
+        12
+      ],
+      "applicability_code": "when_secondary_color_is_salient",
+      "applicability_hint": "Only applicable when the text clearly includes secondary color or color relationship information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"vivid red coordinated look\"",
+        "\"bold red cuffs\"",
+        "\"horizontal red waistband\""
+      ],
+      "reason": "Red is a clearly salient secondary/accent color used across multiple garment details.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "color_relationship_logic": {
+      "axis": "coverage_score",
+      "rule": "当存在多色块、强对比内搭/外搭、条纹或印花与底色关系、或明显的同色系/补色/撞色叙事时，文本须交代配色逻辑（如单色、同色系层次、补色对比、主次色块关系之一），使生成可还原色彩关系；仅罗列颜色词但未体现关系则不计为覆盖",
+      "source_keypoints": [
+        13
+      ],
+      "applicability_code": "when_multi_tone_or_strong_color_story",
+      "applicability_hint": "Only applicable when the text implies multiple color blocks, strong inner/outer contrast, stripe-vs-ground relations, tonal vs accented palette, or another non-trivial color story beyond a single flat hue.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"cream and vivid red coordinated look\"",
+        "\"warm cream contrasted sharply with saturated red and gold hardware\""
+      ],
+      "reason": "The text explicitly explains the palette relationship as a coordinated, high-contrast cream-versus-red scheme with gold accents.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "pattern_type": {
+      "axis": "coverage_score",
+      "rule": "有图案时需给出图案类型",
+      "source_keypoints": [
+        14
+      ],
+      "applicability_code": "when_pattern_exists",
+      "applicability_hint": "Only applicable when the text describes pattern or print information.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No pattern or print is described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "closure": {
+      "axis": "coverage_score",
+      "rule": "显著开合方式应被提到",
+      "source_keypoints": [
+        17
+      ],
+      "applicability_code": "when_closure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions button, zipper, tie, buckle, or closure details.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“three small round gold buttons”",
+        "“red placket”"
+      ],
+      "reason": "A clear buttoned closure/placket detail is explicitly described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "functional_detail": {
+      "axis": "coverage_score",
+      "rule": "显著口袋、挂带或功能细节应被提到",
+      "source_keypoints": [
+        18
+      ],
+      "applicability_code": "when_functional_detail_is_salient",
+      "applicability_hint": "Only applicable when the text mentions pockets, straps, utility parts, or functional details.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No pockets, straps, or other functional utility details are described for the garment.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "construction_technique": {
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "source_keypoints": [
+        9
+      ],
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text describes silhouette and trim, but not a specific construction technique such as pleating, quilting, embroidery, cut-outs, or engineered panel work.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "deconstruction": {
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "source_keypoints": [
+        20
+      ],
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No deconstruction, splicing, displacement, or reconstruction language is present.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "hardware_embellishment": {
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "source_keypoints": [
+        21
+      ],
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“three small round gold buttons”",
+        "“gold hardware”"
+      ],
+      "reason": "Buttons and gold hardware are explicitly mentioned as visible decorative/functional metal details.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "bag": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "source_keypoints": [
+        22
+      ],
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a small woven straw handbag”",
+        "“carried at the side”"
+      ],
+      "reason": "The bag is explicitly identified by type and material, and its carrying position is given, so the look clearly covers the required bag facets.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "footwear": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "source_keypoints": [
+        23
+      ],
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“neutral beige pointed or almond-toe heels”",
+        "“visible at the bottom”"
+      ],
+      "reason": "Footwear type and toe shape are specified, along with color, which is enough to satisfy the footwear coverage rule.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "jewelry": {
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "source_keypoints": [
+        24
+      ],
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“three small round gold buttons”",
+        "“chunky brown and gold bracelets on both wrists”"
+      ],
+      "reason": "The bracelets are salient body adornments and are explicitly described, so jewelry is clearly present.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "belt": {
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "source_keypoints": [
+        25
+      ],
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No actual belt, sash, waist strap, or harness accessory is described; the waistband is part of the skirt construction, not a separate belt.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "layering": {
+      "axis": "coverage_score",
+      "rule": "多层叠搭时应给出层次关系；外套、内搭、腰带、腿带与裤装之间的遮盖与固定顺序应可还原为可见层次，服务生成导向",
+      "source_keypoints": [
+        26
+      ],
+      "applicability_code": "when_layering_exists",
+      "applicability_hint": "Only applicable when the text describes layering or multi-layer garment relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“built around a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+        "“The top is cream ... The skirt sits high on the waist”"
+      ],
+      "reason": "The text describes a clear multi-garment outfit with an upper top and separate skirt, making the layered clothing relationship imageable.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "top_bottom_proportion": {
+      "axis": "coverage_score",
+      "rule": "明显上下比例关系应被提到；长外套、阔腿或宽松下装、厚底鞋与腿带/harness 等叠加时，应交代主干剪影主次，避免仅堆砌元素导致下盘过重、prompt 失焦",
+      "source_keypoints": [
+        27
+      ],
+      "applicability_code": "when_proportion_is_salient",
+      "applicability_hint": "Only applicable when the text describes top-bottom proportion, waist position, or visual balance.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“shown from the lower torso to the feet”",
+        "“high-waisted midi skirt”",
+        "“falls to below the knee”"
+      ],
+      "reason": "The text clearly describes the upper-to-lower body framing and the waist-to-hem proportion of the outfit.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "asymmetry": {
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "source_keypoints": [
+        29
+      ],
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a dramatic high front slit”",
+        "“exposing most of one thigh”"
+      ],
+      "reason": "The skirt’s high front slit creates a clear asymmetrical visual structure.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cross_garment_binding": {
+      "axis": "coverage_score",
+      "rule": "多单品时应能区分属性属于哪件单品",
+      "source_keypoints": [
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a matching high-waisted midi skirt”",
+        "“The top is cream ... finished with bold red cuffs”",
+        "“The skirt sits high on the waist with a horizontal red waistband”"
+      ],
+      "reason": "The description distinguishes which details belong to the top versus the skirt, showing clear cross-garment attribution.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "specific_noun_usage": {
+      "axis": "quality_score",
+      "rule": "使用具体服装或配件名词而非泛词",
+      "source_keypoints": [
+        1,
+        22,
+        23
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"long-sleeve top\"",
+        "\"high-waisted midi skirt\"",
+        "\"chunky brown and gold bracelets\"",
+        "\"woven straw handbag\"",
+        "\"pointed or almond-toe heels\""
+      ],
+      "reason": "Uses concrete garment and accessory nouns throughout, with clear fashion-specific terminology and little reliance on vague wording.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "fine_grained_attribute_usage": {
+      "axis": "quality_score",
+      "rule": "颜色、材质、结构词应尽量细粒度",
+      "source_keypoints": [
+        6,
+        7,
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"cream with bold red cuffs\"",
+        "\"horizontal red waistband\"",
+        "\"red front trim\"",
+        "\"three small round gold buttons\"",
+        "\"gently straight-to-slightly-flared silhouette\""
+      ],
+      "reason": "Color, structure, and finishing details are highly specific and layered, giving a precise and imageable description.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "attribute_entity_binding": {
+      "axis": "quality_score",
+      "rule": "属性必须绑定到正确实体；腰带、腿带、harness、护臂/护手等须明确归属外套、裤装或身体附件，避免腰胯多重束系指代漂移",
+      "source_keypoints": [
+        10,
+        39
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"cream with sleeves pushed or cropped to the forearm, finished with bold red cuffs\"",
+        "\"high-waisted midi skirt\" ... \"horizontal red waistband\" ... \"red front trim\" ... \"three small round gold buttons\""
+      ],
+      "reason": "Most attributes are clearly attached to the correct garment parts, but a few phrases rely on partial visibility or layered description, creating minor binding ambiguity.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "multi_garment_binding": {
+      "axis": "quality_score",
+      "rule": "多单品描述时不得将属性归错单品",
+      "source_keypoints": [
+        12,
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt\"",
+        "\"chunky brown and gold bracelets on both wrists, a small woven straw handbag ... and neutral beige pointed or almond-toe heels\""
+      ],
+      "reason": "The text cleanly separates top, skirt, accessories, and footwear, with only minor ambiguity from cropped framing and side placement of the handbag.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "quantity_accuracy": {
+      "axis": "quality_score",
+      "rule": "数量词应准确且不冲突",
+      "source_keypoints": [
+        37
+      ],
+      "applicability_code": "when_quantity_is_used",
+      "applicability_hint": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“three small round gold buttons”",
+        "“both wrists”"
+      ],
+      "reason": "The explicit quantities and side references are internally consistent and easy to track; no conflicting counts or unclear quantity relations appear.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "reference_clarity": {
+      "axis": "quality_score",
+      "rule": "代词和省略指向必须清晰",
+      "source_keypoints": [
+        38
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“its neckline and full upper shape are out of frame”",
+        "“its sleeves pushed or cropped to the forearm”",
+        "“exposing most of one thigh”"
+      ],
+      "reason": "Pronouns and omitted subjects are clearly anchored to the top and skirt, and the spatial references remain stable and readable throughout.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "information_ordering": {
+      "axis": "quality_score",
+      "rule": "描述应按主体到细节的顺序组织",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“A cream and vivid red coordinated look shown from the lower torso to the feet”",
+        "“built around a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+        "“Styling is polished and resort-like: chunky brown and gold bracelets... a small woven straw handbag... neutral beige pointed or almond-toe heels”"
+      ],
+      "reason": "The description follows a mostly natural order from overall view to main garments, then garment details, then accessories and styling mood. Minor compression appears in the top’s out-of-frame details and the dense skirt description, but the structure remains easy to reconstruct.",
+      "quality_dimension": "StructuralClarity",
+      "quality_dimension_zh": "结构清晰度"
+    },
+    "generation_readiness": {
+      "axis": "quality_score",
+      "rule": "文本应可直接转为图像生成 prompt；须以可见廓形、品类与层次为先，多文化/多时代风格符号混用时应能收束为单一 look 身份，否则视为生成导向不足",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“A cream and vivid red coordinated look”",
+        "“soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+        "“high front slit, exposing most of one thigh”",
+        "“small woven straw handbag ... neutral beige pointed or almond-toe heels”"
+      ],
+      "reason": "The description is highly visual, garment-specific, and mostly prompt-ready, with clear silhouette, colors, and accessories. It is slightly less than perfect because it reads like a polished design description rather than a fully concise generation prompt, and some details are partially out of frame or hedged.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "bilateral_coherence": {
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "source_keypoints": [
+        29,
+        40
+      ],
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text does not explicitly distinguish left/right sides or other bilateral asymmetries in sleeves, legs, shoes, or hands.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "spatial_coherence": {
+      "axis": "quality_score",
+      "rule": "层次、前后、内外、上下、附着位置等空间关系必须清晰且视觉上合理；大衣与腰带、腰下吊带、腿带/harness 与裤管之间的遮盖、穿入与固定点须可还原，禁止腰胯多层束系含糊不可成像",
+      "source_keypoints": [
+        26,
+        30,
+        40
+      ],
+      "applicability_code": "when_spatial_relation_exists",
+      "applicability_hint": "Only applicable when the text describes layering, front/back, inside/outside, attached position, crossing paths, or other explicit spatial relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“shown from the lower torso to the feet”",
+        "“sleeves pushed or cropped to the forearm”",
+        "“red front trim runs down from the waistband and curves around a dramatic high front slit”",
+        "“small woven straw handbag carried at the side”"
+      ],
+      "reason": "The spatial relations are clear and imageable: garment coverage, hem placement, slit location, and accessory placement are all coherent. Minor uncertainty remains in phrases like “pushed or cropped” and “pointed or almond-toe,” but they do not break visual readability.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "core_information_density": {
+      "axis": "quality_score",
+      "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“cream and vivid red coordinated look”",
+        "“soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+        "“small woven straw handbag ... neutral beige pointed or almond-toe heels”"
+      ],
+      "reason": "The text prioritizes the main garment silhouette and key visible styling details well, with only modest extra elaboration on color, trim, and accessories. It remains prompt-useful and fairly dense, though the descriptive layering is slightly verbose.",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "visibility_priority": {
+      "axis": "quality_score",
+      "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部或低可见度细节，避免不可见信息喧宾夺主",
+      "source_keypoints": [
+        18,
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“shown from the lower torso to the feet”",
+        "“A red front trim runs down ... around a dramatic high front slit”",
+        "“neutral beige pointed or almond-toe heels visible at the bottom”"
+      ],
+      "reason": "The description focuses on what is actually visible and image-dominant, including silhouette, slit, trim, accessories, and footwear. It does mention some less visible garment details like the neckline being out of frame, but these do not dominate the prompt.",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "aesthetic_vocabulary": {
+      "axis": "bonus_score",
+      "rule": "适度加入设计风格词汇",
+      "source_keypoints": [
+        31
+      ],
+      "applicability_code": "when_style_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly expresses aesthetic or style vocabulary.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“polished and resort-like”",
+        "“refined nautical or Riviera-inspired mood”"
+      ],
+      "reason": "The text explicitly uses style vocabulary to frame the look’s aesthetic.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cultural_reference": {
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "source_keypoints": [
+        32
+      ],
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“Riviera-inspired mood”",
+        "“nautical”"
+      ],
+      "reason": "It directly references recognizable cultural/style associations.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "gender_expression": {
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "source_keypoints": [
+        33
+      ],
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit gender expression or androgyny is mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "theme_narrative": {
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "source_keypoints": [
+        34
+      ],
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No series theme or conceptual narrative is provided.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "brand_alignment": {
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "source_keypoints": [
+        35
+      ],
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No brand language or brand identity is referenced.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "negation_control": {
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "source_keypoints": [
+        36
+      ],
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text does not emphasize exclusions or absences as a meaningful design constraint.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    }
+  },
+  "context_summary": {
+    "evaluated_modules": [
+      "GarmentCore",
+      "MaterialColor",
+      "ConstructionDetail",
+      "StylingSet",
+      "Composition",
+      "Specificity",
+      "BindingAccuracy",
+      "LanguageClarity",
+      "StructuralClarity",
+      "GenerationReadiness",
+      "ConcisenessAndDensity",
+      "ConceptBonus"
+    ],
+    "semantic_judging_enabled": true,
+    "quality_penalties_enabled": true,
+    "skipped_metrics_enabled": true,
+    "optimization_gates_enabled": true
+  },
+  "raw_module_outputs": {
+    "GarmentCore": {
+      "module": "GarmentCore",
+      "results": [
+        {
+          "metric": "garment_category",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+            "“neutral beige pointed or almond-toe heels”"
+          ],
+          "reason": "The text clearly identifies the main garment categories: top, skirt, and heels."
+        },
+        {
+          "metric": "silhouette",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“gently straight-to-slightly-flared silhouette”",
+            "“soft, close-fitting”"
+          ],
+          "reason": "The overall shape is explicitly described, including fit and skirt silhouette."
+        },
+        {
+          "metric": "length_hemline",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“high-waisted midi skirt”",
+            "“falls to below the knee”",
+            "“dramatic high front slit”",
+            "“finished with a red border”"
+          ],
+          "reason": "The text gives clear length and hemline information for the skirt, including slit detail."
+        },
+        {
+          "metric": "shoulder_architecture",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No salient shoulder structure is described; the neckline and upper shape are explicitly out of frame."
+        },
+        {
+          "metric": "body_coverage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“exposing most of one thigh”",
+            "“high front slit”",
+            "“sleeves pushed or cropped to the forearm”"
+          ],
+          "reason": "The text clearly describes body exposure through the high slit and partial arm coverage."
+        }
+      ]
+    },
+    "MaterialColor": {
+      "module": "MaterialColor",
+      "results": [
+        {
+          "metric": "fabric_family",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text describes colors and garment shapes but does not specify a main fabric family/material."
+        },
+        {
+          "metric": "surface_finish",
+          "applicable": true,
+          "score": 0.0,
+          "hit": 0,
+          "evidence": [
+            "\"soft, close-fitting long-sleeve top\"",
+            "\"falls to below the knee in a gently straight-to-slightly-flared silhouette\""
+          ],
+          "reason": "It gives fit and silhouette, but not a clear surface trait like matte, glossy, drapey, or stiff."
+        },
+        {
+          "metric": "primary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"A cream and vivid red coordinated look\"",
+            "\"The top is cream\""
+          ],
+          "reason": "Cream is clearly established as the dominant base color."
+        },
+        {
+          "metric": "secondary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"vivid red coordinated look\"",
+            "\"bold red cuffs\"",
+            "\"horizontal red waistband\""
+          ],
+          "reason": "Red is a clearly salient secondary/accent color used across multiple garment details."
+        },
+        {
+          "metric": "color_relationship_logic",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"cream and vivid red coordinated look\"",
+            "\"warm cream contrasted sharply with saturated red and gold hardware\""
+          ],
+          "reason": "The text explicitly explains the palette relationship as a coordinated, high-contrast cream-versus-red scheme with gold accents."
+        },
+        {
+          "metric": "pattern_type",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No pattern or print is described."
+        }
+      ]
+    },
+    "ConstructionDetail": {
+      "module": "ConstructionDetail",
+      "results": [
+        {
+          "metric": "closure",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“three small round gold buttons”",
+            "“red placket”"
+          ],
+          "reason": "A clear buttoned closure/placket detail is explicitly described."
+        },
+        {
+          "metric": "functional_detail",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No pockets, straps, or other functional utility details are described for the garment."
+        },
+        {
+          "metric": "construction_technique",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text describes silhouette and trim, but not a specific construction technique such as pleating, quilting, embroidery, cut-outs, or engineered panel work."
+        },
+        {
+          "metric": "deconstruction",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No deconstruction, splicing, displacement, or reconstruction language is present."
+        },
+        {
+          "metric": "hardware_embellishment",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“three small round gold buttons”",
+            "“gold hardware”"
+          ],
+          "reason": "Buttons and gold hardware are explicitly mentioned as visible decorative/functional metal details."
+        }
+      ]
+    },
+    "StylingSet": {
+      "module": "StylingSet",
+      "results": [
+        {
+          "metric": "bag",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a small woven straw handbag”",
+            "“carried at the side”"
+          ],
+          "reason": "The bag is explicitly identified by type and material, and its carrying position is given, so the look clearly covers the required bag facets."
+        },
+        {
+          "metric": "footwear",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“neutral beige pointed or almond-toe heels”",
+            "“visible at the bottom”"
+          ],
+          "reason": "Footwear type and toe shape are specified, along with color, which is enough to satisfy the footwear coverage rule."
+        },
+        {
+          "metric": "jewelry",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“three small round gold buttons”",
+            "“chunky brown and gold bracelets on both wrists”"
+          ],
+          "reason": "The bracelets are salient body adornments and are explicitly described, so jewelry is clearly present."
+        },
+        {
+          "metric": "belt",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No actual belt, sash, waist strap, or harness accessory is described; the waistband is part of the skirt construction, not a separate belt."
+        },
+        {
+          "metric": "layering",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“built around a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+            "“The top is cream ... The skirt sits high on the waist”"
+          ],
+          "reason": "The text describes a clear multi-garment outfit with an upper top and separate skirt, making the layered clothing relationship imageable."
+        }
+      ]
+    },
+    "Composition": {
+      "module": "Composition",
+      "results": [
+        {
+          "metric": "top_bottom_proportion",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“shown from the lower torso to the feet”",
+            "“high-waisted midi skirt”",
+            "“falls to below the knee”"
+          ],
+          "reason": "The text clearly describes the upper-to-lower body framing and the waist-to-hem proportion of the outfit."
+        },
+        {
+          "metric": "asymmetry",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a dramatic high front slit”",
+            "“exposing most of one thigh”"
+          ],
+          "reason": "The skirt’s high front slit creates a clear asymmetrical visual structure."
+        },
+        {
+          "metric": "cross_garment_binding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a matching high-waisted midi skirt”",
+            "“The top is cream ... finished with bold red cuffs”",
+            "“The skirt sits high on the waist with a horizontal red waistband”"
+          ],
+          "reason": "The description distinguishes which details belong to the top versus the skirt, showing clear cross-garment attribution."
+        }
+      ]
+    },
+    "Specificity": {
+      "module": "Specificity",
+      "results": [
+        {
+          "metric": "specific_noun_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"long-sleeve top\"",
+            "\"high-waisted midi skirt\"",
+            "\"chunky brown and gold bracelets\"",
+            "\"woven straw handbag\"",
+            "\"pointed or almond-toe heels\""
+          ],
+          "reason": "Uses concrete garment and accessory nouns throughout, with clear fashion-specific terminology and little reliance on vague wording."
+        },
+        {
+          "metric": "fine_grained_attribute_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"cream with bold red cuffs\"",
+            "\"horizontal red waistband\"",
+            "\"red front trim\"",
+            "\"three small round gold buttons\"",
+            "\"gently straight-to-slightly-flared silhouette\""
+          ],
+          "reason": "Color, structure, and finishing details are highly specific and layered, giving a precise and imageable description."
+        }
+      ]
+    },
+    "BindingAccuracy": {
+      "module": "BindingAccuracy",
+      "results": [
+        {
+          "metric": "attribute_entity_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"cream with sleeves pushed or cropped to the forearm, finished with bold red cuffs\"",
+            "\"high-waisted midi skirt\" ... \"horizontal red waistband\" ... \"red front trim\" ... \"three small round gold buttons\""
+          ],
+          "reason": "Most attributes are clearly attached to the correct garment parts, but a few phrases rely on partial visibility or layered description, creating minor binding ambiguity."
+        },
+        {
+          "metric": "multi_garment_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt\"",
+            "\"chunky brown and gold bracelets on both wrists, a small woven straw handbag ... and neutral beige pointed or almond-toe heels\""
+          ],
+          "reason": "The text cleanly separates top, skirt, accessories, and footwear, with only minor ambiguity from cropped framing and side placement of the handbag."
+        }
+      ]
+    },
+    "LanguageClarity": {
+      "module": "LanguageClarity",
+      "results": [
+        {
+          "metric": "quantity_accuracy",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“three small round gold buttons”",
+            "“both wrists”"
+          ],
+          "reason": "The explicit quantities and side references are internally consistent and easy to track; no conflicting counts or unclear quantity relations appear."
+        },
+        {
+          "metric": "reference_clarity",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“its neckline and full upper shape are out of frame”",
+            "“its sleeves pushed or cropped to the forearm”",
+            "“exposing most of one thigh”"
+          ],
+          "reason": "Pronouns and omitted subjects are clearly anchored to the top and skirt, and the spatial references remain stable and readable throughout."
+        }
+      ]
+    },
+    "StructuralClarity": {
+      "module": "StructuralClarity",
+      "results": [
+        {
+          "metric": "information_ordering",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“A cream and vivid red coordinated look shown from the lower torso to the feet”",
+            "“built around a soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+            "“Styling is polished and resort-like: chunky brown and gold bracelets... a small woven straw handbag... neutral beige pointed or almond-toe heels”"
+          ],
+          "reason": "The description follows a mostly natural order from overall view to main garments, then garment details, then accessories and styling mood. Minor compression appears in the top’s out-of-frame details and the dense skirt description, but the structure remains easy to reconstruct."
+        }
+      ]
+    },
+    "GenerationReadiness": {
+      "module": "GenerationReadiness",
+      "results": [
+        {
+          "metric": "generation_readiness",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“A cream and vivid red coordinated look”",
+            "“soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+            "“high front slit, exposing most of one thigh”",
+            "“small woven straw handbag ... neutral beige pointed or almond-toe heels”"
+          ],
+          "reason": "The description is highly visual, garment-specific, and mostly prompt-ready, with clear silhouette, colors, and accessories. It is slightly less than perfect because it reads like a polished design description rather than a fully concise generation prompt, and some details are partially out of frame or hedged."
+        },
+        {
+          "metric": "bilateral_coherence",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text does not explicitly distinguish left/right sides or other bilateral asymmetries in sleeves, legs, shoes, or hands."
+        },
+        {
+          "metric": "spatial_coherence",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“shown from the lower torso to the feet”",
+            "“sleeves pushed or cropped to the forearm”",
+            "“red front trim runs down from the waistband and curves around a dramatic high front slit”",
+            "“small woven straw handbag carried at the side”"
+          ],
+          "reason": "The spatial relations are clear and imageable: garment coverage, hem placement, slit location, and accessory placement are all coherent. Minor uncertainty remains in phrases like “pushed or cropped” and “pointed or almond-toe,” but they do not break visual readability."
+        }
+      ]
+    },
+    "ConcisenessAndDensity": {
+      "module": "ConcisenessAndDensity",
+      "results": [
+        {
+          "metric": "core_information_density",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“cream and vivid red coordinated look”",
+            "“soft, close-fitting long-sleeve top and a matching high-waisted midi skirt”",
+            "“small woven straw handbag ... neutral beige pointed or almond-toe heels”"
+          ],
+          "reason": "The text prioritizes the main garment silhouette and key visible styling details well, with only modest extra elaboration on color, trim, and accessories. It remains prompt-useful and fairly dense, though the descriptive layering is slightly verbose."
+        },
+        {
+          "metric": "visibility_priority",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“shown from the lower torso to the feet”",
+            "“A red front trim runs down ... around a dramatic high front slit”",
+            "“neutral beige pointed or almond-toe heels visible at the bottom”"
+          ],
+          "reason": "The description focuses on what is actually visible and image-dominant, including silhouette, slit, trim, accessories, and footwear. It does mention some less visible garment details like the neckline being out of frame, but these do not dominate the prompt."
+        }
+      ]
+    },
+    "ConceptBonus": {
+      "module": "ConceptBonus",
+      "results": [
+        {
+          "metric": "aesthetic_vocabulary",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“polished and resort-like”",
+            "“refined nautical or Riviera-inspired mood”"
+          ],
+          "reason": "The text explicitly uses style vocabulary to frame the look’s aesthetic."
+        },
+        {
+          "metric": "cultural_reference",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“Riviera-inspired mood”",
+            "“nautical”"
+          ],
+          "reason": "It directly references recognizable cultural/style associations."
+        },
+        {
+          "metric": "gender_expression",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit gender expression or androgyny is mentioned."
+        },
+        {
+          "metric": "theme_narrative",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No series theme or conceptual narrative is provided."
+        },
+        {
+          "metric": "brand_alignment",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No brand language or brand identity is referenced."
+        },
+        {
+          "metric": "negation_control",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text does not emphasize exclusions or absences as a meaningful design constraint."
+        }
+      ]
+    }
+  },
+  "r_content": {
+    "enabled": true,
+    "odin_reference": "ICML 2024 ODIN (disentangled reward): RL uses content-dominant scalar; length diagnostics + soft penalty channel reduce length hacking vs. raw S_fp alone.",
+    "S_fp": 0.852,
+    "total_penalty": 0.0,
+    "gamma_penalty": 0.35,
+    "formula": "multiply",
+    "beta_z_len": 0.05,
+    "char_len": 1127,
+    "log_len": 7.028201,
+    "est_tokens_char_div_4": 281.75,
+    "holdout_length_prediction": null,
+    "r_after_length_residual": 0.852,
+    "r_after_soft_penalty": 0.852,
+    "z_len": null,
+    "R_content": 0.852
+  }
+}

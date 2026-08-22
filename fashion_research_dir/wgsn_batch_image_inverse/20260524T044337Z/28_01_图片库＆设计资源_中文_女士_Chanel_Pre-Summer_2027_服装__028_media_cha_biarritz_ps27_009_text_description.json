@@ -1,0 +1,18 @@
+{
+  "image_path": "E:\\fashion_agents_project\\downloads\\wgsn_latest_batch\\01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装\\028_media_cha_biarritz_ps27_009.jpg",
+  "text_description": "A runway look shown from upper torso to feet, built around a coordinated dark woven-striped set: a boxy open-front jacket or vest in a textured navy ground with dense vertical multicolor striping, worn over a fitted knit-looking top with a pale cream center panel and deep burgundy vertical bands. A black belt or waistband detail with a gold interlocking-style metal buckle sits high at the front, visually separating the top from the trousers. The trousers are high-waisted with visible belt loops, a center button, front fly area, and side pockets where the hands are tucked; they continue the same irregular vertical striped pattern in navy, white, red, and muted blue tones. The pant silhouette is relaxed straight to slightly wide, full-length and long enough to break softly over the feet, creating a fluid tailored line. Open-toe heeled sandals peek out beneath the hems, with red-and-cream striped straps that echo the color palette of the outfit. The styling reads coordinated, textured, and tailored, with strong verticality from the matching stripe pattern and a polished runway mood.",
+  "key_elements": [
+    "matching dark multicolor vertical-striped woven jacket/vest and trousers",
+    "fitted cream and burgundy paneled top underneath",
+    "high-waisted trousers with belt loops, button, and hands in side pockets",
+    "relaxed full-length straight/wide trouser silhouette",
+    "gold interlocking-style front buckle detail",
+    "open-toe red-and-cream striped heeled sandals"
+  ],
+  "uncertainty_notes": [
+    "Upper body is cropped, so the exact neckline and sleeve length are not fully visible.",
+    "The gold buckle motif is visible but not identified as a brand."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"A runway look shown from upper torso to feet, built around a coordinated dark woven-striped set: a boxy open-front jacket or vest in a textured navy ground with dense vertical multicolor striping, worn over a fitted knit-looking top with a pale cream center panel and deep burgundy vertical bands. A black belt or waistband detail with a gold interlocking-style metal buckle sits high at the front, visually separating the top from the trousers. The trousers are high-waisted with visible belt loops, a center button, front fly area, and side pockets where the hands are tucked; they continue the same irregular vertical striped pattern in navy, white, red, and muted blue tones. The pant silhouette is relaxed straight to slightly wide, full-length and long enough to break softly over the feet, creating a fluid tailored line. Open-toe heeled sandals peek out beneath the hems, with red-and-cream striped straps that echo the color palette of the outfit. The styling reads coordinated, textured, and tailored, with strong verticality from the matching stripe pattern and a polished runway mood.\",\n  \"key_elements\": [\n    \"matching dark multicolor vertical-striped woven jacket/vest and trousers\",\n    \"fitted cream and burgundy paneled top underneath\",\n    \"high-waisted trousers with belt loops, button, and hands in side pockets\",\n    \"relaxed full-length straight/wide trouser silhouette\",\n    \"gold interlocking-style front buckle detail\",\n    \"open-toe red-and-cream striped heeled sandals\"\n  ],\n  \"uncertainty_notes\": [\n    \"Upper body is cropped, so the exact neckline and sleeve length are not fully visible.\",\n    \"The gold buckle motif is visible but not identified as a brand.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

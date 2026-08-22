@@ -1,0 +1,19 @@
+Chapter: 04
+Sub-theme: Aristocratic Nomadism
+Theme: Une Lettre d’amour
+Brand: Givenchy
+ImageCount: 4
+Images:
+1. look_01.jpg
+2. look_02.jpg
+3. look_03.jpg
+4. look_04.jpg
+
+SuggestedDeleteCount: 0
+SuggestedDeleteFiles:
+- NONE
+
+RawAgentResult:
+DELETE: NONE
+FILES: NONE
+NOTES: All four designs are distinct variations that cohesively represent the "Aristocratic Nomadism" theme through structured tailoring and nomadic utility.

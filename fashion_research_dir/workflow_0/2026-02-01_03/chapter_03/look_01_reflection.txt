@@ -1,0 +1,10 @@
+Chapter: 03
+Look: 01
+Sub-theme: The Noir Romanticism of the Double
+Image: look_01.jpg
+
+RawAgentResult:
+TIER: high
+ACTION: KEEP
+INFO: Exceptional execution of asymmetrical tailoring and dual-tone color blocking, creating a powerful avant-garde silhouette.
+FINAL_FASHION_DESIGN: Retain the original high-fashion avant-garde split-tone coat and mask ensemble.

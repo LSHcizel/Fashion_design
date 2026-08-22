@@ -1,0 +1,1670 @@
+{
+  "name": "fashion_text_prompt_optimizer",
+  "version": "0.1.0",
+  "source_name": "08_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__008_media_cha_biarritz_ps27_026_text_description.md",
+  "input_type": "text_description",
+  "judge_backend": "openai_compatible_api",
+  "judge_model": "gpt-5.4-mini",
+  "judge_api_base": "https://api.ohmygpt.com/v1",
+  "text_description": "A coordinated light aqua-blue, heavily sparkling denim-style look worn in a relaxed, oversized silhouette: an open long-sleeve shirt jacket with a pointed collar, dropped shoulders, wide body, and hip-length hem layered over a white fitted camisole or bodysuit, with black bra straps and a black lace bra panel visibly showing through/around the deep open neckline. The jacket has allover sequined or glittering surface texture, mottled blue wash variation, frayed-looking edges along the placket, collar, hem, cuffs, and pocket seams, two chest flap pockets with gold-tone button closures, and additional gold-tone buttons down the front. Below, matching light blue sparkling pants sit at the waist under a black belt or waistband, continuing the same shimmery washed texture in a straight, relaxed cut visible to mid-leg. Styling includes chunky gold earrings and a small beige quilted clutch held at the side, adding a soft neutral accent against the icy blue shine. The overall mood is casual-luxe and slightly undone, mixing denim workwear proportions with high-sparkle embellishment and exposed lingerie layering.",
+  "eval_prose": "A coordinated light aqua-blue, heavily sparkling denim-style look worn in a relaxed, oversized silhouette: an open long-sleeve shirt jacket with a pointed collar, dropped shoulders, wide body, and hip-length hem layered over a white fitted camisole or bodysuit, with black bra straps and a black lace bra panel visibly showing through/around the deep open neckline. The jacket has allover sequined or glittering surface texture, mottled blue wash variation, frayed-looking edges along the placket, collar, hem, cuffs, and pocket seams, two chest flap pockets with gold-tone button closures, and additional gold-tone buttons down the front. Below, matching light blue sparkling pants sit at the waist under a black belt or waistband, continuing the same shimmery washed texture in a straight, relaxed cut visible to mid-leg. Styling includes chunky gold earrings and a small beige quilted clutch held at the side, adding a soft neutral accent against the icy blue shine. The overall mood is casual-luxe and slightly undone, mixing denim workwear proportions with high-sparkle embellishment and exposed lingerie layering.",
+  "total_score": 0.7905,
+  "gates": {
+    "score_gate": {
+      "name": "score_gate",
+      "description": "最终 S_fp（quality 用 weighted base_score，不含 penalty 扣减；已做 holdout 长度去相关）",
+      "value": 0.7905,
+      "threshold": 0.7,
+      "passed": true,
+      "weights": {
+        "coverage": 0.3,
+        "quality": 0.7
+      },
+      "components": {
+        "coverage_axis_score": 0.9545,
+        "quality_effective": 0.7188
+      },
+      "total_cap_applied": 1.0
+    },
+    "penalty_gate": {
+      "name": "penalty_gate",
+      "description": "仅依据 penalties.total_penalty（各 penalty 分值的算术平均）",
+      "total_penalty": 0.0625,
+      "threshold": 0.5,
+      "passed": true
+    },
+    "both_passed": true
+  },
+  "score_band": "Strong",
+  "metric_totals": {
+    "total_defined_metrics": 42,
+    "total_applicable_metrics": 34,
+    "total_hit_metrics": 31,
+    "total_skipped_metrics": 8
+  },
+  "skipped_metrics": [
+    {
+      "metric": "footwear",
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "reason": "No footwear is mentioned."
+    },
+    {
+      "metric": "asymmetry",
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "reason": "No clear asymmetrical design, one-sided structure, or uneven garment construction is described."
+    },
+    {
+      "metric": "bilateral_coherence",
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "reason": "No explicit left-right or other bilateral asymmetry is described."
+    },
+    {
+      "metric": "cultural_reference",
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "reason": "No cultural, historical, or brand reference is provided."
+    },
+    {
+      "metric": "gender_expression",
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "reason": "The description does not explicitly discuss gender expression or androgyny."
+    },
+    {
+      "metric": "theme_narrative",
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "reason": "No series theme or conceptual narrative is stated beyond the outfit description."
+    },
+    {
+      "metric": "brand_alignment",
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "reason": "No brand identity or brand-language target is mentioned."
+    },
+    {
+      "metric": "negation_control",
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "reason": "The text does not emphasize exclusions or absence of elements as a key requirement."
+    }
+  ],
+  "scores": {
+    "coverage_score": {
+      "applicable_metrics": 22,
+      "hit_metrics": 21,
+      "score_sum": 21.0,
+      "score": 0.9545
+    },
+    "quality_score": {
+      "applicable_metrics": 11,
+      "hit_metrics": 9,
+      "score_sum": 8.25,
+      "score": 0.75,
+      "base_score": 0.7188,
+      "axis_score_unweighted": 0.75,
+      "penalized_score": 0.7188,
+      "penalties": {
+        "items": {
+          "generation_content_penalty": {
+            "score": 0.25,
+            "evidence": [
+              "“coordinated light aqua-blue, heavily sparkling denim-style look”",
+              "“casual-luxe and slightly undone, mixing denim workwear proportions with high-sparkle embellishment and exposed lingerie layering”"
+            ],
+            "reason": "Mostly imageable, but includes some conceptual styling language and summary phrasing that adds little beyond the garment description."
+          },
+          "consistency_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "“open long-sleeve shirt jacket ... layered over a white fitted camisole or bodysuit”",
+              "“matching light blue sparkling pants ... under a black belt or waistband”"
+            ],
+            "reason": "The outfit reads as one coherent layered look without trunk-level left-right contradictions or mutually exclusive garment identities."
+          },
+          "coordination_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "“coordinated light aqua-blue”",
+              "“chunky gold earrings and a small beige quilted clutch ... adding a soft neutral accent”"
+            ],
+            "reason": "Color and accessory choices are coordinated around the same icy-blue, gold-accented styling language."
+          },
+          "rationality_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "“sequined or glittering surface texture”",
+              "“frayed-looking edges”"
+            ],
+            "reason": "The description stays within plausible fashion materials and construction; no physically impossible garment structure is asserted."
+          }
+        },
+        "reasons": {
+          "generation_content_penalty": "Mostly imageable, but includes some conceptual styling language and summary phrasing that adds little beyond the garment description.",
+          "consistency_penalty": "The outfit reads as one coherent layered look without trunk-level left-right contradictions or mutually exclusive garment identities.",
+          "coordination_penalty": "Color and accessory choices are coordinated around the same icy-blue, gold-accented styling language.",
+          "rationality_penalty": "The description stays within plausible fashion materials and construction; no physically impossible garment structure is asserted."
+        },
+        "generation_content_penalty": 0.25,
+        "consistency_penalty": 0.0,
+        "coordination_penalty": 0.0,
+        "rationality_penalty": 0.0,
+        "total_penalty": 0.0625
+      },
+      "cap": 1.0
+    },
+    "bonus_score": {
+      "applicable_metrics": 1,
+      "hit_metrics": 1,
+      "score_sum": 1.0,
+      "score": 1.0
+    },
+    "fashion_prompt_score": 0.7905,
+    "s_fp_base": 0.7895,
+    "length_disentangle": {
+      "adjusted_score": 0.7905,
+      "length_component": -0.000963,
+      "log_len": 7.021084,
+      "slope_a": 0.002948,
+      "mode": "centered_slope",
+      "applied": true,
+      "log_len_center": 7.3478
+    },
+    "weights": {
+      "coverage": 0.3,
+      "quality": 0.7
+    },
+    "total_cap": 1.0,
+    "module_scores": {
+      "GarmentCore": {
+        "applicable_metrics": 5,
+        "hit_metrics": 5,
+        "score_sum": 5.0,
+        "score": 1.0
+      },
+      "MaterialColor": {
+        "applicable_metrics": 6,
+        "hit_metrics": 5,
+        "score_sum": 5.0,
+        "score": 0.8333
+      },
+      "ConstructionDetail": {
+        "applicable_metrics": 5,
+        "hit_metrics": 5,
+        "score_sum": 5.0,
+        "score": 1.0
+      },
+      "StylingSet": {
+        "applicable_metrics": 4,
+        "hit_metrics": 4,
+        "score_sum": 4.0,
+        "score": 1.0
+      },
+      "Composition": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "Specificity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "BindingAccuracy": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "LanguageClarity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "StructuralClarity": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 0.75,
+        "score": 0.75
+      },
+      "GenerationReadiness": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "ConcisenessAndDensity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 0,
+        "score_sum": 1.0,
+        "score": 0.5
+      },
+      "ConceptBonus": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 1.0,
+        "score": 1.0
+      }
+    }
+  },
+  "diagnosis": {
+    "missing_information": [
+      {
+        "metric": "pattern_type",
+        "rule": "有图案时需给出图案类型",
+        "score_value": 0.0,
+        "matched_terms": [
+          "“mottled blue wash variation”",
+          "“allover sequined or glittering surface texture”"
+        ],
+        "reason": "There is texture and wash variation, but no clear pattern type such as stripes, florals, checks, or print."
+      }
+    ],
+    "quality_issues": [
+      {
+        "metric": "core_information_density",
+        "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+        "score_value": 0.5,
+        "matched_terms": [
+          "\"coordinated light aqua-blue, heavily sparkling denim-style look\"",
+          "\"open long-sleeve shirt jacket... layered over a white fitted camisole or bodysuit\"",
+          "\"chunky gold earrings and a small beige quilted clutch\""
+        ],
+        "reason": "The description contains strong, usable garment detail, but it is quite long and heavily layered with repeated texture/color elaboration and accessory styling, which reduces concision. The main outfit is still clear, so it is not low-density, but the prompt is somewhat verbose."
+      },
+      {
+        "metric": "visibility_priority",
+        "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部或低可见度细节，避免不可见信息喧宾夺主",
+        "score_value": 0.5,
+        "matched_terms": [
+          "\"black bra straps and a black lace bra panel visibly showing through/around the deep open neckline\"",
+          "\"frayed-looking edges along the placket, collar, hem, cuffs, and pocket seams\"",
+          "\"small beige quilted clutch held at the side\""
+        ],
+        "reason": "Most details are visible and image-relevant, but the text gives notable attention to lower-priority styling and layered-underneath elements, including lingerie visibility and accessory notes, rather than keeping the clearest emphasis on the core silhouette and garments."
+      }
+    ],
+    "bonus_opportunities": []
+  },
+  "metric_results": {
+    "garment_category": {
+      "axis": "coverage_score",
+      "rule": "文本需明确给出服装主体品类",
+      "source_keypoints": [
+        1
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“open long-sleeve shirt jacket”",
+        "“matching light blue sparkling pants”",
+        "“white fitted camisole or bodysuit”"
+      ],
+      "reason": "The text clearly names the main garment categories: shirt jacket, pants, and an inner camisole/bodysuit.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "silhouette": {
+      "axis": "coverage_score",
+      "rule": "文本需给出整体轮廓或结构趋势",
+      "source_keypoints": [
+        2
+      ],
+      "applicability_code": "when_shape_is_salient",
+      "applicability_hint": "Only applicable when the text clearly mentions silhouette, shape, or structural contour.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“relaxed, oversized silhouette”",
+        "“wide body”",
+        "“straight, relaxed cut”"
+      ],
+      "reason": "Overall shape is explicitly described as oversized and relaxed, with a straight relaxed pant cut.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "length_hemline": {
+      "axis": "coverage_score",
+      "rule": "文本需给出长度或下摆信息",
+      "source_keypoints": [
+        3
+      ],
+      "applicability_code": "when_length_or_hem_is_salient",
+      "applicability_hint": "Only applicable when the text mentions length, hemline, slit, or garment length.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“hip-length hem”",
+        "“visible to mid-leg”"
+      ],
+      "reason": "The text gives clear length information for both the jacket and pants.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "shoulder_architecture": {
+      "axis": "coverage_score",
+      "rule": "当肩线设计显著（如强调垫肩/结构肩、落肩、宽肩、单肩或露肩、无肩带抹胸等）时，文本须点明该肩部结构语言，而非仅写「上装」或笼统廓形",
+      "source_keypoints": [
+        4
+      ],
+      "applicability_code": "when_shoulder_is_salient",
+      "applicability_hint": "Only applicable when the text implies prominent shoulder design: pads/structured shoulders, dropped shoulder, one-shoulder/off-shoulder, strapless neckline, or other salient shoulder/sleeve anchor cues.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“dropped shoulders”",
+        "“open long-sleeve shirt jacket”"
+      ],
+      "reason": "Dropped shoulders are explicitly stated, making shoulder structure salient.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "body_coverage": {
+      "axis": "coverage_score",
+      "rule": "文本需描述显著裸露或包裹区域",
+      "source_keypoints": [
+        5
+      ],
+      "applicability_code": "when_exposure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions exposure, coverage, cutout, or body reveal.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“black bra straps and a black lace bra panel visibly showing through/around the deep open neckline”",
+        "“white fitted camisole or bodysuit”"
+      ],
+      "reason": "The text clearly describes exposed lingerie and a deep open neckline, so body coverage/reveal is salient.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "fabric_family": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主体材质类别",
+      "source_keypoints": [
+        6
+      ],
+      "applicability_code": "when_material_is_inferable",
+      "applicability_hint": "Only applicable when the text provides enough information about the main material.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“denim-style look”",
+        "“mixing denim workwear proportions”"
+      ],
+      "reason": "The main fabric family is clearly indicated as denim/denim-style.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "surface_finish": {
+      "axis": "coverage_score",
+      "rule": "文本需给出光泽、哑光、垂坠或硬挺等表面性质",
+      "source_keypoints": [
+        7
+      ],
+      "applicability_code": "when_surface_trait_is_salient",
+      "applicability_hint": "Only applicable when the text mentions gloss, matte, drape, stiffness, pleats, or surface traits.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“heavily sparkling”",
+        "“allover sequined or glittering surface texture”"
+      ],
+      "reason": "The text clearly describes a shiny, glittering surface finish.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "primary_color": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主色",
+      "source_keypoints": [
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“light aqua-blue”",
+        "“light blue sparkling pants”"
+      ],
+      "reason": "The dominant color is clearly light aqua-blue / light blue.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "secondary_color": {
+      "axis": "coverage_score",
+      "rule": "有明显副色时需描述；若为大衣内里、开衩内衬等高对比色块，应说明可见条件（如行走、开片时）或与主色区的衔接，避免孤立撞色无锚点、不利生成",
+      "source_keypoints": [
+        12
+      ],
+      "applicability_code": "when_secondary_color_is_salient",
+      "applicability_hint": "Only applicable when the text clearly includes secondary color or color relationship information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“white fitted camisole or bodysuit”",
+        "“black bra straps and a black lace bra panel”",
+        "“gold-tone buttons”"
+      ],
+      "reason": "Several secondary colors are explicitly present and visible against the blue base.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "color_relationship_logic": {
+      "axis": "coverage_score",
+      "rule": "当存在多色块、强对比内搭/外搭、条纹或印花与底色关系、或明显的同色系/补色/撞色叙事时，文本须交代配色逻辑（如单色、同色系层次、补色对比、主次色块关系之一），使生成可还原色彩关系；仅罗列颜色词但未体现关系则不计为覆盖",
+      "source_keypoints": [
+        13
+      ],
+      "applicability_code": "when_multi_tone_or_strong_color_story",
+      "applicability_hint": "Only applicable when the text implies multiple color blocks, strong inner/outer contrast, stripe-vs-ground relations, tonal vs accented palette, or another non-trivial color story beyond a single flat hue.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“white fitted camisole ... visibly showing through”",
+        "“black bra straps and a black lace bra panel”",
+        "“soft neutral accent against the icy blue shine”"
+      ],
+      "reason": "The text explains the color logic as a blue dominant look with visible white/black contrast layers and a neutral beige accent.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "pattern_type": {
+      "axis": "coverage_score",
+      "rule": "有图案时需给出图案类型",
+      "source_keypoints": [
+        14
+      ],
+      "applicability_code": "when_pattern_exists",
+      "applicability_hint": "Only applicable when the text describes pattern or print information.",
+      "applicable": true,
+      "score_value": 0.0,
+      "hit": 0,
+      "matched_terms": [
+        "“mottled blue wash variation”",
+        "“allover sequined or glittering surface texture”"
+      ],
+      "reason": "There is texture and wash variation, but no clear pattern type such as stripes, florals, checks, or print.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "closure": {
+      "axis": "coverage_score",
+      "rule": "显著开合方式应被提到",
+      "source_keypoints": [
+        17
+      ],
+      "applicability_code": "when_closure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions button, zipper, tie, buckle, or closure details.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“two chest flap pockets with gold-tone button closures”",
+        "“additional gold-tone buttons down the front”"
+      ],
+      "reason": "The text clearly describes button closures and a front button opening.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "functional_detail": {
+      "axis": "coverage_score",
+      "rule": "显著口袋、挂带或功能细节应被提到",
+      "source_keypoints": [
+        18
+      ],
+      "applicability_code": "when_functional_detail_is_salient",
+      "applicability_hint": "Only applicable when the text mentions pockets, straps, utility parts, or functional details.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“two chest flap pockets”",
+        "“black belt or waistband”"
+      ],
+      "reason": "Functional garment details are explicitly mentioned, especially pockets and waist support.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "construction_technique": {
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "source_keypoints": [
+        9
+      ],
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“black lace bra panel visibly showing through/around the deep open neckline”",
+        "“frayed-looking edges along the placket, collar, hem, cuffs, and pocket seams”"
+      ],
+      "reason": "The text includes a specific construction/craft detail with location, especially lace paneling at the neckline and frayed edge treatment on multiple garment zones.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "deconstruction": {
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "source_keypoints": [
+        20
+      ],
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“slightly undone”",
+        "“exposed lingerie layering”"
+      ],
+      "reason": "The look is explicitly framed as undone/deconstructed through exposed layering and relaxed reconstruction of classic denim workwear proportions.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "hardware_embellishment": {
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "source_keypoints": [
+        21
+      ],
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“gold-tone button closures”",
+        "“additional gold-tone buttons”"
+      ],
+      "reason": "Visible metallic hardware is clearly present and emphasized through multiple gold-tone buttons.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "bag": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "source_keypoints": [
+        22
+      ],
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a small beige quilted clutch”",
+        "“held at the side”"
+      ],
+      "reason": "The bag is explicitly identified by type and carrying method, and its material/finish and color are also described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "footwear": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "source_keypoints": [
+        23
+      ],
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No footwear is mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "jewelry": {
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "source_keypoints": [
+        24
+      ],
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“chunky gold earrings”"
+      ],
+      "reason": "A clearly visible jewelry item is explicitly described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "belt": {
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "source_keypoints": [
+        25
+      ],
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“under a black belt or waistband”"
+      ],
+      "reason": "A visible waist accessory is mentioned and its placement relative to the pants is clear.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "layering": {
+      "axis": "coverage_score",
+      "rule": "多层叠搭时应给出层次关系；外套、内搭、腰带、腿带与裤装之间的遮盖与固定顺序应可还原为可见层次，服务生成导向",
+      "source_keypoints": [
+        26
+      ],
+      "applicability_code": "when_layering_exists",
+      "applicability_hint": "Only applicable when the text describes layering or multi-layer garment relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“layered over a white fitted camisole or bodysuit”",
+        "“black bra straps and a black lace bra panel visibly showing through/around the deep open neckline”"
+      ],
+      "reason": "The text clearly describes a layered outfit with visible underlayers and their relationship to the outer shirt jacket.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "top_bottom_proportion": {
+      "axis": "coverage_score",
+      "rule": "明显上下比例关系应被提到；长外套、阔腿或宽松下装、厚底鞋与腿带/harness 等叠加时，应交代主干剪影主次，避免仅堆砌元素导致下盘过重、prompt 失焦",
+      "source_keypoints": [
+        27
+      ],
+      "applicability_code": "when_proportion_is_salient",
+      "applicability_hint": "Only applicable when the text describes top-bottom proportion, waist position, or visual balance.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“relaxed, oversized silhouette”",
+        "“open long-sleeve shirt jacket ... layered over a white fitted camisole”",
+        "“matching light blue sparkling pants sit at the waist”"
+      ],
+      "reason": "The text clearly describes the upper and lower silhouette relationship, including an oversized top over a fitted base and waist-sitting pants, which establishes top-bottom proportion.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "asymmetry": {
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "source_keypoints": [
+        29
+      ],
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No clear asymmetrical design, one-sided structure, or uneven garment construction is described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cross_garment_binding": {
+      "axis": "coverage_score",
+      "rule": "多单品时应能区分属性属于哪件单品",
+      "source_keypoints": [
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“open long-sleeve shirt jacket ... layered over a white fitted camisole or bodysuit”",
+        "“black bra straps and a black lace bra panel visibly showing through/around the deep open neckline”",
+        "“matching light blue sparkling pants ... under a black belt or waistband”"
+      ],
+      "reason": "The description clearly distinguishes which details belong to the jacket, base layer, lingerie, pants, and waist accessory, so multi-item relations are well bound.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "specific_noun_usage": {
+      "axis": "quality_score",
+      "rule": "使用具体服装或配件名词而非泛词",
+      "source_keypoints": [
+        1,
+        22,
+        23
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"open long-sleeve shirt jacket\"",
+        "\"white fitted camisole or bodysuit\"",
+        "\"two chest flap pockets\"",
+        "\"small beige quilted clutch\""
+      ],
+      "reason": "Uses highly specific garment and accessory nouns with clear fashion semantics, plus concrete construction terms and item types.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "fine_grained_attribute_usage": {
+      "axis": "quality_score",
+      "rule": "颜色、材质、结构词应尽量细粒度",
+      "source_keypoints": [
+        6,
+        7,
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"light aqua-blue\"",
+        "\"heavily sparkling\"",
+        "\"mottled blue wash variation\"",
+        "\"frayed-looking edges\"",
+        "\"gold-tone button closures\""
+      ],
+      "reason": "Color, texture, finish, and construction are described with fine-grained fashion detail, making the look highly imageable and precise.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "attribute_entity_binding": {
+      "axis": "quality_score",
+      "rule": "属性必须绑定到正确实体；腰带、腿带、harness、护臂/护手等须明确归属外套、裤装或身体附件，避免腰胯多重束系指代漂移",
+      "source_keypoints": [
+        10,
+        39
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"light aqua-blue, heavily sparkling denim-style look\"",
+        "\"matching light blue sparkling pants sit at the waist under a black belt or waistband\"",
+        "\"white fitted camisole or bodysuit\"",
+        "\"black bra straps and a black lace bra panel visibly showing through/around the deep open neckline\""
+      ],
+      "reason": "Most attributes are clearly tied to the correct garments, but a few phrases introduce mild binding ambiguity, especially \"belt or waistband\" and \"camisole or bodysuit,\" which slightly weaken precision without breaking the overall structure.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "multi_garment_binding": {
+      "axis": "quality_score",
+      "rule": "多单品描述时不得将属性归错单品",
+      "source_keypoints": [
+        12,
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"open long-sleeve shirt jacket... layered over a white fitted camisole or bodysuit\"",
+        "\"matching light blue sparkling pants\"",
+        "\"chunky gold earrings and a small beige quilted clutch\""
+      ],
+      "reason": "The text cleanly separates jacket, inner layer, pants, and accessories, with coherent layering and styling. Minor ambiguity remains in the inner layer naming and the belt/waistband phrasing, but there is no major cross-item attribute confusion.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "quantity_accuracy": {
+      "axis": "quality_score",
+      "rule": "数量词应准确且不冲突",
+      "source_keypoints": [
+        37
+      ],
+      "applicability_code": "when_quantity_is_used",
+      "applicability_hint": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“two chest flap pockets”",
+        "“black bra straps and a black lace bra panel”"
+      ],
+      "reason": "The explicit count is clear and internally consistent, with only minor ambiguity in a few descriptive relations (e.g. “shirt jacket” vs. “jacket” and “bra straps/panel” placement), but nothing that materially confuses the quantity relation.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "reference_clarity": {
+      "axis": "quality_score",
+      "rule": "代词和省略指向必须清晰",
+      "source_keypoints": [
+        38
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“The jacket has…”",
+        "“Below, matching light blue sparkling pants…”"
+      ],
+      "reason": "References are mostly well anchored and easy to follow across garments and accessories. There is slight looseness in phrases like “it”/implied garment continuity and the optional wording “camisole or bodysuit,” but the overall referents remain clear.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "information_ordering": {
+      "axis": "quality_score",
+      "rule": "描述应按主体到细节的顺序组织",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“A coordinated light aqua-blue... look worn in a relaxed, oversized silhouette”",
+        "“an open long-sleeve shirt jacket... layered over a white fitted camisole or bodysuit”",
+        "“Below, matching light blue sparkling pants...”",
+        "“Styling includes chunky gold earrings and a small beige quilted clutch”"
+      ],
+      "reason": "The description follows a mostly natural top-to-bottom structure: overall look, upper layer, underlayer, bottoms, then accessories. It is clear and imageable, with only minor compression from the long modifier-heavy sentences.",
+      "quality_dimension": "StructuralClarity",
+      "quality_dimension_zh": "结构清晰度"
+    },
+    "generation_readiness": {
+      "axis": "quality_score",
+      "rule": "文本应可直接转为图像生成 prompt；须以可见廓形、品类与层次为先，多文化/多时代风格符号混用时应能收束为单一 look 身份，否则视为生成导向不足",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“A coordinated light aqua-blue, heavily sparkling denim-style look”",
+        "“open long-sleeve shirt jacket ... layered over a white fitted camisole or bodysuit”",
+        "“matching light blue sparkling pants ... with a black belt or waistband”"
+      ],
+      "reason": "The text is highly visual, organized around silhouette, garments, layering, texture, and accessories, so it is close to a usable generation prompt. Minor prompt-readiness issues remain because it is somewhat explanatory and includes optional phrasing like “camisole or bodysuit” and “belt or waistband,” which slightly reduce precision.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "bilateral_coherence": {
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "source_keypoints": [
+        29,
+        40
+      ],
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit left-right or other bilateral asymmetry is described.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "spatial_coherence": {
+      "axis": "quality_score",
+      "rule": "层次、前后、内外、上下、附着位置等空间关系必须清晰且视觉上合理；大衣与腰带、腰下吊带、腿带/harness 与裤管之间的遮盖、穿入与固定点须可还原，禁止腰胯多层束系含糊不可成像",
+      "source_keypoints": [
+        26,
+        30,
+        40
+      ],
+      "applicability_code": "when_spatial_relation_exists",
+      "applicability_hint": "Only applicable when the text describes layering, front/back, inside/outside, attached position, crossing paths, or other explicit spatial relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“layered over a white fitted camisole or bodysuit”",
+        "“black bra straps and a black lace bra panel visibly showing through/around the deep open neckline”",
+        "“pants sit at the waist under a black belt or waistband”"
+      ],
+      "reason": "The layering and attachment relations are mostly clear and imageable, with coherent inside-outside and over-under structure. The main limitation is some ambiguity in the underlayer wording and waistband/belt phrasing, but overall the spatial setup is still strong for generation.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "core_information_density": {
+      "axis": "quality_score",
+      "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.5,
+      "hit": 0,
+      "matched_terms": [
+        "\"coordinated light aqua-blue, heavily sparkling denim-style look\"",
+        "\"open long-sleeve shirt jacket... layered over a white fitted camisole or bodysuit\"",
+        "\"chunky gold earrings and a small beige quilted clutch\""
+      ],
+      "reason": "The description contains strong, usable garment detail, but it is quite long and heavily layered with repeated texture/color elaboration and accessory styling, which reduces concision. The main outfit is still clear, so it is not low-density, but the prompt is somewhat verbose.",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "visibility_priority": {
+      "axis": "quality_score",
+      "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部或低可见度细节，避免不可见信息喧宾夺主",
+      "source_keypoints": [
+        18,
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.5,
+      "hit": 0,
+      "matched_terms": [
+        "\"black bra straps and a black lace bra panel visibly showing through/around the deep open neckline\"",
+        "\"frayed-looking edges along the placket, collar, hem, cuffs, and pocket seams\"",
+        "\"small beige quilted clutch held at the side\""
+      ],
+      "reason": "Most details are visible and image-relevant, but the text gives notable attention to lower-priority styling and layered-underneath elements, including lingerie visibility and accessory notes, rather than keeping the clearest emphasis on the core silhouette and garments.",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "aesthetic_vocabulary": {
+      "axis": "bonus_score",
+      "rule": "适度加入设计风格词汇",
+      "source_keypoints": [
+        31
+      ],
+      "applicability_code": "when_style_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly expresses aesthetic or style vocabulary.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"casual-luxe\"",
+        "\"slightly undone\""
+      ],
+      "reason": "The text explicitly uses style-language to frame the look.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cultural_reference": {
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "source_keypoints": [
+        32
+      ],
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No cultural, historical, or brand reference is provided.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "gender_expression": {
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "source_keypoints": [
+        33
+      ],
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The description does not explicitly discuss gender expression or androgyny.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "theme_narrative": {
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "source_keypoints": [
+        34
+      ],
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No series theme or conceptual narrative is stated beyond the outfit description.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "brand_alignment": {
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "source_keypoints": [
+        35
+      ],
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No brand identity or brand-language target is mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "negation_control": {
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "source_keypoints": [
+        36
+      ],
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text does not emphasize exclusions or absence of elements as a key requirement.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    }
+  },
+  "context_summary": {
+    "evaluated_modules": [
+      "GarmentCore",
+      "MaterialColor",
+      "ConstructionDetail",
+      "StylingSet",
+      "Composition",
+      "Specificity",
+      "BindingAccuracy",
+      "LanguageClarity",
+      "StructuralClarity",
+      "GenerationReadiness",
+      "ConcisenessAndDensity",
+      "ConceptBonus"
+    ],
+    "semantic_judging_enabled": true,
+    "quality_penalties_enabled": true,
+    "skipped_metrics_enabled": true,
+    "optimization_gates_enabled": true
+  },
+  "raw_module_outputs": {
+    "GarmentCore": {
+      "module": "GarmentCore",
+      "results": [
+        {
+          "metric": "garment_category",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“open long-sleeve shirt jacket”",
+            "“matching light blue sparkling pants”",
+            "“white fitted camisole or bodysuit”"
+          ],
+          "reason": "The text clearly names the main garment categories: shirt jacket, pants, and an inner camisole/bodysuit."
+        },
+        {
+          "metric": "silhouette",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“relaxed, oversized silhouette”",
+            "“wide body”",
+            "“straight, relaxed cut”"
+          ],
+          "reason": "Overall shape is explicitly described as oversized and relaxed, with a straight relaxed pant cut."
+        },
+        {
+          "metric": "length_hemline",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“hip-length hem”",
+            "“visible to mid-leg”"
+          ],
+          "reason": "The text gives clear length information for both the jacket and pants."
+        },
+        {
+          "metric": "shoulder_architecture",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“dropped shoulders”",
+            "“open long-sleeve shirt jacket”"
+          ],
+          "reason": "Dropped shoulders are explicitly stated, making shoulder structure salient."
+        },
+        {
+          "metric": "body_coverage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“black bra straps and a black lace bra panel visibly showing through/around the deep open neckline”",
+            "“white fitted camisole or bodysuit”"
+          ],
+          "reason": "The text clearly describes exposed lingerie and a deep open neckline, so body coverage/reveal is salient."
+        }
+      ]
+    },
+    "MaterialColor": {
+      "module": "MaterialColor",
+      "results": [
+        {
+          "metric": "fabric_family",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“denim-style look”",
+            "“mixing denim workwear proportions”"
+          ],
+          "reason": "The main fabric family is clearly indicated as denim/denim-style."
+        },
+        {
+          "metric": "surface_finish",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“heavily sparkling”",
+            "“allover sequined or glittering surface texture”"
+          ],
+          "reason": "The text clearly describes a shiny, glittering surface finish."
+        },
+        {
+          "metric": "primary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“light aqua-blue”",
+            "“light blue sparkling pants”"
+          ],
+          "reason": "The dominant color is clearly light aqua-blue / light blue."
+        },
+        {
+          "metric": "secondary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“white fitted camisole or bodysuit”",
+            "“black bra straps and a black lace bra panel”",
+            "“gold-tone buttons”"
+          ],
+          "reason": "Several secondary colors are explicitly present and visible against the blue base."
+        },
+        {
+          "metric": "color_relationship_logic",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“white fitted camisole ... visibly showing through”",
+            "“black bra straps and a black lace bra panel”",
+            "“soft neutral accent against the icy blue shine”"
+          ],
+          "reason": "The text explains the color logic as a blue dominant look with visible white/black contrast layers and a neutral beige accent."
+        },
+        {
+          "metric": "pattern_type",
+          "applicable": true,
+          "score": 0.0,
+          "hit": 0,
+          "evidence": [
+            "“mottled blue wash variation”",
+            "“allover sequined or glittering surface texture”"
+          ],
+          "reason": "There is texture and wash variation, but no clear pattern type such as stripes, florals, checks, or print."
+        }
+      ]
+    },
+    "ConstructionDetail": {
+      "module": "ConstructionDetail",
+      "results": [
+        {
+          "metric": "closure",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“two chest flap pockets with gold-tone button closures”",
+            "“additional gold-tone buttons down the front”"
+          ],
+          "reason": "The text clearly describes button closures and a front button opening."
+        },
+        {
+          "metric": "functional_detail",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“two chest flap pockets”",
+            "“black belt or waistband”"
+          ],
+          "reason": "Functional garment details are explicitly mentioned, especially pockets and waist support."
+        },
+        {
+          "metric": "construction_technique",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“black lace bra panel visibly showing through/around the deep open neckline”",
+            "“frayed-looking edges along the placket, collar, hem, cuffs, and pocket seams”"
+          ],
+          "reason": "The text includes a specific construction/craft detail with location, especially lace paneling at the neckline and frayed edge treatment on multiple garment zones."
+        },
+        {
+          "metric": "deconstruction",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“slightly undone”",
+            "“exposed lingerie layering”"
+          ],
+          "reason": "The look is explicitly framed as undone/deconstructed through exposed layering and relaxed reconstruction of classic denim workwear proportions."
+        },
+        {
+          "metric": "hardware_embellishment",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“gold-tone button closures”",
+            "“additional gold-tone buttons”"
+          ],
+          "reason": "Visible metallic hardware is clearly present and emphasized through multiple gold-tone buttons."
+        }
+      ]
+    },
+    "StylingSet": {
+      "module": "StylingSet",
+      "results": [
+        {
+          "metric": "bag",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a small beige quilted clutch”",
+            "“held at the side”"
+          ],
+          "reason": "The bag is explicitly identified by type and carrying method, and its material/finish and color are also described."
+        },
+        {
+          "metric": "footwear",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No footwear is mentioned."
+        },
+        {
+          "metric": "jewelry",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“chunky gold earrings”"
+          ],
+          "reason": "A clearly visible jewelry item is explicitly described."
+        },
+        {
+          "metric": "belt",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“under a black belt or waistband”"
+          ],
+          "reason": "A visible waist accessory is mentioned and its placement relative to the pants is clear."
+        },
+        {
+          "metric": "layering",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“layered over a white fitted camisole or bodysuit”",
+            "“black bra straps and a black lace bra panel visibly showing through/around the deep open neckline”"
+          ],
+          "reason": "The text clearly describes a layered outfit with visible underlayers and their relationship to the outer shirt jacket."
+        }
+      ]
+    },
+    "Composition": {
+      "module": "Composition",
+      "results": [
+        {
+          "metric": "top_bottom_proportion",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“relaxed, oversized silhouette”",
+            "“open long-sleeve shirt jacket ... layered over a white fitted camisole”",
+            "“matching light blue sparkling pants sit at the waist”"
+          ],
+          "reason": "The text clearly describes the upper and lower silhouette relationship, including an oversized top over a fitted base and waist-sitting pants, which establishes top-bottom proportion."
+        },
+        {
+          "metric": "asymmetry",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No clear asymmetrical design, one-sided structure, or uneven garment construction is described."
+        },
+        {
+          "metric": "cross_garment_binding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“open long-sleeve shirt jacket ... layered over a white fitted camisole or bodysuit”",
+            "“black bra straps and a black lace bra panel visibly showing through/around the deep open neckline”",
+            "“matching light blue sparkling pants ... under a black belt or waistband”"
+          ],
+          "reason": "The description clearly distinguishes which details belong to the jacket, base layer, lingerie, pants, and waist accessory, so multi-item relations are well bound."
+        }
+      ]
+    },
+    "Specificity": {
+      "module": "Specificity",
+      "results": [
+        {
+          "metric": "specific_noun_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"open long-sleeve shirt jacket\"",
+            "\"white fitted camisole or bodysuit\"",
+            "\"two chest flap pockets\"",
+            "\"small beige quilted clutch\""
+          ],
+          "reason": "Uses highly specific garment and accessory nouns with clear fashion semantics, plus concrete construction terms and item types."
+        },
+        {
+          "metric": "fine_grained_attribute_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"light aqua-blue\"",
+            "\"heavily sparkling\"",
+            "\"mottled blue wash variation\"",
+            "\"frayed-looking edges\"",
+            "\"gold-tone button closures\""
+          ],
+          "reason": "Color, texture, finish, and construction are described with fine-grained fashion detail, making the look highly imageable and precise."
+        }
+      ]
+    },
+    "BindingAccuracy": {
+      "module": "BindingAccuracy",
+      "results": [
+        {
+          "metric": "attribute_entity_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"light aqua-blue, heavily sparkling denim-style look\"",
+            "\"matching light blue sparkling pants sit at the waist under a black belt or waistband\"",
+            "\"white fitted camisole or bodysuit\"",
+            "\"black bra straps and a black lace bra panel visibly showing through/around the deep open neckline\""
+          ],
+          "reason": "Most attributes are clearly tied to the correct garments, but a few phrases introduce mild binding ambiguity, especially \"belt or waistband\" and \"camisole or bodysuit,\" which slightly weaken precision without breaking the overall structure."
+        },
+        {
+          "metric": "multi_garment_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"open long-sleeve shirt jacket... layered over a white fitted camisole or bodysuit\"",
+            "\"matching light blue sparkling pants\"",
+            "\"chunky gold earrings and a small beige quilted clutch\""
+          ],
+          "reason": "The text cleanly separates jacket, inner layer, pants, and accessories, with coherent layering and styling. Minor ambiguity remains in the inner layer naming and the belt/waistband phrasing, but there is no major cross-item attribute confusion."
+        }
+      ]
+    },
+    "LanguageClarity": {
+      "module": "LanguageClarity",
+      "results": [
+        {
+          "metric": "quantity_accuracy",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“two chest flap pockets”",
+            "“black bra straps and a black lace bra panel”"
+          ],
+          "reason": "The explicit count is clear and internally consistent, with only minor ambiguity in a few descriptive relations (e.g. “shirt jacket” vs. “jacket” and “bra straps/panel” placement), but nothing that materially confuses the quantity relation."
+        },
+        {
+          "metric": "reference_clarity",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“The jacket has…”",
+            "“Below, matching light blue sparkling pants…”"
+          ],
+          "reason": "References are mostly well anchored and easy to follow across garments and accessories. There is slight looseness in phrases like “it”/implied garment continuity and the optional wording “camisole or bodysuit,” but the overall referents remain clear."
+        }
+      ]
+    },
+    "StructuralClarity": {
+      "module": "StructuralClarity",
+      "results": [
+        {
+          "metric": "information_ordering",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“A coordinated light aqua-blue... look worn in a relaxed, oversized silhouette”",
+            "“an open long-sleeve shirt jacket... layered over a white fitted camisole or bodysuit”",
+            "“Below, matching light blue sparkling pants...”",
+            "“Styling includes chunky gold earrings and a small beige quilted clutch”"
+          ],
+          "reason": "The description follows a mostly natural top-to-bottom structure: overall look, upper layer, underlayer, bottoms, then accessories. It is clear and imageable, with only minor compression from the long modifier-heavy sentences."
+        }
+      ]
+    },
+    "GenerationReadiness": {
+      "module": "GenerationReadiness",
+      "results": [
+        {
+          "metric": "generation_readiness",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“A coordinated light aqua-blue, heavily sparkling denim-style look”",
+            "“open long-sleeve shirt jacket ... layered over a white fitted camisole or bodysuit”",
+            "“matching light blue sparkling pants ... with a black belt or waistband”"
+          ],
+          "reason": "The text is highly visual, organized around silhouette, garments, layering, texture, and accessories, so it is close to a usable generation prompt. Minor prompt-readiness issues remain because it is somewhat explanatory and includes optional phrasing like “camisole or bodysuit” and “belt or waistband,” which slightly reduce precision."
+        },
+        {
+          "metric": "bilateral_coherence",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit left-right or other bilateral asymmetry is described."
+        },
+        {
+          "metric": "spatial_coherence",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“layered over a white fitted camisole or bodysuit”",
+            "“black bra straps and a black lace bra panel visibly showing through/around the deep open neckline”",
+            "“pants sit at the waist under a black belt or waistband”"
+          ],
+          "reason": "The layering and attachment relations are mostly clear and imageable, with coherent inside-outside and over-under structure. The main limitation is some ambiguity in the underlayer wording and waistband/belt phrasing, but overall the spatial setup is still strong for generation."
+        }
+      ]
+    },
+    "ConcisenessAndDensity": {
+      "module": "ConcisenessAndDensity",
+      "results": [
+        {
+          "metric": "core_information_density",
+          "applicable": true,
+          "score": 0.5,
+          "hit": 0,
+          "evidence": [
+            "\"coordinated light aqua-blue, heavily sparkling denim-style look\"",
+            "\"open long-sleeve shirt jacket... layered over a white fitted camisole or bodysuit\"",
+            "\"chunky gold earrings and a small beige quilted clutch\""
+          ],
+          "reason": "The description contains strong, usable garment detail, but it is quite long and heavily layered with repeated texture/color elaboration and accessory styling, which reduces concision. The main outfit is still clear, so it is not low-density, but the prompt is somewhat verbose."
+        },
+        {
+          "metric": "visibility_priority",
+          "applicable": true,
+          "score": 0.5,
+          "hit": 0,
+          "evidence": [
+            "\"black bra straps and a black lace bra panel visibly showing through/around the deep open neckline\"",
+            "\"frayed-looking edges along the placket, collar, hem, cuffs, and pocket seams\"",
+            "\"small beige quilted clutch held at the side\""
+          ],
+          "reason": "Most details are visible and image-relevant, but the text gives notable attention to lower-priority styling and layered-underneath elements, including lingerie visibility and accessory notes, rather than keeping the clearest emphasis on the core silhouette and garments."
+        }
+      ]
+    },
+    "ConceptBonus": {
+      "module": "ConceptBonus",
+      "results": [
+        {
+          "metric": "aesthetic_vocabulary",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"casual-luxe\"",
+            "\"slightly undone\""
+          ],
+          "reason": "The text explicitly uses style-language to frame the look."
+        },
+        {
+          "metric": "cultural_reference",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No cultural, historical, or brand reference is provided."
+        },
+        {
+          "metric": "gender_expression",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The description does not explicitly discuss gender expression or androgyny."
+        },
+        {
+          "metric": "theme_narrative",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No series theme or conceptual narrative is stated beyond the outfit description."
+        },
+        {
+          "metric": "brand_alignment",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No brand identity or brand-language target is mentioned."
+        },
+        {
+          "metric": "negation_control",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text does not emphasize exclusions or absence of elements as a key requirement."
+        }
+      ]
+    }
+  },
+  "r_content": {
+    "enabled": true,
+    "odin_reference": "ICML 2024 ODIN (disentangled reward): RL uses content-dominant scalar; length diagnostics + soft penalty channel reduce length hacking vs. raw S_fp alone.",
+    "S_fp": 0.7905,
+    "total_penalty": 0.0625,
+    "gamma_penalty": 0.35,
+    "formula": "multiply",
+    "beta_z_len": 0.05,
+    "char_len": 1119,
+    "log_len": 7.021084,
+    "est_tokens_char_div_4": 279.75,
+    "holdout_length_prediction": null,
+    "r_after_length_residual": 0.7905,
+    "r_after_soft_penalty": 0.773208,
+    "z_len": null,
+    "R_content": 0.773208
+  }
+}

@@ -1,0 +1,1877 @@
+{
+  "name": "fashion_text_prompt_optimizer",
+  "version": "0.2.0",
+  "source_name": "07_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__007_media_cha_biarritz_ps27_025_text_description.md",
+  "input_type": "text_description",
+  "judge_backend": "openai_compatible_api",
+  "judge_model": "gpt-5.4-mini",
+  "judge_api_base": "https://api.ohmygpt.com/v1",
+  "text_description": "A runway look built around a loose, elongated short-sleeve collared shirt tunic in a patchwork striped textile, worn open at the neck over matching striped knee-length shorts visible beneath the hem. The garment has a relaxed, straight silhouette falling to mid-thigh, with a pointed collar, deep partial button placket, dropped easy shoulders, and short sleeves finished with contrasting green, red, and cream banded trim. The surface is dominated by irregular vertical stripes in deep red, navy, cream, tan, black, and muted yellow, arranged in mismatched panels; one sleeve and parts of the body show a more plaid-like check variation. Utility-style patch pockets sit high on the chest and lower on the front, each with light beige flap bands and small button details, while the hem is emphasized by broad horizontal border stripes in cream, mint green, red, and tan. The matching shorts continue the vertical striped pattern and extend just below the tunic hem, creating a layered shirt-and-shorts proportion. Styling includes oversized dark sunglasses, long earrings, layered necklaces at the open neckline, and a hand-carried tote or bag with black straps and a glimpse of striped fabric, giving the look a bold, resort-like, eclectic patchwork mood.",
+  "eval_prose": "A runway look built around a loose, elongated short-sleeve collared shirt tunic in a patchwork striped textile, worn open at the neck over matching striped knee-length shorts visible beneath the hem. The garment has a relaxed, straight silhouette falling to mid-thigh, with a pointed collar, deep partial button placket, dropped easy shoulders, and short sleeves finished with contrasting green, red, and cream banded trim. The surface is dominated by irregular vertical stripes in deep red, navy, cream, tan, black, and muted yellow, arranged in mismatched panels; one sleeve and parts of the body show a more plaid-like check variation. Utility-style patch pockets sit high on the chest and lower on the front, each with light beige flap bands and small button details, while the hem is emphasized by broad horizontal border stripes in cream, mint green, red, and tan. The matching shorts continue the vertical striped pattern and extend just below the tunic hem, creating a layered shirt-and-shorts proportion. Styling includes oversized dark sunglasses, long earrings, layered necklaces at the open neckline, and a hand-carried tote or bag with black straps and a glimpse of striped fabric, giving the look a bold, resort-like, eclectic patchwork mood.",
+  "total_score": 0.7876,
+  "gates": {
+    "score_gate": {
+      "name": "score_gate",
+      "description": "最终 S_fp（quality 用 weighted base_score，不含 penalty 扣减；已做 holdout 长度去相关）",
+      "value": 0.7876,
+      "threshold": 0.7,
+      "passed": true,
+      "weights": {
+        "coverage": 0.2,
+        "quality": 0.8
+      },
+      "components": {
+        "coverage_axis_score": 0.8889,
+        "quality_effective": 0.7615
+      },
+      "total_cap_applied": 1.0
+    },
+    "penalty_gate": {
+      "name": "penalty_gate",
+      "description": "仅依据 penalties.total_penalty（各 penalty 分值的算术平均）",
+      "total_penalty": 0.1,
+      "threshold": 0.5,
+      "passed": true
+    },
+    "both_passed": true
+  },
+  "score_band": "Strong",
+  "metric_totals": {
+    "total_defined_metrics": 47,
+    "total_applicable_metrics": 35,
+    "total_hit_metrics": 32,
+    "total_skipped_metrics": 12
+  },
+  "skipped_metrics": [
+    {
+      "metric": "fabric_family",
+      "axis": "coverage_score",
+      "rule": "文本需给出主体材质类别",
+      "applicability_code": "when_material_is_inferable",
+      "applicability_hint": "Only applicable when the text provides enough information about the main material.",
+      "reason": "The text describes pattern, silhouette, and trim, but does not clearly state the main fabric family/material."
+    },
+    {
+      "metric": "surface_finish",
+      "axis": "coverage_score",
+      "rule": "文本需给出光泽、哑光、垂坠或硬挺等表面性质",
+      "applicability_code": "when_surface_trait_is_salient",
+      "applicability_hint": "Only applicable when the text mentions gloss, matte, drape, stiffness, pleats, or surface traits.",
+      "reason": "No explicit surface property such as sheen, matte finish, drape, or stiffness is given."
+    },
+    {
+      "metric": "deconstruction",
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "reason": "No explicit deconstruction, splicing, displacement, or reconstruction is stated."
+    },
+    {
+      "metric": "hardware_embellishment",
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "reason": "No salient hardware embellishment such as chains, studs, rings, or crystals is mentioned."
+    },
+    {
+      "metric": "footwear",
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "reason": "No footwear is described."
+    },
+    {
+      "metric": "belt",
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "reason": "No belt, sash, waist strap, or harness is mentioned."
+    },
+    {
+      "metric": "bilateral_coherence",
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "reason": "No explicit left-right or other bilateral differences are described."
+    },
+    {
+      "metric": "cultural_reference",
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "reason": "No specific cultural, historical, or brand reference is grounded in the description."
+    },
+    {
+      "metric": "gender_expression",
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "reason": "The text does not explicitly discuss gender expression or androgyny."
+    },
+    {
+      "metric": "theme_narrative",
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "reason": "No series theme or conceptual narrative is explicitly stated beyond the outfit description."
+    },
+    {
+      "metric": "brand_alignment",
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "reason": "There is no explicit brand language or brand identity target in the text."
+    },
+    {
+      "metric": "negation_control",
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "reason": "The description does not rely on excluding absent elements as an important instruction."
+    }
+  ],
+  "scores": {
+    "coverage_score": {
+      "applicable_metrics": 18,
+      "hit_metrics": 16,
+      "score_sum": 16.0,
+      "score": 0.8889
+    },
+    "quality_score": {
+      "applicable_metrics": 16,
+      "hit_metrics": 15,
+      "score_sum": 12.75,
+      "score": 0.7969,
+      "base_score": 0.7615,
+      "axis_score_unweighted": 0.7969,
+      "penalized_score": 0.7615,
+      "penalties": {
+        "items": {
+          "generation_content_penalty": {
+            "score": 0.25,
+            "evidence": [
+              "\"A runway look built around...\"",
+              "\"giving the look a bold, resort-like, eclectic patchwork mood\""
+            ],
+            "reason": "Mostly imageable garment description, but it includes runway-style framing and mood language that adds some conceptual padding."
+          },
+          "consistency_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "\"loose, elongated short-sleeve collared shirt tunic\"",
+              "\"matching striped knee-length shorts visible beneath the hem\""
+            ],
+            "reason": "The shirt-tunic and matching shorts read as a coherent layered outfit with no trunk-level contradiction."
+          },
+          "coordination_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "\"contrasting green, red, and cream banded trim\"",
+              "\"oversized dark sunglasses, long earrings, layered necklaces\""
+            ],
+            "reason": "Styling elements support the resort/eclectic direction and do not create a trunk-level coordination conflict."
+          },
+          "rationality_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "\"patchwork striped textile\"",
+              "\"utility-style patch pockets\""
+            ],
+            "reason": "All described materials and construction are physically plausible for ordinary apparel."
+          },
+          "formula_template_penalty": {
+            "score": 0.25,
+            "evidence": [
+              "\"runway look built around\"",
+              "\"Styling includes oversized dark sunglasses... layered necklaces... tote or bag\""
+            ],
+            "reason": "The description follows a common fashion-prompt formula: silhouette/material details plus accessory list and mood statement."
+          }
+        },
+        "reasons": {
+          "generation_content_penalty": "Mostly imageable garment description, but it includes runway-style framing and mood language that adds some conceptual padding.",
+          "consistency_penalty": "The shirt-tunic and matching shorts read as a coherent layered outfit with no trunk-level contradiction.",
+          "coordination_penalty": "Styling elements support the resort/eclectic direction and do not create a trunk-level coordination conflict.",
+          "rationality_penalty": "All described materials and construction are physically plausible for ordinary apparel.",
+          "formula_template_penalty": "The description follows a common fashion-prompt formula: silhouette/material details plus accessory list and mood statement."
+        },
+        "generation_content_penalty": 0.25,
+        "consistency_penalty": 0.0,
+        "coordination_penalty": 0.0,
+        "rationality_penalty": 0.0,
+        "formula_template_penalty": 0.25,
+        "total_penalty": 0.1
+      },
+      "cap": 1.0
+    },
+    "bonus_score": {
+      "applicable_metrics": 1,
+      "hit_metrics": 1,
+      "score_sum": 1.0,
+      "score": 1.0
+    },
+    "fashion_prompt_score": 0.7876,
+    "s_fp_base": 0.787,
+    "length_disentangle": {
+      "adjusted_score": 0.7876,
+      "length_component": -0.000623,
+      "log_len": 7.136483,
+      "slope_a": 0.002948,
+      "mode": "centered_slope",
+      "applied": true,
+      "log_len_center": 7.3478
+    },
+    "weights": {
+      "coverage": 0.2,
+      "quality": 0.8
+    },
+    "total_cap": 1.0,
+    "module_scores": {
+      "GarmentCore": {
+        "applicable_metrics": 5,
+        "hit_metrics": 5,
+        "score_sum": 5.0,
+        "score": 1.0
+      },
+      "MaterialColor": {
+        "applicable_metrics": 4,
+        "hit_metrics": 4,
+        "score_sum": 4.0,
+        "score": 1.0
+      },
+      "ConstructionDetail": {
+        "applicable_metrics": 3,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 0.6667
+      },
+      "StylingSet": {
+        "applicable_metrics": 3,
+        "hit_metrics": 3,
+        "score_sum": 3.0,
+        "score": 1.0
+      },
+      "Composition": {
+        "applicable_metrics": 3,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 0.6667
+      },
+      "Specificity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "BindingAccuracy": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "LanguageClarity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "StructuralClarity": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 0.75,
+        "score": 0.75
+      },
+      "GenerationReadiness": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "ConcisenessAndDensity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 1,
+        "score_sum": 1.25,
+        "score": 0.625
+      },
+      "DesignMerit": {
+        "applicable_metrics": 5,
+        "hit_metrics": 5,
+        "score_sum": 4.25,
+        "score": 0.85
+      },
+      "ConceptBonus": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 1.0,
+        "score": 1.0
+      }
+    }
+  },
+  "diagnosis": {
+    "missing_information": [
+      {
+        "metric": "construction_technique",
+        "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+        "score_value": 0.0,
+        "matched_terms": [
+          "“patchwork striped textile”",
+          "“mismatched panels”"
+        ],
+        "reason": "The text describes patchwork/paneling, but not a specific construction technique of the type required by the rubric with a clear named craft and body zone."
+      },
+      {
+        "metric": "asymmetry",
+        "rule": "不对称设计存在时应被提到",
+        "score_value": 0.0,
+        "matched_terms": [
+          "“one sleeve and parts of the body show a more plaid-like check variation”"
+        ],
+        "reason": "There is variation in pattern, but no clear structural asymmetry in garment shape or one-sided construction is described."
+      }
+    ],
+    "quality_issues": [
+      {
+        "metric": "core_information_density",
+        "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+        "score_value": 0.5,
+        "matched_terms": [
+          "“loose, elongated short-sleeve collared shirt tunic”",
+          "“matching striped knee-length shorts visible beneath the hem”",
+          "“utility-style patch pockets”",
+          "“oversized dark sunglasses, long earrings, layered necklaces”"
+        ],
+        "reason": "主体服装轮廓清楚，且细节丰富，但描述较长，重复展开了面料、条纹、口袋、边饰和配饰，信息密度中等偏高但不够精炼。"
+      }
+    ],
+    "bonus_opportunities": []
+  },
+  "metric_results": {
+    "garment_category": {
+      "axis": "coverage_score",
+      "rule": "文本需明确给出服装主体品类",
+      "source_keypoints": [
+        1
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“short-sleeve collared shirt tunic”",
+        "“matching striped knee-length shorts”"
+      ],
+      "reason": "The text clearly identifies the main garment categories: a shirt tunic and matching shorts.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "silhouette": {
+      "axis": "coverage_score",
+      "rule": "文本需给出整体轮廓或结构趋势",
+      "source_keypoints": [
+        2
+      ],
+      "applicability_code": "when_shape_is_salient",
+      "applicability_hint": "Only applicable when the text clearly mentions silhouette, shape, or structural contour.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“loose, elongated”",
+        "“relaxed, straight silhouette”"
+      ],
+      "reason": "The overall shape is explicitly described with clear silhouette language.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "length_hemline": {
+      "axis": "coverage_score",
+      "rule": "文本需给出长度或下摆信息",
+      "source_keypoints": [
+        3
+      ],
+      "applicability_code": "when_length_or_hem_is_salient",
+      "applicability_hint": "Only applicable when the text mentions length, hemline, slit, or garment length.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“falling to mid-thigh”",
+        "“knee-length shorts visible beneath the hem”"
+      ],
+      "reason": "The text gives explicit length and hemline information for both the tunic and shorts.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "shoulder_architecture": {
+      "axis": "coverage_score",
+      "rule": "当肩线设计显著（如强调垫肩/结构肩、落肩、宽肩、单肩或露肩、无肩带抹胸等）时，文本须点明该肩部结构语言，而非仅写「上装」或笼统廓形",
+      "source_keypoints": [
+        4
+      ],
+      "applicability_code": "when_shoulder_is_salient",
+      "applicability_hint": "Only applicable when the text implies prominent shoulder design: pads/structured shoulders, dropped shoulder, one-shoulder/off-shoulder, strapless neckline, or other salient shoulder/sleeve anchor cues.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“dropped easy shoulders”",
+        "“short sleeves”"
+      ],
+      "reason": "Dropped shoulders are a salient shoulder-structure cue.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "body_coverage": {
+      "axis": "coverage_score",
+      "rule": "文本需描述显著裸露或包裹区域",
+      "source_keypoints": [
+        5
+      ],
+      "applicability_code": "when_exposure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions exposure, coverage, cutout, or body reveal.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“worn open at the neck”",
+        "“visible beneath the hem”"
+      ],
+      "reason": "The text describes both partial exposure at the neckline and layered coverage at the hem.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "fabric_family": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主体材质类别",
+      "source_keypoints": [
+        6
+      ],
+      "applicability_code": "when_material_is_inferable",
+      "applicability_hint": "Only applicable when the text provides enough information about the main material.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text describes pattern, silhouette, and trim, but does not clearly state the main fabric family/material.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "surface_finish": {
+      "axis": "coverage_score",
+      "rule": "文本需给出光泽、哑光、垂坠或硬挺等表面性质",
+      "source_keypoints": [
+        7
+      ],
+      "applicability_code": "when_surface_trait_is_salient",
+      "applicability_hint": "Only applicable when the text mentions gloss, matte, drape, stiffness, pleats, or surface traits.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit surface property such as sheen, matte finish, drape, or stiffness is given.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "primary_color": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主色",
+      "source_keypoints": [
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "deep red, navy, cream, tan, black, and muted yellow",
+        "contrasting green, red, and cream banded trim"
+      ],
+      "reason": "The look has a clearly dominant multicolor palette, with deep red/navy/cream/tan as the main visible colors.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "secondary_color": {
+      "axis": "coverage_score",
+      "rule": "有明显副色时需描述；若为大衣内里、开衩内衬等高对比色块，应说明可见条件（如行走、开片时）或与主色区的衔接，避免孤立撞色无锚点、不利生成",
+      "source_keypoints": [
+        12
+      ],
+      "applicability_code": "when_secondary_color_is_salient",
+      "applicability_hint": "Only applicable when the text clearly includes secondary color or color relationship information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "contrasting green, red, and cream banded trim",
+        "broad horizontal border stripes in cream, mint green, red, and tan"
+      ],
+      "reason": "Secondary accent colors are explicitly described and anchored to visible trim and hem border stripes.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "color_relationship_logic": {
+      "axis": "coverage_score",
+      "rule": "当存在多色块、强对比内搭/外搭、条纹或印花与底色关系、或明显的同色系/补色/撞色叙事时，文本须交代配色逻辑（如单色、同色系层次、补色对比、主次色块关系之一），使生成可还原色彩关系；仅罗列颜色词但未体现关系则不计为覆盖",
+      "source_keypoints": [
+        13
+      ],
+      "applicability_code": "when_multi_tone_or_strong_color_story",
+      "applicability_hint": "Only applicable when the text implies multiple color blocks, strong inner/outer contrast, stripe-vs-ground relations, tonal vs accented palette, or another non-trivial color story beyond a single flat hue.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "irregular vertical stripes in deep red, navy, cream, tan, black, and muted yellow",
+        "arranged in mismatched panels",
+        "matching striped knee-length shorts visible beneath the hem"
+      ],
+      "reason": "The text explains the color logic as a coordinated striped, panel-mismatched palette with matching shorts, not just isolated color names.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "pattern_type": {
+      "axis": "coverage_score",
+      "rule": "有图案时需给出图案类型",
+      "source_keypoints": [
+        14
+      ],
+      "applicability_code": "when_pattern_exists",
+      "applicability_hint": "Only applicable when the text describes pattern or print information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "patchwork striped textile",
+        "one sleeve and parts of the body show a more plaid-like check variation"
+      ],
+      "reason": "Pattern types are clearly identified: stripes, patchwork, and a plaid-like check variation.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "closure": {
+      "axis": "coverage_score",
+      "rule": "显著开合方式应被提到",
+      "source_keypoints": [
+        17
+      ],
+      "applicability_code": "when_closure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions button, zipper, tie, buckle, or closure details.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“deep partial button placket”",
+        "“worn open at the neck”"
+      ],
+      "reason": "A clear button-front opening is described, so the closure detail is explicitly covered.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "functional_detail": {
+      "axis": "coverage_score",
+      "rule": "显著口袋、挂带或功能细节应被提到",
+      "source_keypoints": [
+        18
+      ],
+      "applicability_code": "when_functional_detail_is_salient",
+      "applicability_hint": "Only applicable when the text mentions pockets, straps, utility parts, or functional details.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“Utility-style patch pockets”",
+        "“high on the chest and lower on the front”"
+      ],
+      "reason": "Functional pocket placement and utility detailing are explicitly mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "construction_technique": {
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "source_keypoints": [
+        9
+      ],
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "applicable": true,
+      "score_value": 0.0,
+      "hit": 0,
+      "matched_terms": [
+        "“patchwork striped textile”",
+        "“mismatched panels”"
+      ],
+      "reason": "The text describes patchwork/paneling, but not a specific construction technique of the type required by the rubric with a clear named craft and body zone.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "deconstruction": {
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "source_keypoints": [
+        20
+      ],
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit deconstruction, splicing, displacement, or reconstruction is stated.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "hardware_embellishment": {
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "source_keypoints": [
+        21
+      ],
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No salient hardware embellishment such as chains, studs, rings, or crystals is mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "bag": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "source_keypoints": [
+        22
+      ],
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a hand-carried tote or bag”",
+        "“with black straps and a glimpse of striped fabric”"
+      ],
+      "reason": "The bag is explicitly identified as a tote/bag and includes visible strap and material/color details, satisfying the coverage rule.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "footwear": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "source_keypoints": [
+        23
+      ],
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No footwear is described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "jewelry": {
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "source_keypoints": [
+        24
+      ],
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“long earrings”",
+        "“layered necklaces at the open neckline”"
+      ],
+      "reason": "Visible jewelry is explicitly present and salient in the styling.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "belt": {
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "source_keypoints": [
+        25
+      ],
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No belt, sash, waist strap, or harness is mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "layering": {
+      "axis": "coverage_score",
+      "rule": "多层叠搭时应给出层次关系；外套、内搭、腰带、腿带与裤装之间的遮盖与固定顺序应可还原为可见层次，服务生成导向",
+      "source_keypoints": [
+        26
+      ],
+      "applicability_code": "when_layering_exists",
+      "applicability_hint": "Only applicable when the text describes layering or multi-layer garment relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“worn open at the neck over matching striped knee-length shorts visible beneath the hem”",
+        "“creating a layered shirt-and-shorts proportion”"
+      ],
+      "reason": "The text clearly describes a layered relationship between the tunic and shorts, with visible overlap and ordering.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "top_bottom_proportion": {
+      "axis": "coverage_score",
+      "rule": "明显上下比例关系应被提到；长外套、阔腿或宽松下装、厚底鞋与腿带/harness 等叠加时，应交代主干剪影主次，避免仅堆砌元素导致下盘过重、prompt 失焦",
+      "source_keypoints": [
+        27
+      ],
+      "applicability_code": "when_proportion_is_salient",
+      "applicability_hint": "Only applicable when the text describes top-bottom proportion, waist position, or visual balance.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“loose, elongated short-sleeve collared shirt tunic”",
+        "“matching striped knee-length shorts visible beneath the hem”",
+        "“creating a layered shirt-and-shorts proportion”"
+      ],
+      "reason": "The text clearly describes the relationship between the long tunic top and the shorter bottoms, including how the shorts sit beneath the hem and the resulting proportion.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "asymmetry": {
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "source_keypoints": [
+        29
+      ],
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "applicable": true,
+      "score_value": 0.0,
+      "hit": 0,
+      "matched_terms": [
+        "“one sleeve and parts of the body show a more plaid-like check variation”"
+      ],
+      "reason": "There is variation in pattern, but no clear structural asymmetry in garment shape or one-sided construction is described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cross_garment_binding": {
+      "axis": "coverage_score",
+      "rule": "多单品时应能区分属性属于哪件单品",
+      "source_keypoints": [
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“shirt tunic ... over matching striped knee-length shorts”",
+        "“The matching shorts continue the vertical striped pattern”",
+        "“a hand-carried tote or bag with black straps”"
+      ],
+      "reason": "The text distinguishes which attributes belong to the tunic, shorts, and bag, making the multi-garment relationships clear.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "specific_noun_usage": {
+      "axis": "quality_score",
+      "rule": "使用具体服装或配件名词而非泛词",
+      "source_keypoints": [
+        1,
+        22,
+        23
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "short-sleeve collared shirt tunic",
+        "matching striped knee-length shorts",
+        "oversized dark sunglasses",
+        "layered necklaces",
+        "utility-style patch pockets"
+      ],
+      "reason": "The description uses highly specific garment and accessory nouns, with clear fashion terminology and concrete item names throughout.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "fine_grained_attribute_usage": {
+      "axis": "quality_score",
+      "rule": "颜色、材质、结构词应尽量细粒度",
+      "source_keypoints": [
+        6,
+        7,
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "patchwork striped textile",
+        "deep red, navy, cream, tan, black, and muted yellow",
+        "pointed collar, deep partial button placket, dropped easy shoulders",
+        "contrasting green, red, and cream banded trim",
+        "broad horizontal border stripes in cream, mint green, red, and tan"
+      ],
+      "reason": "Color, structure, and surface details are very fine-grained and richly specified, producing a highly imageable and technically precise fashion description.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "attribute_entity_binding": {
+      "axis": "quality_score",
+      "rule": "属性必须绑定到正确实体；腰带、腿带、harness、护臂/护手等须明确归属外套、裤装或身体附件，避免腰胯多重束系指代漂移",
+      "source_keypoints": [
+        10,
+        39
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“short-sleeve collared shirt tunic”",
+        "“matching striped knee-length shorts visible beneath the hem”",
+        "“hand-carried tote or bag with black straps”"
+      ],
+      "reason": "Most attributes are clearly attached to the correct garment or accessory, and the layered shirt-over-shorts relation is coherent. Minor ambiguity remains in phrases like “one sleeve and parts of the body” and “tote or bag,” but they do not seriously disrupt binding.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "multi_garment_binding": {
+      "axis": "quality_score",
+      "rule": "多单品描述时不得将属性归错单品",
+      "source_keypoints": [
+        12,
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“shirt tunic ... over matching striped knee-length shorts”",
+        "“short sleeves finished with contrasting green, red, and cream banded trim”",
+        "“utility-style patch pockets sit high on the chest and lower on the front”"
+      ],
+      "reason": "The text keeps the shirt tunic, shorts, and bag mostly distinct, with garment-specific details bound to the right item. There is slight ambiguity in the bag wording and in the mixed-panel textile description, but no major cross-garment misbinding.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "quantity_accuracy": {
+      "axis": "quality_score",
+      "rule": "数量词应准确且不冲突",
+      "source_keypoints": [
+        37
+      ],
+      "applicability_code": "when_quantity_is_used",
+      "applicability_hint": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“one sleeve”",
+        "“green, red, and cream banded trim”",
+        "“matching striped knee-length shorts”"
+      ],
+      "reason": "Quantity relations are mostly clear and internally consistent, with only minor complexity from multiple descriptive counts and layered garment references.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "reference_clarity": {
+      "axis": "quality_score",
+      "rule": "代词和省略指向必须清晰",
+      "source_keypoints": [
+        38
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“The garment has...”",
+        "“one sleeve and parts of the body”",
+        "“The matching shorts continue...”"
+      ],
+      "reason": "References are generally well anchored and easy to follow; pronouns and omitted subjects do not create serious ambiguity, though the long descriptive sentence structure adds slight reading load.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "information_ordering": {
+      "axis": "quality_score",
+      "rule": "描述应按主体到细节的顺序组织",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"A runway look built around a loose, elongated short-sleeve collared shirt tunic\"",
+        "\"The garment has a relaxed, straight silhouette... with a pointed collar, deep partial button placket...\"",
+        "\"Styling includes oversized dark sunglasses... and a hand-carried tote or bag\""
+      ],
+      "reason": "The description follows a mostly natural order from main garment to construction details, then pattern/color, then accessories. It is clear and easy to reconstruct, though some detail clusters are dense and slightly repetitive.",
+      "quality_dimension": "StructuralClarity",
+      "quality_dimension_zh": "结构清晰度"
+    },
+    "generation_readiness": {
+      "axis": "quality_score",
+      "rule": "文本应可直接转为图像生成 prompt；须以可见廓形、品类与层次为先，多文化/多时代风格符号混用时应能收束为单一 look 身份，否则视为生成导向不足",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“A runway look built around a loose, elongated short-sleeve collared shirt tunic”",
+        "“worn open at the neck over matching striped knee-length shorts”",
+        "“layered shirt-and-shorts proportion”",
+        "“oversized dark sunglasses, long earrings, layered necklaces”"
+      ],
+      "reason": "The text is highly visual and already close to a prompt, with clear garment types, silhouette, layering, materials, and styling. It is slightly verbose and reads like a design description rather than a concise generation prompt, but it remains strongly usable.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "bilateral_coherence": {
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "source_keypoints": [
+        29,
+        40
+      ],
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit left-right or other bilateral differences are described.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "spatial_coherence": {
+      "axis": "quality_score",
+      "rule": "层次、前后、内外、上下、附着位置等空间关系必须清晰且视觉上合理；大衣与腰带、腰下吊带、腿带/harness 与裤管之间的遮盖、穿入与固定点须可还原，禁止腰胯多层束系含糊不可成像",
+      "source_keypoints": [
+        26,
+        30,
+        40
+      ],
+      "applicability_code": "when_spatial_relation_exists",
+      "applicability_hint": "Only applicable when the text describes layering, front/back, inside/outside, attached position, crossing paths, or other explicit spatial relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“worn open at the neck over matching striped knee-length shorts visible beneath the hem”",
+        "“falling to mid-thigh”",
+        "“shorts continue the vertical striped pattern and extend just below the tunic hem”",
+        "“hand-carried tote or bag with black straps”"
+      ],
+      "reason": "Layering and relative placement are clearly described and imageable, with coherent top-over-shorts proportions and accessory placement. The spatial logic is strong, though some details are descriptive rather than strictly necessary for prompt clarity.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "core_information_density": {
+      "axis": "quality_score",
+      "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.5,
+      "hit": 0,
+      "matched_terms": [
+        "“loose, elongated short-sleeve collared shirt tunic”",
+        "“matching striped knee-length shorts visible beneath the hem”",
+        "“utility-style patch pockets”",
+        "“oversized dark sunglasses, long earrings, layered necklaces”"
+      ],
+      "reason": "主体服装轮廓清楚，且细节丰富，但描述较长，重复展开了面料、条纹、口袋、边饰和配饰，信息密度中等偏高但不够精炼。",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "visibility_priority": {
+      "axis": "quality_score",
+      "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部或低可见度细节，避免不可见信息喧宾夺主",
+      "source_keypoints": [
+        18,
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“shirt tunic ... worn open at the neck”",
+        "“shorts visible beneath the hem”",
+        "“The surface is dominated by irregular vertical stripes”",
+        "“Styling includes oversized dark sunglasses”"
+      ],
+      "reason": "可见主体信息优先，先交代了上衣、短裤和整体轮廓，再补充表面纹理与配饰；少量配饰信息存在，但没有压过主体造型。",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "design_distinctiveness": {
+      "axis": "quality_score",
+      "rule": "文本须呈现至少一个可独立识别的设计记忆点（非常规工艺、异材质碰撞、强识别配色/图案、非常规比例或结构），且该记忆点不能仅由「品类+颜色+材质」的常规组合替代。仅写 cropped jacket / navy short / belt / flat sandal 等常见 cruise-resort 公式而不给出额外识别点，不算命中。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“patchwork striped textile”",
+        "“mismatched panels”",
+        "“one sleeve and parts of the body show a more plaid-like check variation”",
+        "“broad horizontal border stripes in cream, mint green, red, and tan”"
+      ],
+      "reason": "The look has a clear memory anchor through patchwork stripe/check mixing and border-stripe treatment, which is more distinctive than a standard resort shirt-and-short set, though it is still built on a familiar silhouette.",
+      "quality_dimension": "DesignDistinctiveness",
+      "quality_dimension_zh": "设计独特性"
+    },
+    "visual_observation_grounding": {
+      "axis": "quality_score",
+      "rule": "文本须体现从可见 look 读取的观察特征：部位锚定（neckline/cuff/hem/center front 等）、可见/不可见层次区分、或诚实的推断标注（appears/inferred/visible）。纯概念组装（如「翻译 workwear」「salon piece reworked」）而无可见锚点，不算命中。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“short-sleeve collared shirt tunic”",
+        "“worn open at the neck”",
+        "“visible beneath the hem”",
+        "“high on the chest and lower on the front”",
+        "“hem is emphasized”"
+      ],
+      "reason": "The description is strongly anchored to visible garment zones and layering, reading like a direct runway observation rather than a concept essay.",
+      "quality_dimension": "VisualGrounding",
+      "quality_dimension_zh": "视觉观察 grounded"
+    },
+    "craft_embellishment_salience": {
+      "axis": "quality_score",
+      "rule": "当文本涉及工艺、装饰、结构亮点时，须写清其类型、位置与视觉作用（如 appliqué 沿 neckline 下行、braid trim 沿 pocket/hem）。仅写 hardware/embellishment 泛称或「精致细节」而不说明何为 look 识别点，不算命中。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "when_craft_or_embellishment_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies craft, embellishment, trim, appliqué, braid, quilting, embroidery, deconstruction, patch decoration, or similar salient construction/detail—not mere generic hardware or finish words.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“utility-style patch pockets”",
+        "“light beige flap bands and small button details”",
+        "“short sleeves finished with contrasting green, red, and cream banded trim”",
+        "“broad horizontal border stripes”"
+      ],
+      "reason": "Trim, pocket construction, and border-striping are clearly located and visually meaningful, though the text emphasizes pattern and structure more than a single standout craft technique.",
+      "quality_dimension": "CraftSalience",
+      "quality_dimension_zh": "工艺装饰显著度"
+    },
+    "silhouette_combination_originality": {
+      "axis": "quality_score",
+      "rule": "上装廓形、下装品类、鞋型与配饰的组合须超出常见 formula template（如 cropped structured jacket + striped shirt + tailored short + narrow belt + flat sandal）。若组合高度可预测、且主干单品可互换而不改变整体 formula 读感，应低分。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“loose, elongated short-sleeve collared shirt tunic”",
+        "“matching striped knee-length shorts visible beneath the hem”",
+        "“creating a layered shirt-and-shorts proportion”",
+        "“oversized dark sunglasses”"
+      ],
+      "reason": "The elongated tunic-over-shorts proportion is specific and somewhat less formulaic than a standard resort set, but the overall combination remains within a recognizable casual-luxury template.",
+      "quality_dimension": "CombinationOriginality",
+      "quality_dimension_zh": "组合原创性"
+    },
+    "design_signal_purity": {
+      "axis": "quality_score",
+      "rule": "有效设计信息（品类/廓形/材质/颜色/工艺/位置/层次）应占主体篇幅；氛围、姿态、场景、品牌 essay、「as if / suggesting / reads as」类修辞不应稀释核心设计信号。本项专评设计事实 vs 非设计叙事比例，而非 general 冗余。",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“The garment has a relaxed, straight silhouette”",
+        "“The surface is dominated by irregular vertical stripes”",
+        "“Utility-style patch pockets sit high on the chest”",
+        "“Styling includes oversized dark sunglasses”"
+      ],
+      "reason": "The text is overwhelmingly composed of concrete design facts—silhouette, pattern, trim, pockets, layering, and accessories—with only a brief mood phrase at the end.",
+      "quality_dimension": "DesignSignalPurity",
+      "quality_dimension_zh": "设计信号纯度"
+    },
+    "aesthetic_vocabulary": {
+      "axis": "bonus_score",
+      "rule": "适度加入设计风格词汇",
+      "source_keypoints": [
+        31
+      ],
+      "applicability_code": "when_style_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly expresses aesthetic or style vocabulary.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“bold, resort-like, eclectic patchwork mood”",
+        "“runway look”"
+      ],
+      "reason": "The text explicitly uses style-language to frame the look’s aesthetic direction.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cultural_reference": {
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "source_keypoints": [
+        32
+      ],
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No specific cultural, historical, or brand reference is grounded in the description.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "gender_expression": {
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "source_keypoints": [
+        33
+      ],
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text does not explicitly discuss gender expression or androgyny.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "theme_narrative": {
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "source_keypoints": [
+        34
+      ],
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No series theme or conceptual narrative is explicitly stated beyond the outfit description.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "brand_alignment": {
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "source_keypoints": [
+        35
+      ],
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "There is no explicit brand language or brand identity target in the text.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "negation_control": {
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "source_keypoints": [
+        36
+      ],
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The description does not rely on excluding absent elements as an important instruction.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    }
+  },
+  "context_summary": {
+    "evaluated_modules": [
+      "GarmentCore",
+      "MaterialColor",
+      "ConstructionDetail",
+      "StylingSet",
+      "Composition",
+      "Specificity",
+      "BindingAccuracy",
+      "LanguageClarity",
+      "StructuralClarity",
+      "GenerationReadiness",
+      "ConcisenessAndDensity",
+      "DesignMerit",
+      "ConceptBonus"
+    ],
+    "semantic_judging_enabled": true,
+    "quality_penalties_enabled": true,
+    "skipped_metrics_enabled": true,
+    "optimization_gates_enabled": true
+  },
+  "raw_module_outputs": {
+    "GarmentCore": {
+      "module": "GarmentCore",
+      "results": [
+        {
+          "metric": "garment_category",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“short-sleeve collared shirt tunic”",
+            "“matching striped knee-length shorts”"
+          ],
+          "reason": "The text clearly identifies the main garment categories: a shirt tunic and matching shorts."
+        },
+        {
+          "metric": "silhouette",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“loose, elongated”",
+            "“relaxed, straight silhouette”"
+          ],
+          "reason": "The overall shape is explicitly described with clear silhouette language."
+        },
+        {
+          "metric": "length_hemline",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“falling to mid-thigh”",
+            "“knee-length shorts visible beneath the hem”"
+          ],
+          "reason": "The text gives explicit length and hemline information for both the tunic and shorts."
+        },
+        {
+          "metric": "shoulder_architecture",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“dropped easy shoulders”",
+            "“short sleeves”"
+          ],
+          "reason": "Dropped shoulders are a salient shoulder-structure cue."
+        },
+        {
+          "metric": "body_coverage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“worn open at the neck”",
+            "“visible beneath the hem”"
+          ],
+          "reason": "The text describes both partial exposure at the neckline and layered coverage at the hem."
+        }
+      ]
+    },
+    "MaterialColor": {
+      "module": "MaterialColor",
+      "results": [
+        {
+          "metric": "fabric_family",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text describes pattern, silhouette, and trim, but does not clearly state the main fabric family/material."
+        },
+        {
+          "metric": "surface_finish",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit surface property such as sheen, matte finish, drape, or stiffness is given."
+        },
+        {
+          "metric": "primary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "deep red, navy, cream, tan, black, and muted yellow",
+            "contrasting green, red, and cream banded trim"
+          ],
+          "reason": "The look has a clearly dominant multicolor palette, with deep red/navy/cream/tan as the main visible colors."
+        },
+        {
+          "metric": "secondary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "contrasting green, red, and cream banded trim",
+            "broad horizontal border stripes in cream, mint green, red, and tan"
+          ],
+          "reason": "Secondary accent colors are explicitly described and anchored to visible trim and hem border stripes."
+        },
+        {
+          "metric": "color_relationship_logic",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "irregular vertical stripes in deep red, navy, cream, tan, black, and muted yellow",
+            "arranged in mismatched panels",
+            "matching striped knee-length shorts visible beneath the hem"
+          ],
+          "reason": "The text explains the color logic as a coordinated striped, panel-mismatched palette with matching shorts, not just isolated color names."
+        },
+        {
+          "metric": "pattern_type",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "patchwork striped textile",
+            "one sleeve and parts of the body show a more plaid-like check variation"
+          ],
+          "reason": "Pattern types are clearly identified: stripes, patchwork, and a plaid-like check variation."
+        }
+      ]
+    },
+    "ConstructionDetail": {
+      "module": "ConstructionDetail",
+      "results": [
+        {
+          "metric": "closure",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“deep partial button placket”",
+            "“worn open at the neck”"
+          ],
+          "reason": "A clear button-front opening is described, so the closure detail is explicitly covered."
+        },
+        {
+          "metric": "functional_detail",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“Utility-style patch pockets”",
+            "“high on the chest and lower on the front”"
+          ],
+          "reason": "Functional pocket placement and utility detailing are explicitly mentioned."
+        },
+        {
+          "metric": "construction_technique",
+          "applicable": true,
+          "score": 0.0,
+          "hit": 0,
+          "evidence": [
+            "“patchwork striped textile”",
+            "“mismatched panels”"
+          ],
+          "reason": "The text describes patchwork/paneling, but not a specific construction technique of the type required by the rubric with a clear named craft and body zone."
+        },
+        {
+          "metric": "deconstruction",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit deconstruction, splicing, displacement, or reconstruction is stated."
+        },
+        {
+          "metric": "hardware_embellishment",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No salient hardware embellishment such as chains, studs, rings, or crystals is mentioned."
+        }
+      ]
+    },
+    "StylingSet": {
+      "module": "StylingSet",
+      "results": [
+        {
+          "metric": "bag",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a hand-carried tote or bag”",
+            "“with black straps and a glimpse of striped fabric”"
+          ],
+          "reason": "The bag is explicitly identified as a tote/bag and includes visible strap and material/color details, satisfying the coverage rule."
+        },
+        {
+          "metric": "footwear",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No footwear is described."
+        },
+        {
+          "metric": "jewelry",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“long earrings”",
+            "“layered necklaces at the open neckline”"
+          ],
+          "reason": "Visible jewelry is explicitly present and salient in the styling."
+        },
+        {
+          "metric": "belt",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No belt, sash, waist strap, or harness is mentioned."
+        },
+        {
+          "metric": "layering",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“worn open at the neck over matching striped knee-length shorts visible beneath the hem”",
+            "“creating a layered shirt-and-shorts proportion”"
+          ],
+          "reason": "The text clearly describes a layered relationship between the tunic and shorts, with visible overlap and ordering."
+        }
+      ]
+    },
+    "Composition": {
+      "module": "Composition",
+      "results": [
+        {
+          "metric": "top_bottom_proportion",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“loose, elongated short-sleeve collared shirt tunic”",
+            "“matching striped knee-length shorts visible beneath the hem”",
+            "“creating a layered shirt-and-shorts proportion”"
+          ],
+          "reason": "The text clearly describes the relationship between the long tunic top and the shorter bottoms, including how the shorts sit beneath the hem and the resulting proportion."
+        },
+        {
+          "metric": "asymmetry",
+          "applicable": true,
+          "score": 0.0,
+          "hit": 0,
+          "evidence": [
+            "“one sleeve and parts of the body show a more plaid-like check variation”"
+          ],
+          "reason": "There is variation in pattern, but no clear structural asymmetry in garment shape or one-sided construction is described."
+        },
+        {
+          "metric": "cross_garment_binding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“shirt tunic ... over matching striped knee-length shorts”",
+            "“The matching shorts continue the vertical striped pattern”",
+            "“a hand-carried tote or bag with black straps”"
+          ],
+          "reason": "The text distinguishes which attributes belong to the tunic, shorts, and bag, making the multi-garment relationships clear."
+        }
+      ]
+    },
+    "Specificity": {
+      "module": "Specificity",
+      "results": [
+        {
+          "metric": "specific_noun_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "short-sleeve collared shirt tunic",
+            "matching striped knee-length shorts",
+            "oversized dark sunglasses",
+            "layered necklaces",
+            "utility-style patch pockets"
+          ],
+          "reason": "The description uses highly specific garment and accessory nouns, with clear fashion terminology and concrete item names throughout."
+        },
+        {
+          "metric": "fine_grained_attribute_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "patchwork striped textile",
+            "deep red, navy, cream, tan, black, and muted yellow",
+            "pointed collar, deep partial button placket, dropped easy shoulders",
+            "contrasting green, red, and cream banded trim",
+            "broad horizontal border stripes in cream, mint green, red, and tan"
+          ],
+          "reason": "Color, structure, and surface details are very fine-grained and richly specified, producing a highly imageable and technically precise fashion description."
+        }
+      ]
+    },
+    "BindingAccuracy": {
+      "module": "BindingAccuracy",
+      "results": [
+        {
+          "metric": "attribute_entity_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“short-sleeve collared shirt tunic”",
+            "“matching striped knee-length shorts visible beneath the hem”",
+            "“hand-carried tote or bag with black straps”"
+          ],
+          "reason": "Most attributes are clearly attached to the correct garment or accessory, and the layered shirt-over-shorts relation is coherent. Minor ambiguity remains in phrases like “one sleeve and parts of the body” and “tote or bag,” but they do not seriously disrupt binding."
+        },
+        {
+          "metric": "multi_garment_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“shirt tunic ... over matching striped knee-length shorts”",
+            "“short sleeves finished with contrasting green, red, and cream banded trim”",
+            "“utility-style patch pockets sit high on the chest and lower on the front”"
+          ],
+          "reason": "The text keeps the shirt tunic, shorts, and bag mostly distinct, with garment-specific details bound to the right item. There is slight ambiguity in the bag wording and in the mixed-panel textile description, but no major cross-garment misbinding."
+        }
+      ]
+    },
+    "LanguageClarity": {
+      "module": "LanguageClarity",
+      "results": [
+        {
+          "metric": "quantity_accuracy",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“one sleeve”",
+            "“green, red, and cream banded trim”",
+            "“matching striped knee-length shorts”"
+          ],
+          "reason": "Quantity relations are mostly clear and internally consistent, with only minor complexity from multiple descriptive counts and layered garment references."
+        },
+        {
+          "metric": "reference_clarity",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“The garment has...”",
+            "“one sleeve and parts of the body”",
+            "“The matching shorts continue...”"
+          ],
+          "reason": "References are generally well anchored and easy to follow; pronouns and omitted subjects do not create serious ambiguity, though the long descriptive sentence structure adds slight reading load."
+        }
+      ]
+    },
+    "StructuralClarity": {
+      "module": "StructuralClarity",
+      "results": [
+        {
+          "metric": "information_ordering",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"A runway look built around a loose, elongated short-sleeve collared shirt tunic\"",
+            "\"The garment has a relaxed, straight silhouette... with a pointed collar, deep partial button placket...\"",
+            "\"Styling includes oversized dark sunglasses... and a hand-carried tote or bag\""
+          ],
+          "reason": "The description follows a mostly natural order from main garment to construction details, then pattern/color, then accessories. It is clear and easy to reconstruct, though some detail clusters are dense and slightly repetitive."
+        }
+      ]
+    },
+    "GenerationReadiness": {
+      "module": "GenerationReadiness",
+      "results": [
+        {
+          "metric": "generation_readiness",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“A runway look built around a loose, elongated short-sleeve collared shirt tunic”",
+            "“worn open at the neck over matching striped knee-length shorts”",
+            "“layered shirt-and-shorts proportion”",
+            "“oversized dark sunglasses, long earrings, layered necklaces”"
+          ],
+          "reason": "The text is highly visual and already close to a prompt, with clear garment types, silhouette, layering, materials, and styling. It is slightly verbose and reads like a design description rather than a concise generation prompt, but it remains strongly usable."
+        },
+        {
+          "metric": "bilateral_coherence",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit left-right or other bilateral differences are described."
+        },
+        {
+          "metric": "spatial_coherence",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“worn open at the neck over matching striped knee-length shorts visible beneath the hem”",
+            "“falling to mid-thigh”",
+            "“shorts continue the vertical striped pattern and extend just below the tunic hem”",
+            "“hand-carried tote or bag with black straps”"
+          ],
+          "reason": "Layering and relative placement are clearly described and imageable, with coherent top-over-shorts proportions and accessory placement. The spatial logic is strong, though some details are descriptive rather than strictly necessary for prompt clarity."
+        }
+      ]
+    },
+    "ConcisenessAndDensity": {
+      "module": "ConcisenessAndDensity",
+      "results": [
+        {
+          "metric": "core_information_density",
+          "applicable": true,
+          "score": 0.5,
+          "hit": 0,
+          "evidence": [
+            "“loose, elongated short-sleeve collared shirt tunic”",
+            "“matching striped knee-length shorts visible beneath the hem”",
+            "“utility-style patch pockets”",
+            "“oversized dark sunglasses, long earrings, layered necklaces”"
+          ],
+          "reason": "主体服装轮廓清楚，且细节丰富，但描述较长，重复展开了面料、条纹、口袋、边饰和配饰，信息密度中等偏高但不够精炼。"
+        },
+        {
+          "metric": "visibility_priority",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“shirt tunic ... worn open at the neck”",
+            "“shorts visible beneath the hem”",
+            "“The surface is dominated by irregular vertical stripes”",
+            "“Styling includes oversized dark sunglasses”"
+          ],
+          "reason": "可见主体信息优先，先交代了上衣、短裤和整体轮廓，再补充表面纹理与配饰；少量配饰信息存在，但没有压过主体造型。"
+        }
+      ]
+    },
+    "DesignMerit": {
+      "module": "DesignMerit",
+      "results": [
+        {
+          "metric": "design_distinctiveness",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“patchwork striped textile”",
+            "“mismatched panels”",
+            "“one sleeve and parts of the body show a more plaid-like check variation”",
+            "“broad horizontal border stripes in cream, mint green, red, and tan”"
+          ],
+          "reason": "The look has a clear memory anchor through patchwork stripe/check mixing and border-stripe treatment, which is more distinctive than a standard resort shirt-and-short set, though it is still built on a familiar silhouette."
+        },
+        {
+          "metric": "visual_observation_grounding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“short-sleeve collared shirt tunic”",
+            "“worn open at the neck”",
+            "“visible beneath the hem”",
+            "“high on the chest and lower on the front”",
+            "“hem is emphasized”"
+          ],
+          "reason": "The description is strongly anchored to visible garment zones and layering, reading like a direct runway observation rather than a concept essay."
+        },
+        {
+          "metric": "craft_embellishment_salience",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“utility-style patch pockets”",
+            "“light beige flap bands and small button details”",
+            "“short sleeves finished with contrasting green, red, and cream banded trim”",
+            "“broad horizontal border stripes”"
+          ],
+          "reason": "Trim, pocket construction, and border-striping are clearly located and visually meaningful, though the text emphasizes pattern and structure more than a single standout craft technique."
+        },
+        {
+          "metric": "silhouette_combination_originality",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“loose, elongated short-sleeve collared shirt tunic”",
+            "“matching striped knee-length shorts visible beneath the hem”",
+            "“creating a layered shirt-and-shorts proportion”",
+            "“oversized dark sunglasses”"
+          ],
+          "reason": "The elongated tunic-over-shorts proportion is specific and somewhat less formulaic than a standard resort set, but the overall combination remains within a recognizable casual-luxury template."
+        },
+        {
+          "metric": "design_signal_purity",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“The garment has a relaxed, straight silhouette”",
+            "“The surface is dominated by irregular vertical stripes”",
+            "“Utility-style patch pockets sit high on the chest”",
+            "“Styling includes oversized dark sunglasses”"
+          ],
+          "reason": "The text is overwhelmingly composed of concrete design facts—silhouette, pattern, trim, pockets, layering, and accessories—with only a brief mood phrase at the end."
+        }
+      ]
+    },
+    "ConceptBonus": {
+      "module": "ConceptBonus",
+      "results": [
+        {
+          "metric": "aesthetic_vocabulary",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“bold, resort-like, eclectic patchwork mood”",
+            "“runway look”"
+          ],
+          "reason": "The text explicitly uses style-language to frame the look’s aesthetic direction."
+        },
+        {
+          "metric": "cultural_reference",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No specific cultural, historical, or brand reference is grounded in the description."
+        },
+        {
+          "metric": "gender_expression",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text does not explicitly discuss gender expression or androgyny."
+        },
+        {
+          "metric": "theme_narrative",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No series theme or conceptual narrative is explicitly stated beyond the outfit description."
+        },
+        {
+          "metric": "brand_alignment",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "There is no explicit brand language or brand identity target in the text."
+        },
+        {
+          "metric": "negation_control",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The description does not rely on excluding absent elements as an important instruction."
+        }
+      ]
+    }
+  },
+  "r_content": {
+    "enabled": true,
+    "odin_reference": "ICML 2024 ODIN (disentangled reward): RL uses content-dominant scalar; length diagnostics + soft penalty channel reduce length hacking vs. raw S_fp alone.",
+    "S_fp": 0.7876,
+    "total_penalty": 0.1,
+    "gamma_penalty": 0.35,
+    "formula": "multiply",
+    "beta_z_len": 0.05,
+    "char_len": 1256,
+    "log_len": 7.136483,
+    "est_tokens_char_div_4": 314.0,
+    "holdout_length_prediction": null,
+    "r_after_length_residual": 0.7876,
+    "r_after_soft_penalty": 0.760034,
+    "z_len": null,
+    "R_content": 0.760034
+  }
+}

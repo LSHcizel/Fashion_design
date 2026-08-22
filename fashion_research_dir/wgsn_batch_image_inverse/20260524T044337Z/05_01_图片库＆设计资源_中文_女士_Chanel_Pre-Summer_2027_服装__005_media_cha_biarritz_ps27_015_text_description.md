@@ -1,0 +1,22 @@
+# 005_media_cha_biarritz_ps27_015 text_description
+
+## text_description
+
+Cropped runway view focused from upper thigh to feet: the model wears a very short black mini bottom or skirt-like hem with a wide cream/off-white border running horizontally around the lower edge, exposing the thighs above tall black boots. The boots are smooth and structured with a leather- or rubber-like surface, rising to the upper thigh with straight cylindrical shafts and bright powder-blue piping around the top openings; the visible soles are chunky, with a vivid yellow section at the front edge contrasting against the black. In one hand, the model carries a large black textured garment, likely a coat or jacket, hanging downward in a heavy drape; it has a subtle grid/tweed-like surface, cream edging, and black scalloped or looped trim/fringe along the border. A small structured blue handbag hangs beside it from a matching blue chain strap, with a compact flap shape and visible dotted or studded edging. A metallic wristwatch or bracelet is visible at the wrist. The styling reads graphic and color-blocked, dominated by black with sharp cream trim and bright blue and yellow accents.
+
+## key_elements
+
+- very short black mini hem with cream border
+- upper-thigh black smooth boots
+- powder-blue piping around boot tops
+- chunky sole with yellow front accent
+- large black textured garment carried by hand
+- cream-edged draped coat or jacket with scalloped trim
+- small blue structured handbag on chain strap
+- visible wristwatch or bracelet
+
+## uncertainty_notes
+
+- The cropped image does not fully show the upper garment or confirm whether the mini piece is a skirt, shorts, or dress hem.
+- The carried black piece appears to be a coat or jacket, but its full construction is not visible.
+- Boot surface appears leather- or rubber-like but material cannot be confirmed from the image.

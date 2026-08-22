@@ -1,0 +1,1701 @@
+{
+  "name": "fashion_text_prompt_optimizer",
+  "version": "0.1.0",
+  "source_name": "look_02.txt",
+  "input_type": "text_description",
+  "judge_backend": "openai_compatible_api",
+  "judge_model": "gpt-5.4-mini",
+  "judge_api_base": "https://api.ohmygpt.com/v1",
+  "text_description": "Please generate female models and the matching clothing for them.\n\nLook textual description\n\nLook 2: Shoreline Modernism\n\n1. The Outerwear: Cropped Navy Canvas Jacket\nA sharply tailored cropped jacket in dense navy cotton canvas anchors the look with the kind of disciplined ease that moves Chanel from salon formality to daylight readiness. The shoulders are lightly structured and squared without hardness, while the body is cut boxy and short, ending just at the high waist so the layer beneath remains visible and active. Clean topstitching traces the seams in a darker navy, giving the jacket a subtle workwear precision, and a polished blackened-metal fastening at the center front keeps the closure quiet but exact. The construction is intentionally lightweight enough for warm coastal air, yet substantial enough to hold its line against the body, creating a crisp frame that opens naturally into the softer foundation below.\n    *   Key Structure: cropped length / slightly squared shoulder / straight front closure / boxy silhouette\n    *   Material & Finish: navy cotton canvas with matte surface; blackened-metal buttons and restrained topstitching\n\n2. The Foundation: Banker-Stripe Shirt with Tailored Shorts\nBeneath the jacket, a fine cotton poplin shirt in white and pale navy banker stripes brings a subtle masculine code into the look, softened through a slightly relaxed collar and a clean, fluid drape. The shirt is tucked into straight-cut tailored shorts in chalk white wool-gabardine, cut with a neat front crease and a mid-thigh hem that feels both modern and promenade-ready. The contrast between the crisp striped shirt and the smooth white shorts creates a graphic vertical line that lengthens the figure while preserving ease, and the narrow striped rhythm continues at the cuffs and shirt placket so the layering feels integrated rather than separate. This foundation supports the outer jacket with clarity, allowing the look to read as tailored but mobile, structured yet breathable.\n    *   Top: white cotton poplin shirt with pale navy banker stripes, soft collar, precise cuffs\n    *   Bottom: chalk white wool-gabardine tailored shorts with pressed crease and clean hem\n    *   Fit & Line: tucked, straight, and lightly relaxed through the torso; leg line is long, open, and easy\n\n3. The Details: Materiality & Hardware\nA narrow black leather belt cinches the waist with a discreet Double C buckle in brushed silver, turning the midpoint of the body into a refined point of focus without interrupting the clean maritime line. At the shirt collar, a thin strip of navy grosgrain peeks from inside the stand, echoing the jacket’s canvas depth and adding a controlled shadow of color near the face. The shorts are finished with flat matte buttons and precise side pockets that stay nearly invisible, keeping the construction functional but elegant. Together, these details balance utility and polish: the hardware is present as structure, not ornament, and the waist treatment reinforces the sense of independence and control at the center of the silhouette.\n    *   Hardware Focus: brushed-silver Double C buckle on a narrow black leather belt\n    *   Waist Treatment: slim belt at the natural waist, defining the shirt tuck and aligning the cropped jacket with the body\n\n4. The Finish: Footwear & Stance\nThe look ends with flat black leather sandals traced with a slim strap across the toe and a second strap over the instep, their low profile designed for easy movement along the promenade while preserving Chanel sharpness. A lightly padded sole keeps the stance grounded, and the exposed foot creates a sense of air and daylight that completes the transition from tailored upper layers to open coastal ease. The sandals’ lacquered sheen subtly answers the polished buckle and buttons above, while their minimal construction prevents any visual heaviness beneath the cropped jacket and short hem. The overall stance is upright but unforced, suggesting a woman ready to step from the salon onto the shore with composed freedom.\n    *   Shoe: flat black leather sandals with slim straps, low-profile sole, and minimal polished finish",
+  "eval_prose": "A sharply tailored cropped jacket in dense navy cotton canvas anchors the look with the kind of disciplined ease that moves Chanel from salon formality to daylight readiness. The shoulders are lightly structured and squared without hardness, while the body is cut boxy and short, ending just at the high waist so the layer beneath remains visible and active. Clean topstitching traces the seams in a darker navy, giving the jacket a subtle workwear precision, and a polished blackened-metal fastening at the center front keeps the closure quiet but exact. The construction is intentionally lightweight enough for warm coastal air, yet substantial enough to hold its line against the body, creating a crisp frame that opens naturally into the softer foundation below.\n\nBeneath the jacket, a fine cotton poplin shirt in white and pale navy banker stripes brings a subtle masculine code into the look, softened through a slightly relaxed collar and a clean, fluid drape. The shirt is tucked into straight-cut tailored shorts in chalk white wool-gabardine, cut with a neat front crease and a mid-thigh hem that feels both modern and promenade-ready. The contrast between the crisp striped shirt and the smooth white shorts creates a graphic vertical line that lengthens the figure while preserving ease, and the narrow striped rhythm continues at the cuffs and shirt placket so the layering feels integrated rather than separate. This foundation supports the outer jacket with clarity, allowing the look to read as tailored but mobile, structured yet breathable.\n\nA narrow black leather belt cinches the waist with a discreet Double C buckle in brushed silver, turning the midpoint of the body into a refined point of focus without interrupting the clean maritime line. At the shirt collar, a thin strip of navy grosgrain peeks from inside the stand, echoing the jacket’s canvas depth and adding a controlled shadow of color near the face. The shorts are finished with flat matte buttons and precise side pockets that stay nearly invisible, keeping the construction functional but elegant. Together, these details balance utility and polish: the hardware is present as structure, not ornament, and the waist treatment reinforces the sense of independence and control at the center of the silhouette.\n\nThe look ends with flat black leather sandals traced with a slim strap across the toe and a second strap over the instep, their low profile designed for easy movement along the promenade while preserving Chanel sharpness. A lightly padded sole keeps the stance grounded, and the exposed foot creates a sense of air and daylight that completes the transition from tailored upper layers to open coastal ease. The sandals’ lacquered sheen subtly answers the polished buckle and buttons above, while their minimal construction prevents any visual heaviness beneath the cropped jacket and short hem. The overall stance is upright but unforced, suggesting a woman ready to step from the salon onto the shore with composed freedom.",
+  "total_score": 0.8887,
+  "gates": {
+    "score_gate": {
+      "name": "score_gate",
+      "description": "最终 S_fp（quality 用 weighted base_score，不含 penalty 扣减；已做 holdout 长度去相关）",
+      "value": 0.8887,
+      "threshold": 0.7,
+      "passed": true,
+      "weights": {
+        "coverage": 0.3,
+        "quality": 0.7
+      },
+      "components": {
+        "coverage_axis_score": 1.0,
+        "quality_effective": 0.8438
+      },
+      "total_cap_applied": 1.0
+    },
+    "penalty_gate": {
+      "name": "penalty_gate",
+      "description": "仅依据 penalties.total_penalty（各 penalty 分值的算术平均）",
+      "total_penalty": 0.0625,
+      "threshold": 0.5,
+      "passed": true
+    },
+    "both_passed": true
+  },
+  "score_band": "Strong",
+  "metric_totals": {
+    "total_defined_metrics": 42,
+    "total_applicable_metrics": 36,
+    "total_hit_metrics": 34,
+    "total_skipped_metrics": 6
+  },
+  "skipped_metrics": [
+    {
+      "metric": "construction_technique",
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "reason": "The text describes tailoring and topstitching, but not a salient named construction technique of the type required by the rule."
+    },
+    {
+      "metric": "deconstruction",
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "reason": "No deconstruction, splicing, displacement, or reconstruction is explicitly mentioned."
+    },
+    {
+      "metric": "bag",
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "reason": "No bag is described or implied as part of the look."
+    },
+    {
+      "metric": "jewelry",
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "reason": "No jewelry or body ornament is mentioned."
+    },
+    {
+      "metric": "asymmetry",
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "reason": "No asymmetrical design, uneven structure, or one-sided garment detail is described."
+    },
+    {
+      "metric": "bilateral_coherence",
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "reason": "No explicit left-right or other bilateral asymmetry is described."
+    }
+  ],
+  "scores": {
+    "coverage_score": {
+      "applicable_metrics": 19,
+      "hit_metrics": 19,
+      "score_sum": 19.0,
+      "score": 1.0
+    },
+    "quality_score": {
+      "applicable_metrics": 11,
+      "hit_metrics": 9,
+      "score_sum": 9.75,
+      "score": 0.8864,
+      "base_score": 0.8438,
+      "axis_score_unweighted": 0.8864,
+      "penalized_score": 0.8438,
+      "penalties": {
+        "items": {
+          "generation_content_penalty": {
+            "score": 0.25,
+            "evidence": [
+              "moves Chanel from salon formality to daylight readiness",
+              "suggesting a woman ready to step from the salon onto the shore"
+            ],
+            "reason": "Mostly imageable garment description, but it includes some runway/editorial framing and conceptual lifestyle language that slightly reduces prompt efficiency."
+          },
+          "consistency_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "cropped jacket in dense navy cotton canvas",
+              "white and pale navy banker stripes",
+              "straight-cut tailored shorts in chalk white wool-gabardine",
+              "flat black leather sandals"
+            ],
+            "reason": "The jacket, shirt, shorts, belt, and sandals form a coherent single outfit without trunk-level contradictions or left-right conflicts."
+          },
+          "coordination_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "crisp striped shirt and the smooth white shorts creates a graphic vertical line",
+              "hardware is present as structure, not ornament",
+              "flat black leather sandals ... preserving Chanel sharpness"
+            ],
+            "reason": "The styling language is unified: tailored, maritime, crisp, and minimal, with accessories and footwear supporting the same mood."
+          },
+          "rationality_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "dense navy cotton canvas",
+              "wool-gabardine",
+              "black leather sandals"
+            ],
+            "reason": "Materials and construction are realistic and wearable; no physically implausible garment structure is asserted."
+          }
+        },
+        "reasons": {
+          "generation_content_penalty": "Mostly imageable garment description, but it includes some runway/editorial framing and conceptual lifestyle language that slightly reduces prompt efficiency.",
+          "consistency_penalty": "The jacket, shirt, shorts, belt, and sandals form a coherent single outfit without trunk-level contradictions or left-right conflicts.",
+          "coordination_penalty": "The styling language is unified: tailored, maritime, crisp, and minimal, with accessories and footwear supporting the same mood.",
+          "rationality_penalty": "Materials and construction are realistic and wearable; no physically implausible garment structure is asserted."
+        },
+        "generation_content_penalty": 0.25,
+        "consistency_penalty": 0.0,
+        "coordination_penalty": 0.0,
+        "rationality_penalty": 0.0,
+        "total_penalty": 0.0625
+      },
+      "cap": 1.0
+    },
+    "bonus_score": {
+      "applicable_metrics": 6,
+      "hit_metrics": 6,
+      "score_sum": 6.0,
+      "score": 1.0
+    },
+    "fashion_prompt_score": 0.8887,
+    "s_fp_base": 0.8907,
+    "length_disentangle": {
+      "adjusted_score": 0.8887,
+      "length_component": 0.001963,
+      "log_len": 8.013674,
+      "slope_a": 0.002948,
+      "mode": "centered_slope",
+      "applied": true,
+      "log_len_center": 7.3478
+    },
+    "weights": {
+      "coverage": 0.3,
+      "quality": 0.7
+    },
+    "total_cap": 1.0,
+    "module_scores": {
+      "GarmentCore": {
+        "applicable_metrics": 5,
+        "hit_metrics": 5,
+        "score_sum": 5.0,
+        "score": 1.0
+      },
+      "MaterialColor": {
+        "applicable_metrics": 6,
+        "hit_metrics": 6,
+        "score_sum": 6.0,
+        "score": 1.0
+      },
+      "ConstructionDetail": {
+        "applicable_metrics": 3,
+        "hit_metrics": 3,
+        "score_sum": 3.0,
+        "score": 1.0
+      },
+      "StylingSet": {
+        "applicable_metrics": 3,
+        "hit_metrics": 3,
+        "score_sum": 3.0,
+        "score": 1.0
+      },
+      "Composition": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "Specificity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "BindingAccuracy": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "LanguageClarity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "StructuralClarity": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 1.0,
+        "score": 1.0
+      },
+      "GenerationReadiness": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.75,
+        "score": 0.875
+      },
+      "ConcisenessAndDensity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 0,
+        "score_sum": 1.0,
+        "score": 0.5
+      },
+      "ConceptBonus": {
+        "applicable_metrics": 6,
+        "hit_metrics": 6,
+        "score_sum": 6.0,
+        "score": 1.0
+      }
+    }
+  },
+  "diagnosis": {
+    "missing_information": [],
+    "quality_issues": [
+      {
+        "metric": "core_information_density",
+        "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+        "score_value": 0.5,
+        "matched_terms": [
+          "“A sharply tailored cropped jacket… Beneath the jacket… The look ends with flat black leather sandals”",
+          "“The contrast between the crisp striped shirt and the smooth white shorts creates a graphic vertical line”",
+          "“The overall stance is upright but unforced”"
+        ],
+        "reason": "The text clearly prioritizes the main garments and their silhouette, but it is quite verbose and repeatedly explains mood, symbolism, and styling intent. Core clothing information is present and coherent, yet the density is diluted by descriptive framing and interpretive commentary."
+      },
+      {
+        "metric": "visibility_priority",
+        "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部或低可见度细节，避免不可见信息喧宾夺主",
+        "score_value": 0.5,
+        "matched_terms": [
+          "“the layer beneath remains visible and active”",
+          "“A narrow black leather belt cinches the waist”",
+          "“The shirt is tucked into straight-cut tailored shorts”"
+        ],
+        "reason": "Visible, image-dominant elements are mostly foregrounded, especially jacket, shirt, shorts, belt, and sandals. However, the description also spends substantial space on less directly visible or interpretive details such as construction intent, atmosphere, and symbolic reading, which reduces strict visibility priority."
+      }
+    ],
+    "bonus_opportunities": []
+  },
+  "metric_results": {
+    "garment_category": {
+      "axis": "coverage_score",
+      "rule": "文本需明确给出服装主体品类",
+      "source_keypoints": [
+        1
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“cropped jacket”",
+        "“shirt”",
+        "“tailored shorts”",
+        "“black leather sandals”"
+      ],
+      "reason": "The text clearly names the main garment categories in the look.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "silhouette": {
+      "axis": "coverage_score",
+      "rule": "文本需给出整体轮廓或结构趋势",
+      "source_keypoints": [
+        2
+      ],
+      "applicability_code": "when_shape_is_salient",
+      "applicability_hint": "Only applicable when the text clearly mentions silhouette, shape, or structural contour.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“cut boxy and short”",
+        "“straight-cut tailored shorts”",
+        "“creates a crisp frame”"
+      ],
+      "reason": "It gives a clear overall structural read: boxy cropped top, straight shorts, and a crisp tailored frame.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "length_hemline": {
+      "axis": "coverage_score",
+      "rule": "文本需给出长度或下摆信息",
+      "source_keypoints": [
+        3
+      ],
+      "applicability_code": "when_length_or_hem_is_salient",
+      "applicability_hint": "Only applicable when the text mentions length, hemline, slit, or garment length.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“ending just at the high waist”",
+        "“mid-thigh hem”",
+        "“cropped jacket”"
+      ],
+      "reason": "The text explicitly states garment lengths and hem positions.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "shoulder_architecture": {
+      "axis": "coverage_score",
+      "rule": "当肩线设计显著（如强调垫肩/结构肩、落肩、宽肩、单肩或露肩、无肩带抹胸等）时，文本须点明该肩部结构语言，而非仅写「上装」或笼统廓形",
+      "source_keypoints": [
+        4
+      ],
+      "applicability_code": "when_shoulder_is_salient",
+      "applicability_hint": "Only applicable when the text implies prominent shoulder design: pads/structured shoulders, dropped shoulder, one-shoulder/off-shoulder, strapless neckline, or other salient shoulder/sleeve anchor cues.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“shoulders are lightly structured and squared”",
+        "“without hardness”"
+      ],
+      "reason": "Shoulder construction is directly described and is visually salient.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "body_coverage": {
+      "axis": "coverage_score",
+      "rule": "文本需描述显著裸露或包裹区域",
+      "source_keypoints": [
+        5
+      ],
+      "applicability_code": "when_exposure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions exposure, coverage, cutout, or body reveal.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“the layer beneath remains visible”",
+        "“exposed foot creates a sense of air and daylight”",
+        "“preserving ease”"
+      ],
+      "reason": "The description clearly emphasizes visible/revealed areas, including layered visibility and exposed feet.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "fabric_family": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主体材质类别",
+      "source_keypoints": [
+        6
+      ],
+      "applicability_code": "when_material_is_inferable",
+      "applicability_hint": "Only applicable when the text provides enough information about the main material.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"dense navy cotton canvas\"",
+        "\"fine cotton poplin shirt\"",
+        "\"chalk white wool-gabardine\""
+      ],
+      "reason": "The text clearly names the main fabric families for the garments.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "surface_finish": {
+      "axis": "coverage_score",
+      "rule": "文本需给出光泽、哑光、垂坠或硬挺等表面性质",
+      "source_keypoints": [
+        7
+      ],
+      "applicability_code": "when_surface_trait_is_salient",
+      "applicability_hint": "Only applicable when the text mentions gloss, matte, drape, stiffness, pleats, or surface traits.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"clean topstitching\"",
+        "\"smooth white shorts\"",
+        "\"polished blackened-metal fastening\"",
+        "\"matte buttons\""
+      ],
+      "reason": "It specifies multiple surface traits such as smoothness, polish, and matte finish, plus the jacket’s crisp structure.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "primary_color": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主色",
+      "source_keypoints": [
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"navy cotton canvas\"",
+        "\"white and pale navy banker stripes\"",
+        "\"chalk white wool-gabardine\""
+      ],
+      "reason": "The dominant palette is clearly established, led by navy, white, and black accents.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "secondary_color": {
+      "axis": "coverage_score",
+      "rule": "有明显副色时需描述；若为大衣内里、开衩内衬等高对比色块，应说明可见条件（如行走、开片时）或与主色区的衔接，避免孤立撞色无锚点、不利生成",
+      "source_keypoints": [
+        12
+      ],
+      "applicability_code": "when_secondary_color_is_salient",
+      "applicability_hint": "Only applicable when the text clearly includes secondary color or color relationship information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"white and pale navy banker stripes\"",
+        "\"black leather sandals\"",
+        "\"brushed silver\""
+      ],
+      "reason": "Secondary colors are explicitly present as accents and supporting tones alongside the main navy-white scheme.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "color_relationship_logic": {
+      "axis": "coverage_score",
+      "rule": "当存在多色块、强对比内搭/外搭、条纹或印花与底色关系、或明显的同色系/补色/撞色叙事时，文本须交代配色逻辑（如单色、同色系层次、补色对比、主次色块关系之一），使生成可还原色彩关系；仅罗列颜色词但未体现关系则不计为覆盖",
+      "source_keypoints": [
+        13
+      ],
+      "applicability_code": "when_multi_tone_or_strong_color_story",
+      "applicability_hint": "Only applicable when the text implies multiple color blocks, strong inner/outer contrast, stripe-vs-ground relations, tonal vs accented palette, or another non-trivial color story beyond a single flat hue.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"contrast between the crisp striped shirt and the smooth white shorts\"",
+        "\"graphic vertical line\"",
+        "\"echoing the jacket’s canvas depth\""
+      ],
+      "reason": "The text explains the color logic through contrast and tonal echoing, making the palette coherent and imageable.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "pattern_type": {
+      "axis": "coverage_score",
+      "rule": "有图案时需给出图案类型",
+      "source_keypoints": [
+        14
+      ],
+      "applicability_code": "when_pattern_exists",
+      "applicability_hint": "Only applicable when the text describes pattern or print information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"banker stripes\"",
+        "\"narrow striped rhythm\""
+      ],
+      "reason": "A clear stripe pattern is described for the shirt.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "closure": {
+      "axis": "coverage_score",
+      "rule": "显著开合方式应被提到",
+      "source_keypoints": [
+        17
+      ],
+      "applicability_code": "when_closure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions button, zipper, tie, buckle, or closure details.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“polished blackened-metal fastening at the center front”",
+        "“The shorts are finished with flat matte buttons”",
+        "“A narrow black leather belt cinches the waist”"
+      ],
+      "reason": "The text clearly describes multiple closure/fastening elements, including a front fastening, buttons, and a belt closure.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "functional_detail": {
+      "axis": "coverage_score",
+      "rule": "显著口袋、挂带或功能细节应被提到",
+      "source_keypoints": [
+        18
+      ],
+      "applicability_code": "when_functional_detail_is_salient",
+      "applicability_hint": "Only applicable when the text mentions pockets, straps, utility parts, or functional details.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“precise side pockets”",
+        "“A narrow black leather belt”",
+        "“second strap over the instep”"
+      ],
+      "reason": "Functional details are explicitly present, especially pockets and structural straps.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "construction_technique": {
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "source_keypoints": [
+        9
+      ],
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text describes tailoring and topstitching, but not a salient named construction technique of the type required by the rule.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "deconstruction": {
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "source_keypoints": [
+        20
+      ],
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No deconstruction, splicing, displacement, or reconstruction is explicitly mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "hardware_embellishment": {
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "source_keypoints": [
+        21
+      ],
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a discreet Double C buckle in brushed silver”",
+        "“polished blackened-metal fastening”",
+        "“lacquered sheen”"
+      ],
+      "reason": "The text includes salient hardware, especially the branded metal buckle and metal fastening.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "bag": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "source_keypoints": [
+        22
+      ],
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No bag is described or implied as part of the look.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "footwear": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "source_keypoints": [
+        23
+      ],
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"flat black leather sandals\"",
+        "\"a slim strap across the toe and a second strap over the instep\""
+      ],
+      "reason": "Footwear is clearly specified as sandals, with shape and material/finish details covered.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "jewelry": {
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "source_keypoints": [
+        24
+      ],
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No jewelry or body ornament is mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "belt": {
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "source_keypoints": [
+        25
+      ],
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"A narrow black leather belt\"",
+        "\"cinches the waist with a discreet Double C buckle\""
+      ],
+      "reason": "A visible belt is explicitly present and its placement/function at the waist is clearly described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "layering": {
+      "axis": "coverage_score",
+      "rule": "多层叠搭时应给出层次关系；外套、内搭、腰带、腿带与裤装之间的遮盖与固定顺序应可还原为可见层次，服务生成导向",
+      "source_keypoints": [
+        26
+      ],
+      "applicability_code": "when_layering_exists",
+      "applicability_hint": "Only applicable when the text describes layering or multi-layer garment relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"Beneath the jacket\"",
+        "\"The shirt is tucked into straight-cut tailored shorts\""
+      ],
+      "reason": "The text clearly describes layered garments and their visible order: jacket over shirt over shorts, with the belt at the waist.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "top_bottom_proportion": {
+      "axis": "coverage_score",
+      "rule": "明显上下比例关系应被提到；长外套、阔腿或宽松下装、厚底鞋与腿带/harness 等叠加时，应交代主干剪影主次，避免仅堆砌元素导致下盘过重、prompt 失焦",
+      "source_keypoints": [
+        27
+      ],
+      "applicability_code": "when_proportion_is_salient",
+      "applicability_hint": "Only applicable when the text describes top-bottom proportion, waist position, or visual balance.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“ending just at the high waist”",
+        "“straight-cut tailored shorts in chalk white wool-gabardine”",
+        "“The contrast between the crisp striped shirt and the smooth white shorts creates a graphic vertical line that lengthens the figure”"
+      ],
+      "reason": "The text clearly describes waist placement and the visual balance between the cropped jacket, tucked shirt, and shorts, including a stated lengthening proportion.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "asymmetry": {
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "source_keypoints": [
+        29
+      ],
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No asymmetrical design, uneven structure, or one-sided garment detail is described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cross_garment_binding": {
+      "axis": "coverage_score",
+      "rule": "多单品时应能区分属性属于哪件单品",
+      "source_keypoints": [
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“The shirt is tucked into straight-cut tailored shorts”",
+        "“The contrast between the crisp striped shirt and the smooth white shorts”",
+        "“The look ends with flat black leather sandals”"
+      ],
+      "reason": "The description clearly distinguishes which attributes belong to the jacket, shirt, shorts, belt, and sandals, showing how the items relate across the full outfit.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "specific_noun_usage": {
+      "axis": "quality_score",
+      "rule": "使用具体服装或配件名词而非泛词",
+      "source_keypoints": [
+        1,
+        22,
+        23
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"cropped jacket\"",
+        "\"cotton canvas\"",
+        "\"poplin shirt\"",
+        "\"tailored shorts\"",
+        "\"black leather sandals\""
+      ],
+      "reason": "The description uses highly specific garment names, materials, and accessory terms throughout, creating a clear fashion object with strong visual precision.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "fine_grained_attribute_usage": {
+      "axis": "quality_score",
+      "rule": "颜色、材质、结构词应尽量细粒度",
+      "source_keypoints": [
+        6,
+        7,
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"dense navy cotton canvas\"",
+        "\"blackened-metal fastening\"",
+        "\"white and pale navy banker stripes\"",
+        "\"chalk white wool-gabardine\"",
+        "\"brushed silver\""
+      ],
+      "reason": "Color, material, and construction details are consistently fine-grained and fashion-specific, with strong structural and surface precision.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "attribute_entity_binding": {
+      "axis": "quality_score",
+      "rule": "属性必须绑定到正确实体；腰带、腿带、harness、护臂/护手等须明确归属外套、裤装或身体附件，避免腰胯多重束系指代漂移",
+      "source_keypoints": [
+        10,
+        39
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“dense navy cotton canvas”",
+        "“a narrow black leather belt cinches the waist”",
+        "“flat black leather sandals”"
+      ],
+      "reason": "Attributes are consistently attached to the correct garments and body area: jacket material/structure, belt at the waist, and sandals on the feet are all clearly and coherently bound.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "multi_garment_binding": {
+      "axis": "quality_score",
+      "rule": "多单品描述时不得将属性归错单品",
+      "source_keypoints": [
+        12,
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“cropped jacket”",
+        "“white and pale navy banker stripes”",
+        "“straight-cut tailored shorts”",
+        "“flat black leather sandals”"
+      ],
+      "reason": "Multiple garments are described with clear separation of their materials, colors, and roles, and the text keeps each attribute tied to the correct item without cross-binding.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "quantity_accuracy": {
+      "axis": "quality_score",
+      "rule": "数量词应准确且不冲突",
+      "source_keypoints": [
+        37
+      ],
+      "applicability_code": "when_quantity_is_used",
+      "applicability_hint": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a second strap over the instep”",
+        "“The sandals’ lacquered sheen”"
+      ],
+      "reason": "The explicit quantity relation is clear and consistent; the text cleanly distinguishes first/second straps and maintains stable reference throughout.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "reference_clarity": {
+      "axis": "quality_score",
+      "rule": "代词和省略指向必须清晰",
+      "source_keypoints": [
+        38
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“The shirt is tucked into straight-cut tailored shorts”",
+        "“The sandals’ lacquered sheen subtly answers the polished buckle and buttons above”"
+      ],
+      "reason": "Pronouns and omitted subjects are easy to resolve, with each sentence’s referent remaining stable and visually coherent.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "information_ordering": {
+      "axis": "quality_score",
+      "rule": "描述应按主体到细节的顺序组织",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“A sharply tailored cropped jacket...”",
+        "“Beneath the jacket...”",
+        "“A narrow black leather belt...”",
+        "“The look ends with flat black leather sandals...”"
+      ],
+      "reason": "The description is organized from main garment to layered pieces, then accessories, then footwear, making the outfit easy to reconstruct in a clear top-to-bottom sequence.",
+      "quality_dimension": "StructuralClarity",
+      "quality_dimension_zh": "结构清晰度"
+    },
+    "generation_readiness": {
+      "axis": "quality_score",
+      "rule": "文本应可直接转为图像生成 prompt；须以可见廓形、品类与层次为先，多文化/多时代风格符号混用时应能收束为单一 look 身份，否则视为生成导向不足",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“A sharply tailored cropped jacket in dense navy cotton canvas”",
+        "“fine cotton poplin shirt in white and pale navy banker stripes”",
+        "“straight-cut tailored shorts in chalk white wool-gabardine”",
+        "“flat black leather sandals”"
+      ],
+      "reason": "The text is highly visual, garment-specific, and organized as a coherent single look with clear layering and styling logic, so it is close to prompt-ready. It is still somewhat prose-like and interpretive in places, which keeps it just short of near-perfect direct generation form.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "bilateral_coherence": {
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "source_keypoints": [
+        29,
+        40
+      ],
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit left-right or other bilateral asymmetry is described.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "spatial_coherence": {
+      "axis": "quality_score",
+      "rule": "层次、前后、内外、上下、附着位置等空间关系必须清晰且视觉上合理；大衣与腰带、腰下吊带、腿带/harness 与裤管之间的遮盖、穿入与固定点须可还原，禁止腰胯多层束系含糊不可成像",
+      "source_keypoints": [
+        26,
+        30,
+        40
+      ],
+      "applicability_code": "when_spatial_relation_exists",
+      "applicability_hint": "Only applicable when the text describes layering, front/back, inside/outside, attached position, crossing paths, or other explicit spatial relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“The shirt is tucked into straight-cut tailored shorts”",
+        "“The body is cut boxy and short, ending just at the high waist so the layer beneath remains visible”",
+        "“A narrow black leather belt cinches the waist”",
+        "“The look ends with flat black leather sandals”"
+      ],
+      "reason": "Layering, tuck-in relation, waist placement, and footwear completion are all clearly articulated and visually reconstructable. The spatial grammar is coherent and easy to image.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "core_information_density": {
+      "axis": "quality_score",
+      "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.5,
+      "hit": 0,
+      "matched_terms": [
+        "“A sharply tailored cropped jacket… Beneath the jacket… The look ends with flat black leather sandals”",
+        "“The contrast between the crisp striped shirt and the smooth white shorts creates a graphic vertical line”",
+        "“The overall stance is upright but unforced”"
+      ],
+      "reason": "The text clearly prioritizes the main garments and their silhouette, but it is quite verbose and repeatedly explains mood, symbolism, and styling intent. Core clothing information is present and coherent, yet the density is diluted by descriptive framing and interpretive commentary.",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "visibility_priority": {
+      "axis": "quality_score",
+      "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部或低可见度细节，避免不可见信息喧宾夺主",
+      "source_keypoints": [
+        18,
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.5,
+      "hit": 0,
+      "matched_terms": [
+        "“the layer beneath remains visible and active”",
+        "“A narrow black leather belt cinches the waist”",
+        "“The shirt is tucked into straight-cut tailored shorts”"
+      ],
+      "reason": "Visible, image-dominant elements are mostly foregrounded, especially jacket, shirt, shorts, belt, and sandals. However, the description also spends substantial space on less directly visible or interpretive details such as construction intent, atmosphere, and symbolic reading, which reduces strict visibility priority.",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "aesthetic_vocabulary": {
+      "axis": "bonus_score",
+      "rule": "适度加入设计风格词汇",
+      "source_keypoints": [
+        31
+      ],
+      "applicability_code": "when_style_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly expresses aesthetic or style vocabulary.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“sharply tailored”",
+        "“disciplined ease”",
+        "“subtle workwear precision”",
+        "“tailored but mobile, structured yet breathable”"
+      ],
+      "reason": "The text clearly uses style-oriented aesthetic language to define the look.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cultural_reference": {
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "source_keypoints": [
+        32
+      ],
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“moves Chanel from salon formality to daylight readiness”",
+        "“Double C buckle”",
+        "“promenade-ready”"
+      ],
+      "reason": "There is explicit brand and cultural grounding through Chanel references and salon/daylight framing.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "gender_expression": {
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "source_keypoints": [
+        33
+      ],
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“brings a subtle masculine code into the look”",
+        "“suggesting a woman ready to step”"
+      ],
+      "reason": "The description explicitly discusses gendered expression and masculine coding.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "theme_narrative": {
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "source_keypoints": [
+        34
+      ],
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“from salon formality to daylight readiness”",
+        "“along the promenade”",
+        "“step from the salon onto the shore”"
+      ],
+      "reason": "The text presents a clear conceptual narrative of transition and setting.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "brand_alignment": {
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "source_keypoints": [
+        35
+      ],
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“moves Chanel”",
+        "“Double C buckle”",
+        "“preserving Chanel sharpness”"
+      ],
+      "reason": "The description explicitly aligns the look with Chanel brand language and identity.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "negation_control": {
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "source_keypoints": [
+        36
+      ],
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“without hardness”",
+        "“rather than separate”",
+        "“prevents any visual heaviness”"
+      ],
+      "reason": "The text repeatedly specifies exclusions and what the look should avoid, making negation control relevant.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    }
+  },
+  "context_summary": {
+    "evaluated_modules": [
+      "GarmentCore",
+      "MaterialColor",
+      "ConstructionDetail",
+      "StylingSet",
+      "Composition",
+      "Specificity",
+      "BindingAccuracy",
+      "LanguageClarity",
+      "StructuralClarity",
+      "GenerationReadiness",
+      "ConcisenessAndDensity",
+      "ConceptBonus"
+    ],
+    "semantic_judging_enabled": true,
+    "quality_penalties_enabled": true,
+    "skipped_metrics_enabled": true,
+    "optimization_gates_enabled": true
+  },
+  "raw_module_outputs": {
+    "GarmentCore": {
+      "module": "GarmentCore",
+      "results": [
+        {
+          "metric": "garment_category",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“cropped jacket”",
+            "“shirt”",
+            "“tailored shorts”",
+            "“black leather sandals”"
+          ],
+          "reason": "The text clearly names the main garment categories in the look."
+        },
+        {
+          "metric": "silhouette",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“cut boxy and short”",
+            "“straight-cut tailored shorts”",
+            "“creates a crisp frame”"
+          ],
+          "reason": "It gives a clear overall structural read: boxy cropped top, straight shorts, and a crisp tailored frame."
+        },
+        {
+          "metric": "length_hemline",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“ending just at the high waist”",
+            "“mid-thigh hem”",
+            "“cropped jacket”"
+          ],
+          "reason": "The text explicitly states garment lengths and hem positions."
+        },
+        {
+          "metric": "shoulder_architecture",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“shoulders are lightly structured and squared”",
+            "“without hardness”"
+          ],
+          "reason": "Shoulder construction is directly described and is visually salient."
+        },
+        {
+          "metric": "body_coverage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“the layer beneath remains visible”",
+            "“exposed foot creates a sense of air and daylight”",
+            "“preserving ease”"
+          ],
+          "reason": "The description clearly emphasizes visible/revealed areas, including layered visibility and exposed feet."
+        }
+      ]
+    },
+    "MaterialColor": {
+      "module": "MaterialColor",
+      "results": [
+        {
+          "metric": "fabric_family",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"dense navy cotton canvas\"",
+            "\"fine cotton poplin shirt\"",
+            "\"chalk white wool-gabardine\""
+          ],
+          "reason": "The text clearly names the main fabric families for the garments."
+        },
+        {
+          "metric": "surface_finish",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"clean topstitching\"",
+            "\"smooth white shorts\"",
+            "\"polished blackened-metal fastening\"",
+            "\"matte buttons\""
+          ],
+          "reason": "It specifies multiple surface traits such as smoothness, polish, and matte finish, plus the jacket’s crisp structure."
+        },
+        {
+          "metric": "primary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"navy cotton canvas\"",
+            "\"white and pale navy banker stripes\"",
+            "\"chalk white wool-gabardine\""
+          ],
+          "reason": "The dominant palette is clearly established, led by navy, white, and black accents."
+        },
+        {
+          "metric": "secondary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"white and pale navy banker stripes\"",
+            "\"black leather sandals\"",
+            "\"brushed silver\""
+          ],
+          "reason": "Secondary colors are explicitly present as accents and supporting tones alongside the main navy-white scheme."
+        },
+        {
+          "metric": "color_relationship_logic",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"contrast between the crisp striped shirt and the smooth white shorts\"",
+            "\"graphic vertical line\"",
+            "\"echoing the jacket’s canvas depth\""
+          ],
+          "reason": "The text explains the color logic through contrast and tonal echoing, making the palette coherent and imageable."
+        },
+        {
+          "metric": "pattern_type",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"banker stripes\"",
+            "\"narrow striped rhythm\""
+          ],
+          "reason": "A clear stripe pattern is described for the shirt."
+        }
+      ]
+    },
+    "ConstructionDetail": {
+      "module": "ConstructionDetail",
+      "results": [
+        {
+          "metric": "closure",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“polished blackened-metal fastening at the center front”",
+            "“The shorts are finished with flat matte buttons”",
+            "“A narrow black leather belt cinches the waist”"
+          ],
+          "reason": "The text clearly describes multiple closure/fastening elements, including a front fastening, buttons, and a belt closure."
+        },
+        {
+          "metric": "functional_detail",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“precise side pockets”",
+            "“A narrow black leather belt”",
+            "“second strap over the instep”"
+          ],
+          "reason": "Functional details are explicitly present, especially pockets and structural straps."
+        },
+        {
+          "metric": "construction_technique",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text describes tailoring and topstitching, but not a salient named construction technique of the type required by the rule."
+        },
+        {
+          "metric": "deconstruction",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No deconstruction, splicing, displacement, or reconstruction is explicitly mentioned."
+        },
+        {
+          "metric": "hardware_embellishment",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a discreet Double C buckle in brushed silver”",
+            "“polished blackened-metal fastening”",
+            "“lacquered sheen”"
+          ],
+          "reason": "The text includes salient hardware, especially the branded metal buckle and metal fastening."
+        }
+      ]
+    },
+    "StylingSet": {
+      "module": "StylingSet",
+      "results": [
+        {
+          "metric": "bag",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No bag is described or implied as part of the look."
+        },
+        {
+          "metric": "footwear",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"flat black leather sandals\"",
+            "\"a slim strap across the toe and a second strap over the instep\""
+          ],
+          "reason": "Footwear is clearly specified as sandals, with shape and material/finish details covered."
+        },
+        {
+          "metric": "jewelry",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No jewelry or body ornament is mentioned."
+        },
+        {
+          "metric": "belt",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"A narrow black leather belt\"",
+            "\"cinches the waist with a discreet Double C buckle\""
+          ],
+          "reason": "A visible belt is explicitly present and its placement/function at the waist is clearly described."
+        },
+        {
+          "metric": "layering",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"Beneath the jacket\"",
+            "\"The shirt is tucked into straight-cut tailored shorts\""
+          ],
+          "reason": "The text clearly describes layered garments and their visible order: jacket over shirt over shorts, with the belt at the waist."
+        }
+      ]
+    },
+    "Composition": {
+      "module": "Composition",
+      "results": [
+        {
+          "metric": "top_bottom_proportion",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“ending just at the high waist”",
+            "“straight-cut tailored shorts in chalk white wool-gabardine”",
+            "“The contrast between the crisp striped shirt and the smooth white shorts creates a graphic vertical line that lengthens the figure”"
+          ],
+          "reason": "The text clearly describes waist placement and the visual balance between the cropped jacket, tucked shirt, and shorts, including a stated lengthening proportion."
+        },
+        {
+          "metric": "asymmetry",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No asymmetrical design, uneven structure, or one-sided garment detail is described."
+        },
+        {
+          "metric": "cross_garment_binding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“The shirt is tucked into straight-cut tailored shorts”",
+            "“The contrast between the crisp striped shirt and the smooth white shorts”",
+            "“The look ends with flat black leather sandals”"
+          ],
+          "reason": "The description clearly distinguishes which attributes belong to the jacket, shirt, shorts, belt, and sandals, showing how the items relate across the full outfit."
+        }
+      ]
+    },
+    "Specificity": {
+      "module": "Specificity",
+      "results": [
+        {
+          "metric": "specific_noun_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"cropped jacket\"",
+            "\"cotton canvas\"",
+            "\"poplin shirt\"",
+            "\"tailored shorts\"",
+            "\"black leather sandals\""
+          ],
+          "reason": "The description uses highly specific garment names, materials, and accessory terms throughout, creating a clear fashion object with strong visual precision."
+        },
+        {
+          "metric": "fine_grained_attribute_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"dense navy cotton canvas\"",
+            "\"blackened-metal fastening\"",
+            "\"white and pale navy banker stripes\"",
+            "\"chalk white wool-gabardine\"",
+            "\"brushed silver\""
+          ],
+          "reason": "Color, material, and construction details are consistently fine-grained and fashion-specific, with strong structural and surface precision."
+        }
+      ]
+    },
+    "BindingAccuracy": {
+      "module": "BindingAccuracy",
+      "results": [
+        {
+          "metric": "attribute_entity_binding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“dense navy cotton canvas”",
+            "“a narrow black leather belt cinches the waist”",
+            "“flat black leather sandals”"
+          ],
+          "reason": "Attributes are consistently attached to the correct garments and body area: jacket material/structure, belt at the waist, and sandals on the feet are all clearly and coherently bound."
+        },
+        {
+          "metric": "multi_garment_binding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“cropped jacket”",
+            "“white and pale navy banker stripes”",
+            "“straight-cut tailored shorts”",
+            "“flat black leather sandals”"
+          ],
+          "reason": "Multiple garments are described with clear separation of their materials, colors, and roles, and the text keeps each attribute tied to the correct item without cross-binding."
+        }
+      ]
+    },
+    "LanguageClarity": {
+      "module": "LanguageClarity",
+      "results": [
+        {
+          "metric": "quantity_accuracy",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a second strap over the instep”",
+            "“The sandals’ lacquered sheen”"
+          ],
+          "reason": "The explicit quantity relation is clear and consistent; the text cleanly distinguishes first/second straps and maintains stable reference throughout."
+        },
+        {
+          "metric": "reference_clarity",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“The shirt is tucked into straight-cut tailored shorts”",
+            "“The sandals’ lacquered sheen subtly answers the polished buckle and buttons above”"
+          ],
+          "reason": "Pronouns and omitted subjects are easy to resolve, with each sentence’s referent remaining stable and visually coherent."
+        }
+      ]
+    },
+    "StructuralClarity": {
+      "module": "StructuralClarity",
+      "results": [
+        {
+          "metric": "information_ordering",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“A sharply tailored cropped jacket...”",
+            "“Beneath the jacket...”",
+            "“A narrow black leather belt...”",
+            "“The look ends with flat black leather sandals...”"
+          ],
+          "reason": "The description is organized from main garment to layered pieces, then accessories, then footwear, making the outfit easy to reconstruct in a clear top-to-bottom sequence."
+        }
+      ]
+    },
+    "GenerationReadiness": {
+      "module": "GenerationReadiness",
+      "results": [
+        {
+          "metric": "generation_readiness",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“A sharply tailored cropped jacket in dense navy cotton canvas”",
+            "“fine cotton poplin shirt in white and pale navy banker stripes”",
+            "“straight-cut tailored shorts in chalk white wool-gabardine”",
+            "“flat black leather sandals”"
+          ],
+          "reason": "The text is highly visual, garment-specific, and organized as a coherent single look with clear layering and styling logic, so it is close to prompt-ready. It is still somewhat prose-like and interpretive in places, which keeps it just short of near-perfect direct generation form."
+        },
+        {
+          "metric": "bilateral_coherence",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit left-right or other bilateral asymmetry is described."
+        },
+        {
+          "metric": "spatial_coherence",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“The shirt is tucked into straight-cut tailored shorts”",
+            "“The body is cut boxy and short, ending just at the high waist so the layer beneath remains visible”",
+            "“A narrow black leather belt cinches the waist”",
+            "“The look ends with flat black leather sandals”"
+          ],
+          "reason": "Layering, tuck-in relation, waist placement, and footwear completion are all clearly articulated and visually reconstructable. The spatial grammar is coherent and easy to image."
+        }
+      ]
+    },
+    "ConcisenessAndDensity": {
+      "module": "ConcisenessAndDensity",
+      "results": [
+        {
+          "metric": "core_information_density",
+          "applicable": true,
+          "score": 0.5,
+          "hit": 0,
+          "evidence": [
+            "“A sharply tailored cropped jacket… Beneath the jacket… The look ends with flat black leather sandals”",
+            "“The contrast between the crisp striped shirt and the smooth white shorts creates a graphic vertical line”",
+            "“The overall stance is upright but unforced”"
+          ],
+          "reason": "The text clearly prioritizes the main garments and their silhouette, but it is quite verbose and repeatedly explains mood, symbolism, and styling intent. Core clothing information is present and coherent, yet the density is diluted by descriptive framing and interpretive commentary."
+        },
+        {
+          "metric": "visibility_priority",
+          "applicable": true,
+          "score": 0.5,
+          "hit": 0,
+          "evidence": [
+            "“the layer beneath remains visible and active”",
+            "“A narrow black leather belt cinches the waist”",
+            "“The shirt is tucked into straight-cut tailored shorts”"
+          ],
+          "reason": "Visible, image-dominant elements are mostly foregrounded, especially jacket, shirt, shorts, belt, and sandals. However, the description also spends substantial space on less directly visible or interpretive details such as construction intent, atmosphere, and symbolic reading, which reduces strict visibility priority."
+        }
+      ]
+    },
+    "ConceptBonus": {
+      "module": "ConceptBonus",
+      "results": [
+        {
+          "metric": "aesthetic_vocabulary",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“sharply tailored”",
+            "“disciplined ease”",
+            "“subtle workwear precision”",
+            "“tailored but mobile, structured yet breathable”"
+          ],
+          "reason": "The text clearly uses style-oriented aesthetic language to define the look."
+        },
+        {
+          "metric": "cultural_reference",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“moves Chanel from salon formality to daylight readiness”",
+            "“Double C buckle”",
+            "“promenade-ready”"
+          ],
+          "reason": "There is explicit brand and cultural grounding through Chanel references and salon/daylight framing."
+        },
+        {
+          "metric": "gender_expression",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“brings a subtle masculine code into the look”",
+            "“suggesting a woman ready to step”"
+          ],
+          "reason": "The description explicitly discusses gendered expression and masculine coding."
+        },
+        {
+          "metric": "theme_narrative",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“from salon formality to daylight readiness”",
+            "“along the promenade”",
+            "“step from the salon onto the shore”"
+          ],
+          "reason": "The text presents a clear conceptual narrative of transition and setting."
+        },
+        {
+          "metric": "brand_alignment",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“moves Chanel”",
+            "“Double C buckle”",
+            "“preserving Chanel sharpness”"
+          ],
+          "reason": "The description explicitly aligns the look with Chanel brand language and identity."
+        },
+        {
+          "metric": "negation_control",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“without hardness”",
+            "“rather than separate”",
+            "“prevents any visual heaviness”"
+          ],
+          "reason": "The text repeatedly specifies exclusions and what the look should avoid, making negation control relevant."
+        }
+      ]
+    }
+  },
+  "r_content": {
+    "enabled": true,
+    "odin_reference": "ICML 2024 ODIN (disentangled reward): RL uses content-dominant scalar; length diagnostics + soft penalty channel reduce length hacking vs. raw S_fp alone.",
+    "S_fp": 0.8887,
+    "total_penalty": 0.0625,
+    "gamma_penalty": 0.35,
+    "formula": "multiply",
+    "beta_z_len": 0.05,
+    "char_len": 3021,
+    "log_len": 8.013674,
+    "est_tokens_char_div_4": 755.25,
+    "holdout_length_prediction": null,
+    "r_after_length_residual": 0.8887,
+    "r_after_soft_penalty": 0.86926,
+    "z_len": null,
+    "R_content": 0.86926
+  }
+}

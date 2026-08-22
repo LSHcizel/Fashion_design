@@ -1,0 +1,20 @@
+{
+  "image_path": "E:\\fashion_agents_project\\downloads\\wgsn_latest_batch\\01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装\\069_media_cha_biarritz_ps27_064.jpg",
+  "text_description": "Full runway look built around a coordinated red, tan, black, and dark navy plaid shirt-dress silhouette with a semi-sheer appearance through the upper bodice, sleeves, and skirt panels. The dress has a pointed collar, a visible central button placket, short straight sleeves ending above the elbow, and a relaxed but controlled fit through the torso before being cinched firmly at the waist. A wide matching plaid sash wraps around the waist and ties into a large off-center bow at the front-right hip, with bright red fabric panels and long hanging ends adding volume and asymmetry. Below the waist, the skirt falls to mid-calf in fluid, lightly pleated vertical panels, continuing the oversized tartan stripe layout with red bands near the hem. The color palette is bold and graphic, mixing warm beige grounds with strong red blocks and dark linear checks. The model carries a soft hand-held bag in white and navy with horizontal stripe/check motifs, hanging from one hand at the side. Footwear consists of ornate metallic gold flat shoes or sandals with sculptural, ruffled decoration over the foot. Styling is polished but eclectic, with dangling dark earrings and the structured plaid dress contrasted by the casual textile bag and decorative gold shoes.",
+  "key_elements": [
+    "red tan black navy plaid shirt dress",
+    "semi-sheer short-sleeve collared bodice",
+    "central button placket",
+    "wide matching waist sash tied in large bow",
+    "mid-calf fluid pleated skirt",
+    "white and navy patterned hand-held bag",
+    "ornate metallic gold flat footwear",
+    "dangling dark earrings"
+  ],
+  "uncertainty_notes": [
+    "The fabric appears semi-sheer in parts, but exact material is not identifiable.",
+    "Footwear shape is partially obscured by decorative gold detailing."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Full runway look built around a coordinated red, tan, black, and dark navy plaid shirt-dress silhouette with a semi-sheer appearance through the upper bodice, sleeves, and skirt panels. The dress has a pointed collar, a visible central button placket, short straight sleeves ending above the elbow, and a relaxed but controlled fit through the torso before being cinched firmly at the waist. A wide matching plaid sash wraps around the waist and ties into a large off-center bow at the front-right hip, with bright red fabric panels and long hanging ends adding volume and asymmetry. Below the waist, the skirt falls to mid-calf in fluid, lightly pleated vertical panels, continuing the oversized tartan stripe layout with red bands near the hem. The color palette is bold and graphic, mixing warm beige grounds with strong red blocks and dark linear checks. The model carries a soft hand-held bag in white and navy with horizontal stripe/check motifs, hanging from one hand at the side. Footwear consists of ornate metallic gold flat shoes or sandals with sculptural, ruffled decoration over the foot. Styling is polished but eclectic, with dangling dark earrings and the structured plaid dress contrasted by the casual textile bag and decorative gold shoes.\",\n  \"key_elements\": [\n    \"red tan black navy plaid shirt dress\",\n    \"semi-sheer short-sleeve collared bodice\",\n    \"central button placket\",\n    \"wide matching waist sash tied in large bow\",\n    \"mid-calf fluid pleated skirt\",\n    \"white and navy patterned hand-held bag\",\n    \"ornate metallic gold flat footwear\",\n    \"dangling dark earrings\"\n  ],\n  \"uncertainty_notes\": [\n    \"The fabric appears semi-sheer in parts, but exact material is not identifiable.\",\n    \"Footwear shape is partially obscured by decorative gold detailing.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

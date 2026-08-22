@@ -1,0 +1,1665 @@
+{
+  "name": "fashion_text_prompt_optimizer",
+  "version": "0.1.0",
+  "source_name": "72_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__072_media_cha_biarritz_ps27_071_text_description.md",
+  "input_type": "text_description",
+  "judge_backend": "openai_compatible_api",
+  "judge_model": "gpt-5.4-mini",
+  "judge_api_base": "https://api.ohmygpt.com/v1",
+  "text_description": "Full-length couture-style evening gown in a pale grey, off-white, and black newspaper-print textile, worn sleeveless with broad shoulder straps and a low, softly squared neckline that opens at the upper chest. The bodice is close-cut through the torso and covered in fragmented newspaper columns and headline blocks, with a dramatic black feather-like or brushstroke motif radiating across the bust and a pale fabric rosette/appliqué placed at the center. The waist flows into a voluminous floor-length A-line ball skirt with structured fullness and a slightly architectural silhouette, printed all over with overlapping newspaper pages, text panels, and dark rectangular graphic blocks. A prominent asymmetric cascade of sculptural ruffles and folded panels runs down the front from the waist toward the hem, creating layered vertical movement over a central lighter underskirt panel; additional curved overskirt panels flare outward around the hips and sides. The hem pools lightly at the floor, mostly concealing the feet. Styling is minimal, with the focus on the printed gown and visible dark floral or feather-like earrings near the face; no bag or footwear is visible.",
+  "eval_prose": "Full-length couture-style evening gown in a pale grey, off-white, and black newspaper-print textile, worn sleeveless with broad shoulder straps and a low, softly squared neckline that opens at the upper chest. The bodice is close-cut through the torso and covered in fragmented newspaper columns and headline blocks, with a dramatic black feather-like or brushstroke motif radiating across the bust and a pale fabric rosette/appliqué placed at the center. The waist flows into a voluminous floor-length A-line ball skirt with structured fullness and a slightly architectural silhouette, printed all over with overlapping newspaper pages, text panels, and dark rectangular graphic blocks. A prominent asymmetric cascade of sculptural ruffles and folded panels runs down the front from the waist toward the hem, creating layered vertical movement over a central lighter underskirt panel; additional curved overskirt panels flare outward around the hips and sides. The hem pools lightly at the floor, mostly concealing the feet. Styling is minimal, with the focus on the printed gown and visible dark floral or feather-like earrings near the face; no bag or footwear is visible.",
+  "total_score": 0.8508,
+  "gates": {
+    "score_gate": {
+      "name": "score_gate",
+      "description": "最终 S_fp（quality 用 weighted base_score，不含 penalty 扣减；已做 holdout 长度去相关）",
+      "value": 0.8508,
+      "threshold": 0.7,
+      "passed": true,
+      "weights": {
+        "coverage": 0.3,
+        "quality": 0.7
+      },
+      "components": {
+        "coverage_axis_score": 0.9375,
+        "quality_effective": 0.8125
+      },
+      "total_cap_applied": 1.0
+    },
+    "penalty_gate": {
+      "name": "penalty_gate",
+      "description": "仅依据 penalties.total_penalty（各 penalty 分值的算术平均）",
+      "total_penalty": 0.0625,
+      "threshold": 0.5,
+      "passed": true
+    },
+    "both_passed": true
+  },
+  "score_band": "Strong",
+  "metric_totals": {
+    "total_defined_metrics": 42,
+    "total_applicable_metrics": 28,
+    "total_hit_metrics": 27,
+    "total_skipped_metrics": 14
+  },
+  "skipped_metrics": [
+    {
+      "metric": "closure",
+      "axis": "coverage_score",
+      "rule": "显著开合方式应被提到",
+      "applicability_code": "when_closure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions button, zipper, tie, buckle, or closure details.",
+      "reason": "No explicit closure mechanism such as buttons, zipper, ties, or buckles is mentioned."
+    },
+    {
+      "metric": "functional_detail",
+      "axis": "coverage_score",
+      "rule": "显著口袋、挂带或功能细节应被提到",
+      "applicability_code": "when_functional_detail_is_salient",
+      "applicability_hint": "Only applicable when the text mentions pockets, straps, utility parts, or functional details.",
+      "reason": "The text does not describe pockets, straps as functional hardware, or other utility details beyond garment construction."
+    },
+    {
+      "metric": "deconstruction",
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "reason": "The text describes asymmetry and layered panels, but does not explicitly indicate deconstruction, splicing, displacement, or reconstruction."
+    },
+    {
+      "metric": "hardware_embellishment",
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "reason": "No salient hardware or metal/crystal embellishment is described."
+    },
+    {
+      "metric": "bag",
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "reason": "No bag is described; the text explicitly says 'no bag'."
+    },
+    {
+      "metric": "footwear",
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "reason": "Footwear is not visually present or important here; it says 'no footwear is visible' and the hem mostly conceals the feet."
+    },
+    {
+      "metric": "belt",
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "reason": "No visible belt, sash, waist strap, or harness is mentioned; the waist emphasis comes from the gown's cut and silhouette."
+    },
+    {
+      "metric": "cross_garment_binding",
+      "axis": "coverage_score",
+      "rule": "多单品时应能区分属性属于哪件单品",
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "reason": "The description centers on a single gown rather than multiple separate garments needing attribute assignment."
+    },
+    {
+      "metric": "quantity_accuracy",
+      "axis": "quality_score",
+      "rule": "数量词应准确且不冲突",
+      "applicability_code": "when_quantity_is_used",
+      "applicability_hint": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
+      "reason": "The text contains no explicit counts, numbers, or quantity relations that need verification."
+    },
+    {
+      "metric": "bilateral_coherence",
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "reason": "No explicit left-right or other bilateral garment differences are described."
+    },
+    {
+      "metric": "cultural_reference",
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "reason": "No explicit cultural, historical, or brand grounding is provided."
+    },
+    {
+      "metric": "gender_expression",
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "reason": "The description does not explicitly discuss gender expression or androgyny."
+    },
+    {
+      "metric": "theme_narrative",
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "reason": "No series theme or conceptual narrative is explicitly stated beyond the garment description."
+    },
+    {
+      "metric": "brand_alignment",
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "reason": "There is no explicit brand language or brand identity target."
+    }
+  ],
+  "scores": {
+    "coverage_score": {
+      "applicable_metrics": 16,
+      "hit_metrics": 15,
+      "score_sum": 15.0,
+      "score": 0.9375
+    },
+    "quality_score": {
+      "applicable_metrics": 10,
+      "hit_metrics": 10,
+      "score_sum": 8.25,
+      "score": 0.825,
+      "base_score": 0.8125,
+      "axis_score_unweighted": 0.825,
+      "penalized_score": 0.8125,
+      "penalties": {
+        "items": {
+          "generation_content_penalty": {
+            "score": 0.25,
+            "evidence": [
+              "pale grey, off-white, and black newspaper-print textile",
+              "fragmented newspaper columns and headline blocks",
+              "overlapping newspaper pages, text panels, and dark rectangular graphic blocks",
+              "black feather-like or brushstroke motif"
+            ],
+            "reason": "The description is imageable and centered on one gown, but it leans heavily on repeated print/graphic wording and conceptual motif language, which slightly reduces prompt efficiency."
+          },
+          "consistency_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "sleeveless with broad shoulder straps",
+              "low, softly squared neckline",
+              "voluminous floor-length A-line ball skirt",
+              "prominent asymmetric cascade of sculptural ruffles"
+            ],
+            "reason": "The gown reads as one coherent silhouette with intentional asymmetry in the skirt, without trunk-level left-right contradictions or mutually exclusive garment identities."
+          },
+          "coordination_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "minimal, with the focus on the printed gown",
+              "visible dark floral or feather-like earrings near the face",
+              "no bag or footwear is visible"
+            ],
+            "reason": "Styling is restrained and aligned to the dress; the visible accessories do not conflict with the main garment language."
+          },
+          "rationality_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "couture-style evening gown",
+              "structured fullness and a slightly architectural silhouette",
+              "sculptural ruffles and folded panels"
+            ],
+            "reason": "The materials and construction remain within plausible couture fashion description; no physically impossible garment structure is asserted."
+          }
+        },
+        "reasons": {
+          "generation_content_penalty": "The description is imageable and centered on one gown, but it leans heavily on repeated print/graphic wording and conceptual motif language, which slightly reduces prompt efficiency.",
+          "consistency_penalty": "The gown reads as one coherent silhouette with intentional asymmetry in the skirt, without trunk-level left-right contradictions or mutually exclusive garment identities.",
+          "coordination_penalty": "Styling is restrained and aligned to the dress; the visible accessories do not conflict with the main garment language.",
+          "rationality_penalty": "The materials and construction remain within plausible couture fashion description; no physically impossible garment structure is asserted."
+        },
+        "generation_content_penalty": 0.25,
+        "consistency_penalty": 0.0,
+        "coordination_penalty": 0.0,
+        "rationality_penalty": 0.0,
+        "total_penalty": 0.0625
+      },
+      "cap": 1.0
+    },
+    "bonus_score": {
+      "applicable_metrics": 2,
+      "hit_metrics": 2,
+      "score_sum": 2.0,
+      "score": 1.0
+    },
+    "fashion_prompt_score": 0.8508,
+    "s_fp_base": 0.85,
+    "length_disentangle": {
+      "adjusted_score": 0.8508,
+      "length_component": -0.000819,
+      "log_len": 7.069874,
+      "slope_a": 0.002948,
+      "mode": "centered_slope",
+      "applied": true,
+      "log_len_center": 7.3478
+    },
+    "weights": {
+      "coverage": 0.3,
+      "quality": 0.7
+    },
+    "total_cap": 1.0,
+    "module_scores": {
+      "GarmentCore": {
+        "applicable_metrics": 5,
+        "hit_metrics": 5,
+        "score_sum": 5.0,
+        "score": 1.0
+      },
+      "MaterialColor": {
+        "applicable_metrics": 6,
+        "hit_metrics": 5,
+        "score_sum": 5.0,
+        "score": 0.8333
+      },
+      "ConstructionDetail": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 1.0,
+        "score": 1.0
+      },
+      "StylingSet": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "Composition": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "Specificity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "BindingAccuracy": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "LanguageClarity": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 1.0,
+        "score": 1.0
+      },
+      "StructuralClarity": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 0.75,
+        "score": 0.75
+      },
+      "GenerationReadiness": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "ConcisenessAndDensity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "ConceptBonus": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      }
+    }
+  },
+  "diagnosis": {
+    "missing_information": [
+      {
+        "metric": "fabric_family",
+        "rule": "文本需给出主体材质类别",
+        "score_value": 0.0,
+        "matched_terms": [
+          "“newspaper-print textile”",
+          "“printed gown”"
+        ],
+        "reason": "The text identifies a printed textile but does not clearly specify the underlying fabric family (e.g. silk, cotton, satin, chiffon)."
+      }
+    ],
+    "quality_issues": [],
+    "bonus_opportunities": []
+  },
+  "metric_results": {
+    "garment_category": {
+      "axis": "coverage_score",
+      "rule": "文本需明确给出服装主体品类",
+      "source_keypoints": [
+        1
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“Full-length couture-style evening gown”",
+        "“the printed gown”"
+      ],
+      "reason": "The main garment is explicitly identified as an evening gown.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "silhouette": {
+      "axis": "coverage_score",
+      "rule": "文本需给出整体轮廓或结构趋势",
+      "source_keypoints": [
+        2
+      ],
+      "applicability_code": "when_shape_is_salient",
+      "applicability_hint": "Only applicable when the text clearly mentions silhouette, shape, or structural contour.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“voluminous floor-length A-line ball skirt”",
+        "“slightly architectural silhouette”"
+      ],
+      "reason": "The text clearly describes the overall shape and structural contour.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "length_hemline": {
+      "axis": "coverage_score",
+      "rule": "文本需给出长度或下摆信息",
+      "source_keypoints": [
+        3
+      ],
+      "applicability_code": "when_length_or_hem_is_salient",
+      "applicability_hint": "Only applicable when the text mentions length, hemline, slit, or garment length.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“Full-length”",
+        "“floor-length A-line ball skirt”",
+        "“The hem pools lightly at the floor”"
+      ],
+      "reason": "Length and hem behavior are explicitly stated.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "shoulder_architecture": {
+      "axis": "coverage_score",
+      "rule": "当肩线设计显著（如强调垫肩/结构肩、落肩、宽肩、单肩或露肩、无肩带抹胸等）时，文本须点明该肩部结构语言，而非仅写「上装」或笼统廓形",
+      "source_keypoints": [
+        4
+      ],
+      "applicability_code": "when_shoulder_is_salient",
+      "applicability_hint": "Only applicable when the text implies prominent shoulder design: pads/structured shoulders, dropped shoulder, one-shoulder/off-shoulder, strapless neckline, or other salient shoulder/sleeve anchor cues.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“worn sleeveless with broad shoulder straps”",
+        "“low, softly squared neckline”"
+      ],
+      "reason": "The shoulder/upper-body construction is clearly specified through broad straps and a sleeveless cut.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "body_coverage": {
+      "axis": "coverage_score",
+      "rule": "文本需描述显著裸露或包裹区域",
+      "source_keypoints": [
+        5
+      ],
+      "applicability_code": "when_exposure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions exposure, coverage, cutout, or body reveal.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“low, softly squared neckline that opens at the upper chest”",
+        "“worn sleeveless”",
+        "“mostly concealing the feet”"
+      ],
+      "reason": "The text describes exposed upper chest/shoulders and also notes coverage at the lower body via the hem.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "fabric_family": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主体材质类别",
+      "source_keypoints": [
+        6
+      ],
+      "applicability_code": "when_material_is_inferable",
+      "applicability_hint": "Only applicable when the text provides enough information about the main material.",
+      "applicable": true,
+      "score_value": 0.0,
+      "hit": 0,
+      "matched_terms": [
+        "“newspaper-print textile”",
+        "“printed gown”"
+      ],
+      "reason": "The text identifies a printed textile but does not clearly specify the underlying fabric family (e.g. silk, cotton, satin, chiffon).",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "surface_finish": {
+      "axis": "coverage_score",
+      "rule": "文本需给出光泽、哑光、垂坠或硬挺等表面性质",
+      "source_keypoints": [
+        7
+      ],
+      "applicability_code": "when_surface_trait_is_salient",
+      "applicability_hint": "Only applicable when the text mentions gloss, matte, drape, stiffness, pleats, or surface traits.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“structured fullness”",
+        "“slightly architectural silhouette”",
+        "“sculptural ruffles and folded panels”"
+      ],
+      "reason": "It clearly describes surface/handling traits such as structure and sculptural form, which support a finish/hand-feel judgment.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "primary_color": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主色",
+      "source_keypoints": [
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“pale grey, off-white, and black”",
+        "“newspaper-print textile”"
+      ],
+      "reason": "The dominant palette is clearly stated, with pale grey/off-white and black as the main colors.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "secondary_color": {
+      "axis": "coverage_score",
+      "rule": "有明显副色时需描述；若为大衣内里、开衩内衬等高对比色块，应说明可见条件（如行走、开片时）或与主色区的衔接，避免孤立撞色无锚点、不利生成",
+      "source_keypoints": [
+        12
+      ],
+      "applicability_code": "when_secondary_color_is_salient",
+      "applicability_hint": "Only applicable when the text clearly includes secondary color or color relationship information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“pale grey, off-white, and black”",
+        "“dark rectangular graphic blocks”"
+      ],
+      "reason": "A clear secondary color structure is present, with black/dark graphic elements contrasting against the pale ground.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "color_relationship_logic": {
+      "axis": "coverage_score",
+      "rule": "当存在多色块、强对比内搭/外搭、条纹或印花与底色关系、或明显的同色系/补色/撞色叙事时，文本须交代配色逻辑（如单色、同色系层次、补色对比、主次色块关系之一），使生成可还原色彩关系；仅罗列颜色词但未体现关系则不计为覆盖",
+      "source_keypoints": [
+        13
+      ],
+      "applicability_code": "when_multi_tone_or_strong_color_story",
+      "applicability_hint": "Only applicable when the text implies multiple color blocks, strong inner/outer contrast, stripe-vs-ground relations, tonal vs accented palette, or another non-trivial color story beyond a single flat hue.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“pale grey, off-white, and black newspaper-print textile”",
+        "“printed all over with overlapping newspaper pages, text panels, and dark rectangular graphic blocks”"
+      ],
+      "reason": "The text explains the color logic as a newspaper-print composition with dark text/blocks over a pale base, giving a clear dominant-versus-accent relationship.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "pattern_type": {
+      "axis": "coverage_score",
+      "rule": "有图案时需给出图案类型",
+      "source_keypoints": [
+        14
+      ],
+      "applicability_code": "when_pattern_exists",
+      "applicability_hint": "Only applicable when the text describes pattern or print information.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“newspaper-print textile”",
+        "“overlapping newspaper pages, text panels, and dark rectangular graphic blocks”"
+      ],
+      "reason": "The pattern type is explicitly described as newspaper print with text panels and graphic blocks.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "closure": {
+      "axis": "coverage_score",
+      "rule": "显著开合方式应被提到",
+      "source_keypoints": [
+        17
+      ],
+      "applicability_code": "when_closure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions button, zipper, tie, buckle, or closure details.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit closure mechanism such as buttons, zipper, ties, or buckles is mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "functional_detail": {
+      "axis": "coverage_score",
+      "rule": "显著口袋、挂带或功能细节应被提到",
+      "source_keypoints": [
+        18
+      ],
+      "applicability_code": "when_functional_detail_is_salient",
+      "applicability_hint": "Only applicable when the text mentions pockets, straps, utility parts, or functional details.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text does not describe pockets, straps as functional hardware, or other utility details beyond garment construction.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "construction_technique": {
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "source_keypoints": [
+        9
+      ],
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"a dramatic black feather-like or brushstroke motif radiating across the bust\"",
+        "\"a prominent asymmetric cascade of sculptural ruffles and folded panels runs down the front from the waist toward the hem\""
+      ],
+      "reason": "The description clearly names engineered construction techniques and their placement on the bodice and skirt.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "deconstruction": {
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "source_keypoints": [
+        20
+      ],
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text describes asymmetry and layered panels, but does not explicitly indicate deconstruction, splicing, displacement, or reconstruction.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "hardware_embellishment": {
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "source_keypoints": [
+        21
+      ],
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No salient hardware or metal/crystal embellishment is described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "bag": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "source_keypoints": [
+        22
+      ],
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No bag is described; the text explicitly says 'no bag'.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "footwear": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "source_keypoints": [
+        23
+      ],
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "Footwear is not visually present or important here; it says 'no footwear is visible' and the hem mostly conceals the feet.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "jewelry": {
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "source_keypoints": [
+        24
+      ],
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "'visible dark floral or feather-like earrings near the face'"
+      ],
+      "reason": "Earrings are explicitly present and salient as the only accessory detail.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "belt": {
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "source_keypoints": [
+        25
+      ],
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No visible belt, sash, waist strap, or harness is mentioned; the waist emphasis comes from the gown's cut and silhouette.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "layering": {
+      "axis": "coverage_score",
+      "rule": "多层叠搭时应给出层次关系；外套、内搭、腰带、腿带与裤装之间的遮盖与固定顺序应可还原为可见层次，服务生成导向",
+      "source_keypoints": [
+        26
+      ],
+      "applicability_code": "when_layering_exists",
+      "applicability_hint": "Only applicable when the text describes layering or multi-layer garment relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "'a central lighter underskirt panel'",
+        "'additional curved overskirt panels flare outward around the hips and sides'"
+      ],
+      "reason": "The gown clearly describes layered garment relations with an underskirt and overskirt panels.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "top_bottom_proportion": {
+      "axis": "coverage_score",
+      "rule": "明显上下比例关系应被提到；长外套、阔腿或宽松下装、厚底鞋与腿带/harness 等叠加时，应交代主干剪影主次，避免仅堆砌元素导致下盘过重、prompt 失焦",
+      "source_keypoints": [
+        27
+      ],
+      "applicability_code": "when_proportion_is_salient",
+      "applicability_hint": "Only applicable when the text describes top-bottom proportion, waist position, or visual balance.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“close-cut through the torso”",
+        "“flows into a voluminous floor-length A-line ball skirt”",
+        "“structured fullness and a slightly architectural silhouette”"
+      ],
+      "reason": "The text clearly describes the relationship between the fitted upper body and the full lower skirt, making the top-bottom proportion salient.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "asymmetry": {
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "source_keypoints": [
+        29
+      ],
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a prominent asymmetric cascade”",
+        "“runs down the front from the waist toward the hem”",
+        "“additional curved overskirt panels flare outward around the hips and sides”"
+      ],
+      "reason": "Asymmetry is explicitly stated and reinforced by the uneven cascade and side-flaring panels.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cross_garment_binding": {
+      "axis": "coverage_score",
+      "rule": "多单品时应能区分属性属于哪件单品",
+      "source_keypoints": [
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The description centers on a single gown rather than multiple separate garments needing attribute assignment.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "specific_noun_usage": {
+      "axis": "quality_score",
+      "rule": "使用具体服装或配件名词而非泛词",
+      "source_keypoints": [
+        1,
+        22,
+        23
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“couture-style evening gown”",
+        "“broad shoulder straps,” “low, softly squared neckline,” “A-line ball skirt,” “asymmetric cascade of sculptural ruffles”"
+      ],
+      "reason": "Uses highly specific fashion nouns and garment-structure terms throughout, with clear, imageable terminology for silhouette, neckline, skirt shape, and embellishment.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "fine_grained_attribute_usage": {
+      "axis": "quality_score",
+      "rule": "颜色、材质、结构词应尽量细粒度",
+      "source_keypoints": [
+        6,
+        7,
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“pale grey, off-white, and black newspaper-print textile”",
+        "“fragmented newspaper columns and headline blocks,” “black feather-like or brushstroke motif,” “pale fabric rosette/appliqué,” “structured fullness”"
+      ],
+      "reason": "Color, material, print, and construction details are all described with fine granularity and strong visual specificity, making the garment highly imageable.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "attribute_entity_binding": {
+      "axis": "quality_score",
+      "rule": "属性必须绑定到正确实体；腰带、腿带、harness、护臂/护手等须明确归属外套、裤装或身体附件，避免腰胯多重束系指代漂移",
+      "source_keypoints": [
+        10,
+        39
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"pale grey, off-white, and black newspaper-print textile\"",
+        "\"a pale fabric rosette/appliqué placed at the center\"",
+        "\"visible dark floral or feather-like earrings near the face\""
+      ],
+      "reason": "Most attributes are clearly tied to the gown or earrings, with good separation between garment and accessory. Minor ambiguity remains in phrases like \"feather-like or brushstroke motif\" and \"dark floral or feather-like earrings,\" but these do not seriously confuse the main bindings.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "multi_garment_binding": {
+      "axis": "quality_score",
+      "rule": "多单品描述时不得将属性归错单品",
+      "source_keypoints": [
+        12,
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"worn sleeveless with broad shoulder straps\"",
+        "\"The waist flows into a voluminous floor-length A-line ball skirt\"",
+        "\"no bag or footwear is visible\""
+      ],
+      "reason": "The description keeps bodice, skirt, and accessories mostly well separated, and it clearly distinguishes the gown from earrings and absent bag/footwear. There is slight complexity in the layered skirt/overskirt/underskirt wording, but the garment relations remain coherent and imageable.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "quantity_accuracy": {
+      "axis": "quality_score",
+      "rule": "数量词应准确且不冲突",
+      "source_keypoints": [
+        37
+      ],
+      "applicability_code": "when_quantity_is_used",
+      "applicability_hint": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text contains no explicit counts, numbers, or quantity relations that need verification.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "reference_clarity": {
+      "axis": "quality_score",
+      "rule": "代词和省略指向必须清晰",
+      "source_keypoints": [
+        38
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“The bodice is close-cut through the torso”",
+        "“The waist flows into a voluminous floor-length A-line ball skirt”",
+        "“no bag or footwear is visible”"
+      ],
+      "reason": "References are clear and stable throughout; the garment subject remains consistent, and pronouns/omissions do not create ambiguity.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "information_ordering": {
+      "axis": "quality_score",
+      "rule": "描述应按主体到细节的顺序组织",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"Full-length couture-style evening gown...\"",
+        "\"The bodice... The waist flows into...\"",
+        "\"Styling is minimal...\""
+      ],
+      "reason": "The description generally follows a clear主体→结构→细节→配饰/完成度 order, making the garment easy to reconstruct. There is minor compression from long modifier chains and some back-and-forth within the skirt description, but the main visual hierarchy remains easy to follow.",
+      "quality_dimension": "StructuralClarity",
+      "quality_dimension_zh": "结构清晰度"
+    },
+    "generation_readiness": {
+      "axis": "quality_score",
+      "rule": "文本应可直接转为图像生成 prompt；须以可见廓形、品类与层次为先，多文化/多时代风格符号混用时应能收束为单一 look 身份，否则视为生成导向不足",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“Full-length couture-style evening gown”",
+        "“pale grey, off-white, and black newspaper-print textile”",
+        "“sleeveless with broad shoulder straps”",
+        "“voluminous floor-length A-line ball skirt”",
+        "“prominent asymmetric cascade of sculptural ruffles”"
+      ],
+      "reason": "The description is highly visual, garment-first, and mostly prompt-ready, with clear silhouette, materials, and layered construction. It is slightly verbose and reads like a design analysis rather than a compact generation prompt, so it falls just short of near-perfect.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "bilateral_coherence": {
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "source_keypoints": [
+        29,
+        40
+      ],
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit left-right or other bilateral garment differences are described.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "spatial_coherence": {
+      "axis": "quality_score",
+      "rule": "层次、前后、内外、上下、附着位置等空间关系必须清晰且视觉上合理；大衣与腰带、腰下吊带、腿带/harness 与裤管之间的遮盖、穿入与固定点须可还原，禁止腰胯多层束系含糊不可成像",
+      "source_keypoints": [
+        26,
+        30,
+        40
+      ],
+      "applicability_code": "when_spatial_relation_exists",
+      "applicability_hint": "Only applicable when the text describes layering, front/back, inside/outside, attached position, crossing paths, or other explicit spatial relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“The waist flows into a voluminous floor-length A-line ball skirt”",
+        "“cascade of sculptural ruffles and folded panels runs down the front from the waist toward the hem”",
+        "“over a central lighter underskirt panel”",
+        "“additional curved overskirt panels flare outward around the hips and sides”"
+      ],
+      "reason": "Layering, front-to-hem movement, and overskirt/underskirt relationships are clearly imageable and coherent. The only limitation is that the description is somewhat dense, but the spatial structure remains readable and consistent.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "core_information_density": {
+      "axis": "quality_score",
+      "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“Full-length couture-style evening gown”",
+        "“pale grey, off-white, and black newspaper-print textile”",
+        "“voluminous floor-length A-line ball skirt”",
+        "“prominent asymmetric cascade of sculptural ruffles”"
+      ],
+      "reason": "主体服装轮廓、材质、印花、裙型和关键装饰都交代得很集中，信息密度高；但细节较多、修饰语偏长，略有冗余，未达到近乎极致的简洁。",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "visibility_priority": {
+      "axis": "quality_score",
+      "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部或低可见度细节，避免不可见信息喧宾夺主",
+      "source_keypoints": [
+        18,
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“focus on the printed gown”",
+        "“visible dark floral or feather-like earrings”",
+        "“no bag or footwear is visible”",
+        "“mostly concealing the feet”"
+      ],
+      "reason": "文本优先描述了可见且决定成像的礼服主体，并明确指出耳饰可见、包和鞋不可见，整体可见性排序合理；不过仍包含少量较细的结构性描述，略降低了优先级的纯度。",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "aesthetic_vocabulary": {
+      "axis": "bonus_score",
+      "rule": "适度加入设计风格词汇",
+      "source_keypoints": [
+        31
+      ],
+      "applicability_code": "when_style_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly expresses aesthetic or style vocabulary.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“couture-style evening gown”",
+        "“slightly architectural silhouette”",
+        "“sculptural ruffles and folded panels”"
+      ],
+      "reason": "The text explicitly uses style and design-language terms that describe the gown’s aesthetic direction.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cultural_reference": {
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "source_keypoints": [
+        32
+      ],
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit cultural, historical, or brand grounding is provided.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "gender_expression": {
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "source_keypoints": [
+        33
+      ],
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The description does not explicitly discuss gender expression or androgyny.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "theme_narrative": {
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "source_keypoints": [
+        34
+      ],
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No series theme or conceptual narrative is explicitly stated beyond the garment description.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "brand_alignment": {
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "source_keypoints": [
+        35
+      ],
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "There is no explicit brand language or brand identity target.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "negation_control": {
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "source_keypoints": [
+        36
+      ],
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“no bag or footwear is visible”",
+        "“mostly concealing the feet”"
+      ],
+      "reason": "The text clearly emphasizes exclusions and absence of visible accessories/footwear.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    }
+  },
+  "context_summary": {
+    "evaluated_modules": [
+      "GarmentCore",
+      "MaterialColor",
+      "ConstructionDetail",
+      "StylingSet",
+      "Composition",
+      "Specificity",
+      "BindingAccuracy",
+      "LanguageClarity",
+      "StructuralClarity",
+      "GenerationReadiness",
+      "ConcisenessAndDensity",
+      "ConceptBonus"
+    ],
+    "semantic_judging_enabled": true,
+    "quality_penalties_enabled": true,
+    "skipped_metrics_enabled": true,
+    "optimization_gates_enabled": true
+  },
+  "raw_module_outputs": {
+    "GarmentCore": {
+      "module": "GarmentCore",
+      "results": [
+        {
+          "metric": "garment_category",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“Full-length couture-style evening gown”",
+            "“the printed gown”"
+          ],
+          "reason": "The main garment is explicitly identified as an evening gown."
+        },
+        {
+          "metric": "silhouette",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“voluminous floor-length A-line ball skirt”",
+            "“slightly architectural silhouette”"
+          ],
+          "reason": "The text clearly describes the overall shape and structural contour."
+        },
+        {
+          "metric": "length_hemline",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“Full-length”",
+            "“floor-length A-line ball skirt”",
+            "“The hem pools lightly at the floor”"
+          ],
+          "reason": "Length and hem behavior are explicitly stated."
+        },
+        {
+          "metric": "shoulder_architecture",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“worn sleeveless with broad shoulder straps”",
+            "“low, softly squared neckline”"
+          ],
+          "reason": "The shoulder/upper-body construction is clearly specified through broad straps and a sleeveless cut."
+        },
+        {
+          "metric": "body_coverage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“low, softly squared neckline that opens at the upper chest”",
+            "“worn sleeveless”",
+            "“mostly concealing the feet”"
+          ],
+          "reason": "The text describes exposed upper chest/shoulders and also notes coverage at the lower body via the hem."
+        }
+      ]
+    },
+    "MaterialColor": {
+      "module": "MaterialColor",
+      "results": [
+        {
+          "metric": "fabric_family",
+          "applicable": true,
+          "score": 0.0,
+          "hit": 0,
+          "evidence": [
+            "“newspaper-print textile”",
+            "“printed gown”"
+          ],
+          "reason": "The text identifies a printed textile but does not clearly specify the underlying fabric family (e.g. silk, cotton, satin, chiffon)."
+        },
+        {
+          "metric": "surface_finish",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“structured fullness”",
+            "“slightly architectural silhouette”",
+            "“sculptural ruffles and folded panels”"
+          ],
+          "reason": "It clearly describes surface/handling traits such as structure and sculptural form, which support a finish/hand-feel judgment."
+        },
+        {
+          "metric": "primary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“pale grey, off-white, and black”",
+            "“newspaper-print textile”"
+          ],
+          "reason": "The dominant palette is clearly stated, with pale grey/off-white and black as the main colors."
+        },
+        {
+          "metric": "secondary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“pale grey, off-white, and black”",
+            "“dark rectangular graphic blocks”"
+          ],
+          "reason": "A clear secondary color structure is present, with black/dark graphic elements contrasting against the pale ground."
+        },
+        {
+          "metric": "color_relationship_logic",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“pale grey, off-white, and black newspaper-print textile”",
+            "“printed all over with overlapping newspaper pages, text panels, and dark rectangular graphic blocks”"
+          ],
+          "reason": "The text explains the color logic as a newspaper-print composition with dark text/blocks over a pale base, giving a clear dominant-versus-accent relationship."
+        },
+        {
+          "metric": "pattern_type",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“newspaper-print textile”",
+            "“overlapping newspaper pages, text panels, and dark rectangular graphic blocks”"
+          ],
+          "reason": "The pattern type is explicitly described as newspaper print with text panels and graphic blocks."
+        }
+      ]
+    },
+    "ConstructionDetail": {
+      "module": "ConstructionDetail",
+      "results": [
+        {
+          "metric": "closure",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit closure mechanism such as buttons, zipper, ties, or buckles is mentioned."
+        },
+        {
+          "metric": "functional_detail",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text does not describe pockets, straps as functional hardware, or other utility details beyond garment construction."
+        },
+        {
+          "metric": "construction_technique",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"a dramatic black feather-like or brushstroke motif radiating across the bust\"",
+            "\"a prominent asymmetric cascade of sculptural ruffles and folded panels runs down the front from the waist toward the hem\""
+          ],
+          "reason": "The description clearly names engineered construction techniques and their placement on the bodice and skirt."
+        },
+        {
+          "metric": "deconstruction",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text describes asymmetry and layered panels, but does not explicitly indicate deconstruction, splicing, displacement, or reconstruction."
+        },
+        {
+          "metric": "hardware_embellishment",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No salient hardware or metal/crystal embellishment is described."
+        }
+      ]
+    },
+    "StylingSet": {
+      "module": "StylingSet",
+      "results": [
+        {
+          "metric": "bag",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No bag is described; the text explicitly says 'no bag'."
+        },
+        {
+          "metric": "footwear",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "Footwear is not visually present or important here; it says 'no footwear is visible' and the hem mostly conceals the feet."
+        },
+        {
+          "metric": "jewelry",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "'visible dark floral or feather-like earrings near the face'"
+          ],
+          "reason": "Earrings are explicitly present and salient as the only accessory detail."
+        },
+        {
+          "metric": "belt",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No visible belt, sash, waist strap, or harness is mentioned; the waist emphasis comes from the gown's cut and silhouette."
+        },
+        {
+          "metric": "layering",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "'a central lighter underskirt panel'",
+            "'additional curved overskirt panels flare outward around the hips and sides'"
+          ],
+          "reason": "The gown clearly describes layered garment relations with an underskirt and overskirt panels."
+        }
+      ]
+    },
+    "Composition": {
+      "module": "Composition",
+      "results": [
+        {
+          "metric": "top_bottom_proportion",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“close-cut through the torso”",
+            "“flows into a voluminous floor-length A-line ball skirt”",
+            "“structured fullness and a slightly architectural silhouette”"
+          ],
+          "reason": "The text clearly describes the relationship between the fitted upper body and the full lower skirt, making the top-bottom proportion salient."
+        },
+        {
+          "metric": "asymmetry",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a prominent asymmetric cascade”",
+            "“runs down the front from the waist toward the hem”",
+            "“additional curved overskirt panels flare outward around the hips and sides”"
+          ],
+          "reason": "Asymmetry is explicitly stated and reinforced by the uneven cascade and side-flaring panels."
+        },
+        {
+          "metric": "cross_garment_binding",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The description centers on a single gown rather than multiple separate garments needing attribute assignment."
+        }
+      ]
+    },
+    "Specificity": {
+      "module": "Specificity",
+      "results": [
+        {
+          "metric": "specific_noun_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“couture-style evening gown”",
+            "“broad shoulder straps,” “low, softly squared neckline,” “A-line ball skirt,” “asymmetric cascade of sculptural ruffles”"
+          ],
+          "reason": "Uses highly specific fashion nouns and garment-structure terms throughout, with clear, imageable terminology for silhouette, neckline, skirt shape, and embellishment."
+        },
+        {
+          "metric": "fine_grained_attribute_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“pale grey, off-white, and black newspaper-print textile”",
+            "“fragmented newspaper columns and headline blocks,” “black feather-like or brushstroke motif,” “pale fabric rosette/appliqué,” “structured fullness”"
+          ],
+          "reason": "Color, material, print, and construction details are all described with fine granularity and strong visual specificity, making the garment highly imageable."
+        }
+      ]
+    },
+    "BindingAccuracy": {
+      "module": "BindingAccuracy",
+      "results": [
+        {
+          "metric": "attribute_entity_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"pale grey, off-white, and black newspaper-print textile\"",
+            "\"a pale fabric rosette/appliqué placed at the center\"",
+            "\"visible dark floral or feather-like earrings near the face\""
+          ],
+          "reason": "Most attributes are clearly tied to the gown or earrings, with good separation between garment and accessory. Minor ambiguity remains in phrases like \"feather-like or brushstroke motif\" and \"dark floral or feather-like earrings,\" but these do not seriously confuse the main bindings."
+        },
+        {
+          "metric": "multi_garment_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"worn sleeveless with broad shoulder straps\"",
+            "\"The waist flows into a voluminous floor-length A-line ball skirt\"",
+            "\"no bag or footwear is visible\""
+          ],
+          "reason": "The description keeps bodice, skirt, and accessories mostly well separated, and it clearly distinguishes the gown from earrings and absent bag/footwear. There is slight complexity in the layered skirt/overskirt/underskirt wording, but the garment relations remain coherent and imageable."
+        }
+      ]
+    },
+    "LanguageClarity": {
+      "module": "LanguageClarity",
+      "results": [
+        {
+          "metric": "quantity_accuracy",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text contains no explicit counts, numbers, or quantity relations that need verification."
+        },
+        {
+          "metric": "reference_clarity",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“The bodice is close-cut through the torso”",
+            "“The waist flows into a voluminous floor-length A-line ball skirt”",
+            "“no bag or footwear is visible”"
+          ],
+          "reason": "References are clear and stable throughout; the garment subject remains consistent, and pronouns/omissions do not create ambiguity."
+        }
+      ]
+    },
+    "StructuralClarity": {
+      "module": "StructuralClarity",
+      "results": [
+        {
+          "metric": "information_ordering",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"Full-length couture-style evening gown...\"",
+            "\"The bodice... The waist flows into...\"",
+            "\"Styling is minimal...\""
+          ],
+          "reason": "The description generally follows a clear主体→结构→细节→配饰/完成度 order, making the garment easy to reconstruct. There is minor compression from long modifier chains and some back-and-forth within the skirt description, but the main visual hierarchy remains easy to follow."
+        }
+      ]
+    },
+    "GenerationReadiness": {
+      "module": "GenerationReadiness",
+      "results": [
+        {
+          "metric": "generation_readiness",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“Full-length couture-style evening gown”",
+            "“pale grey, off-white, and black newspaper-print textile”",
+            "“sleeveless with broad shoulder straps”",
+            "“voluminous floor-length A-line ball skirt”",
+            "“prominent asymmetric cascade of sculptural ruffles”"
+          ],
+          "reason": "The description is highly visual, garment-first, and mostly prompt-ready, with clear silhouette, materials, and layered construction. It is slightly verbose and reads like a design analysis rather than a compact generation prompt, so it falls just short of near-perfect."
+        },
+        {
+          "metric": "bilateral_coherence",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit left-right or other bilateral garment differences are described."
+        },
+        {
+          "metric": "spatial_coherence",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“The waist flows into a voluminous floor-length A-line ball skirt”",
+            "“cascade of sculptural ruffles and folded panels runs down the front from the waist toward the hem”",
+            "“over a central lighter underskirt panel”",
+            "“additional curved overskirt panels flare outward around the hips and sides”"
+          ],
+          "reason": "Layering, front-to-hem movement, and overskirt/underskirt relationships are clearly imageable and coherent. The only limitation is that the description is somewhat dense, but the spatial structure remains readable and consistent."
+        }
+      ]
+    },
+    "ConcisenessAndDensity": {
+      "module": "ConcisenessAndDensity",
+      "results": [
+        {
+          "metric": "core_information_density",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“Full-length couture-style evening gown”",
+            "“pale grey, off-white, and black newspaper-print textile”",
+            "“voluminous floor-length A-line ball skirt”",
+            "“prominent asymmetric cascade of sculptural ruffles”"
+          ],
+          "reason": "主体服装轮廓、材质、印花、裙型和关键装饰都交代得很集中，信息密度高；但细节较多、修饰语偏长，略有冗余，未达到近乎极致的简洁。"
+        },
+        {
+          "metric": "visibility_priority",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“focus on the printed gown”",
+            "“visible dark floral or feather-like earrings”",
+            "“no bag or footwear is visible”",
+            "“mostly concealing the feet”"
+          ],
+          "reason": "文本优先描述了可见且决定成像的礼服主体，并明确指出耳饰可见、包和鞋不可见，整体可见性排序合理；不过仍包含少量较细的结构性描述，略降低了优先级的纯度。"
+        }
+      ]
+    },
+    "ConceptBonus": {
+      "module": "ConceptBonus",
+      "results": [
+        {
+          "metric": "aesthetic_vocabulary",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“couture-style evening gown”",
+            "“slightly architectural silhouette”",
+            "“sculptural ruffles and folded panels”"
+          ],
+          "reason": "The text explicitly uses style and design-language terms that describe the gown’s aesthetic direction."
+        },
+        {
+          "metric": "cultural_reference",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit cultural, historical, or brand grounding is provided."
+        },
+        {
+          "metric": "gender_expression",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The description does not explicitly discuss gender expression or androgyny."
+        },
+        {
+          "metric": "theme_narrative",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No series theme or conceptual narrative is explicitly stated beyond the garment description."
+        },
+        {
+          "metric": "brand_alignment",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "There is no explicit brand language or brand identity target."
+        },
+        {
+          "metric": "negation_control",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“no bag or footwear is visible”",
+            "“mostly concealing the feet”"
+          ],
+          "reason": "The text clearly emphasizes exclusions and absence of visible accessories/footwear."
+        }
+      ]
+    }
+  },
+  "r_content": {
+    "enabled": true,
+    "odin_reference": "ICML 2024 ODIN (disentangled reward): RL uses content-dominant scalar; length diagnostics + soft penalty channel reduce length hacking vs. raw S_fp alone.",
+    "S_fp": 0.8508,
+    "total_penalty": 0.0625,
+    "gamma_penalty": 0.35,
+    "formula": "multiply",
+    "beta_z_len": 0.05,
+    "char_len": 1175,
+    "log_len": 7.069874,
+    "est_tokens_char_div_4": 293.75,
+    "holdout_length_prediction": null,
+    "r_after_length_residual": 0.8508,
+    "r_after_soft_penalty": 0.832189,
+    "z_len": null,
+    "R_content": 0.832189
+  }
+}

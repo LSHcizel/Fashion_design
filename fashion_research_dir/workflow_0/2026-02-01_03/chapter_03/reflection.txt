@@ -1,0 +1,19 @@
+Chapter: 03
+Sub-theme: The Noir Romanticism of the Double
+Theme: I Am Your Mirror
+Brand: Givenchy
+ImageCount: 4
+Images:
+1. look_01.jpg
+2. look_02.jpg
+3. look_03.jpg
+4. look_04.jpg
+
+SuggestedDeleteCount: 1
+SuggestedDeleteFiles:
+- look_02.jpg
+
+RawAgentResult:
+DELETE: 2
+FILES: look_02.jpg
+NOTES: Look 02 is redundant as Look 03 better represents the 'Double' theme through its symmetrical skeleton embroidery and dual-textured mask.

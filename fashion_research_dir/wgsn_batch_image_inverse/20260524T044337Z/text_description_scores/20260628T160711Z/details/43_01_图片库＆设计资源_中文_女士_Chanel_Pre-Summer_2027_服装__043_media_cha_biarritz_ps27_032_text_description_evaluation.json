@@ -1,0 +1,1655 @@
+{
+  "name": "fashion_text_prompt_optimizer",
+  "version": "0.1.0",
+  "source_name": "43_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__043_media_cha_biarritz_ps27_032_text_description.md",
+  "input_type": "text_description",
+  "judge_backend": "openai_compatible_api",
+  "judge_model": "gpt-5.4-mini",
+  "judge_api_base": "https://api.ohmygpt.com/v1",
+  "text_description": "Full-length runway look in a warm camel-gold tone, centered on a long sleeveless gown with a deep plunging V neckline and broad shoulder straps. The bodice skims close to the torso and features a large matching fabric rosette/appliqué placed at the lower center of the V, creating a focal point at the chest. The dress falls in a fluid, elongated column that narrows through the waist and hips before releasing into a softly flared floor-length hem with slight pooling and movement at the feet. The surface appears subtly textured or woven, with a matte-to-soft-sheen finish rather than a flat plain fabric. Matching draped panels extend from the shoulder/upper back area like cape sleeves, visible behind the arms and falling loosely to the sides; on the viewer’s left, an additional matching fabric panel or train is gathered and carried low by the model, creating layered folds and an asymmetrical trailing volume beside the dress. The overall proportion is statuesque and fluid, balancing a clean close-cut front with dramatic side drape and floor-skimming length. Footwear is only partly visible beneath the hem: tonal beige or gold open-toe strappy sandals. Styling is minimal, with no prominent jewelry or bag visible, keeping attention on the sculptural rosette, plunging neckline, and sweeping monochrome drapery.",
+  "eval_prose": "Full-length runway look in a warm camel-gold tone, centered on a long sleeveless gown with a deep plunging V neckline and broad shoulder straps. The bodice skims close to the torso and features a large matching fabric rosette/appliqué placed at the lower center of the V, creating a focal point at the chest. The dress falls in a fluid, elongated column that narrows through the waist and hips before releasing into a softly flared floor-length hem with slight pooling and movement at the feet. The surface appears subtly textured or woven, with a matte-to-soft-sheen finish rather than a flat plain fabric. Matching draped panels extend from the shoulder/upper back area like cape sleeves, visible behind the arms and falling loosely to the sides; on the viewer’s left, an additional matching fabric panel or train is gathered and carried low by the model, creating layered folds and an asymmetrical trailing volume beside the dress. The overall proportion is statuesque and fluid, balancing a clean close-cut front with dramatic side drape and floor-skimming length. Footwear is only partly visible beneath the hem: tonal beige or gold open-toe strappy sandals. Styling is minimal, with no prominent jewelry or bag visible, keeping attention on the sculptural rosette, plunging neckline, and sweeping monochrome drapery.",
+  "total_score": 0.8478,
+  "gates": {
+    "score_gate": {
+      "name": "score_gate",
+      "description": "最终 S_fp（quality 用 weighted base_score，不含 penalty 扣减；已做 holdout 长度去相关）",
+      "value": 0.8478,
+      "threshold": 0.7,
+      "passed": true,
+      "weights": {
+        "coverage": 0.3,
+        "quality": 0.7
+      },
+      "components": {
+        "coverage_axis_score": 0.9286,
+        "quality_effective": 0.8125
+      },
+      "total_cap_applied": 1.0
+    },
+    "penalty_gate": {
+      "name": "penalty_gate",
+      "description": "仅依据 penalties.total_penalty（各 penalty 分值的算术平均）",
+      "total_penalty": 0.0,
+      "threshold": 0.5,
+      "passed": true
+    },
+    "both_passed": true
+  },
+  "score_band": "Strong",
+  "metric_totals": {
+    "total_defined_metrics": 42,
+    "total_applicable_metrics": 28,
+    "total_hit_metrics": 27,
+    "total_skipped_metrics": 14
+  },
+  "skipped_metrics": [
+    {
+      "metric": "secondary_color",
+      "axis": "coverage_score",
+      "rule": "有明显副色时需描述；若为大衣内里、开衩内衬等高对比色块，应说明可见条件（如行走、开片时）或与主色区的衔接，避免孤立撞色无锚点、不利生成",
+      "applicability_code": "when_secondary_color_is_salient",
+      "applicability_hint": "Only applicable when the text clearly includes secondary color or color relationship information.",
+      "reason": "No distinct secondary color is clearly described; the look reads as tonal monochrome."
+    },
+    {
+      "metric": "color_relationship_logic",
+      "axis": "coverage_score",
+      "rule": "当存在多色块、强对比内搭/外搭、条纹或印花与底色关系、或明显的同色系/补色/撞色叙事时，文本须交代配色逻辑（如单色、同色系层次、补色对比、主次色块关系之一），使生成可还原色彩关系；仅罗列颜色词但未体现关系则不计为覆盖",
+      "applicability_code": "when_multi_tone_or_strong_color_story",
+      "applicability_hint": "Only applicable when the text implies multiple color blocks, strong inner/outer contrast, stripe-vs-ground relations, tonal vs accented palette, or another non-trivial color story beyond a single flat hue.",
+      "reason": "The text does not present a multi-tone or contrasting color story beyond a single monochrome palette."
+    },
+    {
+      "metric": "pattern_type",
+      "axis": "coverage_score",
+      "rule": "有图案时需给出图案类型",
+      "applicability_code": "when_pattern_exists",
+      "applicability_hint": "Only applicable when the text describes pattern or print information.",
+      "reason": "No explicit pattern or print is described."
+    },
+    {
+      "metric": "closure",
+      "axis": "coverage_score",
+      "rule": "显著开合方式应被提到",
+      "applicability_code": "when_closure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions button, zipper, tie, buckle, or closure details.",
+      "reason": "No explicit closure details such as buttons, zipper, ties, or buckles are mentioned."
+    },
+    {
+      "metric": "construction_technique",
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "reason": "The text describes drape, rosette/appliqué, and textured fabric, but not a clearly named construction technique with a specific garment zone."
+    },
+    {
+      "metric": "deconstruction",
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "reason": "No deconstruction, splicing, displacement, or reconstruction is explicitly described."
+    },
+    {
+      "metric": "hardware_embellishment",
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "reason": "No salient hardware or metallic embellishment such as chains, studs, rings, or crystals is mentioned."
+    },
+    {
+      "metric": "bag",
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "reason": "No bag is described or visually salient."
+    },
+    {
+      "metric": "jewelry",
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "reason": "The text explicitly says there is \"no prominent jewelry\"."
+    },
+    {
+      "metric": "belt",
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "reason": "No visible belt, sash, waist strap, or harness is present; the waist shaping comes from the dress cut."
+    },
+    {
+      "metric": "cultural_reference",
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "reason": "No cultural, historical, or brand-specific reference is provided."
+    },
+    {
+      "metric": "gender_expression",
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "reason": "The text does not explicitly discuss gender expression or androgyny."
+    },
+    {
+      "metric": "theme_narrative",
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "reason": "No series theme or conceptual narrative is explicitly stated."
+    },
+    {
+      "metric": "brand_alignment",
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "reason": "There is no explicit brand language or brand identity target."
+    }
+  ],
+  "scores": {
+    "coverage_score": {
+      "applicable_metrics": 14,
+      "hit_metrics": 13,
+      "score_sum": 13.0,
+      "score": 0.9286
+    },
+    "quality_score": {
+      "applicable_metrics": 12,
+      "hit_metrics": 12,
+      "score_sum": 10.0,
+      "score": 0.8333,
+      "base_score": 0.8125,
+      "axis_score_unweighted": 0.8333,
+      "penalized_score": 0.8125,
+      "penalties": {
+        "items": {
+          "generation_content_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "centered on a long sleeveless gown",
+              "Footwear is only partly visible beneath the hem"
+            ],
+            "reason": "The description stays focused on a single dress silhouette with concise material and drape details; there is little redundant or analytical prose."
+          },
+          "consistency_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "long sleeveless gown with a deep plunging V neckline",
+              "Matching draped panels extend from the shoulder/upper back area like cape sleeves"
+            ],
+            "reason": "The main garment reads as one coherent gown with cape-like drape and an asymmetrical trailing panel, without trunk-level contradictions."
+          },
+          "coordination_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "warm camel-gold tone",
+              "Styling is minimal, with no prominent jewelry or bag visible"
+            ],
+            "reason": "Color, silhouette, and styling cues are aligned into a unified runway look; no major coordination conflict appears across dress and footwear."
+          },
+          "rationality_penalty": {
+            "score": 0.0,
+            "evidence": [
+              "subtly textured or woven, with a matte-to-soft-sheen finish",
+              "tonal beige or gold open-toe strappy sandals"
+            ],
+            "reason": "All described materials and construction are physically plausible and consistent with ordinary fashion photography."
+          }
+        },
+        "reasons": {
+          "generation_content_penalty": "The description stays focused on a single dress silhouette with concise material and drape details; there is little redundant or analytical prose.",
+          "consistency_penalty": "The main garment reads as one coherent gown with cape-like drape and an asymmetrical trailing panel, without trunk-level contradictions.",
+          "coordination_penalty": "Color, silhouette, and styling cues are aligned into a unified runway look; no major coordination conflict appears across dress and footwear.",
+          "rationality_penalty": "All described materials and construction are physically plausible and consistent with ordinary fashion photography."
+        },
+        "generation_content_penalty": 0.0,
+        "consistency_penalty": 0.0,
+        "coordination_penalty": 0.0,
+        "rationality_penalty": 0.0,
+        "total_penalty": 0.0
+      },
+      "cap": 1.0
+    },
+    "bonus_score": {
+      "applicable_metrics": 2,
+      "hit_metrics": 2,
+      "score_sum": 2.0,
+      "score": 1.0
+    },
+    "fashion_prompt_score": 0.8478,
+    "s_fp_base": 0.8473,
+    "length_disentangle": {
+      "adjusted_score": 0.8478,
+      "length_component": -0.000472,
+      "log_len": 7.187657,
+      "slope_a": 0.002948,
+      "mode": "centered_slope",
+      "applied": true,
+      "log_len_center": 7.3478
+    },
+    "weights": {
+      "coverage": 0.3,
+      "quality": 0.7
+    },
+    "total_cap": 1.0,
+    "module_scores": {
+      "GarmentCore": {
+        "applicable_metrics": 5,
+        "hit_metrics": 5,
+        "score_sum": 5.0,
+        "score": 1.0
+      },
+      "MaterialColor": {
+        "applicable_metrics": 3,
+        "hit_metrics": 3,
+        "score_sum": 3.0,
+        "score": 1.0
+      },
+      "ConstructionDetail": {
+        "applicable_metrics": 1,
+        "hit_metrics": 0,
+        "score_sum": 0.0,
+        "score": 0.0
+      },
+      "StylingSet": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "Composition": {
+        "applicable_metrics": 3,
+        "hit_metrics": 3,
+        "score_sum": 3.0,
+        "score": 1.0
+      },
+      "Specificity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "BindingAccuracy": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "LanguageClarity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      },
+      "StructuralClarity": {
+        "applicable_metrics": 1,
+        "hit_metrics": 1,
+        "score_sum": 0.75,
+        "score": 0.75
+      },
+      "GenerationReadiness": {
+        "applicable_metrics": 3,
+        "hit_metrics": 3,
+        "score_sum": 2.25,
+        "score": 0.75
+      },
+      "ConcisenessAndDensity": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 1.5,
+        "score": 0.75
+      },
+      "ConceptBonus": {
+        "applicable_metrics": 2,
+        "hit_metrics": 2,
+        "score_sum": 2.0,
+        "score": 1.0
+      }
+    }
+  },
+  "diagnosis": {
+    "missing_information": [
+      {
+        "metric": "functional_detail",
+        "rule": "显著口袋、挂带或功能细节应被提到",
+        "score_value": 0.0,
+        "matched_terms": [
+          "\"broad shoulder straps\"",
+          "\"no prominent jewelry or bag visible\""
+        ],
+        "reason": "Straps are described as part of the garment, but no salient functional detail like pockets, utility straps, or other functional hardware is clearly present."
+      }
+    ],
+    "quality_issues": [],
+    "bonus_opportunities": []
+  },
+  "metric_results": {
+    "garment_category": {
+      "axis": "coverage_score",
+      "rule": "文本需明确给出服装主体品类",
+      "source_keypoints": [
+        1
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“a long sleeveless gown”",
+        "“The dress falls”"
+      ],
+      "reason": "The主体服装品类 is explicitly identified as a gown/dress.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "silhouette": {
+      "axis": "coverage_score",
+      "rule": "文本需给出整体轮廓或结构趋势",
+      "source_keypoints": [
+        2
+      ],
+      "applicability_code": "when_shape_is_salient",
+      "applicability_hint": "Only applicable when the text clearly mentions silhouette, shape, or structural contour.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“fluid, elongated column”",
+        "“narrows through the waist and hips”"
+      ],
+      "reason": "The text clearly describes the overall silhouette and structural contour.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "length_hemline": {
+      "axis": "coverage_score",
+      "rule": "文本需给出长度或下摆信息",
+      "source_keypoints": [
+        3
+      ],
+      "applicability_code": "when_length_or_hem_is_salient",
+      "applicability_hint": "Only applicable when the text mentions length, hemline, slit, or garment length.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“floor-length hem”",
+        "“slight pooling”"
+      ],
+      "reason": "Length and hem behavior are explicitly stated.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "shoulder_architecture": {
+      "axis": "coverage_score",
+      "rule": "当肩线设计显著（如强调垫肩/结构肩、落肩、宽肩、单肩或露肩、无肩带抹胸等）时，文本须点明该肩部结构语言，而非仅写「上装」或笼统廓形",
+      "source_keypoints": [
+        4
+      ],
+      "applicability_code": "when_shoulder_is_salient",
+      "applicability_hint": "Only applicable when the text implies prominent shoulder design: pads/structured shoulders, dropped shoulder, one-shoulder/off-shoulder, strapless neckline, or other salient shoulder/sleeve anchor cues.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“broad shoulder straps”",
+        "“Matching draped panels extend from the shoulder/upper back area like cape sleeves”"
+      ],
+      "reason": "Shoulder structure is salient and clearly described through straps and cape-like shoulder drape.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "body_coverage": {
+      "axis": "coverage_score",
+      "rule": "文本需描述显著裸露或包裹区域",
+      "source_keypoints": [
+        5
+      ],
+      "applicability_code": "when_exposure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions exposure, coverage, cutout, or body reveal.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“deep plunging V neckline”",
+        "“long sleeveless gown”"
+      ],
+      "reason": "The text clearly describes exposed upper chest/neckline coverage and sleeveless exposure.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "fabric_family": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主体材质类别",
+      "source_keypoints": [
+        6
+      ],
+      "applicability_code": "when_material_is_inferable",
+      "applicability_hint": "Only applicable when the text provides enough information about the main material.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"subtly textured or woven\"",
+        "\"matching fabric rosette/appliqué\""
+      ],
+      "reason": "The main dress material is identifiable as a woven/textured fabric.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "surface_finish": {
+      "axis": "coverage_score",
+      "rule": "文本需给出光泽、哑光、垂坠或硬挺等表面性质",
+      "source_keypoints": [
+        7
+      ],
+      "applicability_code": "when_surface_trait_is_salient",
+      "applicability_hint": "Only applicable when the text mentions gloss, matte, drape, stiffness, pleats, or surface traits.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"matte-to-soft-sheen finish\"",
+        "\"fluid\"",
+        "\"softly flared\""
+      ],
+      "reason": "The text clearly describes surface and drape qualities.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "primary_color": {
+      "axis": "coverage_score",
+      "rule": "文本需给出主色",
+      "source_keypoints": [
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"warm camel-gold tone\"",
+        "\"tonal beige or gold\""
+      ],
+      "reason": "The dominant color is explicitly stated.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "secondary_color": {
+      "axis": "coverage_score",
+      "rule": "有明显副色时需描述；若为大衣内里、开衩内衬等高对比色块，应说明可见条件（如行走、开片时）或与主色区的衔接，避免孤立撞色无锚点、不利生成",
+      "source_keypoints": [
+        12
+      ],
+      "applicability_code": "when_secondary_color_is_salient",
+      "applicability_hint": "Only applicable when the text clearly includes secondary color or color relationship information.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No distinct secondary color is clearly described; the look reads as tonal monochrome.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "color_relationship_logic": {
+      "axis": "coverage_score",
+      "rule": "当存在多色块、强对比内搭/外搭、条纹或印花与底色关系、或明显的同色系/补色/撞色叙事时，文本须交代配色逻辑（如单色、同色系层次、补色对比、主次色块关系之一），使生成可还原色彩关系；仅罗列颜色词但未体现关系则不计为覆盖",
+      "source_keypoints": [
+        13
+      ],
+      "applicability_code": "when_multi_tone_or_strong_color_story",
+      "applicability_hint": "Only applicable when the text implies multiple color blocks, strong inner/outer contrast, stripe-vs-ground relations, tonal vs accented palette, or another non-trivial color story beyond a single flat hue.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text does not present a multi-tone or contrasting color story beyond a single monochrome palette.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "pattern_type": {
+      "axis": "coverage_score",
+      "rule": "有图案时需给出图案类型",
+      "source_keypoints": [
+        14
+      ],
+      "applicability_code": "when_pattern_exists",
+      "applicability_hint": "Only applicable when the text describes pattern or print information.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit pattern or print is described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "closure": {
+      "axis": "coverage_score",
+      "rule": "显著开合方式应被提到",
+      "source_keypoints": [
+        17
+      ],
+      "applicability_code": "when_closure_is_salient",
+      "applicability_hint": "Only applicable when the text mentions button, zipper, tie, buckle, or closure details.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No explicit closure details such as buttons, zipper, ties, or buckles are mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "functional_detail": {
+      "axis": "coverage_score",
+      "rule": "显著口袋、挂带或功能细节应被提到",
+      "source_keypoints": [
+        18
+      ],
+      "applicability_code": "when_functional_detail_is_salient",
+      "applicability_hint": "Only applicable when the text mentions pockets, straps, utility parts, or functional details.",
+      "applicable": true,
+      "score_value": 0.0,
+      "hit": 0,
+      "matched_terms": [
+        "\"broad shoulder straps\"",
+        "\"no prominent jewelry or bag visible\""
+      ],
+      "reason": "Straps are described as part of the garment, but no salient functional detail like pockets, utility straps, or other functional hardware is clearly present.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "construction_technique": {
+      "axis": "coverage_score",
+      "rule": "当存在显著结构工艺（如 sunray/fan 等定向褶裥、绗缝、刺绣、镂空切割、压褶建筑体、蕾丝拼接等）时，文本须同时给出工艺类型与大致落位（如胸腰、裙身、袖部等），仅泛称「有细节」或只写\"deconstruction\"而不指认工艺不算覆盖",
+      "source_keypoints": [
+        9
+      ],
+      "applicability_code": "when_construction_technique_is_salient",
+      "applicability_hint": "Only applicable when the text implies notable fabrication techniques such as directional/sunray/fan pleating, quilting, embroidery, cut-outs, engineered pleat architecture, lace/engineered panel work, or similar craft—not merely generic “details”.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text describes drape, rosette/appliqué, and textured fabric, but not a clearly named construction technique with a specific garment zone.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "deconstruction": {
+      "axis": "coverage_score",
+      "rule": "存在解构设计时应被提到",
+      "source_keypoints": [
+        20
+      ],
+      "applicability_code": "when_deconstruction_exists",
+      "applicability_hint": "Only applicable when the text mentions deconstruction, splicing, displacement, or reconstruction.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No deconstruction, splicing, displacement, or reconstruction is explicitly described.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "hardware_embellishment": {
+      "axis": "coverage_score",
+      "rule": "存在显著五金或装饰时应被提到",
+      "source_keypoints": [
+        21
+      ],
+      "applicability_code": "when_hardware_is_salient",
+      "applicability_hint": "Only applicable when the text mentions chains, studs, metal rings, crystals, or similar embellishment.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No salient hardware or metallic embellishment such as chains, studs, rings, or crystals is mentioned.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "bag": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当包袋视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 品类或持拿方式（clutch/tote/背包等）(2) 轮廓/几何形态或体量感 (3) 颜色与材质或主要饰面；仅一笔「有个包」式提及不算覆盖",
+      "source_keypoints": [
+        22
+      ],
+      "applicability_code": "when_full_look_and_bag_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and the bag is an important part of it.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No bag is described or visually salient.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "footwear": {
+      "axis": "coverage_score",
+      "rule": "整套 Look 中当鞋履视觉突出或为造型要点时：须在语义上覆盖三项中的至少两项（理想三项齐全）方为命中——(1) 鞋型族（高跟/牛津/短靴/凉鞋等）(2) 跟高/靴筒或鞋头等功能形态 (3) 颜色与材质或漆皮/哑光等饰面；仅「黑鞋/一双鞋」级泛称通常不算覆盖",
+      "source_keypoints": [
+        23
+      ],
+      "applicability_code": "when_full_look_and_footwear_exists",
+      "applicability_hint": "Only applicable when the text describes a full look and footwear is an important part of it.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"tonal beige or gold open-toe strappy sandals\"",
+        "\"Footwear is only partly visible beneath the hem\""
+      ],
+      "reason": "Footwear type and color/material impression are clearly specified, satisfying coverage.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "jewelry": {
+      "axis": "coverage_score",
+      "rule": "显著首饰或身体装饰应被提到",
+      "source_keypoints": [
+        24
+      ],
+      "applicability_code": "when_jewelry_is_salient",
+      "applicability_hint": "Only applicable when jewelry or body ornament is explicitly present.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text explicitly says there is \"no prominent jewelry\".",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "belt": {
+      "axis": "coverage_score",
+      "rule": "仅当存在可见腰带、束腰带、腰封或腰胯束系附件（含宽腰带、腰下吊带、腿带/harness 等）时应被提到，并说明与外衣/裤装的内外、上下与附着关系；剪裁收腰、peplum 荷叶摆、省道或上下比例造成的腰部线条强调不等同于腰带，不要求为此项写腰带",
+      "source_keypoints": [
+        25
+      ],
+      "applicability_code": "when_belt_or_waist_strap_is_salient",
+      "applicability_hint": "Only applicable when the text mentions or clearly implies a visible belt, sash, waist cincher, or waist/hip retention strap/harness—not mere silhouette waist shaping from cut (e.g. defined waist, peplum, princess seams, high/low waist proportion).",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No visible belt, sash, waist strap, or harness is present; the waist shaping comes from the dress cut.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "layering": {
+      "axis": "coverage_score",
+      "rule": "多层叠搭时应给出层次关系；外套、内搭、腰带、腿带与裤装之间的遮盖与固定顺序应可还原为可见层次，服务生成导向",
+      "source_keypoints": [
+        26
+      ],
+      "applicability_code": "when_layering_exists",
+      "applicability_hint": "Only applicable when the text describes layering or multi-layer garment relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"Matching draped panels extend from the shoulder/upper back area like cape sleeves\"",
+        "\"an additional matching fabric panel or train is gathered and carried low\""
+      ],
+      "reason": "The look includes clear layered drape elements with an identifiable attachment and trailing relation to the dress.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "top_bottom_proportion": {
+      "axis": "coverage_score",
+      "rule": "明显上下比例关系应被提到；长外套、阔腿或宽松下装、厚底鞋与腿带/harness 等叠加时，应交代主干剪影主次，避免仅堆砌元素导致下盘过重、prompt 失焦",
+      "source_keypoints": [
+        27
+      ],
+      "applicability_code": "when_proportion_is_salient",
+      "applicability_hint": "Only applicable when the text describes top-bottom proportion, waist position, or visual balance.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“narrows through the waist and hips”",
+        "“statuesque and fluid”",
+        "“floor-length hem with slight pooling”"
+      ],
+      "reason": "The text clearly describes the silhouette’s proportion and balance from torso through lower body, including waist emphasis and elongated length.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "asymmetry": {
+      "axis": "coverage_score",
+      "rule": "不对称设计存在时应被提到",
+      "source_keypoints": [
+        29
+      ],
+      "applicability_code": "when_asymmetry_exists",
+      "applicability_hint": "Only applicable when the text describes asymmetry, one-shoulder, single sleeve, or uneven structure.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“on the viewer’s left, an additional matching fabric panel or train is gathered and carried low”",
+        "“creating layered folds and an asymmetrical trailing volume”"
+      ],
+      "reason": "An explicit asymmetrical element is described, with extra trailing volume only on one side.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cross_garment_binding": {
+      "axis": "coverage_score",
+      "rule": "多单品时应能区分属性属于哪件单品",
+      "source_keypoints": [
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“long sleeveless gown”",
+        "“Matching draped panels extend from the shoulder/upper back area”",
+        "“Footwear is only partly visible”"
+      ],
+      "reason": "Multiple garment components are present and the text clearly assigns features to the gown, draped panels, and footwear separately.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "specific_noun_usage": {
+      "axis": "quality_score",
+      "rule": "使用具体服装或配件名词而非泛词",
+      "source_keypoints": [
+        1,
+        22,
+        23
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "long sleeveless gown",
+        "deep plunging V neckline",
+        "fabric rosette/appliqué",
+        "open-toe strappy sandals"
+      ],
+      "reason": "Uses highly specific fashion nouns and garment terms throughout, with clear references to silhouette, neckline, embellishment, and footwear.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "fine_grained_attribute_usage": {
+      "axis": "quality_score",
+      "rule": "颜色、材质、结构词应尽量细粒度",
+      "source_keypoints": [
+        6,
+        7,
+        11
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "warm camel-gold tone",
+        "subtly textured or woven",
+        "matte-to-soft-sheen finish",
+        "softly flared floor-length hem",
+        "matching draped panels"
+      ],
+      "reason": "Color, material/finish, construction, and drape are described with fine-grained fashion language and strong visual specificity.",
+      "quality_dimension": "Specificity",
+      "quality_dimension_zh": "术语具体度"
+    },
+    "attribute_entity_binding": {
+      "axis": "quality_score",
+      "rule": "属性必须绑定到正确实体；腰带、腿带、harness、护臂/护手等须明确归属外套、裤装或身体附件，避免腰胯多重束系指代漂移",
+      "source_keypoints": [
+        10,
+        39
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"warm camel-gold tone\" on \"a long sleeveless gown\"",
+        "\"matching fabric rosette/appliqué\" placed \"at the lower center of the V\""
+      ],
+      "reason": "Most attributes are clearly attached to the correct garment parts, with only minor complexity from the draped panels and carried train.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "multi_garment_binding": {
+      "axis": "quality_score",
+      "rule": "多单品描述时不得将属性归错单品",
+      "source_keypoints": [
+        12,
+        30
+      ],
+      "applicability_code": "when_multiple_garments_exist",
+      "applicability_hint": "Only applicable when the text includes multiple garments or multi-item relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "\"Matching draped panels extend from the shoulder/upper back area\"",
+        "\"an additional matching fabric panel or train is gathered and carried low by the model\""
+      ],
+      "reason": "The text distinguishes the main gown from the cape-like drapes and the separate carried panel/train well, with slight ambiguity only in the exact relation of the extra trailing panel.",
+      "quality_dimension": "BindingAccuracy",
+      "quality_dimension_zh": "属性绑定准确度"
+    },
+    "quantity_accuracy": {
+      "axis": "quality_score",
+      "rule": "数量词应准确且不冲突",
+      "source_keypoints": [
+        37
+      ],
+      "applicability_code": "when_quantity_is_used",
+      "applicability_hint": "Only applicable when the text includes numbers, counts, or explicit quantity relations.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"one additional matching fabric panel or train\"",
+        "\"Footwear is only partly visible\""
+      ],
+      "reason": "The only explicit quantity relation is clear and internally consistent; side references and counts are stable and easy to parse.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "reference_clarity": {
+      "axis": "quality_score",
+      "rule": "代词和省略指向必须清晰",
+      "source_keypoints": [
+        38
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "\"on the viewer’s left\"",
+        "\"Matching draped panels extend from the shoulder/upper back area\""
+      ],
+      "reason": "Pronouns and omitted subjects are unambiguous, and each reference has a clear antecedent with no confusing shifts in viewpoint.",
+      "quality_dimension": "LanguageClarity",
+      "quality_dimension_zh": "语言清晰度"
+    },
+    "information_ordering": {
+      "axis": "quality_score",
+      "rule": "描述应按主体到细节的顺序组织",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“Full-length runway look ... centered on a long sleeveless gown”",
+        "“The bodice ... The dress falls ... Matching draped panels ... Footwear is only partly visible ... Styling is minimal”"
+      ],
+      "reason": "The description follows a mostly natural progression from overall look to garment structure, fabric/finish, drape, footwear, and styling. It is clear and easy to reconstruct, though some details are slightly compressed and layered within long sentences rather than separated into a perfectly linear hierarchy.",
+      "quality_dimension": "StructuralClarity",
+      "quality_dimension_zh": "结构清晰度"
+    },
+    "generation_readiness": {
+      "axis": "quality_score",
+      "rule": "文本应可直接转为图像生成 prompt；须以可见廓形、品类与层次为先，多文化/多时代风格符号混用时应能收束为单一 look 身份，否则视为生成导向不足",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“Full-length runway look in a warm camel-gold tone”",
+        "“long sleeveless gown with a deep plunging V neckline”",
+        "“matching draped panels extend from the shoulder/upper back area like cape sleeves”"
+      ],
+      "reason": "The description is highly visual, garment-specific, and mostly prompt-ready, with clear silhouette, fabric behavior, and styling cues. It is slightly long and explanatory rather than fully compressed into prompt form, so it falls just short of near-perfect.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "bilateral_coherence": {
+      "axis": "quality_score",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：若差异落在外穿/内搭/裤/鞋等主干上（含内外层上装），须有明确设计逻辑且与 penalty 一致（主干互斥应对齐或删）。**禁止**在 prompt 中同时堆叠多处主干左右对撞（多袖态+双腿异料+双脚异鞋等）仍声称一体解构而不收束——此类视为 bilateral 质量与生成导向双重风险，须低分直至合并或删支。若差异仅落在配饰/小附件且为轻度，而所有主干衣裤鞋已统一，质量分从宽。禁止无叙事支撑的「一侧重装金属护臂/高光护甲、对侧普通皮手套」等与主干对撞，除非文本给出统一的解构或主题设定",
+      "source_keypoints": [
+        29,
+        40
+      ],
+      "applicability_code": "when_bilateral_difference_exists",
+      "applicability_hint": "Only applicable when the text explicitly distinguishes left/right sides or other bilateral elements such as shoes, sleeves, legs, or shoulders.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“on the viewer’s left, an additional matching fabric panel or train is gathered and carried low”",
+        "“matching draped panels extend from the shoulder/upper back area like cape sleeves”"
+      ],
+      "reason": "There is a left-side asymmetry, but it is confined to draped fabric/trailing volume rather than conflicting trunk garments or incompatible footwear. The overall look remains coherent and imageable, with only mild bilateral complexity.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "spatial_coherence": {
+      "axis": "quality_score",
+      "rule": "层次、前后、内外、上下、附着位置等空间关系必须清晰且视觉上合理；大衣与腰带、腰下吊带、腿带/harness 与裤管之间的遮盖、穿入与固定点须可还原，禁止腰胯多层束系含糊不可成像",
+      "source_keypoints": [
+        26,
+        30,
+        40
+      ],
+      "applicability_code": "when_spatial_relation_exists",
+      "applicability_hint": "Only applicable when the text describes layering, front/back, inside/outside, attached position, crossing paths, or other explicit spatial relations.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“extend from the shoulder/upper back area”",
+        "“visible behind the arms and falling loosely to the sides”",
+        "“gathered and carried low by the model”"
+      ],
+      "reason": "Layering and attachment positions are clearly described, and the front/back and side drape relationships are visually reconstructable. Minor ambiguity remains in the exact handling of the carried panel/train, but the spatial logic is strong overall.",
+      "quality_dimension": "GenerationReadiness",
+      "quality_dimension_zh": "生成适配度"
+    },
+    "core_information_density": {
+      "axis": "quality_score",
+      "rule": "服装主体信息应占主要篇幅；多风格符号（军装肩章、大翻领、东方领型、金属护臂、腿带等）并列时须先确立可成像的主干轮廓与品类，再写配件，避免符号堆砌稀释 prompt 主干",
+      "source_keypoints": [
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“long sleeveless gown with a deep plunging V neckline”",
+        "“large matching fabric rosette/appliqué”",
+        "“softly flared floor-length hem”",
+        "“Matching draped panels extend from the shoulder/upper back area”"
+      ],
+      "reason": "The description stays focused on the main garment and its visible silhouette, with strong coverage of shape, neckline, surface, and drape. It is slightly verbose in repeating flow/length effects and elaborating movement, but it does not devolve into symbol stacking or irrelevant background.",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "visibility_priority": {
+      "axis": "quality_score",
+      "rule": "可见且决定成像结果的主体信息应优先于隐藏、内部或低可见度细节，避免不可见信息喧宾夺主",
+      "source_keypoints": [
+        18,
+        40
+      ],
+      "applicability_code": "always",
+      "applicability_hint": "Always judge this metric.",
+      "applicable": true,
+      "score_value": 0.75,
+      "hit": 1,
+      "matched_terms": [
+        "“large matching fabric rosette/appliqué placed at the lower center of the V”",
+        "“Matching draped panels extend from the shoulder/upper back area”",
+        "“Footwear is only partly visible beneath the hem”",
+        "“Styling is minimal, with no prominent jewelry or bag visible”"
+      ],
+      "reason": "Visible, image-dominant elements are prioritized well: neckline, rosette, drape, hem, and sandals. There is some mention of less visible areas like the upper back and the partly hidden footwear, but these do not outweigh the clearly visible trunk details.",
+      "quality_dimension": "ConcisenessAndDensity",
+      "quality_dimension_zh": "信息密度与简洁性"
+    },
+    "aesthetic_vocabulary": {
+      "axis": "bonus_score",
+      "rule": "适度加入设计风格词汇",
+      "source_keypoints": [
+        31
+      ],
+      "applicability_code": "when_style_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly expresses aesthetic or style vocabulary.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“warm camel-gold tone”",
+        "“statuesque and fluid”",
+        "“sculptural rosette”",
+        "“sweeping monochrome drapery”"
+      ],
+      "reason": "The description clearly uses style-oriented aesthetic language to characterize the look.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "cultural_reference": {
+      "axis": "bonus_score",
+      "rule": "仅在用户提供相关背景时加入文化或历史引用",
+      "source_keypoints": [
+        32
+      ],
+      "applicability_code": "when_reference_is_grounded",
+      "applicability_hint": "Only applicable when the text explicitly provides cultural, historical, or brand grounding.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No cultural, historical, or brand-specific reference is provided.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "gender_expression": {
+      "axis": "bonus_score",
+      "rule": "仅在描述明确需要时加入性别气质表达",
+      "source_keypoints": [
+        33
+      ],
+      "applicability_code": "when_gender_expression_is_relevant",
+      "applicability_hint": "Only applicable when the text explicitly mentions gender expression or androgyny.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "The text does not explicitly discuss gender expression or androgyny.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "theme_narrative": {
+      "axis": "bonus_score",
+      "rule": "仅在系列主题任务中加入叙事表达",
+      "source_keypoints": [
+        34
+      ],
+      "applicability_code": "when_series_theme_is_known",
+      "applicability_hint": "Only applicable when the text clearly mentions a theme or conceptual narrative.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "No series theme or conceptual narrative is explicitly stated.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "brand_alignment": {
+      "axis": "bonus_score",
+      "rule": "仅在品牌任务中加入品牌语言",
+      "source_keypoints": [
+        35
+      ],
+      "applicability_code": "when_brand_goal_is_explicit",
+      "applicability_hint": "Only applicable when the text explicitly targets brand language or brand identity.",
+      "applicable": false,
+      "score_value": null,
+      "hit": null,
+      "matched_terms": [],
+      "reason": "There is no explicit brand language or brand identity target.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    },
+    "negation_control": {
+      "axis": "bonus_score",
+      "rule": "需要强调排除项时，明确说明没有什么",
+      "source_keypoints": [
+        36
+      ],
+      "applicability_code": "when_absence_is_important",
+      "applicability_hint": "Only applicable when absence or exclusion of an element matters in the text.",
+      "applicable": true,
+      "score_value": 1.0,
+      "hit": 1,
+      "matched_terms": [
+        "“with no prominent jewelry or bag visible”",
+        "“Styling is minimal”"
+      ],
+      "reason": "The text explicitly emphasizes absence of accessories, making negation control relevant.",
+      "quality_dimension": null,
+      "quality_dimension_zh": null
+    }
+  },
+  "context_summary": {
+    "evaluated_modules": [
+      "GarmentCore",
+      "MaterialColor",
+      "ConstructionDetail",
+      "StylingSet",
+      "Composition",
+      "Specificity",
+      "BindingAccuracy",
+      "LanguageClarity",
+      "StructuralClarity",
+      "GenerationReadiness",
+      "ConcisenessAndDensity",
+      "ConceptBonus"
+    ],
+    "semantic_judging_enabled": true,
+    "quality_penalties_enabled": true,
+    "skipped_metrics_enabled": true,
+    "optimization_gates_enabled": true
+  },
+  "raw_module_outputs": {
+    "GarmentCore": {
+      "module": "GarmentCore",
+      "results": [
+        {
+          "metric": "garment_category",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“a long sleeveless gown”",
+            "“The dress falls”"
+          ],
+          "reason": "The主体服装品类 is explicitly identified as a gown/dress."
+        },
+        {
+          "metric": "silhouette",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“fluid, elongated column”",
+            "“narrows through the waist and hips”"
+          ],
+          "reason": "The text clearly describes the overall silhouette and structural contour."
+        },
+        {
+          "metric": "length_hemline",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“floor-length hem”",
+            "“slight pooling”"
+          ],
+          "reason": "Length and hem behavior are explicitly stated."
+        },
+        {
+          "metric": "shoulder_architecture",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“broad shoulder straps”",
+            "“Matching draped panels extend from the shoulder/upper back area like cape sleeves”"
+          ],
+          "reason": "Shoulder structure is salient and clearly described through straps and cape-like shoulder drape."
+        },
+        {
+          "metric": "body_coverage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“deep plunging V neckline”",
+            "“long sleeveless gown”"
+          ],
+          "reason": "The text clearly describes exposed upper chest/neckline coverage and sleeveless exposure."
+        }
+      ]
+    },
+    "MaterialColor": {
+      "module": "MaterialColor",
+      "results": [
+        {
+          "metric": "fabric_family",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"subtly textured or woven\"",
+            "\"matching fabric rosette/appliqué\""
+          ],
+          "reason": "The main dress material is identifiable as a woven/textured fabric."
+        },
+        {
+          "metric": "surface_finish",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"matte-to-soft-sheen finish\"",
+            "\"fluid\"",
+            "\"softly flared\""
+          ],
+          "reason": "The text clearly describes surface and drape qualities."
+        },
+        {
+          "metric": "primary_color",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"warm camel-gold tone\"",
+            "\"tonal beige or gold\""
+          ],
+          "reason": "The dominant color is explicitly stated."
+        },
+        {
+          "metric": "secondary_color",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No distinct secondary color is clearly described; the look reads as tonal monochrome."
+        },
+        {
+          "metric": "color_relationship_logic",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text does not present a multi-tone or contrasting color story beyond a single monochrome palette."
+        },
+        {
+          "metric": "pattern_type",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit pattern or print is described."
+        }
+      ]
+    },
+    "ConstructionDetail": {
+      "module": "ConstructionDetail",
+      "results": [
+        {
+          "metric": "closure",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No explicit closure details such as buttons, zipper, ties, or buckles are mentioned."
+        },
+        {
+          "metric": "functional_detail",
+          "applicable": true,
+          "score": 0.0,
+          "hit": 0,
+          "evidence": [
+            "\"broad shoulder straps\"",
+            "\"no prominent jewelry or bag visible\""
+          ],
+          "reason": "Straps are described as part of the garment, but no salient functional detail like pockets, utility straps, or other functional hardware is clearly present."
+        },
+        {
+          "metric": "construction_technique",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text describes drape, rosette/appliqué, and textured fabric, but not a clearly named construction technique with a specific garment zone."
+        },
+        {
+          "metric": "deconstruction",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No deconstruction, splicing, displacement, or reconstruction is explicitly described."
+        },
+        {
+          "metric": "hardware_embellishment",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No salient hardware or metallic embellishment such as chains, studs, rings, or crystals is mentioned."
+        }
+      ]
+    },
+    "StylingSet": {
+      "module": "StylingSet",
+      "results": [
+        {
+          "metric": "bag",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No bag is described or visually salient."
+        },
+        {
+          "metric": "footwear",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"tonal beige or gold open-toe strappy sandals\"",
+            "\"Footwear is only partly visible beneath the hem\""
+          ],
+          "reason": "Footwear type and color/material impression are clearly specified, satisfying coverage."
+        },
+        {
+          "metric": "jewelry",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text explicitly says there is \"no prominent jewelry\"."
+        },
+        {
+          "metric": "belt",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No visible belt, sash, waist strap, or harness is present; the waist shaping comes from the dress cut."
+        },
+        {
+          "metric": "layering",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"Matching draped panels extend from the shoulder/upper back area like cape sleeves\"",
+            "\"an additional matching fabric panel or train is gathered and carried low\""
+          ],
+          "reason": "The look includes clear layered drape elements with an identifiable attachment and trailing relation to the dress."
+        }
+      ]
+    },
+    "Composition": {
+      "module": "Composition",
+      "results": [
+        {
+          "metric": "top_bottom_proportion",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“narrows through the waist and hips”",
+            "“statuesque and fluid”",
+            "“floor-length hem with slight pooling”"
+          ],
+          "reason": "The text clearly describes the silhouette’s proportion and balance from torso through lower body, including waist emphasis and elongated length."
+        },
+        {
+          "metric": "asymmetry",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“on the viewer’s left, an additional matching fabric panel or train is gathered and carried low”",
+            "“creating layered folds and an asymmetrical trailing volume”"
+          ],
+          "reason": "An explicit asymmetrical element is described, with extra trailing volume only on one side."
+        },
+        {
+          "metric": "cross_garment_binding",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“long sleeveless gown”",
+            "“Matching draped panels extend from the shoulder/upper back area”",
+            "“Footwear is only partly visible”"
+          ],
+          "reason": "Multiple garment components are present and the text clearly assigns features to the gown, draped panels, and footwear separately."
+        }
+      ]
+    },
+    "Specificity": {
+      "module": "Specificity",
+      "results": [
+        {
+          "metric": "specific_noun_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "long sleeveless gown",
+            "deep plunging V neckline",
+            "fabric rosette/appliqué",
+            "open-toe strappy sandals"
+          ],
+          "reason": "Uses highly specific fashion nouns and garment terms throughout, with clear references to silhouette, neckline, embellishment, and footwear."
+        },
+        {
+          "metric": "fine_grained_attribute_usage",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "warm camel-gold tone",
+            "subtly textured or woven",
+            "matte-to-soft-sheen finish",
+            "softly flared floor-length hem",
+            "matching draped panels"
+          ],
+          "reason": "Color, material/finish, construction, and drape are described with fine-grained fashion language and strong visual specificity."
+        }
+      ]
+    },
+    "BindingAccuracy": {
+      "module": "BindingAccuracy",
+      "results": [
+        {
+          "metric": "attribute_entity_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"warm camel-gold tone\" on \"a long sleeveless gown\"",
+            "\"matching fabric rosette/appliqué\" placed \"at the lower center of the V\""
+          ],
+          "reason": "Most attributes are clearly attached to the correct garment parts, with only minor complexity from the draped panels and carried train."
+        },
+        {
+          "metric": "multi_garment_binding",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "\"Matching draped panels extend from the shoulder/upper back area\"",
+            "\"an additional matching fabric panel or train is gathered and carried low by the model\""
+          ],
+          "reason": "The text distinguishes the main gown from the cape-like drapes and the separate carried panel/train well, with slight ambiguity only in the exact relation of the extra trailing panel."
+        }
+      ]
+    },
+    "LanguageClarity": {
+      "module": "LanguageClarity",
+      "results": [
+        {
+          "metric": "quantity_accuracy",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"one additional matching fabric panel or train\"",
+            "\"Footwear is only partly visible\""
+          ],
+          "reason": "The only explicit quantity relation is clear and internally consistent; side references and counts are stable and easy to parse."
+        },
+        {
+          "metric": "reference_clarity",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "\"on the viewer’s left\"",
+            "\"Matching draped panels extend from the shoulder/upper back area\""
+          ],
+          "reason": "Pronouns and omitted subjects are unambiguous, and each reference has a clear antecedent with no confusing shifts in viewpoint."
+        }
+      ]
+    },
+    "StructuralClarity": {
+      "module": "StructuralClarity",
+      "results": [
+        {
+          "metric": "information_ordering",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“Full-length runway look ... centered on a long sleeveless gown”",
+            "“The bodice ... The dress falls ... Matching draped panels ... Footwear is only partly visible ... Styling is minimal”"
+          ],
+          "reason": "The description follows a mostly natural progression from overall look to garment structure, fabric/finish, drape, footwear, and styling. It is clear and easy to reconstruct, though some details are slightly compressed and layered within long sentences rather than separated into a perfectly linear hierarchy."
+        }
+      ]
+    },
+    "GenerationReadiness": {
+      "module": "GenerationReadiness",
+      "results": [
+        {
+          "metric": "generation_readiness",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“Full-length runway look in a warm camel-gold tone”",
+            "“long sleeveless gown with a deep plunging V neckline”",
+            "“matching draped panels extend from the shoulder/upper back area like cape sleeves”"
+          ],
+          "reason": "The description is highly visual, garment-specific, and mostly prompt-ready, with clear silhouette, fabric behavior, and styling cues. It is slightly long and explanatory rather than fully compressed into prompt form, so it falls just short of near-perfect."
+        },
+        {
+          "metric": "bilateral_coherence",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“on the viewer’s left, an additional matching fabric panel or train is gathered and carried low”",
+            "“matching draped panels extend from the shoulder/upper back area like cape sleeves”"
+          ],
+          "reason": "There is a left-side asymmetry, but it is confined to draped fabric/trailing volume rather than conflicting trunk garments or incompatible footwear. The overall look remains coherent and imageable, with only mild bilateral complexity."
+        },
+        {
+          "metric": "spatial_coherence",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“extend from the shoulder/upper back area”",
+            "“visible behind the arms and falling loosely to the sides”",
+            "“gathered and carried low by the model”"
+          ],
+          "reason": "Layering and attachment positions are clearly described, and the front/back and side drape relationships are visually reconstructable. Minor ambiguity remains in the exact handling of the carried panel/train, but the spatial logic is strong overall."
+        }
+      ]
+    },
+    "ConcisenessAndDensity": {
+      "module": "ConcisenessAndDensity",
+      "results": [
+        {
+          "metric": "core_information_density",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“long sleeveless gown with a deep plunging V neckline”",
+            "“large matching fabric rosette/appliqué”",
+            "“softly flared floor-length hem”",
+            "“Matching draped panels extend from the shoulder/upper back area”"
+          ],
+          "reason": "The description stays focused on the main garment and its visible silhouette, with strong coverage of shape, neckline, surface, and drape. It is slightly verbose in repeating flow/length effects and elaborating movement, but it does not devolve into symbol stacking or irrelevant background."
+        },
+        {
+          "metric": "visibility_priority",
+          "applicable": true,
+          "score": 0.75,
+          "hit": 1,
+          "evidence": [
+            "“large matching fabric rosette/appliqué placed at the lower center of the V”",
+            "“Matching draped panels extend from the shoulder/upper back area”",
+            "“Footwear is only partly visible beneath the hem”",
+            "“Styling is minimal, with no prominent jewelry or bag visible”"
+          ],
+          "reason": "Visible, image-dominant elements are prioritized well: neckline, rosette, drape, hem, and sandals. There is some mention of less visible areas like the upper back and the partly hidden footwear, but these do not outweigh the clearly visible trunk details."
+        }
+      ]
+    },
+    "ConceptBonus": {
+      "module": "ConceptBonus",
+      "results": [
+        {
+          "metric": "aesthetic_vocabulary",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“warm camel-gold tone”",
+            "“statuesque and fluid”",
+            "“sculptural rosette”",
+            "“sweeping monochrome drapery”"
+          ],
+          "reason": "The description clearly uses style-oriented aesthetic language to characterize the look."
+        },
+        {
+          "metric": "cultural_reference",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No cultural, historical, or brand-specific reference is provided."
+        },
+        {
+          "metric": "gender_expression",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "The text does not explicitly discuss gender expression or androgyny."
+        },
+        {
+          "metric": "theme_narrative",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "No series theme or conceptual narrative is explicitly stated."
+        },
+        {
+          "metric": "brand_alignment",
+          "applicable": false,
+          "score": null,
+          "hit": null,
+          "evidence": [],
+          "reason": "There is no explicit brand language or brand identity target."
+        },
+        {
+          "metric": "negation_control",
+          "applicable": true,
+          "score": 1.0,
+          "hit": 1,
+          "evidence": [
+            "“with no prominent jewelry or bag visible”",
+            "“Styling is minimal”"
+          ],
+          "reason": "The text explicitly emphasizes absence of accessories, making negation control relevant."
+        }
+      ]
+    }
+  },
+  "r_content": {
+    "enabled": true,
+    "odin_reference": "ICML 2024 ODIN (disentangled reward): RL uses content-dominant scalar; length diagnostics + soft penalty channel reduce length hacking vs. raw S_fp alone.",
+    "S_fp": 0.8478,
+    "total_penalty": 0.0,
+    "gamma_penalty": 0.35,
+    "formula": "multiply",
+    "beta_z_len": 0.05,
+    "char_len": 1322,
+    "log_len": 7.187657,
+    "est_tokens_char_div_4": 330.5,
+    "holdout_length_prediction": null,
+    "r_after_length_residual": 0.8478,
+    "r_after_soft_penalty": 0.8478,
+    "z_len": null,
+    "R_content": 0.8478
+  }
+}

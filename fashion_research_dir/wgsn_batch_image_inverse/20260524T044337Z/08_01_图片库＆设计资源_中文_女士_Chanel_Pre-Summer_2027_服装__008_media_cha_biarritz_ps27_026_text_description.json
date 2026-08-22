@@ -1,0 +1,21 @@
+{
+  "image_path": "E:\\fashion_agents_project\\downloads\\wgsn_latest_batch\\01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装\\008_media_cha_biarritz_ps27_026.jpg",
+  "text_description": "A coordinated light aqua-blue, heavily sparkling denim-style look worn in a relaxed, oversized silhouette: an open long-sleeve shirt jacket with a pointed collar, dropped shoulders, wide body, and hip-length hem layered over a white fitted camisole or bodysuit, with black bra straps and a black lace bra panel visibly showing through/around the deep open neckline. The jacket has allover sequined or glittering surface texture, mottled blue wash variation, frayed-looking edges along the placket, collar, hem, cuffs, and pocket seams, two chest flap pockets with gold-tone button closures, and additional gold-tone buttons down the front. Below, matching light blue sparkling pants sit at the waist under a black belt or waistband, continuing the same shimmery washed texture in a straight, relaxed cut visible to mid-leg. Styling includes chunky gold earrings and a small beige quilted clutch held at the side, adding a soft neutral accent against the icy blue shine. The overall mood is casual-luxe and slightly undone, mixing denim workwear proportions with high-sparkle embellishment and exposed lingerie layering.",
+  "key_elements": [
+    "light aqua-blue sequined denim-style shirt jacket",
+    "open oversized long-sleeve silhouette with pointed collar",
+    "frayed-looking edges and mottled blue wash",
+    "two chest flap pockets with gold-tone buttons",
+    "white fitted inner layer with visible black bra/straps",
+    "matching sparkling blue straight pants",
+    "black waistband or belt detail",
+    "beige quilted clutch",
+    "chunky gold earrings"
+  ],
+  "uncertainty_notes": [
+    "The inner white garment appears slightly sheer or cut away, but its exact construction is not fully visible.",
+    "The sparkling surface suggests sequins or glitter embellishment; exact material cannot be confirmed from the image."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"A coordinated light aqua-blue, heavily sparkling denim-style look worn in a relaxed, oversized silhouette: an open long-sleeve shirt jacket with a pointed collar, dropped shoulders, wide body, and hip-length hem layered over a white fitted camisole or bodysuit, with black bra straps and a black lace bra panel visibly showing through/around the deep open neckline. The jacket has allover sequined or glittering surface texture, mottled blue wash variation, frayed-looking edges along the placket, collar, hem, cuffs, and pocket seams, two chest flap pockets with gold-tone button closures, and additional gold-tone buttons down the front. Below, matching light blue sparkling pants sit at the waist under a black belt or waistband, continuing the same shimmery washed texture in a straight, relaxed cut visible to mid-leg. Styling includes chunky gold earrings and a small beige quilted clutch held at the side, adding a soft neutral accent against the icy blue shine. The overall mood is casual-luxe and slightly undone, mixing denim workwear proportions with high-sparkle embellishment and exposed lingerie layering.\",\n  \"key_elements\": [\n    \"light aqua-blue sequined denim-style shirt jacket\",\n    \"open oversized long-sleeve silhouette with pointed collar\",\n    \"frayed-looking edges and mottled blue wash\",\n    \"two chest flap pockets with gold-tone buttons\",\n    \"white fitted inner layer with visible black bra/straps\",\n    \"matching sparkling blue straight pants\",\n    \"black waistband or belt detail\",\n    \"beige quilted clutch\",\n    \"chunky gold earrings\"\n  ],\n  \"uncertainty_notes\": [\n    \"The inner white garment appears slightly sheer or cut away, but its exact construction is not fully visible.\",\n    \"The sparkling surface suggests sequins or glitter embellishment; exact material cannot be confirmed from the image.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

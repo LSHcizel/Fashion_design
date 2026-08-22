@@ -1,0 +1,21 @@
+{
+  "image_path": "E:\\fashion_agents_project\\downloads\\wgsn_latest_batch\\01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装\\023_media_cha_biarritz_ps27_004.jpg",
+  "text_description": "Full-length runway look centered on a vivid red sleeveless openwork dress with a loose, straight column silhouette falling to mid-calf/ankle range. The dress is made from a dense floral or organic lace/crochet-like cutout pattern, highly sheer across the body and legs, with the model’s skin visible through the openings. It has broad shoulder straps and a deep V neckline edged with raised, irregular ruffled or appliqué texture that continues around the shoulders, giving the top edge a rough floral dimension. The fit skims rather than clings, hanging fluidly from the shoulders with minimal waist shaping. The hem is uneven and asymmetric, with jagged lace points and hanging openwork edges, creating a handkerchief-like finish around the lower legs. Styling is minimal: bare arms, stacked metallic bracelets or cuffs at the wrists, and dark strappy heeled sandals with small colored accents visible at the front. The overall mood is bold, airy, textural, and resort/runway-like, emphasizing transparency, saturated red color, and irregular lace craftsmanship.",
+  "key_elements": [
+    "vivid red sheer openwork lace dress",
+    "deep V neckline with textured ruffled/appliqué edging",
+    "sleeveless broad-strap silhouette",
+    "loose straight column fit",
+    "asymmetric jagged lace hem",
+    "visible skin through cutout pattern",
+    "metallic wrist bracelets/cuffs",
+    "dark strappy heeled sandals"
+  ],
+  "uncertainty_notes": [
+    "Exact textile construction is unclear; it appears lace or crochet-like from the image.",
+    "Any underlayer or lining is not clearly visible.",
+    "Footwear details are partially obscured by the dress and runway angle."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Full-length runway look centered on a vivid red sleeveless openwork dress with a loose, straight column silhouette falling to mid-calf/ankle range. The dress is made from a dense floral or organic lace/crochet-like cutout pattern, highly sheer across the body and legs, with the model’s skin visible through the openings. It has broad shoulder straps and a deep V neckline edged with raised, irregular ruffled or appliqué texture that continues around the shoulders, giving the top edge a rough floral dimension. The fit skims rather than clings, hanging fluidly from the shoulders with minimal waist shaping. The hem is uneven and asymmetric, with jagged lace points and hanging openwork edges, creating a handkerchief-like finish around the lower legs. Styling is minimal: bare arms, stacked metallic bracelets or cuffs at the wrists, and dark strappy heeled sandals with small colored accents visible at the front. The overall mood is bold, airy, textural, and resort/runway-like, emphasizing transparency, saturated red color, and irregular lace craftsmanship.\",\n  \"key_elements\": [\n    \"vivid red sheer openwork lace dress\",\n    \"deep V neckline with textured ruffled/appliqué edging\",\n    \"sleeveless broad-strap silhouette\",\n    \"loose straight column fit\",\n    \"asymmetric jagged lace hem\",\n    \"visible skin through cutout pattern\",\n    \"metallic wrist bracelets/cuffs\",\n    \"dark strappy heeled sandals\"\n  ],\n  \"uncertainty_notes\": [\n    \"Exact textile construction is unclear; it appears lace or crochet-like from the image.\",\n    \"Any underlayer or lining is not clearly visible.\",\n    \"Footwear details are partially obscured by the dress and runway angle.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

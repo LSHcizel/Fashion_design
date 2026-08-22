@@ -1,0 +1,19 @@
+{
+  "image_path": "E:\\fashion_agents_project\\downloads\\wgsn_latest_batch\\01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装\\051_media_cha_biarritz_ps27_043.jpg",
+  "text_description": "Cropped runway view focused from mid-torso to shoes, showing a fluid asymmetrical wrap-style skirt in warm beige with a scarf-like border print. The skirt sits around the natural waist/upper hip and drapes diagonally across the front, creating overlapping panels, soft folds, and a high front slit that exposes one leg while the hem falls in uneven handkerchief points toward the ankles. The print features broad pale blue bands with narrow black, white, and deep burgundy stripes running along the edges and across the body, giving the piece a graphic silk-scarf effect; small tassel-like ends are visible near the lower points. Above it, only the lower portion of a fitted top is visible, with a red upper area, black banding, and a pale blue-and-cream striped hem with a partial white graphic motif. Styling includes chunky gold bracelets on both wrists and black-and-white high-heeled ankle-strap shoes with a rounded light toe panel and dark bow-like detail at the front. The overall look is polished, resort-like, and movement-focused, combining a close upper silhouette with a fluid draped printed skirt and refined heels.",
+  "key_elements": [
+    "beige asymmetrical draped wrap-style skirt",
+    "pale blue, black, white, and burgundy scarf-border print",
+    "high front slit with exposed leg",
+    "uneven handkerchief hem with small tassel-like ends",
+    "partial fitted red and black top with striped lower edge",
+    "chunky gold bracelets",
+    "black-and-white ankle-strap heels"
+  ],
+  "uncertainty_notes": [
+    "Only the lower portion of the top is visible, so its full shape is not shown.",
+    "The fabric appears fluid and scarf-like, but exact material cannot be confirmed."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Cropped runway view focused from mid-torso to shoes, showing a fluid asymmetrical wrap-style skirt in warm beige with a scarf-like border print. The skirt sits around the natural waist/upper hip and drapes diagonally across the front, creating overlapping panels, soft folds, and a high front slit that exposes one leg while the hem falls in uneven handkerchief points toward the ankles. The print features broad pale blue bands with narrow black, white, and deep burgundy stripes running along the edges and across the body, giving the piece a graphic silk-scarf effect; small tassel-like ends are visible near the lower points. Above it, only the lower portion of a fitted top is visible, with a red upper area, black banding, and a pale blue-and-cream striped hem with a partial white graphic motif. Styling includes chunky gold bracelets on both wrists and black-and-white high-heeled ankle-strap shoes with a rounded light toe panel and dark bow-like detail at the front. The overall look is polished, resort-like, and movement-focused, combining a close upper silhouette with a fluid draped printed skirt and refined heels.\",\n  \"key_elements\": [\n    \"beige asymmetrical draped wrap-style skirt\",\n    \"pale blue, black, white, and burgundy scarf-border print\",\n    \"high front slit with exposed leg\",\n    \"uneven handkerchief hem with small tassel-like ends\",\n    \"partial fitted red and black top with striped lower edge\",\n    \"chunky gold bracelets\",\n    \"black-and-white ankle-strap heels\"\n  ],\n  \"uncertainty_notes\": [\n    \"Only the lower portion of the top is visible, so its full shape is not shown.\",\n    \"The fabric appears fluid and scarf-like, but exact material cannot be confirmed.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}
