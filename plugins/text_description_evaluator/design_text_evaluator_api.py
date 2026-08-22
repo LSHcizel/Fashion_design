@@ -159,6 +159,13 @@ APPLICABILITY_HINTS = {
 
 QUALITY_ALLOWED_SCORES = [0.0, 0.25, 0.5, 0.75, 1.0]
 QUALITY_FULL_HIT_THRESHOLD = 0.75
+DESIGN_MERIT_DIMENSIONS = {
+    "DesignDistinctiveness",
+    "VisualGrounding",
+    "CraftSalience",
+    "CombinationOriginality",
+    "DesignSignalPurity",
+}
 TOTAL_SCORE_BANDS = [
     (0.90, "Excellent"),
     (0.75, "Strong"),
@@ -234,8 +241,8 @@ Judging principles:
 6. When bilateral differences exist, distinguish trunk from accessories. Trunk = all clothing that defines the worn look: outerwear, inner/base tops (shirts, tees, knit base layers, dress bodices when described as a garment layer), bottoms, and footwear—inner and outer layers each count as trunk when described as separate garments. When the text explicitly describes them, trunk also includes outerwear/jacket/coat lining and trouser/pant inner lining or in-seam revealed lining as part of the same garment’s coherent structure (shell vs lining must read as one grammar unless clearly layered). On trunk garments, large left-right differences in style, material, or garment identity should score poorly unless clearly grounded in one coherent grammar; **stacking several** trunk-level left-right contrasts at once (e.g. sleeve presence mismatch + different pant-leg materials/identities + mismatched footwear families + gloved vs bare hand as extra trunk contrast) is especially hostile to image generation—penalize accordingly even if the text calls it “deconstructed.” Mild left-right differences on accessories alone (belt, gloves, jewelry, bag) should be scored leniently and must not drive the same strictness as trunk splits when all trunk garments read unified.
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
-9. For quality_score metrics, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
-10. For DesignMerit, score the look's design idea, not how fully it is specified. One test: after swapping color, fabric, and brand words, does a visible move still identify this look? If yes → 0.75–1.0; if it remains the same silhouette family → 0.25–0.5. 0.75 is not a 'detailed description' score. If the reason says conventional, interchangeable, or mood-diluted, output 0.5. Ignore layout and T2I preamble.
+9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
+10. For DesignMerit, ignore completeness, layout, theme, and garment family. High (0.75–1.0): the look is identified by at least one of: craft that traces a readable path along edges (neckline/front/cuff/hem), layering that creates a second visible identity (worn open over / extending beneath), or a look-specific contrast of surface, volume, or graphic placement. 1.0 when that move is explicit and would change if removed. Low (0.25–0.5): after ignoring theme and category names, only generic tailoring remains. Do not lower for cruise/shore theme or for being a jacket/shorts kit. Ignore T2I preamble.
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
 12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
@@ -480,31 +487,31 @@ Return format:
     ) -> str:
         serialized_specs = json.dumps(metric_specs, ensure_ascii=False, indent=2)
         if axis_name == "quality_score":
-            cap_line = (
-                "- Also obey explicit score caps in each metric's rule field when present.\n"
-                if module_name != "DesignMerit"
-                else ""
-            )
-            scale_rules = (
-                "Scoring scale for each quality metric:\n"
-                "- Use the metric-specific five-level rubric in quality_scoring_rubric as the first reference.\n"
-                f"{cap_line}"
-                "- 1.0 = near-perfect for that metric and quality dimension\n"
-                "- 0.75 = strong with only minor issues for that metric\n"
-                "- 0.5 = partially good but with clear room for improvement for that metric\n"
-                "- 0.25 = weak or inefficient for that metric\n"
-                "- 0.0 = missing, wrong, unusable, or seriously poor for that metric\n"
-                "Do not give 1.0 unless the metric is satisfied at a near-perfect prompt level under its own rubric.\n"
-            )
             if module_name == "DesignMerit":
-                scale_rules += (
-                    "\nDesignMerit — one test, not completeness:\n"
-                    "After swapping color, fabric, and brand words, does a visible design move still identify this look "
-                    "(craft type+path, unusual proportion, or a trunk contrast that would collapse if one piece were swapped)?\n"
-                    "- Yes → 0.75 or 1.0. No (same silhouette family / standard tailoring / brand hardware as the signature / mood-theme sentences) → 0.25 or 0.5.\n"
-                    "0.75 is not a 'detailed specification' score. If the reason already says conventional, interchangeable, or mood-diluted, output 0.5, not 0.75.\n"
+                scale_rules = (
+                    "Scoring scale: 1.0 / 0.75 / 0.5 / 0.25 / 0.0. Judge the design idea, not completeness.\n"
+                    "\nDesignMerit — does the look have a visible identifying move?\n"
+                    "High (0.75–1.0) if at least one is explicit; 1.0 if removing it would change the look:\n"
+                    "- craft traces a path along edges (neckline, front opening, cuff, hem, pocket),\n"
+                    "- layering creates a second visible identity (worn open over / extending beneath),\n"
+                    "- a look-specific contrast of surface, volume, or graphic placement.\n"
+                    "Low (0.25–0.5): after ignoring theme words and category names, only generic tailoring remains.\n"
+                    "Do not lower for collection theme or garment family.\n"
+                    "Reason: quote the move, or say none remains. Do not paste rubric sentences.\n"
                 )
-            elif module_name in ("ConcisenessAndDensity", "GenerationReadiness", "StructuralClarity"):
+            else:
+                scale_rules = (
+                    "Scoring scale for each quality metric:\n"
+                    "- Use the metric-specific five-level rubric in quality_scoring_rubric as the first reference.\n"
+                    "- Also obey explicit score caps in each metric's rule field when present.\n"
+                    "- 1.0 = near-perfect for that metric and quality dimension\n"
+                    "- 0.75 = strong with only minor issues for that metric\n"
+                    "- 0.5 = partially good but with clear room for improvement for that metric\n"
+                    "- 0.25 = weak or inefficient for that metric\n"
+                    "- 0.0 = missing, wrong, unusable, or seriously poor for that metric\n"
+                    "Do not give 1.0 unless the metric is satisfied at a near-perfect prompt level under its own rubric.\n"
+                )
+            if module_name in ("ConcisenessAndDensity", "GenerationReadiness", "StructuralClarity"):
                 scale_rules += (
                     f"\n{module_name} module — T2I content priority (ignore layout):\n"
                     "- High: sentences map to visible pixels (garment form, material, color, trim path, layering, accessory placement).\n"
@@ -1192,17 +1199,11 @@ class DesignTextEvaluator:
                         "quality_dimension": dimension_key,
                         "quality_dimension_zh": dimension_cfg.get("zh_name", dimension_key),
                         "quality_dimension_description": dimension_cfg.get("description", ""),
-                        "quality_scoring_rubric": dimension_cfg.get("scoring_rubric", {}),
                     }
                 )
-                # DesignMerit: style preference lives in module prompt + rubric; omit soft_rules/corpus noise.
-                if dimension_key not in (
-                    "DesignDistinctiveness",
-                    "VisualGrounding",
-                    "CraftSalience",
-                    "CombinationOriginality",
-                    "DesignSignalPurity",
-                ):
+                # DesignMerit: module prompt only — dumping five-level rubric / soft_rules makes the 7B copy 0.75 lines.
+                if dimension_key not in DESIGN_MERIT_DIMENSIONS:
+                    metric_spec["quality_scoring_rubric"] = dimension_cfg.get("scoring_rubric", {})
                     soft_rules = dimension_cfg.get("soft_rules")
                     if soft_rules:
                         metric_spec["soft_rules"] = soft_rules
