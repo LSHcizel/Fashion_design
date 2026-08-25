@@ -154,7 +154,7 @@ APPLICABILITY_HINTS = {
     "when_series_theme_is_known": "Applicable when the text includes theme, setting, mood, or collection-context narrative—even a single closing overall mood/palette sentence counts.",
     "when_brand_goal_is_explicit": "Applicable when the text reflects brand-consistent craft, silhouette, or palette language—even without naming the brand or stating an explicit brand task.",
     "when_absence_is_important": "Only applicable when absence or exclusion of an element matters in the text.",
-    "when_craft_or_embellishment_is_salient": "Only applicable when the text mentions or clearly implies craft, embellishment, trim, appliqué, braid, quilting, embroidery, deconstruction, patch decoration, or similar salient construction/detail—not mere generic hardware or finish words.",
+    "when_craft_or_embellishment_is_salient": "Applicable when the text mentions craft, embellishment, trim path, appliqué, braid, quilting, embroidery, deconstruction, patch decoration, OR treats seam topstitching, piping, binding, hidden placket, or brand hardware as a visual feature. In the latter case, score as factory finishing unless it is an identifying surface or edge path.",
 }
 
 QUALITY_ALLOWED_SCORES = [0.0, 0.25, 0.5, 0.75, 1.0]
@@ -166,6 +166,135 @@ DESIGN_MERIT_DIMENSIONS = {
     "CombinationOriginality",
     "DesignSignalPurity",
 }
+# Single DesignMerit judge block: used only in the DesignMerit user prompt (not repeated in system).
+DESIGN_MERIT_JUDGE_GUIDE = (
+    "Score the identifying idea, not completeness / layout / theme / garment family. "
+    "Test: swap color, material, and brand words — what still identifies the look?\n"
+    "High 0.75–1.0 (keep high even if buttons, collars, hems, or stitching also appear): "
+    "allover surface field as identity; edge path that draws the silhouette; "
+    "inner garment still readable if the outer is removed; trunk surface/volume collision.\n"
+    "Low 0.25–0.5 — not an idea (every applicable metric, including distinctiveness; do not leave 0.75): "
+    "hem/cuff reveal, wrap, self-belt, tucked shirt, optional open-or-belted, "
+    "factory finishing, brand hardware, fabric-mood, theme dualities.\n"
+    "Auxiliary cap: if none of those four high signatures are present and the text is ordinary "
+    "finishing/dressing, every applicable metric is ≤0.25. A present signature blocks the cap. "
+    "Do not lower merely for a coat, cropped jacket, or shorts. Ignore T2I preamble.\n"
+    "Reason: name the idea in one clause, or none; then pick the score. "
+    "Evidence: quote that idea, or quote finishing/theme-only."
+)
+DESIGN_MERIT_AUX_CAP = 0.25
+_DESIGN_IDENTIFYING_SIGNATURES = (
+    (
+        "edge_path",
+        re.compile(
+            r"(appliqu[eé]|frayed|fringe[d]?\b|ruffle|cutwork|sequin|crochet|"
+            r"bead(?:ed|work)|charm-like|tassel|rosette|feather trim|braided trim|"
+            r"zigzag|scalloped|decorative (?:border|trim|edging)|banded trim|"
+            r"(?:trim|edging|border|binding)\w*.{0,60}"
+            r"(?:along|down|at|from|outlines?|running|borders?)\s+"
+            r"(?:the\s+)?(?:neckline|front|hem|cuff|opening|sleeve|slit|neck|waist))",
+            re.I,
+        ),
+    ),
+    (
+        "surface_field",
+        re.compile(
+            r"(all-?over|densely (?:covered|textured)|painterly|scenic (?:print|landscape)|"
+            r"chevron|shaggy|boucl[eé]|starburst|patchwork|floral surface|"
+            r"graphic (?:panel|motif|cutout|check)|geometric panel|"
+            r"irregular (?:stripe|panel|plaid)|mismatched panel|mixed-?print|"
+            r"contrast panels?\s+(?:curve|run|along)|"
+            r"oversized (?:white |abstract )?(?:motif|curved)|"
+            r"branch-like|bow-and-scroll)",
+            re.I,
+        ),
+    ),
+    (
+        "second_identity",
+        re.compile(
+            r"(?:worn open(?:\s+at the neck)?\s+over|"
+            r"sits open over|"
+            r"open-front \w+(?:/\w+)?(?: \w+){0,4} worn over)\s+.{0,120}?"
+            r"(shorts?|dress|skirt|vest|tunic|bike|cycling|stripe|top|shirt|layer)",
+            re.I,
+        ),
+    ),
+    (
+        "volume_collision",
+        re.compile(
+            r"(voluminous (?:skirt|volume|black)|sculptural (?:folded|peplum|volume)|"
+            r"architectural peplum|capelet|cape (?:sleeves?|panels?)|trailing volume|"
+            r"carried .{0,40}(?:coat|outerwear).{0,40}volume|"
+            r"wrapped waist with voluminous)",
+            re.I,
+        ),
+    ),
+)
+_ORDINARY_FINISHING_CUES = re.compile(
+    r"(topstitch(?:ing)?|hidden placket|concealed (?:placket|closure)|"
+    r"tonal piping|contrast piping|self-belt|"
+    r"double c\b|stance should|"
+    r"lining (?:peek|glimpses?|peeks)|"
+    r"tucked into|"
+    r"can be worn (?:fully open|open|belted)|"
+    r"clean salon line|promenade in sea)",
+    re.I,
+)
+
+
+def list_design_identifying_signatures(text: str) -> List[str]:
+    """Return inverse-style identifying signatures present in the look text."""
+    found: List[str] = []
+    body = text or ""
+    for name, pattern in _DESIGN_IDENTIFYING_SIGNATURES:
+        if pattern.search(body):
+            found.append(name)
+    return found
+
+
+def design_merit_auxiliary_cap(text: str) -> Optional[float]:
+    """Cap only when no identifying signature and ordinary finishing/dressing dominates."""
+    if list_design_identifying_signatures(text):
+        return None
+    if _ORDINARY_FINISHING_CUES.search(text or ""):
+        return DESIGN_MERIT_AUX_CAP
+    return None
+
+
+def apply_design_merit_auxiliary_caps(text: str, module_output: Dict) -> Dict:
+    """Clamp DesignMerit scores after the judge; signatures from inverse-style design block the cap."""
+    signatures = list_design_identifying_signatures(text)
+    cap = design_merit_auxiliary_cap(text)
+    patched = dict(module_output or {})
+    if signatures:
+        reason = "identifying signature present; cap not applied"
+    elif cap is not None:
+        reason = "no identifying signature; ordinary finishing/dressing"
+    else:
+        reason = "no identifying signature and no finishing cue; judge score kept"
+    patched["auxiliary_caps"] = {
+        "applied": cap is not None,
+        "cap": cap,
+        "signatures": signatures,
+        "reason": reason,
+    }
+    if cap is None:
+        return patched
+    note = (
+        f" [auxiliary cap {cap}: no surface-field / edge-path / second-identity / volume collision]"
+    )
+    results = []
+    for item in patched.get("results") or []:
+        row = dict(item)
+        score = row.get("score")
+        if row.get("applicable") and isinstance(score, (int, float)) and float(score) > cap:
+            row["score"] = cap
+            row["hit"] = 1 if cap >= QUALITY_FULL_HIT_THRESHOLD else 0
+            row["score_cap"] = cap
+            row["reason"] = (row.get("reason") or "") + note
+        results.append(row)
+    patched["results"] = results
+    return patched
 TOTAL_SCORE_BANDS = [
     (0.90, "Excellent"),
     (0.75, "Strong"),
@@ -242,7 +371,7 @@ Judging principles:
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
-10. For DesignMerit, ignore completeness, layout, theme, and garment family. Ask only: is there a visible identifying idea? High (0.75–1.0): an allover surface that is the identity (texture, print, or embellishment field); an edge path that draws the silhouette; worn-open layering that reveals another readable garment; or a graphic/volume collision that belongs to this look. If that idea is present, keep high even when buttons, collars, hems, or stitching are also mentioned. Low (0.25–0.5): thorough, imageable garment specs with only factory finishing, ordinary dressing, brand hardware, or theme/pose language and no identifying idea. 0.75 is not the default for a well-written spec. Completeness is other modules. Ignore T2I preamble.
+10. For DesignMerit, score only the identifying idea (module guide). Completeness, precision, and imageability are other modules. Ignore T2I preamble.
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
 12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
@@ -510,24 +639,7 @@ Return format:
         serialized_specs = json.dumps(metric_specs, ensure_ascii=False, indent=2)
         if axis_name == "quality_score":
             if module_name == "DesignMerit":
-                scale_rules = (
-                    "Scoring scale: 1.0 / 0.75 / 0.5 / 0.25 / 0.0. Judge the design idea, not completeness.\n"
-                    "\nDesignMerit — two observation styles:\n"
-                    "Prefer (0.75–1.0) when the text watches an identifying idea as a continuous visual fact:\n"
-                    "- an allover surface that is the identity (texture field, print field, dense embellishment),\n"
-                    "- an edge path that draws the silhouette (appliqué, frayed graphic trim, ruffle, cutwork),\n"
-                    "- worn open over / extending beneath so the inner garment is a second readable identity,\n"
-                    "- a graphic, volume, or surface collision that belongs to this look.\n"
-                    "If that idea is present, keep 0.75–1.0 even if buttons, collars, hems, or stitching are also named.\n"
-                    "Resist (0.25–0.5) when the text is a thorough, imageable spec of ordinary dressing:\n"
-                    "factory finishing as if it were design, interchangeable layering, brand hardware as identity, "
-                    "or theme/pose language standing in for a visual idea. "
-                    "A tucked shirt under a jacket is ordinary dressing, not a second identity.\n"
-                    "0.75 is not the default for a well-written garment spec. "
-                    "visual_observation_grounding and design_signal_purity stay low when only finishing is well-anchored.\n"
-                    "Do not lower merely because the look is a coat, cropped jacket, or shorts.\n"
-                    "Reason: first name the identifying idea in one clause, or say none; then pick the matching score.\n"
-                )
+                scale_rules = DESIGN_MERIT_JUDGE_GUIDE + "\n"
             else:
                 scale_rules = (
                     "Scoring scale for each quality metric:\n"
@@ -562,12 +674,8 @@ Return format:
         if module_name == "DesignMerit":
             requirements = (
                 "Requirements:\n"
-                "1. Judge applicability first.\n"
-                "2. If applicable=true, return a numeric score.\n"
-                "3. Scoring must be semantic, not surface keyword matching.\n"
-                "4. evidence should quote the identifying idea, or quote that only finishing/theme is present.\n"
-                "5. Do not reward completeness, precision, structure, or imageability here; those belong to other modules.\n"
-                "6. Return JSON only.\n\n"
+                "1. Judge applicability first; if applicable, score 1.0 / 0.75 / 0.5 / 0.25 / 0.0.\n"
+                "2. Semantic judging, not keyword matching. Return JSON only.\n\n"
             )
         else:
             requirements = (
@@ -1004,6 +1112,8 @@ class DesignTextEvaluator:
                     metric_specs,
                     axis_name,
                 )
+                if module["name"] == "DesignMerit":
+                    module_output = apply_design_merit_auxiliary_caps(text_for_judge, module_output)
                 raw_module_outputs[module["name"]] = module_output
                 for result in module_output["results"]:
                     metric_name = result["metric"]

@@ -130,10 +130,9 @@ text-evaluator:
   top-p: 1.0
   max-tokens: 2048
   timeout: 120
-  # DesignMerit 单独解码：greedy(t=0) 会把「写得细」锁在 0.75。
-  # 略升温度让「有无识别性想法」参与采样；有想法的 caption 仍倾向 0.75–1.0。
-  design-merit-temperature: 0.2
-  design-merit-top-p: 0.9
+  # DesignMerit 单独解码：0.2 会把平庸叠穿随机打到 1.0。改回 greedy，靠规则收紧「第二身份」。
+  design-merit-temperature: 0.0
+  design-merit-top-p: 1.0
   design-merit-seed: 7
 
   # optimize 内部双门限（两门均通过则早停）
