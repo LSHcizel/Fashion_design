@@ -242,7 +242,7 @@ Judging principles:
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
-10. For DesignMerit, ignore completeness, layout, theme, and garment family. High (0.75–1.0): decorative/contrast craft that draws the silhouette, or worn-open layering that reveals a second garment identity, or a surface/volume contrast that would change the look if removed. Not a design move: seam topstitching, hidden/concealed placket, tonal piping, notch lapel, lining/cuff peek in motion, brand buckle/finish, metaphor or theme sentences. Those score 0.25. Tucked shirt under jacket is ordinary dressing, not a second identity. 1.0 when the identifying move is explicit. Ignore T2I preamble.
+10. For DesignMerit, ignore completeness, layout, theme, and garment family. Ask only: is there a visible identifying idea? High (0.75–1.0): an allover surface that is the identity (texture, print, or embellishment field); an edge path that draws the silhouette; worn-open layering that reveals another readable garment; or a graphic/volume collision that belongs to this look. If that idea is present, keep high even when buttons, collars, hems, or stitching are also mentioned. Low (0.25–0.5): thorough, imageable garment specs with only factory finishing, ordinary dressing, brand hardware, or theme/pose language and no identifying idea. 0.75 is not the default for a well-written spec. Completeness is other modules. Ignore T2I preamble.
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
 12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
@@ -314,6 +314,11 @@ Return format:
             temperature = float(_grpo_ev["temperature"])
         self.temperature = temperature
         self.top_p = top_p
+        te = dict(FASHION_CONFIG.get("text-evaluator") or {})
+        self.design_merit_temperature = float(te.get("design-merit-temperature", temperature))
+        self.design_merit_top_p = float(te.get("design-merit-top-p", top_p))
+        merit_seed = te.get("design-merit-seed")
+        self.design_merit_seed = int(merit_seed) if merit_seed is not None else None
         self.max_tokens = max_tokens
         self.timeout = timeout
         self.penalty_registry: Dict[str, Dict[str, Any]] = {}
@@ -351,9 +356,26 @@ Return format:
             axis_name,
             extra_guidance=extra_guidance,
         )
-        raw_output = self._generate(self.DEFAULT_SYSTEM_PROMPT, user_prompt)
+        temperature, top_p, seed = self._sampling_for_module(module_name)
+        raw_output = self._request_completion(
+            system_prompt=self.DEFAULT_SYSTEM_PROMPT,
+            user_content=user_prompt,
+            response_format={"type": "json_object"},
+            temperature=temperature,
+            top_p=top_p,
+            seed=seed,
+        )
         parsed = self._parse_json(raw_output)
         return self._normalize_module_result(module_name, metric_specs, parsed, axis_name)
+
+    def _sampling_for_module(self, module_name: str):
+        if module_name == "DesignMerit":
+            return (
+                self.design_merit_temperature,
+                self.design_merit_top_p,
+                self.design_merit_seed,
+            )
+        return (self.temperature, self.top_p, None)
 
     def judge_quality_penalties(self, text_description: str) -> Dict:
         user_prompt = (
@@ -490,19 +512,21 @@ Return format:
             if module_name == "DesignMerit":
                 scale_rules = (
                     "Scoring scale: 1.0 / 0.75 / 0.5 / 0.25 / 0.0. Judge the design idea, not completeness.\n"
-                    "\nDesignMerit — is there a visible identifying move?\n"
-                    "High (0.75–1.0); 1.0 if removing the move would change the look:\n"
-                    "- decorative/contrast craft that draws the silhouette (appliqué, frayed graphic trim, ruffle path, "
-                    "cutwork, sequin field),\n"
+                    "\nDesignMerit — two observation styles:\n"
+                    "Prefer (0.75–1.0) when the text watches an identifying idea as a continuous visual fact:\n"
+                    "- an allover surface that is the identity (texture field, print field, dense embellishment),\n"
+                    "- an edge path that draws the silhouette (appliqué, frayed graphic trim, ruffle, cutwork),\n"
                     "- worn open over / extending beneath so the inner garment is a second readable identity,\n"
-                    "- a surface, volume, or graphic contrast that belongs to this look.\n"
-                    "Score 0.25 when the look has no design sense beyond construction finishing and theme language: "
-                    "seam topstitching, hidden/concealed placket, tonal piping, notch lapel, lining or cuff peek in motion, "
-                    "brand buckle/finish, or metaphor (envelope, promenade, confession) standing in for a visual move. "
+                    "- a graphic, volume, or surface collision that belongs to this look.\n"
+                    "If that idea is present, keep 0.75–1.0 even if buttons, collars, hems, or stitching are also named.\n"
+                    "Resist (0.25–0.5) when the text is a thorough, imageable spec of ordinary dressing:\n"
+                    "factory finishing as if it were design, interchangeable layering, brand hardware as identity, "
+                    "or theme/pose language standing in for a visual idea. "
                     "A tucked shirt under a jacket is ordinary dressing, not a second identity.\n"
-                    "0.5 only if there is one weak real move mixed with the above. "
+                    "0.75 is not the default for a well-written garment spec. "
+                    "visual_observation_grounding and design_signal_purity stay low when only finishing is well-anchored.\n"
                     "Do not lower merely because the look is a coat, cropped jacket, or shorts.\n"
-                    "Reason: quote the identifying move, or quote the construction/theme-only details.\n"
+                    "Reason: first name the identifying idea in one clause, or say none; then pick the matching score.\n"
                 )
             else:
                 scale_rules = (
@@ -535,19 +559,35 @@ Return format:
                 "- score must be 1 if the applicable metric is clearly covered by the text\n"
                 "- score must be 0 if the applicable metric is not clearly covered\n"
             )
+        if module_name == "DesignMerit":
+            requirements = (
+                "Requirements:\n"
+                "1. Judge applicability first.\n"
+                "2. If applicable=true, return a numeric score.\n"
+                "3. Scoring must be semantic, not surface keyword matching.\n"
+                "4. evidence should quote the identifying idea, or quote that only finishing/theme is present.\n"
+                "5. Do not reward completeness, precision, structure, or imageability here; those belong to other modules.\n"
+                "6. Return JSON only.\n\n"
+            )
+        else:
+            requirements = (
+                "Requirements:\n"
+                "1. Judge applicability first.\n"
+                "2. If applicable=true, return a numeric score.\n"
+                "3. Scoring must be semantic, not surface keyword matching.\n"
+                "4. evidence should quote short phrases from the original text when possible.\n"
+                "5. For quality metrics, be strict about prompt usefulness, precision, structure, concision, spatial imageability, and internal visual coherence.\n"
+                "6. Return JSON only.\n\n"
+            )
+        extra = f"{extra_guidance.strip()}\n\n" if extra_guidance and extra_guidance.strip() else ""
         return (
             f"Text to evaluate:\n{text_description}\n\n"
             f"Current module: {module_name}\n\n"
             f"Axis: {axis_name}\n\n"
             f"Metrics to judge:\n{serialized_specs}\n\n"
-            "Requirements:\n"
-            "1. Judge applicability first.\n"
-            "2. If applicable=true, return a numeric score.\n"
-            "3. Scoring must be semantic, not surface keyword matching.\n"
-            "4. evidence should quote short phrases from the original text when possible.\n"
-            "5. For quality metrics, be strict about prompt usefulness, precision, structure, concision, spatial imageability, and internal visual coherence.\n"
-            "6. Return JSON only.\n\n"
+            f"{requirements}"
             f"{scale_rules}"
+            f"{extra}"
         )
 
     def _generate(self, system_prompt: str, user_prompt: str) -> str:
@@ -564,21 +604,25 @@ Return format:
         response_format: Optional[Dict[str, Any]] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
+        top_p: Optional[float] = None,
+        seed: Optional[int] = None,
     ) -> str:
         if isinstance(user_content, str):
             user_message: Dict[str, Any] = {"role": "user", "content": user_content}
         else:
             user_message = {"role": "user", "content": user_content}
-        payload = {
+        payload: Dict[str, Any] = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 user_message,
             ],
             "temperature": self.temperature if temperature is None else temperature,
-            "top_p": self.top_p,
+            "top_p": self.top_p if top_p is None else top_p,
             "max_completion_tokens": self.max_tokens if max_tokens is None else max_tokens,
         }
+        if seed is not None:
+            payload["seed"] = seed
         if response_format is not None:
             payload["response_format"] = response_format
 

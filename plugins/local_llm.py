@@ -389,6 +389,7 @@ def build_workflow_text_evaluator(
             api_base=resolve_local_llm_endpoint()["api_base"],
             model=resolve_local_llm_endpoint()["model"],
             temperature=float(te.get("temperature", temperature)),
+            top_p=float(te.get("top-p", 1.0)),
             max_new_tokens=int(
                 te.get("max-tokens")
                 or (_load_fashion_config().get("grpo") or {})

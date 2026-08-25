@@ -127,8 +127,14 @@ text-evaluator:
 
   # 与 grpo.design-text-evaluator 对齐，保证 judge 调用参数一致
   temperature: 0.0
+  top-p: 1.0
   max-tokens: 2048
   timeout: 120
+  # DesignMerit 单独解码：greedy(t=0) 会把「写得细」锁在 0.75。
+  # 略升温度让「有无识别性想法」参与采样；有想法的 caption 仍倾向 0.75–1.0。
+  design-merit-temperature: 0.2
+  design-merit-top-p: 0.9
+  design-merit-seed: 7
 
   # optimize 内部双门限（两门均通过则早停）
   # 注意：与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json optimization_gates 保持一致
