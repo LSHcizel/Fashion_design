@@ -173,16 +173,50 @@ DESIGN_MERIT_JUDGE_GUIDE = (
     "High 0.75–1.0 (keep high even if buttons, collars, hems, or stitching also appear): "
     "allover surface field as identity; edge path that draws the silhouette; "
     "inner garment still readable if the outer is removed; trunk surface/volume collision.\n"
-    "Low 0.25–0.5 — not an idea (every applicable metric, including distinctiveness; do not leave 0.75): "
+    "Low 0.25–0.5 — that metric has no identifying idea: "
     "hem/cuff reveal, wrap, self-belt, tucked shirt, optional open-or-belted, "
-    "factory finishing, brand hardware, fabric-mood, theme dualities.\n"
-    "Auxiliary cap: if none of those four high signatures are present and the text is ordinary "
-    "finishing/dressing, every applicable metric is ≤0.25. A present signature blocks the cap. "
-    "Do not lower merely for a coat, cropped jacket, or shorts. Ignore T2I preamble.\n"
+    "factory finishing, brand hardware, fabric-mood, theme dualities, "
+    "or a collection-shared cropped jacket + shirt + short/trouser + belt grammar "
+    "that still reads the same after a fabric swap. "
+    "Do not copy one score onto every axis. "
+    "Do not raise a look for precise cut if the idea is still that shared wardrobe. "
+    "Do not lower merely for a coat, cropped jacket, or shorts as a category. Ignore T2I preamble.\n"
     "Reason: name the idea in one clause, or none; then pick the score. "
     "Evidence: quote that idea, or quote finishing/theme-only."
 )
-DESIGN_MERIT_AUX_CAP = 0.25
+# Per-axis floors after the judge. Shared series/finishing grammar stays low on idea axes.
+DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_ORDINARY = 0.25
+DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_CEILING = 0.5
+DESIGN_MERIT_AUX_CAP_GROUNDING = 0.5
+DESIGN_MERIT_AUX_CAP_CRAFT = 0.25
+DESIGN_MERIT_AUX_CAP_COMBINATION = 0.25
+DESIGN_MERIT_AUX_CAP_COMBINATION_WEAK = 0.5
+DESIGN_MERIT_AUX_CAP_PURITY_THEME = 0.25
+DESIGN_MERIT_AUX_CAP_PURITY_CEILING = 0.5
+DESIGN_MERIT_AUX_CAP = DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_ORDINARY
+_DESIGN_MERIT_METRIC_NAMES = (
+    "design_distinctiveness",
+    "visual_observation_grounding",
+    "craft_embellishment_salience",
+    "silhouette_combination_originality",
+    "design_signal_purity",
+)
+_SURFACE_EDGE_EXEMPT_METRICS = frozenset(
+    {
+        "design_distinctiveness",
+        "visual_observation_grounding",
+        "craft_embellishment_salience",
+        "design_signal_purity",
+    }
+)
+_COMBO_EXEMPT_METRICS = frozenset(
+    {
+        "design_distinctiveness",
+        "visual_observation_grounding",
+        "silhouette_combination_originality",
+        "design_signal_purity",
+    }
+)
 _DESIGN_IDENTIFYING_SIGNATURES = (
     (
         "edge_path",
@@ -214,6 +248,7 @@ _DESIGN_IDENTIFYING_SIGNATURES = (
         re.compile(
             r"(?:worn open(?:\s+at the neck)?\s+over|"
             r"sits open over|"
+            r"opens (?:fully )?over|"
             r"open-front \w+(?:/\w+)?(?: \w+){0,4} worn over)\s+.{0,120}?"
             r"(shorts?|dress|skirt|vest|tunic|bike|cycling|stripe|top|shirt|layer)",
             re.I,
@@ -230,14 +265,41 @@ _DESIGN_IDENTIFYING_SIGNATURES = (
         ),
     ),
 )
+_FACTORY_FINISHING_CUES = re.compile(
+    r"(topstitch(?:ing)?|hidden placket|concealed (?:placket|closure)|"
+    r"tonal piping|contrast piping|double c\b|clean salon line|"
+    r"lining (?:peek|glimpses?|peeks))",
+    re.I,
+)
+_ORDINARY_DRESSING_CUES = re.compile(
+    r"(self-belt|"
+    r"tucked into (?:the )?(?:waist|trousers|pants|skirt|shorts|jacket|belt|waistband)|"
+    r"(?:shirt|blouse|top)s?\b.{0,40}tucked into|"
+    r"can be worn (?:fully open|open|belted))",
+    re.I,
+)
+_THEME_POSE_CUES = re.compile(
+    r"(stance should|promenade in sea)",
+    re.I,
+)
+# Collection-shared cruise / shoreline wardrobe — not an identifying idea by itself.
+_SERIES_FORMULA_CUES = re.compile(
+    r"(shoreline|marina jacket|bleu de travail|sailor (?:trousers|pants)|"
+    r"nautical jacket|the outerwear|"
+    r"look\s+\d+\s*:|"
+    r"cropped (?:marina|navy|nautical|canvas))",
+    re.I,
+)
+# Union of factory + dressing; kept for callers that still test "ordinary finishing".
 _ORDINARY_FINISHING_CUES = re.compile(
     r"(topstitch(?:ing)?|hidden placket|concealed (?:placket|closure)|"
     r"tonal piping|contrast piping|self-belt|"
-    r"double c\b|stance should|"
+    r"double c\b|"
     r"lining (?:peek|glimpses?|peeks)|"
-    r"tucked into|"
+    r"tucked into (?:the )?(?:waist|trousers|pants|skirt|shorts|jacket|belt|waistband)|"
+    r"(?:shirt|blouse|top)s?\b.{0,40}tucked into|"
     r"can be worn (?:fully open|open|belted)|"
-    r"clean salon line|promenade in sea)",
+    r"clean salon line)",
     re.I,
 )
 
@@ -252,49 +314,172 @@ def list_design_identifying_signatures(text: str) -> List[str]:
     return found
 
 
+def list_design_merit_cue_families(text: str) -> Dict[str, bool]:
+    """Detect finishing / dressing / theme / shared-series grammar."""
+    body = text or ""
+    return {
+        "factory_finishing": bool(_FACTORY_FINISHING_CUES.search(body)),
+        "ordinary_dressing": bool(_ORDINARY_DRESSING_CUES.search(body)),
+        "theme_pose": bool(_THEME_POSE_CUES.search(body)),
+        "series_formula": bool(_SERIES_FORMULA_CUES.search(body)),
+    }
+
+
+def _design_merit_exempt_metrics(signatures: List[str]) -> Set[str]:
+    exempt: Set[str] = set()
+    for sig in signatures:
+        if sig in ("surface_field", "edge_path"):
+            exempt |= _SURFACE_EDGE_EXEMPT_METRICS
+        elif sig in ("second_identity", "volume_collision"):
+            exempt |= _COMBO_EXEMPT_METRICS
+    return exempt
+
+
+def compute_design_merit_metric_caps(text: str) -> Dict[str, Dict[str, Any]]:
+    """Per-axis floors: identifying ideas stay high; shared series/finishing grammar stays low."""
+    signatures = list_design_identifying_signatures(text)
+    cues = list_design_merit_cue_families(text)
+    exempt = _design_merit_exempt_metrics(signatures)
+    has_any_sig = bool(signatures)
+    has_surface_or_edge = any(s in signatures for s in ("surface_field", "edge_path"))
+    has_combo_sig = any(s in signatures for s in ("second_identity", "volume_collision"))
+    shared_wardrobe = (
+        cues["factory_finishing"]
+        or cues["ordinary_dressing"]
+        or cues["series_formula"]
+    )
+    caps: Dict[str, Dict[str, Any]] = {}
+
+    def _propose(metric: str, cap: float, reason: str) -> None:
+        if metric in exempt:
+            return
+        prev = caps.get(metric)
+        if prev is None or cap < float(prev["cap"]):
+            caps[metric] = {"cap": cap, "reason": reason}
+
+    if not has_any_sig:
+        if shared_wardrobe:
+            _propose(
+                "design_distinctiveness",
+                DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_ORDINARY,
+                "no identifying idea; shared finishing or series wardrobe",
+            )
+        else:
+            _propose(
+                "design_distinctiveness",
+                DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_CEILING,
+                "no identifying idea",
+            )
+
+    if not has_any_sig and shared_wardrobe:
+        _propose(
+            "visual_observation_grounding",
+            DESIGN_MERIT_AUX_CAP_GROUNDING,
+            "observation is cut/finishing, not an identifying idea",
+        )
+
+    if cues["factory_finishing"] and not has_surface_or_edge:
+        _propose(
+            "craft_embellishment_salience",
+            DESIGN_MERIT_AUX_CAP_CRAFT,
+            "factory finishing is not identifying craft",
+        )
+
+    if not has_combo_sig:
+        if cues["ordinary_dressing"] or cues["series_formula"]:
+            _propose(
+                "silhouette_combination_originality",
+                DESIGN_MERIT_AUX_CAP_COMBINATION,
+                "ordinary or series stacking, no second identity",
+            )
+        elif not has_any_sig:
+            _propose(
+                "silhouette_combination_originality",
+                DESIGN_MERIT_AUX_CAP_COMBINATION_WEAK,
+                "no second identity or volume collision",
+            )
+
+    if not has_any_sig:
+        if cues["theme_pose"] or cues["series_formula"]:
+            _propose(
+                "design_signal_purity",
+                DESIGN_MERIT_AUX_CAP_PURITY_THEME,
+                "theme or series narrative without an identifying idea",
+            )
+        else:
+            _propose(
+                "design_signal_purity",
+                DESIGN_MERIT_AUX_CAP_PURITY_CEILING,
+                "no identifying idea",
+            )
+
+    return {
+        "caps": caps,
+        "signatures": signatures,
+        "cues": cues,
+        "exempt_metrics": sorted(exempt),
+    }
+
+
 def design_merit_auxiliary_cap(text: str) -> Optional[float]:
-    """Cap only when no identifying signature and ordinary finishing/dressing dominates."""
-    if list_design_identifying_signatures(text):
+    """Strictest per-metric cap, or None if no DesignMerit axis is capped."""
+    payload = compute_design_merit_metric_caps(text)
+    caps = payload.get("caps") or {}
+    if not caps:
         return None
-    if _ORDINARY_FINISHING_CUES.search(text or ""):
-        return DESIGN_MERIT_AUX_CAP
-    return None
+    return min(float(item["cap"]) for item in caps.values())
 
 
 def apply_design_merit_auxiliary_caps(text: str, module_output: Dict) -> Dict:
-    """Clamp DesignMerit scores after the judge; signatures from inverse-style design block the cap."""
-    signatures = list_design_identifying_signatures(text)
-    cap = design_merit_auxiliary_cap(text)
+    """Clamp DesignMerit scores after the judge when the look has no identifying idea."""
+    payload = compute_design_merit_metric_caps(text)
+    caps: Dict[str, Dict[str, Any]] = payload["caps"]
+    signatures = payload["signatures"]
     patched = dict(module_output or {})
-    if signatures:
-        reason = "identifying signature present; cap not applied"
-    elif cap is not None:
-        reason = "no identifying signature; ordinary finishing/dressing"
+    if caps:
+        reason = "; ".join(
+            f"{metric}≤{item['cap']:g} ({item['reason']})"
+            for metric, item in caps.items()
+        )
+    elif signatures:
+        reason = "identifying idea present; matching axes not floored"
     else:
-        reason = "no identifying signature and no finishing cue; judge score kept"
+        reason = "no design floor applied"
     patched["auxiliary_caps"] = {
-        "applied": cap is not None,
-        "cap": cap,
+        "applied": bool(caps),
+        "cap": min((float(item["cap"]) for item in caps.values()), default=None),
+        "per_metric": caps,
         "signatures": signatures,
+        "cues": payload["cues"],
+        "exempt_metrics": payload["exempt_metrics"],
         "reason": reason,
     }
-    if cap is None:
+    if not caps:
         return patched
-    note = (
-        f" [auxiliary cap {cap}: no surface-field / edge-path / second-identity / volume collision]"
-    )
     results = []
     for item in patched.get("results") or []:
         row = dict(item)
+        metric = row.get("metric")
+        spec = caps.get(metric) if isinstance(metric, str) else None
         score = row.get("score")
-        if row.get("applicable") and isinstance(score, (int, float)) and float(score) > cap:
+        if (
+            spec
+            and row.get("applicable")
+            and isinstance(score, (int, float))
+            and float(score) > float(spec["cap"])
+        ):
+            cap = float(spec["cap"])
             row["score"] = cap
             row["hit"] = 1 if cap >= QUALITY_FULL_HIT_THRESHOLD else 0
             row["score_cap"] = cap
-            row["reason"] = (row.get("reason") or "") + note
+            row["reason"] = (row.get("reason") or "") + (
+                f" [{metric} stays at {cap:g}: {spec['reason']}]"
+            )
         results.append(row)
     patched["results"] = results
     return patched
+
+
 TOTAL_SCORE_BANDS = [
     (0.90, "Excellent"),
     (0.75, "Strong"),
@@ -1113,7 +1298,8 @@ class DesignTextEvaluator:
                     axis_name,
                 )
                 if module["name"] == "DesignMerit":
-                    module_output = apply_design_merit_auxiliary_caps(text_for_judge, module_output)
+                    # Use raw text so series titles/shared wardrobe lines are not stripped first.
+                    module_output = apply_design_merit_auxiliary_caps(raw_text, module_output)
                 raw_module_outputs[module["name"]] = module_output
                 for result in module_output["results"]:
                     metric_name = result["metric"]

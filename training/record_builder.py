@@ -130,9 +130,9 @@ def build_training_record(
 
     if evaluation is not None:
         gates_block = evaluation.get("gates") or {}
-        if not gates_block.get("both_passed"):
-            training_filter["include_in_training"] = False
-            training_filter["exclude_reasons"].append("gates_not_both_passed")
+        # Keep gate failures in the JSONL. GRPO needs low-reward completions
+        # (series-formula negatives); SFT still uses group argmax.
+        training_filter["gates_both_passed"] = bool(gates_block.get("both_passed"))
 
     eval_for_compact = evaluation
     if evaluation is not None and isinstance(r_content_block, dict) and not evaluation.get("r_content"):

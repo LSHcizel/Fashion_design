@@ -1,6 +1,6 @@
 {
   "name": "fashion_text_prompt_optimizer",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "input_type": "text_description",
   "output_type": [
     "optimized_prompt",
@@ -73,7 +73,7 @@
   },
   "score_composition": {
     "default_module_weight": 1.0,
-    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0 评识别性设计想法（非规格完整度）；ConcisenessAndDensity=3.0、GenerationReadiness=3.0，其余模块统一 1.0。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
+    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0 评识别性设计想法（非规格完整度、非系列共用成衣语法）；ConcisenessAndDensity=3.0、GenerationReadiness=3.0，其余模块统一 1.0。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
   },
   "coverage_modules": [
     {
@@ -248,12 +248,12 @@
     },
     "DesignDistinctiveness": {
       "zh_name": "设计独特性",
-      "description": "造型是否有不可替换的可见设计想法。规格写全、剪裁写细、露腰或系腰带不算独特。",
+      "description": "造型是否有不可替换的可见设计想法。规格写全、剪裁写细、露腰或系腰带不算独特。同一短夹克+衬衫+短裤/裤+腰带的系列共用语法，换色换料后仍可读成同一套，不算独特。",
       "scoring_rubric": {
         "1.0": "身份来自整面表面场（肌理/印花/密铺装饰）、画出轮廓的沿边路径、开合后内层仍是另一件可读的衣服，或两件主干在表面/量感上对撞。",
         "0.75": "上述想法有一处清楚。",
         "0.5": "仅有一处偏弱的真实想法，其余是成衣收口或主题句。",
-        "0.25": "没有识别性想法：成衣收口、常规叠穿、面料情绪词或主题对仗。",
+        "0.25": "没有识别性想法：成衣收口、常规叠穿、系列共用廓形、面料情绪词或主题对仗。",
         "0.0": "只有品类堆叠。"
       }
     },
@@ -281,7 +281,7 @@
     },
     "CombinationOriginality": {
       "zh_name": "组合原创性",
-      "description": "内层去掉外套后是否仍是另一件可读的衣服。露腰、wrap、系腰带是普通穿法。",
+      "description": "内层去掉外套后是否仍是另一件可读的衣服。露腰、wrap、系腰带、系列共用的短夹克叠穿是普通穿法。",
       "scoring_rubric": {
         "1.0": "开合后内层有自己的品类或表面身份；或两件主干表面/量感对撞。",
         "0.75": "组合取向明确，仍含部分常规元素。",
@@ -292,7 +292,7 @@
     },
     "DesignSignalPurity": {
       "zh_name": "设计信号纯度",
-      "description": "识别性设计想法是否压过成衣规格、主题对仗和姿态指令。可成像不等于有设计。",
+      "description": "识别性设计想法是否压过成衣规格、主题对仗、系列共用叙事和姿态指令。可成像不等于有设计。",
       "scoring_rubric": {
         "1.0": "几乎全是在写那个识别性想法。",
         "0.75": "想法为主；允许一句 mood 收尾。",
@@ -668,7 +668,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "评设计想法，不评写得细。高分：整面表面场、沿边路径、开合后可独立内层、主干对撞。有上述想法时不封顶。硬封顶：无上述想法且文本是成衣收口/普通叠穿 → 各适用维 ≤0.25。不因主题或品类本身降分。",
+      "rule": "评设计想法，不评写得细。高分：整面表面场、沿边路径、开合后可独立内层、主干对撞。低分：成衣收口、常规叠穿、系列共用廓形（同一短夹克+衬衫+短裤/裤+腰带，换色换料仍成立）、面料情绪或主题对仗。不因主题或品类本身降分。",
       "applicability": "always",
       "quality_dimension": "DesignDistinctiveness"
     },
@@ -695,7 +695,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "高分：开合后内层去掉外套仍可读为自己的衣服（自有品类或表面）。露腰、袖口微露、衬衫收进外套、wrap、系腰带是普通穿法。不因外套或短裤这类品类本身降分。",
+      "rule": "高分：开合后内层去掉外套仍可读为自己的衣服（自有品类或表面）。露腰、袖口微露、衬衫收进外套、wrap、系腰带、系列共用的短夹克叠穿是普通穿法。不因外套或短裤这类品类本身降分。",
       "applicability": "always",
       "quality_dimension": "CombinationOriginality"
     },
@@ -704,7 +704,7 @@
       "source_keypoints": [
         40
       ],
-      "rule": "高分是识别性想法占主体。可成像的规格清单、主题对仗（工装×海边等）不是高纯度。一句主题/场域不降分；姿态指令压过想法时降低。有清楚想法的连续观察应保持高分。",
+      "rule": "高分是识别性想法占主体。可成像的规格清单、主题对仗（工装×海边等）、系列共用叙事不是高纯度。一句主题/场域不降分；姿态指令压过想法时降低。有清楚想法的连续观察应保持高分。",
       "applicability": "always",
       "quality_dimension": "DesignSignalPurity"
     },
