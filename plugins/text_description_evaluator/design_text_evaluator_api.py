@@ -115,6 +115,28 @@ def default_hf_local_grpo_ref_model() -> str:
     return default_hf_local_grpo_model()
 
 
+def grpo_odin_rm_config() -> Dict[str, Any]:
+    """``grpo.odin-rm``：双头 RM 蒸馏裁判。"""
+    return dict(grpo_config().get("odin-rm") or {})
+
+
+def default_odin_rm_model() -> str:
+    """
+    RM backbone：``grpo.odin-rm.model`` → 基座 ``local-llm.model-path``。
+
+    不要默认指向 rewriter：RM 应冻在裁判同侧基座上，与正在训的改写器分开。
+    """
+    cfg = grpo_odin_rm_config()
+    m = cfg.get("model")
+    if isinstance(m, str) and m.strip():
+        return m.strip()
+    ll = FASHION_CONFIG.get("local-llm") or {}
+    p = ll.get("model-path")
+    if isinstance(p, str) and p.strip():
+        return p.strip()
+    return default_hf_local_grpo_model()
+
+
 def _yaml_opt_str(value: Any) -> Optional[str]:
     if isinstance(value, str) and value.strip():
         return value.strip()
@@ -1234,7 +1256,7 @@ class DesignTextEvaluator:
         return {
             "score_gate": {
                 "name": "score_gate",
-                "description": "最终 S_fp（quality 用 weighted base_score，不含 penalty 扣减；已做 holdout 长度去相关）",
+                "description": "内容主分 s_fp_base（quality 用 weighted base_score；不含 penalty，长度不进总分）",
                 "value": score_gate_value,
                 "threshold": cfg["score_gate_min"],
                 "passed": score_passed,
@@ -1353,7 +1375,11 @@ class DesignTextEvaluator:
         rcfg = self.spec.get("r_content_for_rl") or {}
         hold_cfg = rcfg.get("holdout_regression") or {}
         length_disentangle = apply_length_disentangle(s_fp_base, char_len, hold_cfg)
-        fashion_prompt_score = length_disentangle["adjusted_score"]
+        fashion_prompt_score = (
+            length_disentangle["adjusted_score"]
+            if length_disentangle.get("applied")
+            else s_fp_base
+        )
         total_defined_metrics = len(self.spec["metric_registry"])
         total_applicable_metrics = sum(1 for item in metric_results.values() if item["applicable"])
         total_hit_metrics = sum(1 for item in metric_results.values() if item["applicable"] and item["hit"] == 1)
@@ -1423,7 +1449,7 @@ class DesignTextEvaluator:
         rcfg["length_already_applied"] = bool(length_disentangle.get("applied"))
         out["r_content"] = build_r_content_payload(
             eval_prose or raw_text,
-            fashion_prompt_score,
+            s_fp_base if not length_disentangle.get("applied") else fashion_prompt_score,
             quality_penalties["total_penalty"],
             rcfg,
             z_len=None,

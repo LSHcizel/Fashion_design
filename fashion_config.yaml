@@ -199,6 +199,18 @@ grpo:
     # KL 锚点 = 训练前改写器快照（勿指向基座 judge 目录）
     ref-model: "models/Qwen2.5-7B-Rewriter"
 
+  # ODIN 档 3：冻住基座 7B，只训两个线性头 r_Q / r_L。不要指向 rewriter。
+  # python -m training.odin_rm.run_pipeline --samples training/runs/<id>/samples.jsonl --work-dir training/runs/<id>/odin_rm
+  odin-rm:
+    model: "models/Qwen2.5-7B-Instruct"
+    freeze-backbone: true
+    lambda-corr: 1.0
+    lambda-orth: 1.0
+    max-length: 2048
+    epochs: 3.0
+    lr: 0.001
+    batch-pairs: 8
+
   parallel-k-rewrite:
     # 并行改写候选条数（generate_k_parallel_rewrites 的 k；调用方未显式传入时使用）
     k: 10

@@ -1,12 +1,10 @@
 """
-第 2 步 / ODIN 思想：在沿用既有 fashion_prompt_score（S_fp）的前提下，
-构造供 RL（如 GRPO）使用的内容主导标量 R_content，削弱「越长越容易涨分」的单一通道优化。
-penalties.total_penalty（P̄）默认不参与 S_fp / R_content，仅用于 penalty_gate；若 spec 将 gamma_penalty>0 则可软并入 R_content。
+ODIN 内容通道：单条 R_content = s_fp_base；GRPO 组内才减 β·z_len。
+长度回归默认不进 S_fp / R_content，只作泄漏诊断（ρ(R, log_len)）。
+penalties.total_penalty（P̄）默认不参与分数，仅用于 penalty_gate。
 
-- 评判准则与 S_fp 合成仍完全由 design_text_evaluator_api.evaluate_text 负责；本模块只做**后处理标量**。
-- 参考 ICML 2024 ODIN：RL 阶段避免让「长度泄漏」主导梯度 → 显式记入长度诊断、软并入惩罚通道、可选组内 z_len 与留出集长度回归残差。
-
-见项目计划文档「落地到本仓库」三档公式。
+参考 ICML 2024 ODIN：RL 只用内容通道，丢掉长度可解释部分。
+本仓库档 1 用裁判内容主分近似 r^Q；档 3 见 ``training/odin_rm``（双头 RM，GRPO 只用 r_Q）。
 """
 
 from __future__ import annotations
@@ -30,10 +28,69 @@ def _clip01(x: float) -> float:
 
 
 def _soft_penalty_merge(r: float, total_penalty: float, gamma: float) -> float:
-    """方案第 2 步：R ∋ 冗长通道 — 乘性并入 P̄：clip(r · (1 - γ·P̄))。"""
+    """乘性并入 P̄：clip(r · (1 - γ·P̄))。γ=0 时不改变 r。"""
     p = float(total_penalty or 0.0)
     g = float(gamma)
     return _clip01(r * (1.0 - g * p))
+
+
+def _holdout_mixes_into_score(hold: Dict[str, Any]) -> bool:
+    if not bool(hold.get("enabled")):
+        return False
+    if "mix_into_score" in hold:
+        return bool(hold.get("mix_into_score"))
+    return True
+
+
+def pearson_corr(xs: Sequence[float], ys: Sequence[float]) -> Optional[float]:
+    """批内 Pearson ρ；n<2 或方差为 0 时返回 None。"""
+    n = min(len(xs), len(ys))
+    if n < 2:
+        return None
+    xv = [float(x) for x in xs[:n]]
+    yv = [float(y) for y in ys[:n]]
+    mx = sum(xv) / n
+    my = sum(yv) / n
+    vxx = sum((x - mx) ** 2 for x in xv)
+    vyy = sum((y - my) ** 2 for y in yv)
+    if vxx < 1e-18 or vyy < 1e-18:
+        return None
+    cov = sum((x - mx) * (y - my) for x, y in zip(xv, yv))
+    return float(cov / math.sqrt(vxx * vyy))
+
+
+def summarize_length_leakage(evaluations: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    ODIN Table 1 的本仓库对照：奖励与对数长度的 Pearson。
+    内容通道健康时 ρ(R_content, log_len) 应接近 0。
+    """
+    bases: List[float] = []
+    rewards: List[float] = []
+    log_lens: List[float] = []
+    for ev in evaluations:
+        scores = ev.get("scores") or {}
+        rc = ev.get("r_content") or {}
+        base = scores.get("s_fp_base")
+        if base is None:
+            base = ev.get("total_score")
+        rew = rc.get("R_content") if rc.get("enabled", True) else base
+        ll = rc.get("log_len")
+        if ll is None:
+            prose = ev.get("eval_prose") or ev.get("text_description") or ""
+            ll = math.log1p(float(len(str(prose).strip())))
+        if base is None or rew is None:
+            continue
+        bases.append(float(base))
+        rewards.append(float(rew))
+        log_lens.append(float(ll))
+    rho_base = pearson_corr(bases, log_lens)
+    rho_r = pearson_corr(rewards, log_lens)
+    return {
+        "n": len(rewards),
+        "pearson_s_fp_base_vs_log_len": None if rho_base is None else round(rho_base, 4),
+        "pearson_R_content_vs_log_len": None if rho_r is None else round(rho_r, 4),
+        "target_zh": "接近 0 表示内容通道几乎不靠写长涨分（ODIN 用 r^Q 对长度的相关作验收）。",
+    }
 
 
 def build_r_content_payload(
@@ -52,7 +109,7 @@ def build_r_content_payload(
     text_description:
         被判分的正文（用于 char_len / log_len；与 evaluate_text 输入一致）。
     S_fp:
-        与返回体 total_score / scores.fashion_prompt_score 相同。
+        内容主分。现行口径等于 s_fp_base / total_score。
     total_penalty:
         scores.quality_score.penalties.total_penalty。
     cfg:
@@ -73,11 +130,12 @@ def build_r_content_payload(
 
     length_pred: Optional[float] = None
     r_after_resid = float(S_fp)
-    if bool(hold.get("enabled")) and not bool(cfg.get("length_already_applied")):
+    mix = _holdout_mixes_into_score(hold)
+    if mix and not bool(cfg.get("length_already_applied")):
         disent = apply_length_disentangle(S_fp, c_len, hold)
         length_pred = disent.get("length_component")
         r_after_resid = float(disent["adjusted_score"])
-    elif bool(hold.get("enabled")) and bool(cfg.get("length_already_applied")):
+    elif mix and bool(cfg.get("length_already_applied")):
         r_after_resid = float(S_fp)
 
     r_soft = _soft_penalty_merge(r_after_resid, total_penalty, gamma)
@@ -90,17 +148,18 @@ def build_r_content_payload(
     if not gamma:
         penalty_note = "γ=0，P̄ 不进 R_content（仅 penalty_gate）。"
     else:
-        penalty_note = "r_soft = clip(S_fp·(1 - γ·P̄))。"
+        penalty_note = "r_soft = clip(s_fp_base·(1 - γ·P̄))。"
     if z_applied is not None:
         z_note = f"R_content = clip(r_soft - β·z_len)，z_len={float(z_applied):.4f}。"
     else:
-        z_note = "无组内 z_len：R_content = r_soft。"
+        z_note = "无组内 z_len：R_content = s_fp_base。"
     interpretation_zh = f"{penalty_note}{z_note}"
 
     return {
         "enabled": True,
-        "odin_reference": "ICML 2024 ODIN (disentangled reward): RL uses content-dominant scalar; "
-        "length diagnostics + soft penalty channel reduce length hacking vs. raw S_fp alone.",
+        "odin_reference": "ICML 2024 ODIN: RL uses content channel only. "
+        "Here r^Q ≈ s_fp_base; length is diagnostic except GRPO β·z_len.",
+        "odin_stage": int(cfg.get("odin_stage") or 1),
         "S_fp": round(float(S_fp), 6),
         "total_penalty": round(float(total_penalty or 0.0), 6),
         "gamma_penalty": gamma,
@@ -110,6 +169,7 @@ def build_r_content_payload(
         "log_len": round(ll, 6),
         "est_tokens_char_div_4": round(c_len / 4.0, 2),
         "holdout_length_prediction": None if length_pred is None else round(float(length_pred), 6),
+        "length_mixed_into_score": mix,
         "r_after_length_residual": round(r_after_resid, 6),
         "r_after_soft_penalty": round(r_soft, 6),
         "z_len": None if z_applied is None else round(float(z_applied), 6),
@@ -144,6 +204,11 @@ def apply_group_z_len_r_content(evaluations: Sequence[Dict[str, Any]], cfg: Opti
     cfg = cfg or {}
     if not evaluations:
         return
+    if int(cfg.get("odin_stage") or 1) >= 3:
+        leakage = summarize_length_leakage(evaluations)
+        for ev in evaluations:
+            ev["odin_diagnostics"] = leakage
+        return
     use_log = bool(cfg.get("length_use_log", True))
 
     rows = [e.get("r_content") or {} for e in evaluations]
@@ -163,7 +228,12 @@ def apply_group_z_len_r_content(evaluations: Sequence[Dict[str, Any]], cfg: Opti
         )
         for e in evaluations
     ]
-    sfps = [float(e.get("total_score", 0.0) or 0.0) for e in evaluations]
+    sfps: List[float] = []
+    for e in evaluations:
+        base = (e.get("scores") or {}).get("s_fp_base")
+        if base is None:
+            base = e.get("total_score", 0.0)
+        sfps.append(float(base or 0.0))
 
     for i, ev in enumerate(evaluations):
         ev["r_content"] = build_r_content_payload(
@@ -175,6 +245,10 @@ def apply_group_z_len_r_content(evaluations: Sequence[Dict[str, Any]], cfg: Opti
         )
         refresh_score_formula_r_content(ev)
 
+    leakage = summarize_length_leakage(evaluations)
+    for ev in evaluations:
+        ev["odin_diagnostics"] = leakage
+
 
 def fit_holdout_length_regression(
     S_fp_values: Sequence[float],
@@ -182,7 +256,7 @@ def fit_holdout_length_regression(
 ) -> Tuple[float, float]:
     """
     留出集上拟合 S_fp ≈ a * log(1 + len) + b（简单最小二乘）。
-    将 a,b 写入 spec ``holdout_regression`` 后启用 enabled 即可在训练管线扣分长度可解释部分。
+    仅当 spec holdout_regression.mix_into_score=true 时才会扣进分数。
     """
     xs: List[float] = []
     ys: List[float] = []
@@ -207,7 +281,7 @@ def fit_holdout_length_centered(
     S_fp_values: Sequence[float],
     char_lens: Sequence[int],
 ) -> Tuple[float, float]:
-    """拟合 centered slope：S_fp_adj = clip(S_fp - a * (log1p(len) - log_len_center))。"""
+    """拟合 centered slope：诊断用 Δ_len = a * (log1p(len) - log_len_center)。"""
     ll = [math.log1p(float(max(0, int(c)))) for c in char_lens]
     ys = [float(s) for s in S_fp_values]
     if not ll:
@@ -227,17 +301,19 @@ def apply_length_disentangle(
     hold_cfg: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
-    统一长度去相关（ODIN / holdout）：从 S_fp 中减去可由长度解释的分量。
-    centered_slope：仅惩罚高于 log_len_center 的冗长；legacy_regression：减 a*log1p(len)+b。
+    长度回归诊断。mix_into_score=true 时才从分数中减去长度分量；
+    现行默认只记录 Δ_len，S_fp 仍等于 s_fp_base。
     """
     hold_cfg = hold_cfg or {}
     ll = math.log1p(float(max(0, int(char_len))))
+    mix = _holdout_mixes_into_score(hold_cfg)
     if not bool(hold_cfg.get("enabled")):
         return {
             "adjusted_score": round(float(s_fp), 4),
             "length_component": 0.0,
             "log_len": round(ll, 6),
             "applied": False,
+            "role": "off",
         }
 
     mode = str(hold_cfg.get("mode", "centered_slope"))
@@ -250,14 +326,22 @@ def apply_length_disentangle(
         center = float(hold_cfg.get("log_len_center", ll))
         component = a * (ll - center)
 
-    adjusted = _clip01(float(s_fp) - component)
+    if mix:
+        adjusted = _clip01(float(s_fp) - component)
+        applied = True
+        role = "score"
+    else:
+        adjusted = round(float(s_fp), 4)
+        applied = False
+        role = "diagnostic"
     out: Dict[str, Any] = {
-        "adjusted_score": round(adjusted, 4),
+        "adjusted_score": round(adjusted, 4) if mix else round(float(s_fp), 4),
         "length_component": round(component, 6),
         "log_len": round(ll, 6),
         "slope_a": a,
         "mode": mode,
-        "applied": True,
+        "applied": applied,
+        "role": role,
     }
     if center is not None:
         out["log_len_center"] = round(center, 6)

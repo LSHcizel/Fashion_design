@@ -1,6 +1,6 @@
 {
   "name": "fashion_text_prompt_optimizer",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "input_type": "text_description",
   "output_type": [
     "optimized_prompt",
@@ -10,7 +10,7 @@
   "optimization_gates": {
     "score_gate_min": 0.7,
     "penalty_gate_max": 0.5,
-    "notes": "score_gate 基于最终 S_fp（quality 用 weighted base_score，penalty 不参与 S_fp / R_content；penalty 仅用于 penalty_gate）。"
+    "notes": "score_gate 基于内容主分 s_fp_base（= S_fp）。penalty 不参与 S_fp。长度不进总分。档 3 时 GRPO 的 R_content 改为 r_Q，门限仍看 s_fp_base。"
   },
   "rewriter": {
     "temperature": 0.45,
@@ -30,21 +30,28 @@
     "enabled": true,
     "gamma_penalty": 0.0,
     "penalty_merge": "multiply",
-    "penalty_merge_formula": "r_soft = clip(S_fp · (1 - γ · P̄), 0, 1)",
+    "penalty_merge_formula": "r_soft = clip(s_fp_base · (1 - γ · P̄), 0, 1)",
     "beta_z_len": 0.02,
     "length_use_log": true,
+    "odin_stage": 1,
+    "odin_roadmap": {
+      "1": "采数：S_fp = s_fp_base；GRPO 同组才减 β·z_len。批内看 ρ(R, log_len)。",
+      "2": "若 ρ 仍高：裁判显式拆内容分 / 长度诊断分，训练仍只回传内容分。",
+      "3": "已实现：蒸馏裁判为本地双头 RM（training/odin_rm）。排序用 r_Q+r_L，Pearson 去相关 + 权重正交；导出后 GRPO 只用 r_Q，不再减 β·z_len。"
+    },
     "holdout_regression": {
       "enabled": true,
+      "mix_into_score": false,
       "mode": "centered_slope",
       "holdout_modes": {
-        "centered_slope": "Δ_len = a·(x-x_0)：以典型长度 x_0 为锚，只校正相对偏长/偏短（现行默认）。",
-        "legacy_regression": "S_fp = clip(s_fp_base - (a·x+b))：减去完整线性预测含截距 b，适合离线 ODIN 复现。"
+        "centered_slope": "仅诊断：Δ_len = a·(x-x_0)，不写入 S_fp / R_content。",
+        "legacy_regression": "仅离线对照：pred = a·x+b。"
       },
       "a": 0.002948,
       "log_len_center": 7.3478,
-      "notes": "符号式：S_fp = clip(s_fp_base - a·(ln(1+L)-x_0))，其中 a、x_0 由 fit_holdout_length_centered 在留出集拟合；重跑评分后建议更新。"
+      "notes": "mix_into_score=false：长度回归只作泄漏诊断，不再扣总分。a、x_0 保留便于对照旧口径。"
     },
-    "notes": "S_fp 已含 holdout 长度去相关；penalty 不参与 S_fp 与 R_content（gamma_penalty=0），仅用于 penalty_gate。GRPO 组内 z_len 系数 beta_z_len=0.02（原 0.05），避免同组字数差主导 R_content。"
+    "notes": "采数默认档 1：单条 R_content = s_fp_base；GRPO 组内 clip(s_fp_base - β·z_len)。档 3：training/odin_rm 用 r_Q 覆盖 R_content。penalty 只走 penalty_gate。质量轴 Q 始终 0～1。"
   },
   "score_axes": {
     "coverage_score": {
@@ -73,7 +80,7 @@
   },
   "score_composition": {
     "default_module_weight": 1.0,
-    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0 评识别性设计想法（非规格完整度、非系列共用成衣语法）；ConcisenessAndDensity=3.0、GenerationReadiness=3.0，其余模块统一 1.0。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = apply_length_disentangle(s_fp_base)。"
+    "notes": "quality_effective = quality_weighted（仅 BindingAccuracy cap）；DesignMerit=10.0 评识别性设计想法（非规格完整度、非系列共用成衣语法）；ConcisenessAndDensity=3.0、GenerationReadiness=3.0，其余模块统一 1.0。penalties 不扣减 S_fp / R_content，仅用于 penalty_gate；S_fp = s_fp_base（长度不进总分）。"
   },
   "coverage_modules": [
     {

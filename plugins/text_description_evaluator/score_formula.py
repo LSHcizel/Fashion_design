@@ -21,14 +21,14 @@ FORMULA_SYMBOLS: Dict[str, str] = {
     "w_i": "各 quality 子模块权重（spec quality_module_weights）",
     "cap_q": "质量分上限 quality_cap",
     "cap_t": "总分上限 total_cap",
-    "s_fp_base": "长度校正前的内容主分",
+    "s_fp_base": "内容主分（覆盖+质量加权；长度不进此分）",
     "L": "eval_prose 字符数（strip 后正文长度）",
     "x": "对数长度 x = ln(1 + L)",
-    "x_0": "留出集对数长度中心 log_len_center（spec holdout_regression）",
+    "x_0": "留出集对数长度中心 log_len_center（仅诊断）",
     "L_ref": "基准字符长度 L_ref = exp(x_0) - 1",
-    "a": "长度斜率（spec holdout_regression.a，留出集拟合）",
-    "Δ_len": "长度校正量 Δ_len = a · (x - x_0)",
-    "S_fp": "最终综合分 total_score",
+    "a": "长度斜率（诊断用，默认不进 S_fp）",
+    "Δ_len": "长度诊断量 Δ_len = a · (x - x_0)",
+    "S_fp": "最终综合分 total_score，现行等于 s_fp_base",
     "P̄": "惩罚项算术平均 total_penalty",
     "γ": "惩罚软并入系数 gamma_penalty（spec r_content_for_rl）",
     "β": "组内长度修正系数 beta_z_len（spec r_content_for_rl）",
@@ -44,19 +44,17 @@ FORMULA_SYMBOLS: Dict[str, str] = {
 LENGTH_DISENTANGLE_MODES: Dict[str, Dict[str, str]] = {
     "centered_slope": {
         "name_zh": "居中斜率（当前默认）",
-        "formula": "Δ_len = a · (x - x_0)，S_fp = clip(s_fp_base - Δ_len, 0, 1)",
-        "when_to_use": "生产评分与门限；以留出集典型长度 x_0 为锚，只校正相对偏长/偏短。",
+        "formula": "Δ_len = a · (x - x_0)（诊断；默认不写入 S_fp）",
+        "when_to_use": "对照旧口径或看长度泄漏；现行评分与门限用 s_fp_base。",
         "interpretation_zh": (
-            "在 L = L_ref 处 Δ_len = 0，不改动内容分；"
-            "比典型更长 → Δ_len > 0 → 扣分（抑制写长刷分）；"
-            "比典型更短 → Δ_len < 0 → 略加分（奖励同等信息量下更精炼）。"
-            "相对 legacy_regression，不会在全体样本上叠加常数截距 b 带来的系统偏移。"
+            "Δ_len 只记录「相对典型长度偏长/偏短」的诊断量，不扣总分。"
+            "训练通道靠 GRPO 组内 β·z_len；验收看 ρ(R_content, log_len) 是否接近 0。"
         ),
     },
     "legacy_regression": {
         "name_zh": "经典回归残差",
         "formula": "pred = a · x + b，S_fp = clip(s_fp_base - pred, 0, 1)",
-        "when_to_use": "离线 ODIN 复现或研究；需同时拟合 a 与 b。",
+        "when_to_use": "仅离线对照；现行默认 mix_into_score=false，不扣总分。",
         "interpretation_zh": (
             "从 s_fp_base 中减去「长度线性模型 pred 预测的全部分数」，含截距 b。"
             "所有样本都会被减去与长度相关的仿射项，短文本也可能被整体抬高。"
@@ -158,7 +156,10 @@ def interpret_length_disentangle(
     log_len = ld.get("log_len")
 
     if not ld.get("applied"):
-        interpretation = "长度去相关未启用：S_fp = s_fp_base。"
+        if ld.get("role") == "diagnostic":
+            interpretation = "长度回归仅诊断，不进总分：S_fp = s_fp_base。"
+        else:
+            interpretation = "长度去相关未启用：S_fp = s_fp_base。"
     elif abs(component) < 1e-6:
         interpretation = "L ≈ L_ref，故 Δ_len ≈ 0，S_fp ≈ s_fp_base。"
     elif component > 0:
@@ -178,7 +179,7 @@ def interpret_length_disentangle(
 
     return {
         "formula_symbolic": "Δ_len = a · (x - x_0)，其中 x = ln(1 + L)",
-        "formula_S_fp": "S_fp = clip(s_fp_base - Δ_len, 0, 1)",
+        "formula_S_fp": "S_fp = s_fp_base（长度不进总分）" if not ld.get("applied") else "S_fp = clip(s_fp_base - Δ_len, 0, 1)",
         "eval_prose_char_len": char_len,
         "reference_char_len": ref_chars,
         "char_len_delta_vs_reference": delta_chars,
@@ -199,6 +200,23 @@ def build_r_content_formula_steps(r_content: Dict[str, Any]) -> List[Dict[str, A
     if not r_content.get("enabled"):
         return []
 
+    if int(r_content.get("odin_stage") or 1) >= 3 and r_content.get("r_Q") is not None:
+        rq = float(r_content.get("R_content") if r_content.get("R_content") is not None else r_content["r_Q"])
+        return [
+            {
+                "step": 1,
+                "id": "odin_rm_r_q",
+                "label_zh": "ODIN 内容头（档 3）",
+                "formula": "R_content = r_Q（丢掉 r_L；无界，不 clip）",
+                "value": _r(rq, 6),
+                "substitution": {
+                    "r_Q": r_content.get("r_Q"),
+                    "r_L": r_content.get("r_L"),
+                    "r_sum": r_content.get("r_sum"),
+                },
+            }
+        ]
+
     steps: List[Dict[str, Any]] = []
     s_fp = float(r_content.get("S_fp") or 0.0)
     gamma = float(r_content.get("gamma_penalty") or 0.0)
@@ -213,7 +231,7 @@ def build_r_content_formula_steps(r_content: Dict[str, Any]) -> List[Dict[str, A
             "step": 1,
             "id": "r_content_input",
             "label_zh": "RL 奖励输入",
-            "formula": "r_in = S_fp",
+            "formula": "r_in = s_fp_base",
             "value": _r(s_fp, 6),
         }
     )
@@ -291,10 +309,8 @@ def _formula_chain_symbolic() -> List[str]:
         "Q_w = (Σ w_i · m_i) / (Σ w_i)",
         "Q = min(Q_w, cap_q)",
         "s_fp_base = min(w_c · C + w_q · Q, cap_t)",
-        "x = ln(1 + L)",
-        "Δ_len = a · (x - x_0)",
-        "S_fp = clip(s_fp_base - Δ_len, 0, 1)",
-        "R_content = clip(r_soft - β · z_len, 0, 1)，其中 r_soft = S_fp 或 clip(S_fp · (1 - γ·P̄))",
+        "S_fp = s_fp_base",
+        "R_content = s_fp_base（单条）；GRPO 组内 clip(s_fp_base - β · z_len, 0, 1)",
     ]
 
 
@@ -402,16 +418,20 @@ def build_score_formula_breakdown(
             "id": "length_disentangle",
             "label_zh": "长度去相关",
             "formula": (
-                "Δ_len = a · (x - x_0)，x = ln(1+L)；S_fp = clip(s_fp_base - Δ_len, 0, 1)"
-                if ld_applied and holdout_mode == "centered_slope"
+                "Δ_len 仅诊断，S_fp = s_fp_base"
+                if not ld_applied
                 else (
-                    "pred = a·x + b；S_fp = clip(s_fp_base - pred, 0, 1)"
-                    if ld_applied
-                    else "S_fp = s_fp_base（holdout 长度去相关关闭）"
+                    "Δ_len = a · (x - x_0)，x = ln(1+L)；S_fp = clip(s_fp_base - Δ_len, 0, 1)"
+                    if holdout_mode == "centered_slope"
+                    else "pred = a·x + b；S_fp = clip(s_fp_base - pred, 0, 1)"
                 )
             ),
-            "mode": holdout_mode if ld_applied else None,
-            "mode_explanation_zh": explain_length_mode(holdout_mode)["interpretation_zh"] if ld_applied else None,
+            "mode": holdout_mode,
+            "mode_explanation_zh": (
+                "长度不进总分；Δ_len 只作泄漏对照。"
+                if not ld_applied
+                else explain_length_mode(holdout_mode)["interpretation_zh"]
+            ),
             "value": _r(fashion_prompt_score),
             "substitution": {
                 "L": char_len,
@@ -428,7 +448,7 @@ def build_score_formula_breakdown(
             "step": 6,
             "id": "S_fp",
             "label_zh": "最终 S_fp",
-            "formula": "S_fp = total_score",
+            "formula": "S_fp = s_fp_base",
             "value": _r(fashion_prompt_score),
         },
         {
@@ -461,8 +481,8 @@ def build_score_formula_breakdown(
         "parameters": parameters,
         "formula_chain_symbolic": _formula_chain_symbolic(),
         "formula_one_liner": (
-            "S_fp = clip(min(w_c·C + w_q·Q, cap_t) - a·(ln(1+L) - x_0), 0, 1); "
-            "R_content = clip(r_soft - β·z_len, 0, 1)"
+            "S_fp = s_fp_base = min(w_c·C + w_q·Q, cap_t); "
+            "R_content = s_fp_base（单条）或 clip(s_fp_base - β·z_len, 0, 1)（GRPO 组内）"
         ),
         "outputs": {
             "S_fp": _r(fashion_prompt_score),

@@ -4,7 +4,7 @@
 - 评判侧与 `DesignTextEvaluator.evaluate_text`（spec 双门限与 R_content）对齐；仓库内已不再提供多轮自动 optimize。
 - 默认对有效候选调用 `DesignTextEvaluator.evaluate_text`，**完全沿用** `fashion_prompt_optimizer_spec.json`
   中的 coverage/quality/penalty 合成、`score_gate` / `penalty_gate` 以及 `r_content_for_rl`；
-  同组多条会再执行 `apply_group_z_len_r_content` 对齐 GRPO 组内 R_content。
+  同组多条会再执行 `apply_group_z_len_r_content`（档 1：β·z_len；档 3：跳过，改由 `training/odin_rm` 的 r_Q 作为 R_content）。
 - 输出结构便于后续组编号、字段对齐与去重（训练 JSONL 见方案第 4 步）。
 """
 

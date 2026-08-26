@@ -13,6 +13,8 @@ HuggingFace 本地 SFT + GRPO（组相对优势 + 对参考策略的 KL 惩罚�
 
     python -m training.hf_grpo.train_sft --help
     python -m training.hf_grpo.train_grpo --help
+
+档 3 先跑 ``python -m training.odin_rm.run_pipeline``，再用本包训改写器（phase_a/b 的 advantage 来自 r_Q）。
 """
 
 from .data import (
