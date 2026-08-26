@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import atexit
 import json
+import os
+import signal
+import subprocess
 import sys
+import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
@@ -20,6 +25,10 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
 from training.build_grpo_source_corpus import DEFAULT_OUT as DEFAULT_CORPUS
 from training.jsonl_logger import TrainingRunLogger
 from training.record_builder import sha256_text
+
+SCRIPT_MARKER = "collect_k_rewrite_samples.py"
+COMPLETED_NAME = "completed_groups.txt"
+PID_NAME = "collect.pid"
 
 
 def _load_corpus(path: Path, *, roles: Optional[List[str]], limit: int) -> List[Dict[str, Any]]:
@@ -62,6 +71,190 @@ def _inject_original_as_candidate(
     parallel_result["candidates"] = cands
 
 
+def _pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    except SystemError:
+        return False
+    return True
+
+
+def _kill_pid(pid: int) -> None:
+    if pid <= 0 or pid == os.getpid() or not _pid_alive(pid):
+        return
+    print(f"killing previous collect pid={pid}")
+    if sys.platform == "win32":
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            capture_output=True,
+            text=True,
+        )
+        return
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError:
+        return
+    for _ in range(30):
+        if not _pid_alive(pid):
+            return
+        time.sleep(0.1)
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        pass
+
+
+def _cmdline_of(pid: int) -> str:
+    proc_cmd = Path("/proc") / str(pid) / "cmdline"
+    if proc_cmd.is_file():
+        try:
+            return proc_cmd.read_bytes().replace(b"\x00", b" ").decode("utf-8", "replace")
+        except OSError:
+            return ""
+    return ""
+
+
+def _iter_other_collect_pids() -> List[int]:
+    my = os.getpid()
+    found: Set[int] = set()
+    proc = Path("/proc")
+    if proc.is_dir():
+        for entry in proc.iterdir():
+            if not entry.name.isdigit():
+                continue
+            pid = int(entry.name)
+            if pid == my:
+                continue
+            cmd = _cmdline_of(pid)
+            if SCRIPT_MARKER in cmd:
+                found.add(pid)
+    try:
+        out = subprocess.check_output(
+            ["pgrep", "-f", SCRIPT_MARKER],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        for token in out.split():
+            try:
+                pid = int(token)
+            except ValueError:
+                continue
+            if pid != my and SCRIPT_MARKER in (_cmdline_of(pid) or SCRIPT_MARKER):
+                found.add(pid)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        pass
+    return sorted(found)
+
+
+def _kill_previous_collectors(pid_path: Path) -> None:
+    victims: Set[int] = set()
+    if pid_path.is_file():
+        try:
+            old = int(pid_path.read_text(encoding="utf-8").strip().split()[0])
+            if old != os.getpid() and _pid_alive(old):
+                victims.add(old)
+        except (ValueError, OSError):
+            pass
+    victims.update(_iter_other_collect_pids())
+    for pid in sorted(victims):
+        _kill_pid(pid)
+    time.sleep(0.3)
+
+
+def _write_pidfile(pid_path: Path) -> None:
+    pid_path.write_text(str(os.getpid()) + "\n", encoding="utf-8")
+
+    def _cleanup() -> None:
+        try:
+            if pid_path.is_file() and pid_path.read_text(encoding="utf-8").strip() == str(os.getpid()):
+                pid_path.unlink()
+        except OSError:
+            pass
+
+    atexit.register(_cleanup)
+
+
+def _load_completed(path: Path) -> Set[str]:
+    if not path.is_file():
+        return set()
+    return {ln.strip() for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()}
+
+
+def _append_completed(path: Path, source_id: str) -> None:
+    with path.open("a", encoding="utf-8") as f:
+        f.write(source_id + "\n")
+        f.flush()
+        os.fsync(f.fileno())
+
+
+def _group_ids_in_order(jsonl: Path) -> List[str]:
+    order: List[str] = []
+    seen: Set[str] = set()
+    if not jsonl.is_file():
+        return order
+    with jsonl.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            rec = json.loads(line)
+            gid = str(rec.get("group_id") or "")
+            if gid and gid not in seen:
+                seen.add(gid)
+                order.append(gid)
+    return order
+
+
+def _rewrite_jsonl_keep_groups(jsonl: Path, keep: Set[str]) -> int:
+    """Drop in-progress groups; return number of lines removed."""
+    if not jsonl.is_file():
+        return 0
+    tmp = jsonl.with_suffix(".jsonl.tmp")
+    dropped = 0
+    with jsonl.open("r", encoding="utf-8") as src, tmp.open("w", encoding="utf-8") as dst:
+        for line in src:
+            raw = line.strip()
+            if not raw:
+                continue
+            rec = json.loads(raw)
+            gid = str(rec.get("group_id") or "")
+            if gid in keep:
+                dst.write(raw + "\n")
+            else:
+                dropped += 1
+    os.replace(tmp, jsonl)
+    return dropped
+
+
+def _bootstrap_completed(jsonl: Path, completed_path: Path) -> Set[str]:
+    """Resume set: sidecar if present; else all groups except the last jsonl group (may be partial)."""
+    done = _load_completed(completed_path)
+    if done:
+        dropped = _rewrite_jsonl_keep_groups(jsonl, done)
+        if dropped:
+            print(f"dropped {dropped} in-progress jsonl rows not in {completed_path.name}")
+        return done
+    order = _group_ids_in_order(jsonl)
+    if not order:
+        return set()
+    done = set(order[:-1])
+    if done:
+        completed_path.write_text("\n".join(sorted(done)) + "\n", encoding="utf-8")
+        dropped = _rewrite_jsonl_keep_groups(jsonl, done)
+        print(
+            f"bootstrapped {len(done)} completed groups; "
+            f"will redo last group {order[-1]!r} (dropped {dropped} rows)"
+        )
+    else:
+        print(f"incomplete first group {order[-1]!r}; will redo from start of jsonl")
+        jsonl.write_text("", encoding="utf-8")
+    return done
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
@@ -74,6 +267,16 @@ def main() -> None:
         "--no-inject-original-negatives",
         action="store_true",
         help="Do not add the original negative draft as an extra group member",
+    )
+    p.add_argument(
+        "--no-kill-previous",
+        action="store_true",
+        help="Do not kill an already-running collect_k_rewrite_samples.py",
+    )
+    p.add_argument(
+        "--no-resume",
+        action="store_true",
+        help="Do not skip sources already in completed_groups.txt",
     )
     p.add_argument(
         "--system-prompt-file",
@@ -94,16 +297,35 @@ def main() -> None:
     if args.system_prompt_file.is_file():
         sys_hash = sha256_text(args.system_prompt_file.read_text(encoding="utf-8"))
 
-    evaluator = load_default_evaluator()
     logger = TrainingRunLogger(args.run_id)
-    print(f"run_dir={logger.run_dir} n_sources={len(corpus)} jsonl={logger.path()}")
+    pid_path = logger.run_dir / PID_NAME
+    completed_path = logger.run_dir / COMPLETED_NAME
 
-    for i, src in enumerate(corpus, start=1):
+    if not args.no_kill_previous:
+        _kill_previous_collectors(pid_path)
+    _write_pidfile(pid_path)
+
+    done: Set[str] = set()
+    if not args.no_resume:
+        done = _bootstrap_completed(logger.path(), completed_path)
+
+    pending = [src for src in corpus if str(src.get("source_id") or "") not in done]
+    print(
+        f"run_dir={logger.run_dir} jsonl={logger.path()} "
+        f"n_sources={len(corpus)} already_done={len(done)} pending={len(pending)}"
+    )
+    if not pending:
+        print("nothing to do")
+        return
+
+    evaluator = load_default_evaluator()
+    n_pending = len(pending)
+    for i, src in enumerate(pending, start=1):
         sid = str(src.get("source_id") or f"src_{i}")
         text = str(src.get("text") or "").strip()
         biz = str(src.get("business_context") or "")
         role = str(src.get("role") or "")
-        print(f"[{i}/{len(corpus)}] {role} {sid}")
+        print(f"[{i}/{n_pending}] {role} {sid}", flush=True)
         result = generate_k_parallel_rewrites(
             text,
             k=args.k,
@@ -130,6 +352,7 @@ def main() -> None:
             },
             system_prompt_sha256=sys_hash,
         )
+        _append_completed(completed_path, sid)
     print("done", logger.path())
 
 

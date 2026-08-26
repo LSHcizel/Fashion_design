@@ -14,6 +14,8 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+from .score_formula import refresh_score_formula_r_content
+
 
 def char_len_of(text: str) -> int:
     return len((text or "").strip())
