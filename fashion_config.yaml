@@ -204,15 +204,15 @@ grpo:
     k: 10
     max-workers: 4
     eval-max-workers: 5
-    temperature-floor: 0.15
-    temperature-step: 0.05
-    temperature-cap: 0.55
+    temperature-floor: 0.35
+    temperature-step: 0.07
+    temperature-cap: 0.90
     evaluate-candidates: true
     eval-source-prefix: parallel_k
     # 改写 → rewriter-llm；评判 → local-llm 基座（冻结，提供 R_content / 评分详情）
     use-local-rewrite: true
     use-local-evaluation: true
-    rewrite-temperature: 0.3
+    rewrite-temperature: 0.55
     rewrite-max-tokens: 2048
     rewrite-timeout: 300
 

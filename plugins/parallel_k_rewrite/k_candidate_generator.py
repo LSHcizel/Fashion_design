@@ -73,8 +73,9 @@ def _one_rewrite(
     user = (
         f"PARALLEL REWRITE TASK\n"
         f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
-        f"Candidates are generated independently in parallel; make yours substantively different in "
-        f"phrasing and information ordering from a generic rewrite, while keeping the same grounded garment facts "
+        f"Candidates are generated independently in parallel. Prefer a strong rewrite, not a near-copy: "
+        f"restructure, compress redundancy, and retell the look in different sentence order, "
+        f"while keeping the same grounded garment facts "
         f"(do not invent new facts; do not drop required grounded content).\n\n"
         f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
     )

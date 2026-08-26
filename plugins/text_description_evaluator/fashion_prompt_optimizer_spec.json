@@ -1,6 +1,6 @@
 {
   "name": "fashion_text_prompt_optimizer",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "input_type": "text_description",
   "output_type": [
     "optimized_prompt",
@@ -13,8 +13,8 @@
     "notes": "score_gate 基于最终 S_fp（quality 用 weighted base_score，penalty 不参与 S_fp / R_content；penalty 仅用于 penalty_gate）。"
   },
   "rewriter": {
-    "temperature": 0.1,
-    "notes": "仅用于 optimize 改写 API 调用；裁判评分仍使用 CLI 的 --temperature（默认 0）。"
+    "temperature": 0.45,
+    "notes": "仅用于 optimize 改写 API 调用；裁判评分仍使用 CLI 的 --temperature（默认 0）。0.45 提高首轮改写幅度，避免近复制。"
   },
   "optimize_candidate_evaluation": {
     "enabled": true,
@@ -31,7 +31,7 @@
     "gamma_penalty": 0.0,
     "penalty_merge": "multiply",
     "penalty_merge_formula": "r_soft = clip(S_fp · (1 - γ · P̄), 0, 1)",
-    "beta_z_len": 0.05,
+    "beta_z_len": 0.02,
     "length_use_log": true,
     "holdout_regression": {
       "enabled": true,
@@ -44,7 +44,7 @@
       "log_len_center": 7.3478,
       "notes": "符号式：S_fp = clip(s_fp_base - a·(ln(1+L)-x_0))，其中 a、x_0 由 fit_holdout_length_centered 在留出集拟合；重跑评分后建议更新。"
     },
-    "notes": "S_fp 已含 holdout 长度去相关；penalty 不参与 S_fp 与 R_content（gamma_penalty=0），仅用于 penalty_gate。GRPO 组内可比时仍可用 apply_group_z_len_r_content。"
+    "notes": "S_fp 已含 holdout 长度去相关；penalty 不参与 S_fp 与 R_content（gamma_penalty=0），仅用于 penalty_gate。GRPO 组内 z_len 系数 beta_z_len=0.02（原 0.05），避免同组字数差主导 R_content。"
   },
   "score_axes": {
     "coverage_score": {
