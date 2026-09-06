@@ -18,10 +18,6 @@ def _iso_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
-def _est_tokens(char_len: int) -> float:
-    return round(max(0, int(char_len)) / 4.0, 4)
-
-
 def _compact_gates(evaluation: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     if not evaluation:
         return None
@@ -58,13 +54,31 @@ def _compact_scores_for_training(evaluation: Optional[Dict[str, Any]]) -> Option
     return {
         "S_fp": sfp_val,
         "R_content": r_scalar,
-        "fashion_prompt_score": fp,
         "coverage_axis_score": (cov.get("score") if isinstance(cov, dict) else None),
         "quality_penalized_score": q.get("penalized_score"),
         "quality_base_score": q.get("base_score"),
         "total_penalty": pen.get("total_penalty"),
         "weights": sc.get("weights"),
     }
+
+
+_R_CONTENT_TRAIN_KEEP = (
+    "enabled",
+    "S_fp",
+    "R_content",
+    "char_len",
+    "log_len",
+    "total_penalty",
+    "r_Q",
+    "r_L",
+    "r_sum",
+    "odin_stage",
+)
+
+
+def _slim_r_content_for_training(rc: Dict[str, Any]) -> Dict[str, Any]:
+    """训练 JSONL 只留双头 RM / 奖励入口需要的量，去掉档 1 长度修正遗留。"""
+    return {k: rc[k] for k in _R_CONTENT_TRAIN_KEEP if k in rc}
 
 
 def build_training_record(
@@ -94,7 +108,7 @@ def build_training_record(
     evaluation :
         单次 ``evaluate_text`` 完整返回；若无评判则为 None。
     r_content_block :
-        建议使用 ``evaluation["r_content"]``（已含 γ、β、z_len、R_content 等）。
+        建议使用 ``evaluation["r_content"]``；写入 JSONL 时会去掉 γ / β / z_len 等遗留项。
     parallel_meta :
         可选：temperature、dedupe_kept、rewrite_error 等并行采样元数据。
     system_prompt_sha256 :
@@ -153,28 +167,17 @@ def build_training_record(
         },
         "completion": completion_text,
         "char_len": char_len,
-        "est_tokens_char_div_4": _est_tokens(char_len),
         "S_fp": S_fp,
         "R_content": R,
-        "fashion_prompt_score": S_fp,
         "scores_compact": _compact_scores_for_training(eval_for_compact),
         "gates_compact": _compact_gates(evaluation),
         "penalties": (
             evaluation.get("scores", {}).get("quality_score", {}).get("penalties") if evaluation else None
         ),
-        "r_content": rcfg,
-        "hyperparameters": {
-            "gamma_penalty": rcfg.get("gamma_penalty"),
-            "beta_z_len": rcfg.get("beta_z_len"),
-            "r_content_penalty_merge": rcfg.get("penalty_merge", "multiply"),
-            "length_use_log": None,
-        },
+        "r_content": _slim_r_content_for_training(rcfg),
         "grpo": {
             "reward_scalar": R,
-            "S_fp": S_fp,
-            "R_content": R,
             "group_id": group_id,
-            "note": "RL/GRPO 主标量建议使用顶栏 R_content 或 grpo.reward_scalar（与 r_content.R_content 一致）；S_fp 为 fashion_prompt_score / total_score。",
         },
         "parallel_sampling": parallel_meta or {},
         "training_filter": training_filter,

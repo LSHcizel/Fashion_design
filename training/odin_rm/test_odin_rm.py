@@ -73,7 +73,64 @@ class RewardWritebackTests(unittest.TestCase):
         self.assertEqual(pick_reward_scalar(rec), -1.25)
         self.assertEqual(rec["S_fp"], 0.7)
         self.assertEqual(rec["r_content"]["odin_stage"], 3)
-        self.assertIsNone(rec["r_content"]["z_len"])
+        self.assertEqual(rec["r_content"]["r_Q"], -1.25)
+        self.assertEqual(rec["r_content"]["r_L"], 3.0)
+        self.assertNotIn("z_len", rec["r_content"])
+        self.assertNotIn("beta_z_len", rec["r_content"])
+        self.assertNotIn("hyperparameters", rec)
+
+
+class TrainingRecordSlimTests(unittest.TestCase):
+    def test_collect_record_drops_length_legacy(self) -> None:
+        from training.record_builder import build_training_record
+
+        rec = build_training_record(
+            group_id="g",
+            group_round=0,
+            candidate_index=0,
+            context={"shared_source_text": "src"},
+            completion_text="a wool coat",
+            evaluation={
+                "total_score": 0.8,
+                "scores": {
+                    "s_fp_base": 0.8,
+                    "quality_score": {"penalties": {"total_penalty": 0.1}},
+                },
+                "gates": {"both_passed": True},
+                "r_content": {
+                    "enabled": True,
+                    "S_fp": 0.8,
+                    "R_content": 0.8,
+                    "char_len": 11,
+                    "log_len": 2.48,
+                    "z_len": 0.3,
+                    "beta_z_len": 0.02,
+                    "gamma_penalty": 0.0,
+                    "holdout_length_prediction": 0.1,
+                    "r_after_length_residual": 0.8,
+                },
+            },
+            r_content_block={
+                "enabled": True,
+                "S_fp": 0.8,
+                "R_content": 0.8,
+                "char_len": 11,
+                "log_len": 2.48,
+                "z_len": 0.3,
+                "beta_z_len": 0.02,
+                "gamma_penalty": 0.0,
+                "holdout_length_prediction": 0.1,
+                "r_after_length_residual": 0.8,
+            },
+        )
+        self.assertEqual(rec["S_fp"], 0.8)
+        self.assertEqual(rec["char_len"], 11)
+        self.assertEqual(rec["r_content"]["log_len"], 2.48)
+        self.assertNotIn("z_len", rec["r_content"])
+        self.assertNotIn("beta_z_len", rec["r_content"])
+        self.assertNotIn("fashion_prompt_score", rec)
+        self.assertNotIn("hyperparameters", rec)
+        self.assertNotIn("est_tokens_char_div_4", rec)
 
 
 class OdinLossTests(unittest.TestCase):

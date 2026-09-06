@@ -197,14 +197,13 @@ def z_len_from_char_lens(char_lens: Sequence[int], *, use_log: bool = True) -> L
 
 def apply_group_z_len_r_content(evaluations: Sequence[Dict[str, Any]], cfg: Optional[Dict[str, Any]] = None) -> None:
     """
-    就地更新一批 evaluate_text 结果：为组内各条写入 z_len 并重算 R_content（需每条已有 r_content 且 enabled）。
-
-    典型用法：同一 group_id 下 K 个候选先各 evaluate_text，再调用本函数。
+    就地更新一批 evaluate_text 结果。档 3 或 ``beta_z_len=0`` 时不再减组内 z_len，
+    只写长度泄漏诊断。否则为组内各条写入 z_len 并重算 R_content。
     """
     cfg = cfg or {}
     if not evaluations:
         return
-    if int(cfg.get("odin_stage") or 1) >= 3:
+    if int(cfg.get("odin_stage") or 1) >= 3 or float(cfg.get("beta_z_len") or 0.0) == 0.0:
         leakage = summarize_length_leakage(evaluations)
         for ev in evaluations:
             ev["odin_diagnostics"] = leakage

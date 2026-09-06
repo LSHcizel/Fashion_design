@@ -90,12 +90,7 @@ def apply_r_q_to_record(
     rec["R_content"] = rq
     grpo = dict(rec.get("grpo") or {})
     grpo["reward_scalar"] = rq
-    grpo["R_content"] = rq
-    grpo["S_fp"] = rec.get("S_fp")
-    grpo["note"] = (
-        "档 3：GRPO 主标量 R_content = r_Q（无界）。"
-        "S_fp 仍为裁判 s_fp_base（0～1），用于报表与门限。"
-    )
+    grpo["group_id"] = rec.get("group_id")
     rec["grpo"] = grpo
 
     rc = dict(rec.get("r_content") or {})
@@ -105,16 +100,21 @@ def apply_r_q_to_record(
     rc["r_L"] = round(rl, 6)
     rc["r_sum"] = round(rq + rl, 6)
     rc["R_content"] = round(rq, 6)
-    rc["z_len"] = None
-    rc["beta_z_len"] = 0.0
-    rc["odin_reference"] = (
-        "ICML 2024 ODIN: RL uses r^Q only. r^L discarded after RM training."
-    )
-    rc["interpretation_zh"] = "档 3：R_content = r_Q；长度在 r_L，不进 GRPO。"
+    rc.pop("z_len", None)
+    rc.pop("beta_z_len", None)
+    rc.pop("gamma_penalty", None)
+    rc.pop("holdout_length_prediction", None)
+    rc.pop("length_mixed_into_score", None)
+    rc.pop("r_after_length_residual", None)
+    rc.pop("r_after_soft_penalty", None)
+    rc.pop("penalty_merge", None)
+    rc.pop("odin_reference", None)
+    rc.pop("interpretation_zh", None)
     rec["r_content"] = rc
 
     sc = dict(rec.get("scores_compact") or {})
     sc["R_content"] = round(rq, 6)
+    sc.pop("fashion_prompt_score", None)
     rec["scores_compact"] = sc
 
     rec["odin_rm"] = {
@@ -123,8 +123,7 @@ def apply_r_q_to_record(
         "r_sum": round(rq + rl, 6),
         "backbone": backbone,
     }
-    hyp = dict(rec.get("hyperparameters") or {})
-    hyp["beta_z_len"] = 0.0
-    hyp["odin_stage"] = 3
-    rec["hyperparameters"] = hyp
+    rec.pop("hyperparameters", None)
+    rec.pop("fashion_prompt_score", None)
+    rec.pop("est_tokens_char_div_4", None)
     return rec
