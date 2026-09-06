@@ -43,7 +43,9 @@ def _next_steps(export_dir: Path, rm_dir: Path, *, skip_train: bool) -> str:
             f"    --train-work-dir <hf_checkpoints>\n"
         )
     return (
-        "\n下一步（冷启动：SFT 一次 + 多轮短 GRPO）:\n"
+        "\n下一步（冷启动第 2+3 步也可用一条命令）:\n"
+        f"  python -m training.run_coldstart_train --run-id <run_id>\n"
+        "\n或只跑第 3 步（SFT 一次 + 多轮短 GRPO）:\n"
         f"  python training/hf_grpo/run_recommended_training.py \\\n"
         f"    --phase-a {phase_a} \\\n"
         f"    --phase-b {phase_b} \\\n"
