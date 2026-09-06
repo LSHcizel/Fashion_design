@@ -115,6 +115,25 @@ def default_hf_local_grpo_ref_model() -> str:
     return default_hf_local_grpo_model()
 
 
+def default_hf_grpo_rounds() -> int:
+    """冷启动后短 GRPO 轮数；``grpo.hf-local-training.grpo-rounds``，缺省 4。"""
+    hf = grpo_hf_local_training_config()
+    try:
+        return max(1, int(hf.get("grpo-rounds", 4)))
+    except (TypeError, ValueError):
+        return 4
+
+
+def default_hf_grpo_epochs_per_round() -> float:
+    """每轮短 GRPO 的 epoch；``grpo.hf-local-training.grpo-epochs-per-round``，缺省 0.25。"""
+    hf = grpo_hf_local_training_config()
+    try:
+        val = float(hf.get("grpo-epochs-per-round", 0.25))
+    except (TypeError, ValueError):
+        return 0.25
+    return val if val > 0 else 0.25
+
+
 def grpo_odin_rm_config() -> Dict[str, Any]:
     """``grpo.odin-rm``：双头 RM 蒸馏裁判。"""
     return dict(grpo_config().get("odin-rm") or {})

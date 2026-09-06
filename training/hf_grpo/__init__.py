@@ -5,9 +5,11 @@ HuggingFace 本地 SFT + GRPO（组相对优势 + 对参考策略的 KL 惩罚�
 
     pip install -r training/hf_grpo/requirements.txt
 
-**推荐顺序（改写器：基座快照 → SFT → GRPO）**：使用编排脚本，一次跑完两段训练（policy=SFT 目录，ref=hf-local-training.ref-model）::
+**推荐顺序（冷启动一次）**：双头 RM 见 ``training.odin_rm``。本包 **SFT 只跑一次**，随后 **多轮短 GRPO**（policy 链式更新，ref 冻在 ``hf-local-training.ref-model``）::
 
     python training/hf_grpo/run_recommended_training.py --help
+
+后续新 K 路样本不要再 SFT / 不要再训双头，用 ``python -m training.run_next_grpo_round``。
 
 分步入口（``--model`` 可省略，默认读 ``fashion_config.yaml`` → ``grpo.hf-local-training.model``）::
 

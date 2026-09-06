@@ -1,13 +1,17 @@
 """
-ODIN 档 3：蒸馏裁判为本地双头 RM，GRPO 只用 r_Q。
+ODIN 档 3：蒸馏裁判为本地双头 RM，GRPO 只用 r_Q。双头 RM 只在冷启动训一次。
 
 采数仍走裁判 0～1 分。本包在其后插入：
 
-    samples.jsonl → 偏好对 → 训 r_Q/r_L → 用 r_Q 重写 R_content → 导出 phase_a/b
+    samples.jsonl → 偏好对 → 训 r_Q/r_L（一次）→ 用 r_Q 重写 R_content → 导出 phase_a/b
 
 入口::
 
     python -m training.odin_rm.run_pipeline --samples ... --work-dir ...
+
+后续新样本复用 RM::
+
+    python -m training.odin_rm.run_pipeline --skip-train --rm-dir <冷启动 rm> ...
 """
 
 from .data import apply_r_q_to_record, teacher_score

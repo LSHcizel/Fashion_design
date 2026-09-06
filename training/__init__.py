@@ -10,7 +10,7 @@
 
 **阶段 A（图像逆解析）**：``phase_a_image_inverse`` 多模态逆解析 → 评测 → 写出与上式相同的 SFT 顶层字段，可与 ``phase_a_sft.jsonl`` 合并训练。
 
-**ODIN 档 3（双头 RM）**：``training/odin_rm`` 从 ``samples.jsonl`` 造偏好对、训 r_Q/r_L，再用 r_Q 覆盖 ``R_content`` 后导出 phase_a/b。改写器 SFT/GRPO 仍走 ``hf_grpo``。
+**ODIN 档 3（双头 RM）**：``training/odin_rm`` 冷启动一次：造偏好对、训 r_Q/r_L，再用 r_Q 覆盖 ``R_content`` 后导出 phase_a/b。改写器 **SFT 一次**，随后 **多轮短 GRPO**（``hf_grpo/run_recommended_training.py``）；续跑见 ``training.run_next_grpo_round``。
 
 指标与字段说明见 ``record_builder.build_training_record``。
 """

@@ -3,6 +3,8 @@
 from .design_text_evaluator_api import (
     DEFAULT_HF_LOCAL_GRPO_MODEL,
     DesignTextEvaluator,
+    default_hf_grpo_epochs_per_round,
+    default_hf_grpo_rounds,
     default_hf_local_grpo_model,
     default_hf_local_grpo_ref_model,
     default_odin_rm_model,
@@ -41,6 +43,8 @@ __all__ = [
     "load_default_evaluator",
     "default_hf_local_grpo_model",
     "default_hf_local_grpo_ref_model",
+    "default_hf_grpo_rounds",
+    "default_hf_grpo_epochs_per_round",
     "default_odin_rm_model",
     "grpo_config",
     "grpo_design_text_evaluator_config",
