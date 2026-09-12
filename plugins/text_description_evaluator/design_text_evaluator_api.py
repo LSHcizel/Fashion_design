@@ -22,6 +22,41 @@ from .r_content_reward import apply_length_disentangle, build_r_content_payload
 from .score_formula import build_score_formula_breakdown
 
 
+class JudgeConnectionError(RuntimeError):
+    """Judge / rewriter API unreachable (connection refused, reset, DNS, etc.)."""
+
+
+_CONNECTION_FAILURE_MARKERS = (
+    "connection refused",
+    "connection reset",
+    "connection aborted",
+    "urlerror",
+    "remotedisconnected",
+    "failed to establish a new connection",
+    "network is unreachable",
+    "name or service not known",
+    "nodename nor servname",
+    "errno 111",
+    "errno 104",
+    "winerror 10061",
+    "winerror 10054",
+)
+
+
+def is_connection_failure(err: Any) -> bool:
+    """True when ``err`` is (or describes) an API transport / connection failure."""
+    if err is None:
+        return False
+    if isinstance(err, JudgeConnectionError):
+        return True
+    if isinstance(err, (ConnectionError, ConnectionRefusedError, ConnectionResetError, ConnectionAbortedError)):
+        return True
+    if isinstance(err, urllib.error.URLError):
+        return True
+    text = str(err).lower()
+    return any(marker in text for marker in _CONNECTION_FAILURE_MARKERS)
+
+
 def _load_env_file() -> None:
     """Load simple KEY=VALUE pairs from local env files if present."""
     candidate_paths = [
@@ -1023,6 +1058,10 @@ Return format:
                     errors.append(f"{url} -> unexpected response format: {exc}")
 
             last_error = "\n".join(errors)
+            if errors and all(is_connection_failure(item) for item in errors):
+                raise JudgeConnectionError(
+                    f"Judge API connection failed:\n{last_error}"
+                )
             if attempt < max_retries:
                 backoff = (2 ** attempt) * 2.0
                 self.logger.warning("All URLs failed on attempt %d/%d, backing off %.1fs: %s",
@@ -1032,6 +1071,10 @@ Return format:
             else:
                 break
 
+        if is_connection_failure(last_error):
+            raise JudgeConnectionError(
+                f"Judge API connection failed after {max_retries + 1} attempt(s):\n{last_error}"
+            )
         raise RuntimeError(
             f"Judge API request failed after {max_retries + 1} attempt(s):\n{last_error}"
         )

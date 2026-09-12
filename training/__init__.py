@@ -47,6 +47,8 @@ from .record_builder import (
     SCHEMA_VERSION,
     build_training_record,
     iter_records_from_parallel_result,
+    record_include_in_training,
+    rewrite_error_of,
     sha256_text,
     summarize_jsonl_file,
 )
@@ -57,6 +59,8 @@ __all__ = [
     "default_runs_root",
     "build_training_record",
     "iter_records_from_parallel_result",
+    "record_include_in_training",
+    "rewrite_error_of",
     "sha256_text",
     "summarize_jsonl_file",
     "pick_reward_scalar",

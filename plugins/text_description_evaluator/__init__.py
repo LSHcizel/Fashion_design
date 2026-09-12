@@ -3,6 +3,8 @@
 from .design_text_evaluator_api import (
     DEFAULT_HF_LOCAL_GRPO_MODEL,
     DesignTextEvaluator,
+    JudgeConnectionError,
+    is_connection_failure,
     default_hf_grpo_epochs_per_round,
     default_hf_grpo_rounds,
     default_hf_local_grpo_model,
@@ -40,6 +42,8 @@ from .score_formula import (
 __all__ = [
     "DEFAULT_HF_LOCAL_GRPO_MODEL",
     "DesignTextEvaluator",
+    "JudgeConnectionError",
+    "is_connection_failure",
     "load_default_evaluator",
     "default_hf_local_grpo_model",
     "default_hf_local_grpo_ref_model",

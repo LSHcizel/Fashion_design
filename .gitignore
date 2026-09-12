@@ -50,7 +50,12 @@ Thumbs.db
 !fashion_research_dir/**/*.jsonl
 
 # Training run logs (JSONL can be large)
-training/runs/
+training/runs/*
+!training/runs/grpo_chanel_inverse_v2/
+training/runs/grpo_chanel_inverse_v2/*
+!training/runs/grpo_chanel_inverse_v2/samples.jsonl
+!training/runs/grpo_chanel_inverse_v2/completed_groups.txt
+!training/runs/grpo_chanel_inverse_v2/run_manifest.txt
 
 # Local HF weights (large)
 models/

@@ -20,8 +20,11 @@ if str(REPO) not in sys.path:
 from plugins.parallel_k_rewrite import generate_k_parallel_rewrites
 from plugins.text_description_evaluator.design_text_evaluator_api import (
     DesignTextEvaluator,
+    JudgeConnectionError,
+    is_connection_failure,
     load_default_evaluator,
 )
+from training.record_builder import rewrite_error_of
 from training.build_grpo_source_corpus import DEFAULT_OUT as DEFAULT_CORPUS
 from training.jsonl_logger import TrainingRunLogger
 from training.record_builder import sha256_text
@@ -191,6 +194,62 @@ def _append_completed(path: Path, source_id: str) -> None:
         os.fsync(f.fileno())
 
 
+def _rewrite_completed(path: Path, keep: Set[str]) -> None:
+    kept: List[str] = []
+    seen: Set[str] = set()
+    if path.is_file():
+        for ln in path.read_text(encoding="utf-8").splitlines():
+            sid = ln.strip()
+            if sid and sid in keep and sid not in seen:
+                seen.add(sid)
+                kept.append(sid)
+    path.write_text(("\n".join(kept) + "\n") if kept else "", encoding="utf-8")
+
+
+def _connection_error_text(err: Any) -> Optional[str]:
+    if err is None:
+        return None
+    if is_connection_failure(err):
+        return str(err)
+    return None
+
+
+def _first_connection_error_from_result(result: Dict[str, Any]) -> Optional[str]:
+    for cand in result.get("candidates") or []:
+        text = _connection_error_text(cand.get("error"))
+        if text:
+            return text
+    return None
+
+
+def _connection_failed_group_ids(jsonl: Path) -> Set[str]:
+    bad: Set[str] = set()
+    if not jsonl.is_file():
+        return bad
+    with jsonl.open("r", encoding="utf-8") as f:
+        for line in f:
+            raw = line.strip()
+            if not raw:
+                continue
+            rec = json.loads(raw)
+            if _connection_error_text(rewrite_error_of(rec)):
+                gid = str(rec.get("group_id") or "")
+                if gid:
+                    bad.add(gid)
+    return bad
+
+
+def _purge_groups(jsonl: Path, completed_path: Path, drop: Set[str]) -> int:
+    """Delete exception groups from samples.jsonl and completed_groups.txt."""
+    if not drop:
+        return 0
+    keep = {gid for gid in _group_ids_in_order(jsonl) if gid not in drop}
+    dropped = _rewrite_jsonl_keep_groups(jsonl, keep)
+    done = _load_completed(completed_path)
+    _rewrite_completed(completed_path, done - drop)
+    return dropped
+
+
 def _group_ids_in_order(jsonl: Path) -> List[str]:
     order: List[str] = []
     seen: Set[str] = set()
@@ -233,6 +292,14 @@ def _rewrite_jsonl_keep_groups(jsonl: Path, keep: Set[str]) -> int:
 def _bootstrap_completed(jsonl: Path, completed_path: Path) -> Set[str]:
     """Resume set: sidecar if present; else all groups except the last jsonl group (may be partial)."""
     done = _load_completed(completed_path)
+    bad = _connection_failed_group_ids(jsonl)
+    if bad:
+        n_drop = _purge_groups(jsonl, completed_path, bad)
+        done -= bad
+        print(
+            f"purged {len(bad)} connection-failed groups "
+            f"({n_drop} jsonl rows) from {jsonl.name}"
+        )
     if done:
         dropped = _rewrite_jsonl_keep_groups(jsonl, done)
         if dropped:
@@ -326,20 +393,32 @@ def main() -> None:
         biz = str(src.get("business_context") or "")
         role = str(src.get("role") or "")
         print(f"[{i}/{n_pending}] {role} {sid}", flush=True)
-        result = generate_k_parallel_rewrites(
-            text,
-            k=args.k,
-            evaluator=evaluator,
-            group_id=sid,
-            extra_context=biz,
-        )
-        if inject_neg and role == "negative":
-            _inject_original_as_candidate(
-                evaluator,
-                result,
+        try:
+            result = generate_k_parallel_rewrites(
                 text,
-                source_name=f"{sid}.original",
+                k=args.k,
+                evaluator=evaluator,
+                group_id=sid,
+                extra_context=biz,
             )
+            if inject_neg and role == "negative":
+                _inject_original_as_candidate(
+                    evaluator,
+                    result,
+                    text,
+                    source_name=f"{sid}.original",
+                )
+            conn_err = _first_connection_error_from_result(result)
+            if conn_err:
+                raise JudgeConnectionError(conn_err)
+        except JudgeConnectionError as exc:
+            drop = _connection_failed_group_ids(logger.path())
+            drop.add(sid)
+            n_drop = _purge_groups(logger.path(), completed_path, drop)
+            raise SystemExit(
+                f"connection failure on {sid}; aborted collection and "
+                f"deleted {n_drop} exception record(s) in {drop}"
+            ) from exc
         logger.append_parallel_result(
             result,
             context={

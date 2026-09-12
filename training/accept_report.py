@@ -12,6 +12,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Union
 
+from .record_builder import record_include_in_training
+
 JsonPath = Union[str, Path]
 
 
@@ -58,7 +60,7 @@ def summarize_rows(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
         gid = rec.get("group_id")
         if gid:
             groups.add(str(gid))
-        if (rec.get("training_filter") or {}).get("include_in_training", True):
+        if record_include_in_training(rec):
             n_train += 1
 
         r = (rec.get("grpo") or {}).get("reward_scalar")

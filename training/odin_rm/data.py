@@ -31,7 +31,9 @@ def write_jsonl(path: JsonPath, rows: Iterable[Dict[str, Any]]) -> int:
 
 
 def include_in_training(rec: Dict[str, Any]) -> bool:
-    return bool((rec.get("training_filter") or {}).get("include_in_training", True))
+    from ..record_builder import record_include_in_training
+
+    return record_include_in_training(rec)
 
 
 def teacher_score(rec: Dict[str, Any]) -> Optional[float]:

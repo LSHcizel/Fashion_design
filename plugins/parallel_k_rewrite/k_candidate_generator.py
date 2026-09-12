@@ -16,7 +16,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from ..text_description_evaluator.design_text_evaluator_api import (
+    JudgeConnectionError,
     grpo_parallel_k_rewrite_config,
+    is_connection_failure,
 )
 from ..text_description_evaluator.r_content_reward import apply_group_z_len_r_content
 
@@ -103,6 +105,8 @@ def _one_rewrite(
             "error": None,
         }
     except Exception as exc:  # noqa: BLE001
+        if isinstance(exc, JudgeConnectionError) or is_connection_failure(exc):
+            raise JudgeConnectionError(str(exc)) from exc
         return {
             "candidate_index": candidate_index,
             "text": "",
@@ -270,6 +274,9 @@ def generate_k_parallel_rewrites(
 
     deduped, dup_count = _dedupe_by_normalized_text(rows)
     errors = [r for r in deduped if r.get("error")]
+    for row in errors:
+        if is_connection_failure(row.get("error")):
+            raise JudgeConnectionError(str(row.get("error")))
 
     eval_workers = eval_max_workers if eval_max_workers is not None else min(k, 4)
     group_evals: List[Dict[str, Any]] = []

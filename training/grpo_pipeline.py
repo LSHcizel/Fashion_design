@@ -22,6 +22,7 @@ from .grpo_compute import (
     skip_rank_correction_for_group,
 )
 from .record_builder import SCHEMA_VERSION as SAMPLES_SCHEMA
+from .record_builder import record_include_in_training
 
 DEFAULT_SFT_SCHEMA = "sft_phase_a_v1"
 
@@ -127,7 +128,7 @@ def load_samples_by_group(
 
 
 def default_include_for_training(rec: Dict[str, Any]) -> bool:
-    return bool((rec.get("training_filter") or {}).get("include_in_training", True))
+    return record_include_in_training(rec)
 
 
 def build_sft_record_for_group(

@@ -228,6 +228,26 @@ def iter_records_from_parallel_result(
         )
 
 
+def rewrite_error_of(rec: Dict[str, Any]) -> Any:
+    tf = rec.get("training_filter") or {}
+    if tf.get("rewrite_error"):
+        return tf["rewrite_error"]
+    return (rec.get("parallel_sampling") or {}).get("rewrite_error")
+
+
+def record_include_in_training(rec: Dict[str, Any]) -> bool:
+    """训练导入：排除 ``include_in_training=False`` 与改写/连接异常记录。"""
+    tf = rec.get("training_filter") or {}
+    if not tf.get("include_in_training", True):
+        return False
+    if rewrite_error_of(rec):
+        return False
+    reasons = tf.get("exclude_reasons") or []
+    if "rewrite_exception" in reasons:
+        return False
+    return True
+
+
 def sha256_text(text: str) -> str:
     return hashlib.sha256((text or "").encode("utf-8")).hexdigest()
 
