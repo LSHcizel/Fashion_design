@@ -84,6 +84,31 @@ def _load_env_file() -> None:
 _load_env_file()
 
 
+def coerce_judge_result_items(raw_results: Any) -> List[Dict[str, Any]]:
+    """Local 7B sometimes returns ``results`` as strings or a metric-keyed dict."""
+    if raw_results is None:
+        return []
+    if isinstance(raw_results, dict):
+        items: List[Dict[str, Any]] = []
+        for key, val in raw_results.items():
+            if isinstance(val, dict):
+                row = dict(val)
+                row.setdefault("metric", key)
+                items.append(row)
+            else:
+                items.append({"metric": str(key), "score": val})
+        return items
+    if not isinstance(raw_results, list):
+        return []
+    items = []
+    for item in raw_results:
+        if isinstance(item, dict):
+            items.append(item)
+        elif isinstance(item, str) and item.strip():
+            items.append({"metric": item.strip()})
+    return items
+
+
 def _load_fashion_config() -> Dict[str, Any]:
     """Load shared project config when available."""
     config_path = Path(__file__).resolve().parents[2] / "fashion_config.yaml"
@@ -533,7 +558,7 @@ def apply_design_merit_auxiliary_caps(text: str, module_output: Dict) -> Dict:
     if not caps:
         return patched
     results = []
-    for item in patched.get("results") or []:
+    for item in coerce_judge_result_items(patched.get("results")):
         row = dict(item)
         metric = row.get("metric")
         spec = caps.get(metric) if isinstance(metric, str) else None
@@ -1143,7 +1168,8 @@ Return format:
         requested_metrics = {item["metric"] for item in metric_specs}
         normalized = {"module": module_name, "results": []}
         result_map = {}
-        for item in parsed.get("results", []):
+        parsed = parsed if isinstance(parsed, dict) else {}
+        for item in coerce_judge_result_items(parsed.get("results")):
             metric = item.get("metric")
             if metric in requested_metrics:
                 result_map[metric] = item
@@ -1191,9 +1217,12 @@ Return format:
         penalty_options = {
             key: cfg.get("allowed_scores", [0.0]) for key, cfg in penalty_registry.items()
         }
-        items = parsed.get("items", []) if isinstance(parsed.get("items", []), list) else []
+        raw_items = parsed.get("items", []) if isinstance(parsed, dict) else []
+        items = raw_items if isinstance(raw_items, list) else []
         item_map = {}
         for item in items:
+            if not isinstance(item, dict):
+                continue
             penalty_key = item.get("penalty_key")
             if penalty_key in penalty_options:
                 item_map[penalty_key] = item
