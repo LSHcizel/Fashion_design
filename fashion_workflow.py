@@ -1430,8 +1430,181 @@ class FashionWorkflow:
             raise Exception(f"Max tries during phase: Design Elements Proposal for Chapter {chapter['number']}")
 
     # ------------------------------------------------------------------ #
-    # 文本评估（双门限，无工作流内多轮 optimize）
+    # 文本评估（双门限；失败时可选 K 路改写）
     # ------------------------------------------------------------------ #
+
+    _LOOK_PROMPT_PREFIX = "Please generate female models and the matching clothing for them."
+
+    @staticmethod
+    def _ensure_look_file_prefix(text: str) -> str:
+        body = text or ""
+        head_lines = [ln.strip() for ln in body.splitlines()[:3]]
+        if FashionWorkflow._LOOK_PROMPT_PREFIX in head_lines:
+            return body
+        return FashionWorkflow._LOOK_PROMPT_PREFIX + "\n\n" + body.lstrip("\n")
+
+    def _active_penalties_from_eval(self, eval_result: dict) -> list:
+        penalty_items = (
+            (eval_result.get("scores") or {})
+            .get("quality_score", {})
+            .get("penalties", {})
+            .get("items", {})
+        )
+        out = []
+        for key, item in penalty_items.items():
+            penalty_score = float(item.get("score", 0.0) or 0.0)
+            if penalty_score >= self.evaluator_config.adaptive_penalty_threshold:
+                out.append(
+                    {
+                        "penalty_key": key,
+                        "score": penalty_score,
+                        "reason": item.get("reason", ""),
+                    }
+                )
+        return out
+
+    def _fill_result_from_eval(self, result: dict, eval_result: dict) -> None:
+        ts = float(eval_result.get("total_score", 0.0) or 0.0)
+        qs = float(
+            (eval_result.get("scores") or {})
+            .get("quality_score", {})
+            .get("penalized_score", 0.0)
+            or 0.0
+        )
+        pt = float(
+            (eval_result.get("scores") or {})
+            .get("quality_score", {})
+            .get("penalties", {})
+            .get("total_penalty", 0.0)
+            or 0.0
+        )
+        gates = eval_result.get("gates") or {}
+        both_passed = bool(gates.get("both_passed")) or (
+            bool((gates.get("score_gate") or {}).get("passed", False))
+            and bool((gates.get("penalty_gate") or {}).get("passed", False))
+        )
+        result["total_score"] = ts
+        result["penalized_score"] = qs
+        result["total_penalty"] = pt
+        result["both_gates_passed"] = both_passed
+        result["passed"] = both_passed
+        result["active_penalties"] = self._active_penalties_from_eval(eval_result)
+        result["score_band"] = eval_result.get("score_band")
+        result["coverage_axis_score"] = (eval_result.get("scores") or {}).get("coverage_score", {}).get("score")
+        result["quality_axis_score"] = (eval_result.get("scores") or {}).get("quality_score", {}).get("penalized_score")
+
+    def _rewrite_extra_context(self) -> str:
+        bits = []
+        if getattr(self, "design_target_prompt", None):
+            bits.append(str(self.design_target_prompt))
+        sub = getattr(self, "_current_sub_theme_name", None)
+        if sub:
+            bits.append(f"Chapter: {sub}")
+        return "\n".join(bits)
+
+    def _try_k_rewrite_on_gate_fail(
+        self,
+        *,
+        look_desc_raw: str,
+        baseline_eval: dict,
+        look_txt_path: str | None,
+        look_number: int,
+        chapter_idx: int,
+        export_root: str | None,
+        result: dict,
+    ) -> None:
+        from plugins.local_llm import (
+            build_parallel_k_evaluator,
+            use_local_for_parallel_k_rewrite,
+        )
+        from plugins.parallel_k_rewrite import (
+            JudgeConnectionError,
+            generate_k_parallel_rewrites,
+            pick_rewrite_if_better,
+        )
+
+        if not use_local_for_parallel_k_rewrite():
+            if self.verbose:
+                print(f"  [TextEval] Look {look_number} rewrite skipped (rewriter-llm 未启用)")
+            return
+
+        if self.verbose:
+            print(f"  [TextEval] Look {look_number} gates failed; K-rewrite via rewriter-llm ...")
+        try:
+            parallel = generate_k_parallel_rewrites(
+                look_desc_raw,
+                evaluator=build_parallel_k_evaluator(),
+                extra_context=self._rewrite_extra_context(),
+            )
+        except JudgeConnectionError as exc:
+            if self.verbose:
+                print(f"  [TextEval] Look {look_number} K-rewrite aborted (connection): {exc}")
+            result["rewrite_error"] = str(exc)
+            return
+
+        chosen = pick_rewrite_if_better(
+            baseline_evaluation=baseline_eval,
+            candidates=parallel.get("candidates") or [],
+        )
+        temps = [
+            c.get("temperature")
+            for c in (parallel.get("candidates") or [])
+            if c.get("dedupe_kept") is not False
+        ]
+        result["k_rewrite_temperatures"] = temps
+        if chosen is None:
+            if self.verbose:
+                print(f"  [TextEval] Look {look_number} K-rewrite not better than original; keep source")
+            result["mode"] = "evaluate_only"
+            return
+
+        ev = chosen.get("evaluation") or {}
+        new_text = str(chosen.get("text") or "").strip()
+        if not new_text:
+            result["mode"] = "evaluate_only"
+            return
+
+        file_text = self._ensure_look_file_prefix(new_text)
+        if look_txt_path:
+            src = Path(look_txt_path)
+            original_side = src.with_name(src.stem + ".original.txt")
+            if not original_side.is_file():
+                original_side.write_text(look_desc_raw, encoding="utf-8")
+            src.write_text(file_text, encoding="utf-8")
+        descs = getattr(self.look_stylist, "look_descriptions", None)
+        if isinstance(descs, list) and descs:
+            descs[-1] = new_text
+
+        self._fill_result_from_eval(result, ev)
+        result["best_text"] = file_text
+        result["mode"] = "k_rewrite"
+        result["rounds_executed"] = 1
+        result["chosen_candidate_index"] = chosen.get("candidate_index")
+        result["chosen_temperature"] = chosen.get("temperature")
+
+        if export_root:
+            from plugins.text_description_evaluator.evaluation_export import write_look_evaluation_artifacts
+
+            paths = write_look_evaluation_artifacts(
+                ev,
+                out_dir=Path(export_root) / "text_eval_scores",
+                stem=f"look_{look_number:02d}",
+                extra_summary={
+                    "chapter_idx": chapter_idx,
+                    "look_number": look_number,
+                    "source_txt": Path(look_txt_path).name if look_txt_path else None,
+                    "rewrite": "k_rewrite",
+                    "chosen_candidate_index": chosen.get("candidate_index"),
+                },
+            )
+            result["report_path"] = paths.get("report_md")
+            result["evaluation_json_path"] = paths.get("evaluation_json")
+        if self.verbose:
+            print(
+                f"  [TextEval] Look {look_number} adopted candidate #{chosen.get('candidate_index')} "
+                f"temp={chosen.get('temperature')} total={result['total_score']:.3f} "
+                f"passed={result['passed']}"
+            )
 
     def _evaluate_and_optimize_look(
         self,
@@ -1442,15 +1615,12 @@ class FashionWorkflow:
         chapter_dir: str | None = None,
     ) -> dict:
         """
-        对单个 look 描述执行文本评判（双门限与 spec 中评分准则），不再进行多轮自动改写。
+        对单个 look 描述执行文本评判（双门限与 spec 中评分准则）。
 
         1. evaluator 未启用 → 透传
-        2. `evaluate_txt_file` → 得到 total_score、gates、penalties、r_content 等
-        3. 双门限均通过 → `passed=True`，保留原文本
-        4. 未通过 → `passed=False`，`best_text` 仍为当前生成稿；改写请使用并行 K 改写等外部流程
-
-        返回结构中的 ``rounds_executed`` 恒为 0。
-        评测成功时写入 ``<chapter>/text_eval_scores/look_XX_evaluation.json`` 与 ``look_XX_report.md``。
+        2. 评原文；双门限均通过 → 保留原文本
+        3. 未通过且 ``rewrite_on_gate_fail`` → 8001 K 路改写，8000 选优于原文的一条并回写
+        4. 改写不优于原文或改写器不可用 → 保留原稿
         """
         cfg = self.evaluator_config
         evaluator = self.text_evaluator
@@ -1474,12 +1644,8 @@ class FashionWorkflow:
                 print(f"  [TextEval] Look {look_number} skipped (evaluator disabled)")
             return result
 
-        from pathlib import Path
-
-        # -- 评估原始文本 -- #
         eval_path = look_txt_path
         if eval_path is None:
-            # 写临时文件供 evaluator 使用
             tmp_dir = Path(self.workflow_dir or ".")
             eval_path = str(tmp_dir / f"_tmp_look_{chapter_idx:02d}_{look_number:02d}.txt")
             with open(eval_path, "w", encoding="utf-8") as f:
@@ -1489,53 +1655,8 @@ class FashionWorkflow:
             if self.verbose:
                 print(f"  [TextEval] Evaluating look {look_number} ...")
             eval_result = evaluator.evaluate_txt_file(Path(eval_path))
-
-            ts = float(eval_result.get("total_score", 0.0) or 0.0)
-            qs = float(
-                eval_result.get("scores", {})
-                .get("quality_score", {})
-                .get("penalized_score", 0.0)
-                or 0.0
-            )
-            pt = float(
-                eval_result.get("scores", {})
-                .get("quality_score", {})
-                .get("penalties", {})
-                .get("total_penalty", 0.0)
-                or 0.0
-            )
-            gates = eval_result.get("gates") or {}
-            score_gate_passed = bool((gates.get("score_gate") or {}).get("passed", False))
-            penalty_gate_passed = bool((gates.get("penalty_gate") or {}).get("passed", False))
-            both_passed = score_gate_passed and penalty_gate_passed
-
-            # 提取 active penalties
-            penalty_items = (
-                eval_result.get("scores", {})
-                .get("quality_score", {})
-                .get("penalties", {})
-                .get("items", {})
-            )
-            active_penalties = []
-            for key, item in penalty_items.items():
-                penalty_score = float(item.get("score", 0.0) or 0.0)
-                if penalty_score >= cfg.adaptive_penalty_threshold:
-                    active_penalties.append(
-                        {
-                            "penalty_key": key,
-                            "score": penalty_score,
-                            "reason": item.get("reason", ""),
-                        }
-                    )
-
-            result["total_score"] = ts
-            result["penalized_score"] = qs
-            result["total_penalty"] = pt
-            result["both_gates_passed"] = both_passed
-            result["active_penalties"] = active_penalties
-            result["score_band"] = eval_result.get("score_band")
-            result["coverage_axis_score"] = (eval_result.get("scores") or {}).get("coverage_score", {}).get("score")
-            result["quality_axis_score"] = (eval_result.get("scores") or {}).get("quality_score", {}).get("penalized_score")
+            self._fill_result_from_eval(result, eval_result)
+            both_passed = bool(result["both_gates_passed"])
 
             export_root = chapter_dir or (str(Path(look_txt_path).parent) if look_txt_path else None)
             if export_root:
@@ -1560,29 +1681,33 @@ class FashionWorkflow:
                 status = "PASS" if both_passed else "FAIL"
                 print(
                     f"  [TextEval] Look {look_number} initial eval: "
-                    f"total={ts:.3f} quality={qs:.3f} penalty={pt:.3f} → [{status}]"
+                    f"total={result['total_score']:.3f} quality={result['penalized_score']:.3f} "
+                    f"penalty={result['total_penalty']:.3f} → [{status}]"
                 )
 
-            # -- 通过双门限：直接保留，不优化 -- #
+            result["best_text"] = look_desc_raw
             if both_passed:
-                result["passed"] = True
                 result["mode"] = "evaluate_only"
-                result["best_text"] = look_desc_raw
                 return result
 
-            # -- 未通过双门限：不再自动多轮改写，仅记录评判结果 -- #
-            if self.verbose:
+            result["mode"] = "evaluate_only"
+            if getattr(cfg, "rewrite_on_gate_fail", True):
+                self._try_k_rewrite_on_gate_fail(
+                    look_desc_raw=look_desc_raw,
+                    baseline_eval=eval_result,
+                    look_txt_path=look_txt_path,
+                    look_number=look_number,
+                    chapter_idx=chapter_idx,
+                    export_root=export_root,
+                    result=result,
+                )
+            elif self.verbose:
                 print(
                     f"  [TextEval] Look {look_number} gates not passed; "
-                    f"multi-round optimize disabled — use parallel K rewrite or manual edit if needed."
+                    f"rewrite-on-gate-fail=false, keep original"
                 )
-            result["passed"] = False
-            result["mode"] = "evaluate_only"
-            result["rounds_executed"] = 0
-            result["best_text"] = look_desc_raw
 
         finally:
-            # 清理临时文件
             if eval_path != look_txt_path and eval_path:
                 try:
                     Path(eval_path).unlink(missing_ok=True)
@@ -1796,7 +1921,7 @@ class TextEvaluatorConfig:
     # 分项 penalty score ≥ 此值时计入 active_penalties（与 penalties.total_penalty 门限无关）
     adaptive_penalty_threshold: float = 0.05
     # 双门限（与 spec optimization_gates / evaluate_text 一致）
-    score_gate_min: float = 0.7
+    score_gate_min: float = 0.8
     penalty_gate_max: float = 0.5
     # API 配置（None 表示从 spec 默认读取）
     evaluator_api_key: str | None = None
@@ -1804,6 +1929,7 @@ class TextEvaluatorConfig:
     evaluator_model: str | None = None       # spec 默认: gpt-5.4-mini
     evaluator_temperature: float = 0.0       # 裁判评分用
     rewriter_temperature: float = 0.1        # spec rewriter.temperature 默认
+    rewrite_on_gate_fail: bool = True        # 门限失败则 K 路改写（8001）
 
 
 def parse_yaml(yaml_file_loc):
@@ -1910,13 +2036,14 @@ def parse_yaml(yaml_file_loc):
     parser.evaluator_adaptive_min_total_score = float(ev.get("adaptive-min-total-score", 0.82))
     parser.evaluator_adaptive_min_quality_score = float(ev.get("adaptive-min-quality-score", 0.80))
     parser.evaluator_adaptive_penalty_threshold = float(ev.get("adaptive-penalty-threshold", 0.05))
-    parser.evaluator_score_gate_min = float(ev.get("score-gate-min", 0.7))
+    parser.evaluator_score_gate_min = float(ev.get("score-gate-min", 0.8))
     parser.evaluator_penalty_gate_max = float(ev.get("penalty-gate-max", 0.5))
     parser.evaluator_api_key = ev.get("api-key") or None
     parser.evaluator_api_base = ev.get("api-base") or None
     parser.evaluator_model = ev.get("model") or None
     parser.evaluator_temperature = float(ev.get("temperature", 0.0))
     parser.evaluator_rewriter_temperature = float(ev.get("rewriter-temperature", 0.1))
+    parser.evaluator_rewrite_on_gate_fail = bool(ev.get("rewrite-on-gate-fail", True))
 
     grpo_ev = (config_data.get("grpo") or {}).get("design-text-evaluator") or {}
 
@@ -2041,6 +2168,7 @@ if __name__ == "__main__":
             evaluator_model=args.evaluator_model,
             evaluator_temperature=args.evaluator_temperature,
             rewriter_temperature=args.evaluator_rewriter_temperature,
+            rewrite_on_gate_fail=getattr(args, "evaluator_rewrite_on_gate_fail", True),
         )
 
         workflow = FashionWorkflow(

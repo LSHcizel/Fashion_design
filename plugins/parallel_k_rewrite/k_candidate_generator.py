@@ -215,7 +215,7 @@ def generate_k_parallel_rewrites(
         为 True（默认）时，对去重保留的候选调用 `evaluate_text`，门限与分数与
         `plugins/text_description_evaluator` 完全一致；False 则仅生成文本（旧行为）。
     gate_config :
-        传入 `evaluate_text` 的门限覆盖，例如 ``{"score_gate_min": 0.7, "penalty_gate_max": 0.5}``；
+        传入 `evaluate_text` 的门限覆盖，例如 ``{"score_gate_min": 0.8, "penalty_gate_max": 0.5}``；
         为 None 时使用 spec 中 ``optimization_gates`` 默认。
     eval_source_prefix :
         评判 `source_name` 前缀，单条为 ``{prefix}.c{index}``。

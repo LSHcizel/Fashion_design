@@ -137,8 +137,10 @@ text-evaluator:
 
   # optimize 内部双门限（两门均通过则早停）
   # 注意：与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json optimization_gates 保持一致
-  score-gate-min: 0.7
+  score-gate-min: 0.8
   penalty-gate-max: 0.5
+  # 双门限失败时用 8001 改写器 K 路改写，8000 裁判选优于原文的一条
+  rewrite-on-gate-fail: true
 
   # 若需临时切回 GPT 评判：use-local: false，并留空下面三项（继承 grpo.design-text-evaluator）
   # api-key:
@@ -182,6 +184,8 @@ grpo:
   # 改写专用 7B（与基座同架构，独立权重目录；SFT/GRPO 只更新此模型）
   # 首次使用：cp -r models/Qwen2.5-7B-Instruct models/Qwen2.5-7B-Rewriter
   # 启动 vLLM：VLLM_GPU=1 VLLM_PROFILE=rewriter bash scripts/restart_local_vllm.sh
+  # 切 GRPO merge 权重 / 恢复默认：bash scripts/rewriter_weights.sh apply --run-id <id>
+  #                             bash scripts/rewriter_weights.sh restore
   rewriter-llm:
     enabled: true
     api-base: "http://127.0.0.1:8001/v1"

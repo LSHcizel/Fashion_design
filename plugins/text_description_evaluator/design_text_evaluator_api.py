@@ -1319,7 +1319,7 @@ class DesignTextEvaluator:
 
     def _resolve_optimization_gate_config(self, gate_config: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
         spec_gates = self.spec.get("optimization_gates", {}) or {}
-        score_gate_min = float(spec_gates.get("score_gate_min", 0.7))
+        score_gate_min = float(spec_gates.get("score_gate_min", 0.8))
         penalty_gate_max = float(spec_gates.get("penalty_gate_max", 0.5))
         if gate_config:
             if gate_config.get("score_gate_min") is not None:

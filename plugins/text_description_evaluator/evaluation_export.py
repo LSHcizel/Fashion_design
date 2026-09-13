@@ -100,7 +100,7 @@ def load_gate_thresholds_from_fashion_config(config_path: Path) -> Dict[str, flo
             cfg = yaml.safe_load(fp) or {}
     te = dict(cfg.get("text-evaluator") or {})
     return {
-        "score_gate_threshold": float(te.get("score-gate-min", 0.7)),
+        "score_gate_threshold": float(te.get("score-gate-min", 0.8)),
         "penalty_gate_threshold": float(te.get("penalty-gate-max", 0.5)),
     }
 

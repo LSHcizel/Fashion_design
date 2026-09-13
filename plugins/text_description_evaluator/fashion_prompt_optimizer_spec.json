@@ -8,7 +8,7 @@
     "diagnosis"
   ],
   "optimization_gates": {
-    "score_gate_min": 0.7,
+    "score_gate_min": 0.8,
     "penalty_gate_max": 0.5,
     "notes": "score_gate 基于内容主分 s_fp_base（= S_fp）。penalty 不参与 S_fp。长度不进总分。档 3 时 GRPO 的 R_content 改为 r_Q，门限仍看 s_fp_base。"
   },

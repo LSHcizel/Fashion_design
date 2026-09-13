@@ -343,7 +343,7 @@ def build_score_formula_breakdown(
     x_0 = hold_cfg.get("log_len_center") or length_disentangle.get("log_len_center")
     gamma = float(rcfg.get("gamma_penalty") or 0.0)
     beta_z = float(rcfg.get("beta_z_len") or 0.0)
-    tau_s = float(gates.get("score_gate_min", 0.7))
+    tau_s = float(gates.get("score_gate_min", 0.8))
     tau_p = float(gates.get("penalty_gate_max", 0.5))
 
     cap_reasons: List[str] = []
