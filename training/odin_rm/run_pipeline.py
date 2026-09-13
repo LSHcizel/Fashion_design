@@ -27,7 +27,7 @@ def _export(samples_rq: Path, export_dir: Path) -> dict:
     return export_two_phase_from_samples(
         samples_rq,
         export_dir,
-        include_filter=default_include_for_training,
+        filter_fn=default_include_for_training,
         reward_key="R_content",
     )
 
