@@ -24,6 +24,7 @@ from transformers import (
 from plugins.text_description_evaluator.design_text_evaluator_api import default_hf_local_grpo_model
 
 from .data import completion_token_start, load_phase_a_rows, render_chat_text
+from .trainer_compat import trainer_processing_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -284,8 +285,8 @@ def main() -> None:
         args=ta,
         train_dataset=ds,
         data_collator=collator,
-        tokenizer=tokenizer,
         callbacks=callbacks,
+        **trainer_processing_kwargs(tokenizer),
     )
     trainer.train()
     trainer.save_model(str(args.out))
