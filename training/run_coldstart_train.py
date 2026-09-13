@@ -21,7 +21,7 @@ from typing import List, Sequence
 logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-REC_SCRIPT = REPO_ROOT / "training" / "hf_grpo" / "run_recommended_training.py"
+REC_MODULE = "training.hf_grpo.run_recommended_training"
 
 
 def _run(cmd: Sequence[str], *, dry_run: bool) -> None:
@@ -128,7 +128,8 @@ def main() -> None:
 
     rec_cmd: List[str] = [
         py,
-        str(REC_SCRIPT),
+        "-m",
+        REC_MODULE,
         "--phase-b",
         str(phase_b),
         "--work-dir",

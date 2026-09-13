@@ -31,8 +31,10 @@ from typing import Any, Dict, List, Optional, Sequence
 logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SFT_SCRIPT = REPO_ROOT / "training" / "hf_grpo" / "train_sft.py"
-GRPO_SCRIPT = REPO_ROOT / "training" / "hf_grpo" / "train_grpo.py"
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+SFT_MODULE = "training.hf_grpo.train_sft"
+GRPO_MODULE = "training.hf_grpo.train_grpo"
 LATEST_NAME = "latest.json"
 ACCEPT_LOG_NAME = "accept_rounds.jsonl"
 
@@ -124,7 +126,8 @@ def build_sft_cmd(
 ) -> List[str]:
     sft_cmd: List[str] = [
         py,
-        str(SFT_SCRIPT),
+        "-m",
+        SFT_MODULE,
         "--jsonl",
         str(phase_a),
         "--model",
@@ -177,7 +180,8 @@ def build_grpo_cmd(
 ) -> List[str]:
     grpo_cmd: List[str] = [
         py,
-        str(GRPO_SCRIPT),
+        "-m",
+        GRPO_MODULE,
         "--jsonl",
         str(phase_b),
         "--model",
@@ -312,9 +316,6 @@ def main() -> None:
     p.add_argument("--dry-run", action="store_true", help="只打印命令不执行")
 
     args = p.parse_args()
-
-    if not SFT_SCRIPT.is_file() or not GRPO_SCRIPT.is_file():
-        raise SystemExit(f"脚本缺失: {SFT_SCRIPT} 或 {GRPO_SCRIPT}")
 
     try:
         from plugins.text_description_evaluator.design_text_evaluator_api import (
