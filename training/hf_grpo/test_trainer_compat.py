@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import unittest
 
-from training.hf_grpo.trainer_compat import trainer_processing_kwargs
+from training.hf_grpo.trainer_compat import (
+    merge_signature_columns,
+    trainer_processing_kwargs,
+    training_args_keep_extra_columns,
+)
 
 
 class _OldTrainer:
@@ -50,6 +54,15 @@ class TrainerCompatTest(unittest.TestCase):
         self.assertEqual(
             trainer_processing_kwargs("tok", trainer_cls=_Subclass),
             {"processing_class": "tok"},
+        )
+
+    def test_keep_grpo_columns(self):
+        kw = training_args_keep_extra_columns()
+        if kw:
+            self.assertEqual(kw.get("remove_unused_columns"), False)
+        self.assertEqual(
+            merge_signature_columns(["input_ids"]),
+            ["input_ids", "completion_start", "advantage"],
         )
 
 

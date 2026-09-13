@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Dict
+from typing import Any, Dict, Iterable, List
 
 
 def trainer_processing_kwargs(tokenizer: Any, trainer_cls: Any = None) -> Dict[str, Any]:
@@ -26,3 +26,30 @@ def trainer_processing_kwargs(tokenizer: Any, trainer_cls: Any = None) -> Dict[s
         if "tokenizer" in params:
             return {"tokenizer": tokenizer}
     return {}
+
+
+def training_args_keep_extra_columns() -> Dict[str, Any]:
+    """
+    Trainer 默认按 model.forward 签名丢掉自定义列。
+    GRPO 需要保留 ``completion_start`` / ``advantage``。
+    """
+    try:
+        from transformers import TrainingArguments
+
+        params = inspect.signature(TrainingArguments.__init__).parameters
+    except Exception:
+        return {"remove_unused_columns": False}
+    if "remove_unused_columns" in params:
+        return {"remove_unused_columns": False}
+    return {}
+
+
+GRPO_EXTRA_COLUMNS = ("completion_start", "advantage")
+
+
+def merge_signature_columns(existing: Iterable[str] | None, extra: Iterable[str] = GRPO_EXTRA_COLUMNS) -> List[str]:
+    cols = list(existing or [])
+    for name in extra:
+        if name not in cols:
+            cols.append(name)
+    return cols

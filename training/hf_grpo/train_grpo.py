@@ -34,7 +34,11 @@ from .model_load import (
     should_use_lora,
 )
 from .modeling import grpo_loss, sequence_completion_log_probs
-from .trainer_compat import trainer_processing_kwargs
+from .trainer_compat import (
+    merge_signature_columns,
+    trainer_processing_kwargs,
+    training_args_keep_extra_columns,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +133,14 @@ class GRPOTrainer(Trainer):
         self.beta_kl = beta_kl
         self.kl_squared = kl_squared
         self.share_ref_via_disable_adapter = share_ref_via_disable_adapter
+
+    def _set_signature_columns_if_needed(self):  # type: ignore[override]
+        parent = getattr(super(), "_set_signature_columns_if_needed", None)
+        if parent is not None:
+            parent()
+        self._signature_columns = merge_signature_columns(
+            getattr(self, "_signature_columns", None)
+        )
 
     def compute_loss(
         self,
@@ -294,6 +306,7 @@ def main() -> None:
         fp16=use_fp16,
         gradient_checkpointing=True,
         report_to=[],
+        **training_args_keep_extra_columns(),
     )
 
     trainer = GRPOTrainer(
