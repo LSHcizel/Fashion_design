@@ -10,10 +10,13 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 from ..text_description_evaluator.design_text_evaluator_api import (
     JudgeConnectionError,
@@ -144,15 +147,42 @@ def _evaluate_candidates_with_spec(
     if not work_items:
         return []
 
-    def run_one(idx: int, cand: Dict[str, Any]) -> Tuple[int, Dict[str, Any], Dict[str, Any]]:
+    def run_one(
+        idx: int, cand: Dict[str, Any]
+    ) -> Tuple[int, Dict[str, Any], Optional[Dict[str, Any]], Optional[str]]:
         src = f"{eval_source_prefix}.c{idx}"
-        result = evaluator.evaluate_text(cand["text"], source_name=src, gate_config=gate_config)
-        return idx, cand, result
+        try:
+            result = evaluator.evaluate_text(cand["text"], source_name=src, gate_config=gate_config)
+            return idx, cand, result, None
+        except JudgeConnectionError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            if is_connection_failure(exc):
+                raise JudgeConnectionError(str(exc)) from exc
+            return idx, cand, None, str(exc)
+
+    def _apply_eval(
+        cand: Dict[str, Any],
+        ev: Optional[Dict[str, Any]],
+        err: Optional[str],
+    ) -> None:
+        if err:
+            cand["evaluation"] = None
+            cand["evaluation_skipped"] = "judge_eval_error"
+            cand["evaluation_error"] = err
+            logger.warning(
+                "skip evaluate for %s.c%s: %s",
+                eval_source_prefix,
+                cand.get("candidate_index"),
+                err,
+            )
+            return
+        cand["evaluation"] = ev
 
     if len(work_items) == 1:
         idx, cand = work_items[0]
-        _, _, ev = run_one(idx, cand)
-        cand["evaluation"] = ev
+        _, _, ev, err = run_one(idx, cand)
+        _apply_eval(cand, ev, err)
     else:
         n_workers = max(1, min(eval_max_workers, len(work_items)))
         futures = {}
@@ -160,8 +190,8 @@ def _evaluate_candidates_with_spec(
             for idx, cand in work_items:
                 futures[pool.submit(run_one, idx, cand)] = (idx, cand)
             for fut in as_completed(futures):
-                idx, cand, ev = fut.result()
-                cand["evaluation"] = ev
+                idx, cand, ev, err = fut.result()
+                _apply_eval(cand, ev, err)
 
     ordered_evals: List[Dict[str, Any]] = []
     for c in sorted(deduped, key=lambda x: int(x["candidate_index"])):

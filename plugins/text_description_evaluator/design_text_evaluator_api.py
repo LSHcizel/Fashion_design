@@ -26,6 +26,9 @@ class JudgeConnectionError(RuntimeError):
     """Judge / rewriter API unreachable (connection refused, reset, DNS, etc.)."""
 
 
+JUDGE_JSON_PARSE_ATTEMPTS = 3
+
+
 _CONNECTION_FAILURE_MARKERS = (
     "connection refused",
     "connection reset",
@@ -652,7 +655,7 @@ Judging principles:
 2. Synonyms, paraphrases, fashion-specific near-equivalents, hypernyms, and hyponyms should count as hits when they clearly cover the target concept.
 3. Only mark hit=1 when the text clearly supports it. Do not hallucinate missing facts.
 4. applicable decides whether a metric should enter scoring for this text. If applicable is false, hit must be null.
-5. evidence should quote short spans from the original text whenever possible.
+5. evidence should quote short spans from the original text whenever possible. Each evidence array has at most 3 short quotes (under 20 words each); do not enumerate the whole look.
 6. When bilateral differences exist, distinguish trunk from accessories. Trunk = all clothing that defines the worn look: outerwear, inner/base tops (shirts, tees, knit base layers, dress bodices when described as a garment layer), bottoms, and footwear—inner and outer layers each count as trunk when described as separate garments. When the text explicitly describes them, trunk also includes outerwear/jacket/coat lining and trouser/pant inner lining or in-seam revealed lining as part of the same garment’s coherent structure (shell vs lining must read as one grammar unless clearly layered). On trunk garments, large left-right differences in style, material, or garment identity should score poorly unless clearly grounded in one coherent grammar; **stacking several** trunk-level left-right contrasts at once (e.g. sleeve presence mismatch + different pant-leg materials/identities + mismatched footwear families + gloved vs bare hand as extra trunk contrast) is especially hostile to image generation—penalize accordingly even if the text calls it “deconstructed.” Mild left-right differences on accessories alone (belt, gloves, jewelry, bag) should be scored leniently and must not drive the same strictness as trunk splits when all trunk garments read unified.
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
@@ -772,15 +775,17 @@ Return format:
             extra_guidance=extra_guidance,
         )
         temperature, top_p, seed = self._sampling_for_module(module_name)
-        raw_output = self._request_completion(
-            system_prompt=self.DEFAULT_SYSTEM_PROMPT,
-            user_content=user_prompt,
-            response_format={"type": "json_object"},
-            temperature=temperature,
-            top_p=top_p,
-            seed=seed,
+        parsed = self._parse_json_with_retry(
+            lambda: self._request_completion(
+                system_prompt=self.DEFAULT_SYSTEM_PROMPT,
+                user_content=user_prompt,
+                response_format={"type": "json_object"},
+                temperature=temperature,
+                top_p=top_p,
+                seed=seed,
+            ),
+            label=f"judge_module[{module_name}]",
         )
-        parsed = self._parse_json(raw_output)
         return self._normalize_module_result(module_name, metric_specs, parsed, axis_name)
 
     def _sampling_for_module(self, module_name: str):
@@ -813,8 +818,10 @@ Return format:
             "where higher means a worse issue, analogous to inverted quality rubric levels.\n"
             "Return JSON only."
         )
-        raw_output = self._generate(self._build_quality_penalty_system_prompt(), user_prompt)
-        parsed = self._parse_json(raw_output)
+        parsed = self._parse_json_with_retry(
+            lambda: self._generate(self._build_quality_penalty_system_prompt(), user_prompt),
+            label="judge_quality_penalties",
+        )
         return self._normalize_quality_penalties(parsed)
 
     def _get_penalty_registry(self) -> Dict[str, Dict[str, Any]]:
@@ -1126,6 +1133,38 @@ Return format:
             return json.loads(json_block)
         except json.JSONDecodeError as exc:
             raise ValueError(f"LLM judge did not return valid JSON:\n{cleaned}") from exc
+
+    def _parse_json_with_retry(
+        self,
+        raw_factory,
+        *,
+        label: str,
+        attempts: int = JUDGE_JSON_PARSE_ATTEMPTS,
+    ) -> Dict:
+        """Parse judge JSON; retry then fall back to {} so one truncated reply cannot abort evaluate."""
+        last_exc: Optional[BaseException] = None
+        n = max(1, int(attempts))
+        for i in range(n):
+            raw = raw_factory()
+            try:
+                return self._parse_json(raw)
+            except ValueError as exc:
+                last_exc = exc
+                self.logger.warning(
+                    "%s JSON parse failed (%s/%s): %s",
+                    label,
+                    i + 1,
+                    n,
+                    exc,
+                )
+        self.logger.warning(
+            "%s giving up after %s parse error(s); treating output as empty",
+            label,
+            n,
+        )
+        if last_exc is not None:
+            self.logger.debug("%s last parse error", label, exc_info=last_exc)
+        return {}
 
     def _clean_output(self, text: str) -> str:
         text = re.sub(r"<think>[\s\S]*?</think>", "", text).strip()

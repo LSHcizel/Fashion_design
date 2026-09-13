@@ -58,19 +58,32 @@ def _inject_original_as_candidate(
     source_name: str,
 ) -> None:
     """Keep the unrevised draft in the group as a low-reward contrast (negatives)."""
-    ev = evaluator.evaluate_text(source_text, source_name=source_name)
+    try:
+        ev = evaluator.evaluate_text(source_text, source_name=source_name)
+        skip = None
+        eval_err = None
+    except JudgeConnectionError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        if is_connection_failure(exc):
+            raise JudgeConnectionError(str(exc)) from exc
+        ev = None
+        skip = "judge_eval_error"
+        eval_err = str(exc)
     cands = list(parallel_result.get("candidates") or [])
-    cands.append(
-        {
-            "candidate_index": -1,
-            "text": source_text,
-            "temperature": 0.0,
-            "dedupe_kept": True,
-            "evaluation": ev,
-            "error": None,
-            "injected_original": True,
-        }
-    )
+    row: Dict[str, Any] = {
+        "candidate_index": -1,
+        "text": source_text,
+        "temperature": 0.0,
+        "dedupe_kept": True,
+        "evaluation": ev,
+        "error": None,
+        "injected_original": True,
+    }
+    if skip:
+        row["evaluation_skipped"] = skip
+        row["evaluation_error"] = eval_err
+    cands.append(row)
     parallel_result["candidates"] = cands
 
 

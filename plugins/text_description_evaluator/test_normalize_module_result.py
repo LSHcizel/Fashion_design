@@ -38,5 +38,63 @@ class CoerceJudgeResultsTests(unittest.TestCase):
         self.assertFalse(out["results"][0]["applicable"])
 
 
+class JudgeJsonRetryTests(unittest.TestCase):
+    INCOMPLETE = (
+        '{\n'
+        '  "module": "LanguageClarity",\n'
+        '  "results": [\n'
+        '    {\n'
+        '      "metric": "quantity_accuracy",\n'
+        '      "applicable": true,\n'
+        '      "score": 1.0,\n'
+        '      "evidence": ["light aqua-blue", "relaxed oversized"],\n'
+        '      "reason": "'
+    )
+
+    def _judge(self) -> ApiLLMJudge:
+        return ApiLLMJudge(api_key="local", api_base="http://127.0.0.1:8000/v1", model="dummy")
+
+    def test_extract_raises_on_truncated_json(self) -> None:
+        judge = self._judge()
+        with self.assertRaises(ValueError) as ctx:
+            judge._parse_json(self.INCOMPLETE)
+        self.assertIn("incomplete JSON", str(ctx.exception))
+
+    def test_retry_then_empty_fallback(self) -> None:
+        judge = self._judge()
+        calls = {"n": 0}
+
+        def raw_factory() -> str:
+            calls["n"] += 1
+            return self.INCOMPLETE
+
+        parsed = judge._parse_json_with_retry(raw_factory, label="test", attempts=3)
+        self.assertEqual(parsed, {})
+        self.assertEqual(calls["n"], 3)
+
+    def test_retry_succeeds_on_later_attempt(self) -> None:
+        judge = self._judge()
+        replies = [
+            self.INCOMPLETE,
+            '{"module": "LanguageClarity", "results": [{"metric": "quantity_accuracy", "applicable": true, "score": 1.0}]}',
+        ]
+
+        parsed = judge._parse_json_with_retry(lambda: replies.pop(0), label="test", attempts=3)
+        self.assertEqual(parsed["module"], "LanguageClarity")
+        self.assertEqual(parsed["results"][0]["score"], 1.0)
+
+    def test_judge_module_does_not_raise_on_truncated_json(self) -> None:
+        judge = self._judge()
+        judge._request_completion = lambda **kwargs: self.INCOMPLETE  # type: ignore[method-assign]
+        out = judge.judge_module(
+            "a light aqua-blue oversized shirt",
+            "LanguageClarity",
+            [{"metric": "quantity_accuracy"}],
+            "coverage_score",
+        )
+        self.assertEqual(out["results"][0]["metric"], "quantity_accuracy")
+        self.assertFalse(out["results"][0]["applicable"])
+
+
 if __name__ == "__main__":
     unittest.main()

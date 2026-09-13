@@ -96,6 +96,32 @@ class TrainingImportFilterTests(unittest.TestCase):
         self.assertTrue(default_include_for_training(good))
 
 
+class InjectOriginalEvalErrorTests(unittest.TestCase):
+    def test_truncated_json_still_injects_without_evaluation(self) -> None:
+        from training.collect_k_rewrite_samples import _inject_original_as_candidate
+
+        class _Ev:
+            def evaluate_text(self, *_a, **_k):
+                raise ValueError("LLM judge returned incomplete JSON:\n{")
+
+        result = {"candidates": []}
+        _inject_original_as_candidate(_Ev(), result, "draft look", source_name="n")
+        row = result["candidates"][0]
+        self.assertTrue(row["injected_original"])
+        self.assertIsNone(row["evaluation"])
+        self.assertEqual(row["evaluation_skipped"], "judge_eval_error")
+
+    def test_connection_error_still_raises(self) -> None:
+        from training.collect_k_rewrite_samples import _inject_original_as_candidate
+
+        class _Ev:
+            def evaluate_text(self, *_a, **_k):
+                raise JudgeConnectionError(CONN_ERR)
+
+        with self.assertRaises(JudgeConnectionError):
+            _inject_original_as_candidate(_Ev(), {"candidates": []}, "draft", source_name="n")
+
+
 class OneRewriteAbortTests(unittest.TestCase):
     def test_one_rewrite_reraises_connection_failure(self) -> None:
         from plugins.parallel_k_rewrite.k_candidate_generator import _one_rewrite
