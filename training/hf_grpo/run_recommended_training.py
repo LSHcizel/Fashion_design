@@ -28,6 +28,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
+from .model_load import DEFAULT_LORA_ALPHA, DEFAULT_LORA_R, lora_cli_args
+
 logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -166,6 +168,13 @@ def build_sft_cmd(
                 str(args.sft_early_stop_ema_decay),
             ]
         )
+    sft_cmd.extend(
+        lora_cli_args(
+            lora_r=args.lora_r,
+            lora_alpha=args.lora_alpha,
+            full_finetune=args.full_finetune,
+        )
+    )
     return sft_cmd
 
 
@@ -207,6 +216,13 @@ def build_grpo_cmd(
     ]
     if args.system_prompt_file and args.system_prompt_file.is_file():
         grpo_cmd.extend(["--system-prompt-file", str(args.system_prompt_file.resolve())])
+    grpo_cmd.extend(
+        lora_cli_args(
+            lora_r=args.lora_r,
+            lora_alpha=args.lora_alpha,
+            full_finetune=args.full_finetune,
+        )
+    )
     return grpo_cmd
 
 
@@ -311,6 +327,13 @@ def main() -> None:
         help="仅 GRPO：可选 system 文本文件路径",
     )
 
+    p.add_argument("--lora-r", type=int, default=DEFAULT_LORA_R)
+    p.add_argument("--lora-alpha", type=int, default=DEFAULT_LORA_ALPHA)
+    p.add_argument(
+        "--full-finetune",
+        action="store_true",
+        help="7B 全参。24G 会 OOM，仅大显存使用。",
+    )
     p.add_argument("--skip-sft", action="store_true", help="跳过 SFT（冷启动已完成时）")
     p.add_argument("--skip-grpo", action="store_true", help="只跑到 SFT 结束")
     p.add_argument("--dry-run", action="store_true", help="只打印命令不执行")

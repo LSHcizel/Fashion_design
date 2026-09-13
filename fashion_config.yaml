@@ -201,6 +201,7 @@ grpo:
     # 冷启动只 SFT 一次；随后多轮短 GRPO，每轮结束后写验收摘要
     grpo-rounds: 4
     grpo-epochs-per-round: 0.25
+    # 24G 上 7B 全参反传会 OOM；训练脚本默认 LoRA r=16。大卡才加 --full-finetune
 
   # ODIN 档 3：冻住基座 7B，只训两个线性头 r_Q / r_L。不要指向 rewriter。
   # python -m training.odin_rm.run_pipeline --samples training/runs/<id>/samples.jsonl --work-dir training/runs/<id>/odin_rm

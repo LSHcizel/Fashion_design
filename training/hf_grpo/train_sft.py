@@ -24,6 +24,12 @@ from transformers import (
 from plugins.text_description_evaluator.design_text_evaluator_api import default_hf_local_grpo_model
 
 from .data import completion_token_start, load_phase_a_rows, render_chat_text
+from .model_load import (
+    DEFAULT_LORA_ALPHA,
+    DEFAULT_LORA_R,
+    apply_lora,
+    should_use_lora,
+)
 from .trainer_compat import trainer_processing_kwargs
 
 logger = logging.getLogger(__name__)
@@ -227,6 +233,18 @@ def main() -> None:
         default=0.92,
         help="对 log 中 loss 的 EMA 衰减系数（越大曲线越平滑）。",
     )
+    p.add_argument(
+        "--lora-r",
+        type=int,
+        default=DEFAULT_LORA_R,
+        help="LoRA rank。24G 上 7B 全参反传会 OOM，默认 16。",
+    )
+    p.add_argument("--lora-alpha", type=int, default=DEFAULT_LORA_ALPHA)
+    p.add_argument(
+        "--full-finetune",
+        action="store_true",
+        help="关闭 LoRA、全参更新。24G 级显存通常无法跑 7B。",
+    )
     args = p.parse_args()
 
     model_id = args.model or default_hf_local_grpo_model()
@@ -248,6 +266,13 @@ def main() -> None:
     )
     if hasattr(model.config, "use_cache"):
         model.config.use_cache = False
+    if should_use_lora(full_finetune=args.full_finetune, lora_r=args.lora_r):
+        logger.info("SFT 使用 LoRA r=%s alpha=%s（避免 7B 全参在 24G OOM）", args.lora_r, args.lora_alpha)
+        model = apply_lora(model, lora_r=args.lora_r, lora_alpha=args.lora_alpha)
+        if hasattr(model, "print_trainable_parameters"):
+            model.print_trainable_parameters()
+    else:
+        logger.info("SFT 全参微调；24G 级显存很可能 OOM")
 
     ds = PhaseASftDataset(rows, tokenizer, args.max_length)
     collator = SFTDataCollator(tokenizer.pad_token_id or 0)

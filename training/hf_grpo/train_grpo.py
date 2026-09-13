@@ -23,6 +23,16 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
 )
 
 from .data import completion_token_start, load_phase_b_rows, messages_from_phase_b_row, render_chat_text
+from .model_load import (
+    DEFAULT_LORA_ALPHA,
+    DEFAULT_LORA_R,
+    adapter_base_model_path,
+    apply_lora,
+    is_peft_adapter_dir,
+    load_peft_policy,
+    same_model_path,
+    should_use_lora,
+)
 from .modeling import grpo_loss, sequence_completion_log_probs
 from .trainer_compat import trainer_processing_kwargs
 
@@ -106,15 +116,19 @@ class GRPOCollator:
 class GRPOTrainer(Trainer):
     def __init__(
         self,
-        ref_model: nn.Module,
+        ref_model: Optional[nn.Module] = None,
         beta_kl: float = 0.04,
         kl_squared: bool = True,
+        share_ref_via_disable_adapter: bool = False,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
+        if not share_ref_via_disable_adapter and ref_model is None:
+            raise ValueError("ref_model required unless share_ref_via_disable_adapter")
         self.ref_model = ref_model
         self.beta_kl = beta_kl
         self.kl_squared = kl_squared
+        self.share_ref_via_disable_adapter = share_ref_via_disable_adapter
 
     def compute_loss(
         self,
@@ -128,16 +142,23 @@ class GRPOTrainer(Trainer):
         comp_start = inputs["completion_start"]
         adv = inputs["advantage"].to(model.device)
 
-        dev = input_ids.device
-        if next(self.ref_model.parameters()).device != dev:
-            self.ref_model.to(dev)
-
         out = model(input_ids=input_ids, attention_mask=attn)
         logits = out.logits
-        self.ref_model.eval()
-        with torch.no_grad():
-            ref_out = self.ref_model(input_ids=input_ids, attention_mask=attn)
-            ref_logits = ref_out.logits
+        if self.share_ref_via_disable_adapter:
+            raw = self.accelerator.unwrap_model(model)
+            with torch.no_grad():
+                with raw.disable_adapter():
+                    ref_logits = raw(input_ids=input_ids, attention_mask=attn).logits
+        else:
+            assert self.ref_model is not None
+            self.ref_model.eval()
+            ref_dev = next(self.ref_model.parameters()).device
+            with torch.no_grad():
+                ref_out = self.ref_model(
+                    input_ids=input_ids.to(ref_dev),
+                    attention_mask=attn.to(ref_dev),
+                )
+                ref_logits = ref_out.logits.to(device=logits.device, dtype=logits.dtype)
 
         logp_p = sequence_completion_log_probs(logits, input_ids, comp_start, attn)
         logp_r = sequence_completion_log_probs(ref_logits, input_ids, comp_start, attn)
@@ -185,6 +206,13 @@ def main() -> None:
         choices=["bf16", "fp16", "fp32"],
         default="bf16",
     )
+    p.add_argument("--lora-r", type=int, default=DEFAULT_LORA_R)
+    p.add_argument("--lora-alpha", type=int, default=DEFAULT_LORA_ALPHA)
+    p.add_argument(
+        "--full-finetune",
+        action="store_true",
+        help="关闭 LoRA。全参 policy + 第二份 ref 在 24G 通常 OOM。",
+    )
     args = p.parse_args()
 
     model_id = args.model or default_hf_local_grpo_model()
@@ -198,7 +226,14 @@ def main() -> None:
     if not rows:
         raise SystemExit("empty jsonl")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+    tok_src = model_id
+    adapter_tok = Path(model_id)
+    if is_peft_adapter_dir(model_id) and not (
+        (adapter_tok / "tokenizer.json").is_file()
+        or (adapter_tok / "tokenizer_config.json").is_file()
+    ):
+        tok_src = adapter_base_model_path(model_id)
+    tokenizer = AutoTokenizer.from_pretrained(tok_src, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
@@ -208,14 +243,37 @@ def main() -> None:
     if args.dtype != "fp32":
         common_kw["torch_dtype"] = torch_dtype
 
-    policy = AutoModelForCausalLM.from_pretrained(model_id, **common_kw)
-    if hasattr(policy.config, "use_cache"):
-        policy.config.use_cache = False
-
     ref_path = args.ref_model.strip() or default_hf_local_grpo_ref_model()
-    ref = AutoModelForCausalLM.from_pretrained(ref_path, **common_kw)
-    ref.requires_grad_(False)
-    ref.eval()
+    share_ref = False
+    ref: Optional[nn.Module] = None
+
+    if is_peft_adapter_dir(model_id):
+        base_id = adapter_base_model_path(model_id)
+        logger.info("从 LoRA 目录加载 policy=%s base=%s", model_id, base_id)
+        policy = AutoModelForCausalLM.from_pretrained(base_id, **common_kw)
+        if hasattr(policy.config, "use_cache"):
+            policy.config.use_cache = False
+        policy = load_peft_policy(policy, model_id)
+        if same_model_path(base_id, ref_path):
+            share_ref = True
+            logger.info("KL 用 disable_adapter（同一份基座，不再加载第二份 7B ref）")
+        else:
+            logger.info("adapter 基座与 --ref-model 不同，ref 放到 CPU: %s", ref_path)
+    else:
+        policy = AutoModelForCausalLM.from_pretrained(model_id, **common_kw)
+        if hasattr(policy.config, "use_cache"):
+            policy.config.use_cache = False
+        if should_use_lora(full_finetune=args.full_finetune, lora_r=args.lora_r):
+            logger.info("在全量 policy 上新挂 LoRA r=%s", args.lora_r)
+            policy = apply_lora(policy, lora_r=args.lora_r, lora_alpha=args.lora_alpha)
+
+    if not share_ref:
+        ref = AutoModelForCausalLM.from_pretrained(ref_path, **common_kw)
+        ref.requires_grad_(False)
+        ref.eval()
+        if torch.cuda.is_available():
+            ref.to("cpu")
+            logger.info("独立 ref 放 CPU，避免与 policy 同时占满 24G")
 
     ds = PhaseBGRPODataset(rows, tokenizer, args.max_length, system_prompt=sys_prompt)
     if len(ds) == 0:
@@ -241,6 +299,7 @@ def main() -> None:
     trainer = GRPOTrainer(
         ref_model=ref,
         beta_kl=args.beta_kl,
+        share_ref_via_disable_adapter=share_ref,
         model=policy,
         args=ta,
         train_dataset=ds,

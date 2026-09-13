@@ -8,7 +8,10 @@ import unittest
 from pathlib import Path
 
 from training.accept_report import build_round_accept, summarize_rows
+from argparse import Namespace
+
 from training.hf_grpo.run_recommended_training import (
+    build_sft_cmd,
     grpo_round_dir,
     load_latest,
     resolve_grpo_start,
@@ -109,6 +112,31 @@ class GrpoRoundPlanTests(unittest.TestCase):
             )
             self.assertEqual(policy.resolve(), r4.resolve())
             self.assertEqual(start, 5)
+
+    def test_sft_cmd_defaults_to_lora(self) -> None:
+        args = Namespace(
+            max_length=2048,
+            sft_epochs=1.0,
+            sft_lr=2e-5,
+            batch=1,
+            grad_accum=8,
+            dtype="bf16",
+            sft_logging_steps=10,
+            sft_no_early_stop=True,
+            lora_r=16,
+            lora_alpha=32,
+            full_finetune=False,
+        )
+        cmd = build_sft_cmd(
+            py="python",
+            phase_a=Path("a.jsonl"),
+            model="m",
+            sft_out=Path("out"),
+            args=args,
+        )
+        self.assertIn("--lora-r", cmd)
+        self.assertIn("16", cmd)
+        self.assertNotIn("--full-finetune", cmd)
 
     def test_skip_sft_without_checkpoint_fails(self) -> None:
         with tempfile.TemporaryDirectory() as td:
