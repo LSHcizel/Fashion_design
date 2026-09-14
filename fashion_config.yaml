@@ -96,22 +96,24 @@ task-notes:
     - "When description is provided, extract description-derived key elements in English before the final THEME_ANALYSIS"
     - "Deeply analyze Chanel brand history, Gabrielle Chanel's Biarritz legacy, and Matthieu Blazy's Cruise 2027 vision"
     - "Key aspects are holistic analysis only; produce exactly num-chapters sub-themes that synthesize across key aspects (not 1:1)"
+    - "Stay strictly on theme, but do not write a conservative recap: name daring chapter angles the brief already authorizes"
     - "Focus on liberation, salon-to-beach duality, Basque craft references, and sporty elegance reframed for today"
   
   concept-brainstorming:
-    - "Ensure the four chapters form a complete narrative arc"
+    - "Each chapter must deepen its sub-theme, then take a runway-scale leap inside that brief"
     - "Each chapter should have a distinct visual and emotional tone"
-    - "Consider the transition from masculine to feminine aesthetics"
+    - "Do not shrink the chapter into a polite, production-safe capsule of expected garments"
+    - "Identifying ideas per look should feel like visible risks the theme can still claim"
   
   design-elements-proposal:
-    - "Design elements should align with the theme analysis"
-    - "Consider materials, colors, silhouettes, and details"
-    - "Provide sufficient diversity for each chapter"
+    - "Design elements should align with the theme analysis, then make the theme visible in a bold way"
+    - "Consider materials, colors, silhouettes, and details as carriers of an idea, not a safe wardrobe list"
+    - "Provide sufficient diversity for each chapter; do not use feasibility as an excuse to stay conservative"
   
   look-description-generation:
     - "Look descriptions should be detailed and visually evocative"
-    - "Consider the completeness and harmony of the overall styling"
-    - "Include all necessary details"
+    - "Instantiate one identifying idea from the chapter's bold element pool"
+    - "Include all necessary visible details"
 
 # ─── Text Evaluator ──────────────────────────────────────────────────────────
 # 启用后，每个生成的 look 描述文本在保存前会自动进行质量评估；

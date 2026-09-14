@@ -1071,7 +1071,12 @@ class FashionWorkflow:
                     print(f"@@ Workflow #{self.workflow_index} - Chapter {chapter_idx:02d} - Look {look_number} - Regeneration Step {_i} @@")
                 
                 resp = self.look_stylist.inference(
-                    research_topic=f"Design Target: {self.design_target_prompt}\nLook Number: {look_number}",
+                    research_topic=(
+                        f"Design Target: {self.design_target_prompt}\n"
+                        f"Look Number: {look_number}\n"
+                        "Give this look an updated identifying idea that is distinct from already generated "
+                        "looks in this chapter. Do not only swap color, material, or brand words of a previous look."
+                    ),
                     phase="look description generation",
                     feedback="",
                     step=_i
@@ -1500,6 +1505,16 @@ class FashionWorkflow:
         sub = getattr(self, "_current_sub_theme_name", None)
         if sub:
             bits.append(f"Chapter: {sub}")
+        bits.append(
+            "DesignMerit rewrite: if the source already has an identifying idea, lead with it and keep it "
+            "dominant — allover surface field; trim/appliqué path along neckline/front/hem/cuff; "
+            "open outer worn over an inner that would still read alone; or trunk volume/surface collision. "
+            "Restate grounded facts with those relations (worn open over, trim along, allover, voluminous vs flatter). "
+            "Do not invent new garments, surfaces, or trims. "
+            "Demote factory finishing (topstitch, hidden placket, piping, brand hardware), "
+            "ordinary dressing (tucked shirt, self-belt), and theme/pose (promenade, salon, stance) "
+            "so they cannot become the identity."
+        )
         return "\n".join(bits)
 
     def _try_k_rewrite_on_gate_fail(
@@ -1738,7 +1753,12 @@ class FashionWorkflow:
                     print(f"@@ Workflow #{self.workflow_index} - Look {look_number} - Step {_i} @@")
                 resp = self.look_stylist.inference(
                     # 避免与 LookDescriptionAgent.context() 中的 theme/theme_analysis 重复
-                    research_topic=f"Design Target: {self.design_target_prompt}\nLook Number: {look_number}",
+                    research_topic=(
+                        f"Design Target: {self.design_target_prompt}\n"
+                        f"Look Number: {look_number}\n"
+                        "Give this look an updated identifying idea that is distinct from already generated "
+                        "looks in this chapter. Do not only swap color, material, or brand words of a previous look."
+                    ),
                     phase="look description generation",
                     feedback="",
                     step=_i
@@ -1848,7 +1868,13 @@ class FashionWorkflow:
                 if self.verbose:
                     print(f"@@ Workflow #{self.workflow_index} - Look {look_idx + 1} - Step {_i} @@")
                 resp = self.look_stylist.inference(
-                    research_topic=f"Design Target: {self.design_target_prompt}\nTheme: {self.theme}",
+                    research_topic=(
+                        f"Design Target: {self.design_target_prompt}\n"
+                        f"Theme: {self.theme}\n"
+                        f"Look Number: {look_idx + 1}\n"
+                        "Give this look an updated identifying idea that is distinct from already generated "
+                        "looks in this chapter. Do not only swap color, material, or brand words of a previous look."
+                    ),
                     phase="look description generation",
                     feedback="",
                     step=_i

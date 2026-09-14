@@ -82,6 +82,13 @@ def _one_rewrite(
         f"restructure, compress redundancy, and retell the look in different sentence order, "
         f"while keeping the same grounded garment facts "
         f"(do not invent new facts; do not drop required grounded content).\n\n"
+        f"DESIGN MERIT: If SOURCE already has an identifying idea, lead with it — "
+        f"allover surface field; trim/appliqué path along neckline, front, hem, or cuff; "
+        f"open outer worn over an inner that would still read alone; or trunk volume/surface collision. "
+        f"Restate those grounded facts with those relations. "
+        f"Do not invent new garments, surfaces, or trims. "
+        f"Do not treat cropped jacket + shirt + short + belt, topstitching, hidden placket, "
+        f"tucked shirt, or theme dualities as the identity. Compress promenade/salon/stance commentary.\n\n"
         f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
     )
     if extra_context.strip():

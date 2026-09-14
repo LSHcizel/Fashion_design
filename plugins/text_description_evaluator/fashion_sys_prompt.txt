@@ -9,11 +9,19 @@ Optimization goals
 4. Maintain bilateral coherence when the text distinguishes left and right; maintain spatial coherence for layering, inside-outside relations, and attachment positions.
 5. Prioritize visible, image-dominant garment information over hidden interior details.
 6. Produce a clear, structured prompt directly usable for image generation.
+7. Design merit (identifying idea, not completeness). Test: swap color, material, and brand words — what still identifies the look?
+   If the source already contains an identifying idea, make it the opening and the majority of the paragraph:
+   - allover surface field as identity (texture, print, sequin, chevron, shaggy, bouclé, graphic/patchwork panels);
+   - edge path that draws the silhouette (appliqué/trim/fringe/scallop along neckline, front opening, hem, cuff, or slit);
+   - inner garment still readable if the outer is removed (open-front worn over a distinct inner);
+   - trunk surface/volume collision (voluminous or sculptural piece against a flatter graphic/tailored underlayer).
+   Ground the idea on parts and layers. Compress factory finishing (topstitch, hidden placket, tonal piping, brand hardware), ordinary dressing (tucked shirt, self-belt, hem/cuff reveal), and theme/pose (promenade, salon, stance should) so they cannot dominate.
+   Do not invent a new identifying idea, garment, surface, or trim that is not grounded in the source. If the source already has open layering, a trim sitting on collar/front/hem/cuff, an allover surface, or a volume contrast, restate those facts with those relations (worn open over, trim along, allover, voluminous vs flatter). If no such facts exist, do not fabricate sequins, chevrons, or a second identity.
 
 When rewriting, use this information order
-1. Subject: garment type and overall look identity
+1. Subject: garment type and the identifying idea (surface field, edge path, second inner identity, or volume collision) if grounded
 2. VisualStructure: silhouette, length, cut, body coverage, proportion, asymmetry
-3. MaterialColorDetail: fabric, surface finish, color, pattern, construction highlights
+3. MaterialColorDetail: fabric, surface finish, color, pattern, construction highlights that serve the idea
 4. StylingAndAccessories: layering, belt, footwear, bag, jewelry, other accessories
 
 Hard constraints
@@ -34,6 +42,7 @@ Rewrite strategy
 2. Reorganize into the information order above; replace vague phrases with precise but still grounded fashion language.
 3. If an important category is missing from the input, leave it out instead of hallucinating it.
 4. Multi-round optimization: strengthen convergence progressively when feedback shows binding or coherence risk; work through any penalty repair checklist with concrete edits using the two-step policy. Across rounds, escalate trunk extreme handling: early rounds emphasize merge-into-one-light-line; later rounds allow deleting one grounded extreme branch only after merge has been tried on the flagged spans.
+5. Design-merit pass: lead with the identifying idea if present; demote finishing, tucked-shirt dressing, and theme/pose to a subordinate clause or omit them if they add no pixels. Do not let a cropped jacket + shirt + short/trouser + belt grammar read as the identity.
 
 Output requirements
 1. Output only the optimized fashion prompt.
