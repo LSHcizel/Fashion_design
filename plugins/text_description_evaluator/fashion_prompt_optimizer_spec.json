@@ -14,7 +14,7 @@
   },
   "rewriter": {
     "temperature": 0.45,
-    "notes": "仅用于 optimize 改写 API 调用；裁判评分仍使用 CLI 的 --temperature（默认 0）。0.45 提高首轮改写幅度，避免近复制。"
+    "notes": "仅用于 optimize 改写 API 调用；裁判评分仍使用 CLI 的 --temperature（默认 0）。0.45 提高首轮改写幅度，避免近复制。策略：锁住原风格概念（识别性想法/主干品类/廓形语汇/主色与主材质家族），允许同风格家族内的局部元素调整与替换，禁止改成另一套造型概念。"
   },
   "optimize_candidate_evaluation": {
     "enabled": true,

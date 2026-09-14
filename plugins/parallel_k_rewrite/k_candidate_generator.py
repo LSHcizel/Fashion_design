@@ -29,6 +29,59 @@ if TYPE_CHECKING:
     from ..text_description_evaluator.design_text_evaluator_api import DesignTextEvaluator
 
 
+REWRITE_STYLE_CONCEPT_LOCK = (
+    "STYLE CONCEPT LOCK: Keep the original style concept unchanged — "
+    "identifying idea if present, trunk garment families, silhouette language, "
+    "primary palette, and main material family. "
+    "Do not restyle the look into a different concept "
+    "(no workwear→eveningwear, no new competing identifying idea, no new trunk garment category)."
+)
+
+REWRITE_LOCAL_EDITS_ALLOWED = (
+    "LOCAL EDITS ALLOWED: Adjust or replace local elements in the same style family so the look is more imageable: "
+    "collar/cuff/hem/pocket treatment; trim medium or density along an already-named edge; "
+    "hardware; belt; jewelry; bag if a bag already exists; footwear variant within the same family; "
+    "inner-layer surface if an inner already exists. "
+    "Prefer replace/adjust over adding a new garment. Do not drop required trunk content."
+)
+
+
+def build_rewrite_user_prompt(
+    source_text: str,
+    k: int,
+    candidate_index: int,
+    extra_context: str = "",
+) -> str:
+    """K 路改写的 user prompt：锁住原风格概念，允许局部元素调整/替换。"""
+    user = (
+        f"PARALLEL REWRITE TASK\n"
+        f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
+        f"Candidates are generated independently in parallel. Prefer a strong rewrite, not a near-copy: "
+        f"restructure, compress redundancy, retell the look in different sentence order, "
+        f"and apply local element adjustments or replacements that make the look more imageable.\n\n"
+        f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
+        f"{REWRITE_LOCAL_EDITS_ALLOWED}\n\n"
+        f"DESIGN MERIT: If SOURCE already has an identifying idea, lead with it — "
+        f"allover surface field; trim/appliqué path along neckline, front, hem, or cuff; "
+        f"open outer worn over an inner that would still read alone; or trunk volume/surface collision. "
+        f"Local replacements must serve that idea, not replace it. "
+        f"Do not treat cropped jacket + shirt + short + belt, topstitching, hidden placket, "
+        f"tucked shirt, or theme dualities as the identity. Compress promenade/salon/stance commentary.\n\n"
+        f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
+    )
+    if extra_context.strip():
+        user += (
+            f"BUSINESS CONTEXT / CONSTRAINTS (shared across all {k} candidates):\n"
+            f"{extra_context.strip()}\n\n"
+        )
+    user += (
+        "OUTPUT RULES:\n"
+        "1. Output exactly one coherent English paragraph: the optimized fashion image prompt only.\n"
+        "2. No markdown fences, no numbering, no preamble or commentary.\n"
+    )
+    return user
+
+
 def _normalize_for_dedup(text: str) -> str:
     s = (text or "").strip().lower()
     s = re.sub(r"\s+", " ", s)
@@ -75,28 +128,11 @@ def _one_rewrite(
 ) -> Dict[str, Any]:
     """Worker：单次生成一条候选。"""
     t = min(temperature_cap, temperature_floor + candidate_index * temperature_step)
-    user = (
-        f"PARALLEL REWRITE TASK\n"
-        f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
-        f"Candidates are generated independently in parallel. Prefer a strong rewrite, not a near-copy: "
-        f"restructure, compress redundancy, and retell the look in different sentence order, "
-        f"while keeping the same grounded garment facts "
-        f"(do not invent new facts; do not drop required grounded content).\n\n"
-        f"DESIGN MERIT: If SOURCE already has an identifying idea, lead with it — "
-        f"allover surface field; trim/appliqué path along neckline, front, hem, or cuff; "
-        f"open outer worn over an inner that would still read alone; or trunk volume/surface collision. "
-        f"Restate those grounded facts with those relations. "
-        f"Do not invent new garments, surfaces, or trims. "
-        f"Do not treat cropped jacket + shirt + short + belt, topstitching, hidden placket, "
-        f"tucked shirt, or theme dualities as the identity. Compress promenade/salon/stance commentary.\n\n"
-        f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
-    )
-    if extra_context.strip():
-        user += f"BUSINESS CONTEXT / CONSTRAINTS (shared across all {k} candidates):\n{extra_context.strip()}\n\n"
-    user += (
-        "OUTPUT RULES:\n"
-        "1. Output exactly one coherent English paragraph: the optimized fashion image prompt only.\n"
-        "2. No markdown fences, no numbering, no preamble or commentary.\n"
+    user = build_rewrite_user_prompt(
+        source_text,
+        k,
+        candidate_index,
+        extra_context,
     )
     try:
         raw = evaluator.judge.generate_text(
