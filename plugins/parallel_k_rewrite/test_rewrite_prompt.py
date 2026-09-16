@@ -1,4 +1,4 @@
-"""改写 user prompt：锁住原风格概念，允许局部元素调整/替换。"""
+"""改写 user prompt：K 路共用抽主题/概念再重构要素，差异靠温度。"""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from plugins.parallel_k_rewrite.k_candidate_generator import (
-    REWRITE_LOCAL_EDITS_ALLOWED,
+    REWRITE_ELEMENT_RECONSTRUCTION,
     REWRITE_STYLE_CONCEPT_LOCK,
     build_rewrite_user_prompt,
 )
@@ -18,9 +18,22 @@ SYS_PROMPT = (
     / "fashion_sys_prompt.txt"
 )
 
+SPEC_JSON = (
+    Path(__file__).resolve().parents[1]
+    / "text_description_evaluator"
+    / "fashion_prompt_optimizer_spec.json"
+)
+
+_COMBO_PHRASES = (
+    "cropped jacket + shirt + short",
+    "cropped-jacket + shirt + short",
+    "短夹克+衬衫+短裤",
+    "短夹克 + 衬衫 + 短裤",
+)
+
 
 class RewritePromptPolicyTests(unittest.TestCase):
-    def test_user_prompt_locks_style_and_allows_local_edits(self) -> None:
+    def test_user_prompt_extracts_theme_then_reconstructs(self) -> None:
         prompt = build_rewrite_user_prompt(
             "A cropped navy jacket over a white shirt and beige shorts with a self-belt.",
             k=10,
@@ -30,26 +43,49 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("rewrite candidate #3 of 10", prompt)
         self.assertIn("SOURCE TEXT TO REWRITE:", prompt)
         self.assertIn("Chapter: salon-to-beach", prompt)
-        self.assertIn("STYLE CONCEPT LOCK", prompt)
-        self.assertIn("LOCAL EDITS ALLOWED", prompt)
-        self.assertIn("local element adjustments or replacements", prompt)
-        self.assertNotIn("Do not invent new garments, surfaces, or trims.", prompt)
-        self.assertNotIn("do not invent new facts", prompt)
-        self.assertIn("Local replacements must serve that idea, not replace it.", prompt)
+        self.assertIn("THEME AND CONCEPT LOCK", prompt)
+        self.assertIn("ELEMENT RECONSTRUCTION", prompt)
+        self.assertIn("different temperatures", prompt)
+        self.assertIn("Extract theme and concept from SOURCE only", prompt)
+        self.assertNotIn("THIS CANDIDATE'S TASK", prompt)
+        self.assertNotIn("strategy=", prompt)
+        for phrase in _COMBO_PHRASES:
+            self.assertNotIn(phrase, prompt)
 
-    def test_policy_constants_forbid_restyle(self) -> None:
-        self.assertIn("Do not restyle the look into a different concept", REWRITE_STYLE_CONCEPT_LOCK)
-        self.assertIn("Prefer replace/adjust over adding a new garment", REWRITE_LOCAL_EDITS_ALLOWED)
+    def test_all_k_share_the_same_strategy_text(self) -> None:
+        prompts = [build_rewrite_user_prompt("source look.", k=10, candidate_index=i) for i in range(10)]
+        bodies = []
+        for i, prompt in enumerate(prompts):
+            marker = f"rewrite candidate #{i + 1} of 10"
+            self.assertIn(marker, prompt)
+            bodies.append(prompt.replace(marker, "rewrite candidate #N of 10"))
+        self.assertEqual(len(set(bodies)), 1)
+
+    def test_policy_constants_lock_theme_and_allow_reconstruction(self) -> None:
+        self.assertIn("extract the theme and the design concept", REWRITE_STYLE_CONCEPT_LOCK)
+        self.assertIn("redesign the look's elements", REWRITE_ELEMENT_RECONSTRUCTION)
+        self.assertIn("raise DesignMerit", REWRITE_ELEMENT_RECONSTRUCTION)
 
     def test_optimizer_system_prompt_matches_policy(self) -> None:
         prompt = SYS_PROMPT.read_text(encoding="utf-8")
-        self.assertIn("Preserve the original style concept", prompt)
-        self.assertIn("Local element pass", prompt)
-        self.assertIn("local replacements must serve that idea", prompt.lower())
-        self.assertNotIn(
-            "Do not invent a new identifying idea, garment, surface, or trim that is not grounded in the source.",
-            prompt,
+        self.assertIn("Extract the theme and the design concept", prompt)
+        self.assertIn("Element reconstruction pass", prompt)
+        self.assertIn("collection-shared, interchangeable trunk-garment formula", prompt)
+        for phrase in _COMBO_PHRASES:
+            self.assertNotIn(phrase, prompt)
+
+    def test_spec_and_judge_guide_use_generic_formula_wording(self) -> None:
+        spec = SPEC_JSON.read_text(encoding="utf-8")
+        for phrase in _COMBO_PHRASES:
+            self.assertNotIn(phrase, spec)
+        self.assertIn("公式化组合", spec)
+        from plugins.text_description_evaluator.design_text_evaluator_api import (
+            DESIGN_MERIT_JUDGE_GUIDE,
         )
+
+        for phrase in _COMBO_PHRASES:
+            self.assertNotIn(phrase, DESIGN_MERIT_JUDGE_GUIDE)
+        self.assertIn("interchangeable trunk-garment formula", DESIGN_MERIT_JUDGE_GUIDE)
 
 
 if __name__ == "__main__":

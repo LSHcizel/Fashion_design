@@ -1500,7 +1500,7 @@ class FashionWorkflow:
 
     def _rewrite_extra_context(self) -> str:
         from plugins.parallel_k_rewrite.k_candidate_generator import (
-            REWRITE_LOCAL_EDITS_ALLOWED,
+            REWRITE_ELEMENT_RECONSTRUCTION,
             REWRITE_STYLE_CONCEPT_LOCK,
         )
 
@@ -1511,16 +1511,12 @@ class FashionWorkflow:
         if sub:
             bits.append(f"Chapter: {sub}")
         bits.append(
-            "DesignMerit rewrite: if the source already has an identifying idea, lead with it and keep it "
-            "dominant — allover surface field; trim/appliqué path along neckline/front/hem/cuff; "
-            "open outer worn over an inner that would still read alone; or trunk volume/surface collision. "
-            "Local replacements must serve that idea, not replace it. "
-            "Demote factory finishing (topstitch, hidden placket, piping, brand hardware), "
-            "ordinary dressing (tucked shirt, self-belt), and theme/pose (promenade, salon, stance) "
-            "so they cannot become the identity."
+            "Extract theme and design concept from the look description, keep them consistent, "
+            "then reconstruct elements to raise DesignMerit. Do not treat a collection-shared "
+            "interchangeable garment formula as the identity."
         )
         bits.append(REWRITE_STYLE_CONCEPT_LOCK)
-        bits.append(REWRITE_LOCAL_EDITS_ALLOWED)
+        bits.append(REWRITE_ELEMENT_RECONSTRUCTION)
         return "\n".join(bits)
 
     def _try_k_rewrite_on_gate_fail(

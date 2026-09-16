@@ -30,20 +30,42 @@ if TYPE_CHECKING:
 
 
 REWRITE_STYLE_CONCEPT_LOCK = (
-    "STYLE CONCEPT LOCK: Keep the original style concept unchanged — "
-    "identifying idea if present, trunk garment families, silhouette language, "
-    "primary palette, and main material family. "
-    "Do not restyle the look into a different concept "
-    "(no workwear→eveningwear, no new competing identifying idea, no new trunk garment category)."
+    "THEME AND CONCEPT LOCK: First extract the theme and the design concept already present "
+    "in SOURCE (collection story, dualities, aesthetic register, and design intent). "
+    "Keep those consistent. Do not switch to a different theme or a different concept "
+    "(no workwear→eveningwear unless SOURCE already is that register)."
 )
 
-REWRITE_LOCAL_EDITS_ALLOWED = (
-    "LOCAL EDITS ALLOWED: Adjust or replace local elements in the same style family so the look is more imageable: "
-    "collar/cuff/hem/pocket treatment; trim medium or density along an already-named edge; "
-    "hardware; belt; jewelry; bag if a bag already exists; footwear variant within the same family; "
-    "inner-layer surface if an inner already exists. "
-    "Prefer replace/adjust over adding a new garment. Do not drop required trunk content."
+REWRITE_ELEMENT_RECONSTRUCTION = (
+    "ELEMENT RECONSTRUCTION: After extracting theme and concept, redesign the look's elements "
+    "to raise DesignMerit: recompose silhouette, layering, surface, edge treatment, volume, "
+    "or local construction while the theme and concept still read as the same. "
+    "Acceptable reconstruction may replace or restack garments and details. "
+    "It must not abandon the extracted theme/concept, and must not treat a collection-shared "
+    "interchangeable garment formula as the identity."
 )
+
+REWRITE_DESIGN_MERIT = (
+    "DESIGN MERIT GOAL: Optimize for a higher DesignMerit score (identifying idea, not completeness). "
+    "Prefer a visible idea grounded on parts and layers: allover surface field; trim/appliqué path "
+    "along neckline, front, hem, or cuff; open outer over an inner that would still read alone; "
+    "or trunk volume/surface collision. "
+    "If SOURCE already has such an idea, strengthen it and lead with it. "
+    "If SOURCE is only formulaic wardrobe grammar, reconstruct elements to create one identifying "
+    "idea that still belongs to the extracted theme and concept. "
+    "Do not treat factory finishing (topstitching, hidden placket), ordinary dressing "
+    "(tucked shirt), or theme dualities as the identity. Compress promenade/salon/stance commentary."
+)
+
+REWRITE_SHARED_STRATEGY = (
+    "SHARED STRATEGY (all K candidates use this; diversity comes from sampling temperature): "
+    "1) Extract theme and concept from SOURCE only — there is no separate chapter brief. "
+    "2) Redesign the elements under that lock so the look is more distinctive and imageable. "
+    "3) Output one coherent English paragraph."
+)
+
+# Backward-compatible name used by workflow extra_context.
+REWRITE_LOCAL_EDITS_ALLOWED = REWRITE_ELEMENT_RECONSTRUCTION
 
 
 def build_rewrite_user_prompt(
@@ -52,21 +74,15 @@ def build_rewrite_user_prompt(
     candidate_index: int,
     extra_context: str = "",
 ) -> str:
-    """K 路改写的 user prompt：锁住原风格概念，允许局部元素调整/替换。"""
+    """K 路改写的 user prompt：各路共用抽主题/概念再重构要素；差异靠温度。"""
     user = (
         f"PARALLEL REWRITE TASK\n"
         f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
-        f"Candidates are generated independently in parallel. Prefer a strong rewrite, not a near-copy: "
-        f"restructure, compress redundancy, retell the look in different sentence order, "
-        f"and apply local element adjustments or replacements that make the look more imageable.\n\n"
+        f"All candidates share the same strategy; they are sampled independently at different temperatures.\n\n"
+        f"{REWRITE_SHARED_STRATEGY}\n"
         f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
-        f"{REWRITE_LOCAL_EDITS_ALLOWED}\n\n"
-        f"DESIGN MERIT: If SOURCE already has an identifying idea, lead with it — "
-        f"allover surface field; trim/appliqué path along neckline, front, hem, or cuff; "
-        f"open outer worn over an inner that would still read alone; or trunk volume/surface collision. "
-        f"Local replacements must serve that idea, not replace it. "
-        f"Do not treat cropped jacket + shirt + short + belt, topstitching, hidden placket, "
-        f"tucked shirt, or theme dualities as the identity. Compress promenade/salon/stance commentary.\n\n"
+        f"{REWRITE_ELEMENT_RECONSTRUCTION}\n"
+        f"{REWRITE_DESIGN_MERIT}\n\n"
         f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
     )
     if extra_context.strip():
@@ -283,7 +299,7 @@ def generate_k_parallel_rewrites(
     max_workers :
         改写线程池大小；默认 ``min(k, 8)``。
     temperature_floor / temperature_step / temperature_cap :
-        按 candidate_index 递进温度，鼓励多样性并避免完全同温输出。
+        各路共用同一策略，按 candidate_index 递进温度以拉开采样差异。
     evaluate_candidates :
         为 True（默认）时，对去重保留的候选调用 `evaluate_text`，门限与分数与
         `plugins/text_description_evaluator` 完全一致；False 则仅生成文本（旧行为）。

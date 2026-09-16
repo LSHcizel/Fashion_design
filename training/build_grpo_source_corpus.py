@@ -48,7 +48,7 @@ def iter_positive_sources(root: Path) -> Iterable[Dict[str, Any]]:
             "business_context": (
                 "Chanel Cruise / Pre-Summer 2027 look. Preserve identifying design "
                 "(surface field, edge-path trim, inner garment readable when outer is open). "
-                "Do not collapse into a generic cropped-jacket + shirt + short + belt formula."
+                "Do not collapse into a collection-shared interchangeable garment formula."
             ),
         }
 
@@ -84,9 +84,9 @@ def iter_negative_sources(roots: List[Path]) -> Iterable[Dict[str, Any]]:
                 "text": text,
                 "business_context": (
                     "This draft uses a collection-shared wardrobe grammar "
-                    "(cropped jacket + shirt + short/trouser + belt, numbered sections, "
+                    "(interchangeable trunk formula, numbered sections, "
                     "theme dualities). Rewrite into one grounded T2I paragraph. "
-                    "Do not invent unstated garments. Do not keep the shared series formula "
+                    "Do not invent unstated garments. Do not keep a shared series formula "
                     "as the identifying idea."
                 ),
             }
