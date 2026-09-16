@@ -2,7 +2,7 @@
 # 停止并重启本地 vLLM（读取 fashion_config.yaml）
 # 基座（生成+评判）: VLLM_GPU=0 bash scripts/restart_local_vllm.sh
 # 改写器（K 路改写）: VLLM_GPU=1 VLLM_PROFILE=rewriter bash scripts/restart_local_vllm.sh
-# 双实例: bash scripts/restart_local_vllm.sh && VLLM_PROFILE=rewriter VLLM_GPU=1 bash scripts/restart_local_vllm.sh
+# 双实例可分别重启：裁判只停 8000，改写器只停 8001，互不 pkill 对方。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -97,13 +97,17 @@ if command -v nvidia-smi >/dev/null 2>&1; then
 fi
 
 echo "[1/6] 停止旧 vLLM 进程 (profile=${PROFILE}, port=${PORT})..."
+# 只停本 profile 的端口/pid，不要 pkill 全部 vLLM（否则重启裁判会杀掉 8001 改写器）。
+if [ -f "$PID_FILE" ]; then
+  old_pid="$(tr -d '[:space:]' < "$PID_FILE" || true)"
+  if [ -n "${old_pid:-}" ] && kill -0 "$old_pid" 2>/dev/null; then
+    kill -TERM "$old_pid" 2>/dev/null || true
+    sleep 1
+    kill -9 "$old_pid" 2>/dev/null || true
+  fi
+fi
 if command -v fuser >/dev/null 2>&1; then
   fuser -k "${PORT}/tcp" 2>/dev/null || true
-fi
-if [ "$PROFILE" = "base" ]; then
-  pkill -9 -f "vllm.entrypoints.openai.api_server" 2>/dev/null || true
-  pkill -9 -f "vllm.v1.engine" 2>/dev/null || true
-  pkill -9 -f "EngineCore" 2>/dev/null || true
 fi
 sleep 3
 
