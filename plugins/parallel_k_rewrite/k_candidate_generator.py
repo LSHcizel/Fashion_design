@@ -36,32 +36,63 @@ REWRITE_STYLE_CONCEPT_LOCK = (
     "(no workwear→eveningwear unless SOURCE already is that register)."
 )
 
+REWRITE_WHOLE_LOOK_SCOPE = (
+    "WHOLE-LOOK CHANGE (allowed, inside theme/concept): You MAY change the overall clothing "
+    "so the rewrite is a new realization of the SAME extracted theme and concept — including "
+    "color and palette, garment pairing and categories (what is worn with what), silhouette "
+    "and layering, and detail design (trim, surface, construction, local craft, accessories). "
+    "A color restyle or a different pairing that still reads as that theme/concept is in-scope. "
+    "Do not keep SOURCE's current SKU just to be faithful. "
+    "Out of scope: leaving the theme or design concept, or jumping to a competing register."
+)
+
 REWRITE_ELEMENT_RECONSTRUCTION = (
     "ELEMENT RECONSTRUCTION: After extracting theme and concept, redesign the look's elements "
-    "to raise DesignMerit: recompose silhouette, layering, surface, edge treatment, volume, "
-    "or local construction while the theme and concept still read as the same. "
-    "Acceptable reconstruction may replace or restack garments and details. "
-    "It must not abandon the extracted theme/concept, and must not treat a collection-shared "
-    "interchangeable garment formula as the identity."
+    "to raise DesignMerit: recompose color, pairing, silhouette, layering, surface, edge "
+    "treatment, volume, local construction, and detail design while the theme and concept "
+    "still read as the same. Acceptable reconstruction may replace or restack garments and "
+    "details. It must not abandon the extracted theme/concept, and must not treat a "
+    "collection-shared interchangeable garment formula as the identity."
 )
 
 REWRITE_DESIGN_MERIT = (
     "DESIGN MERIT GOAL: Optimize for a higher DesignMerit score (identifying idea, not completeness). "
-    "Prefer a visible idea grounded on parts and layers: allover surface field; trim/appliqué path "
-    "along neckline, front, hem, or cuff; open outer over an inner that would still read alone; "
-    "or trunk volume/surface collision. "
-    "If SOURCE already has such an idea, strengthen it and lead with it. "
-    "If SOURCE is only formulaic wardrobe grammar, reconstruct elements to create one identifying "
-    "idea that still belongs to the extracted theme and concept. "
+    "Give this rewrite exactly one dominant visual idea, grounded on parts and layers. "
+    "Examples of idea kinds (a menu, not an assignment to this candidate): allover surface field; "
+    "trim/appliqué path along neckline, front, hem, or cuff; open outer over an inner that would "
+    "still read alone; trunk volume/surface collision; or another equally specific visible idea. "
+    "Do not merely paraphrase SOURCE, retighten wording, or only change pose/background. "
+    "If SOURCE already has an idea, you may strengthen, relocate/rescale, or replace it with a "
+    "different idea that still belongs to the extracted theme and concept — including new color, "
+    "pairing, and detail design — so the generated image can diverge from a clone of SOURCE's "
+    "current SKU. "
+    "If SOURCE is only formulaic wardrobe grammar, create one identifying idea inside that theme. "
     "Do not treat factory finishing (topstitching, hidden placket), ordinary dressing "
-    "(tucked shirt), or theme dualities as the identity. Compress promenade/salon/stance commentary."
+    "(tucked shirt), brand hardware as identity, or theme dualities as the identity. "
+    "Compress promenade/salon/stance commentary."
+)
+
+REWRITE_BRAND_LOGO_LOCK = (
+    "BRAND LOGO LOCK (hard): You do not see the original image; SOURCE plus any business "
+    "context is the ground for logos. If a house logo, monogram, interlocking-letter mark, "
+    "branded buckle, or letter motif is described (or the house is named in context and a "
+    "chest/belt/hardware mark is present): keep that SAME house and the SAME mark family. "
+    "You MAY change its placement and scale. You MUST NOT replace it with another brand "
+    "(no YSL, Dior, Gucci, Louis Vuitton, or any other maison when SOURCE/context is that house). "
+    "Do not paraphrase a specific house mark into a generic 'interlocking letters' that an "
+    "image model could render as a different brand — name or keep the same mark identity. "
+    "If SOURCE has no logo/monogram, do not invent another house's logo."
 )
 
 REWRITE_SHARED_STRATEGY = (
-    "SHARED STRATEGY (all K candidates use this; diversity comes from sampling temperature): "
+    "SHARED STRATEGY (theme/concept lock + logo lock; whole-look change inside that lock): "
     "1) Extract theme and concept from SOURCE only — there is no separate chapter brief. "
-    "2) Redesign the elements under that lock so the look is more distinctive and imageable. "
-    "3) Output one coherent English paragraph."
+    "2) You may change colors, garment pairing, and detail design — the whole look — so this "
+    "sample is not a wording-only clone of SOURCE; a generated image should be able to diverge. "
+    "Stay inside the extracted theme and concept. Identifying-idea kinds are a menu, not a "
+    "per-candidate assignment. "
+    "3) Keep any original house logo/monogram as the same brand mark (placement/scale may change). "
+    "4) Output one coherent English paragraph."
 )
 
 # Backward-compatible name used by workflow extra_context.
@@ -74,13 +105,19 @@ def build_rewrite_user_prompt(
     candidate_index: int,
     extra_context: str = "",
 ) -> str:
-    """K 路改写的 user prompt：各路共用抽主题/概念再重构要素；差异靠温度。"""
+    """K 路改写 user prompt：可改整体造型（颜色/搭配/细节），主题与概念、品牌 logo 加锁。"""
     user = (
         f"PARALLEL REWRITE TASK\n"
         f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
-        f"All candidates share the same strategy; they are sampled independently at different temperatures.\n\n"
+        f"This is an independent sample: choose one identifying idea yourself "
+        "(do not wait for a kind to be assigned). "
+        "You may change the overall clothing (color, pairing, detail design) as long as the "
+        "extracted theme and concept stay the same. "
+        "Candidates are sampled separately at different temperatures.\n\n"
         f"{REWRITE_SHARED_STRATEGY}\n"
         f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
+        f"{REWRITE_WHOLE_LOOK_SCOPE}\n"
+        f"{REWRITE_BRAND_LOGO_LOCK}\n"
         f"{REWRITE_ELEMENT_RECONSTRUCTION}\n"
         f"{REWRITE_DESIGN_MERIT}\n\n"
         f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
@@ -94,6 +131,10 @@ def build_rewrite_user_prompt(
         "OUTPUT RULES:\n"
         "1. Output exactly one coherent English paragraph: the optimized fashion image prompt only.\n"
         "2. No markdown fences, no numbering, no preamble or commentary.\n"
+        "3. Lead with the identifying idea you chose, then outer-to-inner visual order.\n"
+        "4. Whole-look change is allowed (color, pairing, details) only inside SOURCE's theme and concept.\n"
+        "5. If SOURCE or business context has a house logo/monogram, keep that same brand mark "
+        "(placement and size may change; never another house).\n"
     )
     return user
 
@@ -299,7 +340,7 @@ def generate_k_parallel_rewrites(
     max_workers :
         改写线程池大小；默认 ``min(k, 8)``。
     temperature_floor / temperature_step / temperature_cap :
-        各路共用同一策略，按 candidate_index 递进温度以拉开采样差异。
+        按 candidate_index 递进温度；各路独立选择识别性想法，不预分配种类。
     evaluate_candidates :
         为 True（默认）时，对去重保留的候选调用 `evaluate_text`，门限与分数与
         `plugins/text_description_evaluator` 完全一致；False 则仅生成文本（旧行为）。

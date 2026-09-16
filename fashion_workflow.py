@@ -1500,8 +1500,10 @@ class FashionWorkflow:
 
     def _rewrite_extra_context(self) -> str:
         from plugins.parallel_k_rewrite.k_candidate_generator import (
+            REWRITE_BRAND_LOGO_LOCK,
             REWRITE_ELEMENT_RECONSTRUCTION,
             REWRITE_STYLE_CONCEPT_LOCK,
+            REWRITE_WHOLE_LOOK_SCOPE,
         )
 
         bits = []
@@ -1512,11 +1514,14 @@ class FashionWorkflow:
             bits.append(f"Chapter: {sub}")
         bits.append(
             "Extract theme and design concept from the look description, keep them consistent, "
-            "then reconstruct elements to raise DesignMerit. Do not treat a collection-shared "
-            "interchangeable garment formula as the identity."
+            "then you may change overall clothing (color, pairing, detail design) to raise "
+            "DesignMerit. Do not treat a collection-shared interchangeable garment formula "
+            "as the identity."
         )
         bits.append(REWRITE_STYLE_CONCEPT_LOCK)
+        bits.append(REWRITE_WHOLE_LOOK_SCOPE)
         bits.append(REWRITE_ELEMENT_RECONSTRUCTION)
+        bits.append(REWRITE_BRAND_LOGO_LOCK)
         return "\n".join(bits)
 
     def _try_k_rewrite_on_gate_fail(
