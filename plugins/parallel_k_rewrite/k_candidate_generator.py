@@ -32,8 +32,10 @@ if TYPE_CHECKING:
 REWRITE_STYLE_CONCEPT_LOCK = (
     "THEME AND CONCEPT LOCK: First extract the theme and the design concept already present "
     "in SOURCE (collection story, dualities, aesthetic register, and design intent). "
-    "Keep those consistent. Do not switch to a different theme or a different concept "
-    "(no workwear→eveningwear unless SOURCE already is that register)."
+    "If SOURCE names a theme and concept and then also describes garments from a different "
+    "theme or concept, keep only the stated theme and concept. Delete or replace those "
+    "conflicting garments. Do not treat that second register as part of the concept you must "
+    "preserve. Do not switch to a different theme or a different concept."
 )
 
 REWRITE_WHOLE_LOOK_SCOPE = (
@@ -56,21 +58,109 @@ REWRITE_ELEMENT_RECONSTRUCTION = (
 )
 
 REWRITE_DESIGN_MERIT = (
-    "DESIGN MERIT GOAL: Optimize for a higher DesignMerit score (identifying idea, not completeness). "
-    "Give this rewrite exactly one dominant visual idea, grounded on parts and layers. "
-    "Examples of idea kinds (a menu, not an assignment to this candidate): allover surface field; "
+    "DESIGN MERIT GOAL: Optimize for a higher DesignMerit score (visible ideas, not completeness). "
+    "The number of visible ideas is not fixed: use as many as this look needs, including more than one. "
+    "Every idea must serve the theme and concept already extracted from SOURCE, and stay grounded "
+    "on parts and layers. "
+    "Examples of idea kinds (a menu, not an assignment and not a quota): allover surface field; "
     "trim/appliqué path along neckline, front, hem, or cuff; open outer over an inner that would "
     "still read alone; trunk volume/surface collision; or another equally specific visible idea. "
     "Do not merely paraphrase SOURCE, retighten wording, or only change pose/background. "
-    "If SOURCE already has an idea, you may strengthen, relocate/rescale, or replace it with a "
-    "different idea that still belongs to the extracted theme and concept — including new color, "
-    "pairing, and detail design — so the generated image can diverge from a clone of SOURCE's "
-    "current SKU. "
-    "If SOURCE is only formulaic wardrobe grammar, create one identifying idea inside that theme. "
+    "If SOURCE already has ideas, you may strengthen, relocate/rescale, drop, or add ideas that "
+    "still belong to the extracted theme and concept — including new color, pairing, and detail "
+    "design — so the generated image can diverge from a clone of SOURCE's current SKU. "
+    "If SOURCE is only formulaic wardrobe grammar, create visible ideas inside that theme. "
     "Do not treat factory finishing (topstitching, hidden placket), ordinary dressing "
     "(tucked shirt), brand hardware as identity, or theme dualities as the identity. "
-    "Compress promenade/salon/stance commentary."
+    "Compress promenade/salon/stance commentary. "
+    "When a repair brief lists exposed consistency problems or penalty deductions, resolve those "
+    "consistency problems and lower those penalty scores in this rewrite."
 )
+
+_CONSISTENCY_METRICS = (
+    ("bilateral_coherence", "left-right consistency"),
+    ("spatial_coherence", "spatial / layering consistency"),
+)
+_PENALTY_LABELS = {
+    "generation_content_penalty": "non-visual or redundant content",
+    "consistency_penalty": "trunk consistency",
+    "coordination_penalty": "styling coordination",
+    "rationality_penalty": "wearability / physical plausibility",
+    "formula_template_penalty": "formula template",
+}
+
+
+def _clip_reason(text: str, limit: int = 360) -> str:
+    s = " ".join((text or "").split())
+    if len(s) <= limit:
+        return s
+    return s[: limit - 1].rstrip() + "…"
+
+
+def format_exposed_repair_brief(evaluation: Optional[Dict[str, Any]]) -> str:
+    """把原文评判里已暴露的一致性问题和惩罚扣分写成改写必须处理的简报。"""
+    if not isinstance(evaluation, dict):
+        return ""
+
+    consistency_lines: List[str] = []
+    metric_results = evaluation.get("metric_results") or {}
+    if isinstance(metric_results, dict):
+        for key, label in _CONSISTENCY_METRICS:
+            row = metric_results.get(key) or {}
+            if not isinstance(row, dict) or not row.get("applicable"):
+                continue
+            try:
+                score = float(row.get("score_value"))
+            except (TypeError, ValueError):
+                continue
+            if score >= 1.0:
+                continue
+            reason = _clip_reason(str(row.get("reason") or ""))
+            consistency_lines.append(
+                f"- {label} ({key}) score={score:.2f}" + (f": {reason}" if reason else "")
+            )
+
+    penalty_lines: List[str] = []
+    items = (
+        ((evaluation.get("scores") or {}).get("quality_score") or {})
+        .get("penalties") or {}
+    ).get("items") or {}
+    if isinstance(items, dict):
+        for key, item in items.items():
+            if not isinstance(item, dict):
+                continue
+            try:
+                score = float(item.get("score", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if score <= 0:
+                continue
+            label = _PENALTY_LABELS.get(str(key), str(key))
+            reason = _clip_reason(str(item.get("reason") or ""))
+            line = f"- {label} ({key}) score={score:.2f}" + (f": {reason}" if reason else "")
+            penalty_lines.append(line)
+            if key == "consistency_penalty":
+                consistency_lines.append(line)
+
+    if not consistency_lines and not penalty_lines:
+        return ""
+
+    parts = [
+        "REPAIR BRIEF (from the current evaluation of SOURCE; required):",
+        "Visible ideas are not capped at a fixed count. Each idea must still serve the theme "
+        "and concept extracted from SOURCE.",
+        "Resolve every consistency problem below so the same failure would not recur.",
+        "Lower every listed penalty. Rephrase or merge first; omit the smallest span only if "
+        "rephrase would leave the same harm. Do not add a new consistency clash or a new penalty.",
+        REWRITE_CONSISTENCY_REPAIR,
+    ]
+    if consistency_lines:
+        parts.append("EXPOSED CONSISTENCY:")
+        parts.extend(consistency_lines)
+    if penalty_lines:
+        parts.append("EXPOSED PENALTY DEDUCTIONS:")
+        parts.extend(penalty_lines)
+    return "\n".join(parts)
 
 REWRITE_BRAND_LOGO_LOCK = (
     "BRAND LOGO LOCK (hard): You do not see the original image; SOURCE plus any business "
@@ -84,15 +174,32 @@ REWRITE_BRAND_LOGO_LOCK = (
     "If SOURCE has no logo/monogram, do not invent another house's logo."
 )
 
+REWRITE_CONSISTENCY_REPAIR = (
+    "CONSISTENCY REPAIR: Clear trunk inconsistency on three axes, matching the scored dimensions. "
+    "(1) Stacked left-right splits (bilateral coherence, consistency and coordination penalties): "
+    "one sleeve grammar, one bottom, one footwear family, and at most one mild local asymmetry. "
+    "Delete the weaker side rather than keeping both. "
+    "(2) Same-element contradiction (consistency penalty on one garment): one element keeps one "
+    "binding — one neckline, one sleeve state, one length, one closure, one shell material. "
+    "Delete the contradictory binding. "
+    "(3) Theme or concept clash (coordination penalty, elements that do not serve the extracted "
+    "theme and concept): delete garments that belong to a different theme or concept. "
+    "Do not add a new clash."
+)
+
 REWRITE_SHARED_STRATEGY = (
     "SHARED STRATEGY (theme/concept lock + logo lock; whole-look change inside that lock): "
     "1) Extract theme and concept from SOURCE only — there is no separate chapter brief. "
     "2) You may change colors, garment pairing, and detail design — the whole look — so this "
     "sample is not a wording-only clone of SOURCE; a generated image should be able to diverge. "
-    "Stay inside the extracted theme and concept. Identifying-idea kinds are a menu, not a "
+    "Stay inside the extracted theme and concept. Visible ideas have no fixed count; each one "
+    "must serve that extracted theme and concept. Idea kinds are a menu, not a quota and not a "
     "per-candidate assignment. "
     "3) Keep any original house logo/monogram as the same brand mark (placement/scale may change). "
-    "4) Output one coherent English paragraph."
+    "4) Output one coherent English paragraph. "
+    "5) If a repair brief is attached, resolve its exposed consistency problems and lower its "
+    "exposed penalty deductions. "
+    f"6) {REWRITE_CONSISTENCY_REPAIR}"
 )
 
 # Backward-compatible name used by workflow extra_context.
@@ -109,8 +216,8 @@ def build_rewrite_user_prompt(
     user = (
         f"PARALLEL REWRITE TASK\n"
         f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
-        f"This is an independent sample: choose one identifying idea yourself "
-        "(do not wait for a kind to be assigned). "
+        f"This is an independent sample: choose the visible ideas yourself. "
+        "Their count is not fixed. Each idea must serve the theme and concept extracted from SOURCE. "
         "You may change the overall clothing (color, pairing, detail design) as long as the "
         "extracted theme and concept stay the same. "
         "Candidates are sampled separately at different temperatures.\n\n"
@@ -131,10 +238,11 @@ def build_rewrite_user_prompt(
         "OUTPUT RULES:\n"
         "1. Output exactly one coherent English paragraph: the optimized fashion image prompt only.\n"
         "2. No markdown fences, no numbering, no preamble or commentary.\n"
-        "3. Lead with the identifying idea you chose, then outer-to-inner visual order.\n"
+        "3. Lead with the visible ideas that serve the extracted theme and concept, then outer-to-inner visual order.\n"
         "4. Whole-look change is allowed (color, pairing, details) only inside SOURCE's theme and concept.\n"
         "5. If SOURCE or business context has a house logo/monogram, keep that same brand mark "
         "(placement and size may change; never another house).\n"
+        "6. If a repair brief is present, resolve every listed consistency problem and lower every listed penalty.\n"
     )
     return user
 

@@ -1,4 +1,4 @@
-"""改写 user prompt：K 路独立调整识别性想法（不预分配种类），品牌 logo 加锁。"""
+"""改写 user prompt：可见想法不限数量，须服务主题并处理已暴露的一致性与惩罚。"""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from plugins.parallel_k_rewrite.k_candidate_generator import (
     REWRITE_STYLE_CONCEPT_LOCK,
     REWRITE_WHOLE_LOOK_SCOPE,
     build_rewrite_user_prompt,
+    format_exposed_repair_brief,
 )
 
 SYS_PROMPT = (
@@ -50,8 +51,13 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("ELEMENT RECONSTRUCTION", prompt)
         self.assertIn("BRAND LOGO LOCK", prompt)
         self.assertIn("MUST NOT replace it with another brand", prompt)
-        self.assertIn("a menu, not an assignment", prompt)
-        self.assertIn("choose one identifying idea yourself", prompt)
+        self.assertIn("not a quota", prompt)
+        self.assertIn("count is not fixed", prompt)
+        self.assertIn("serve the theme and concept extracted from SOURCE", prompt)
+        self.assertIn("lower every listed penalty", prompt)
+        self.assertIn("one footwear family", prompt)
+        self.assertIn("contradictory binding", prompt)
+        self.assertIn("different theme or concept", prompt)
         self.assertIn("color and palette", prompt)
         self.assertIn("garment pairing", prompt)
         self.assertIn("detail design", prompt)
@@ -82,6 +88,7 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("garment pairing", REWRITE_WHOLE_LOOK_SCOPE)
         self.assertIn("detail design", REWRITE_WHOLE_LOOK_SCOPE)
         self.assertIn("SAME extracted theme and concept", REWRITE_WHOLE_LOOK_SCOPE)
+        self.assertIn("different theme or concept", REWRITE_STYLE_CONCEPT_LOCK)
         self.assertIn("SAME house", REWRITE_BRAND_LOGO_LOCK)
         self.assertIn("MUST NOT replace it with another brand", REWRITE_BRAND_LOGO_LOCK)
 
@@ -91,7 +98,11 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("Element reconstruction pass", prompt)
         self.assertIn("collection-shared, interchangeable trunk-garment formula", prompt)
         self.assertIn("Brand logo lock", prompt)
-        self.assertIn("menu, not an assignment", prompt)
+        self.assertIn("not a quota and not an assignment", prompt)
+        self.assertIn("count is not fixed", prompt)
+        self.assertIn("Repair pass", prompt)
+        self.assertIn("one footwear family", prompt)
+        self.assertIn("different theme or concept", prompt)
         self.assertIn("must not replace it with another brand", prompt)
         self.assertIn("color/palette, garment pairing", prompt)
         self.assertIn("does not require keeping SOURCE's original palette", prompt)
@@ -104,7 +115,10 @@ class RewritePromptPolicyTests(unittest.TestCase):
         for phrase in _COMBO_PHRASES:
             self.assertNotIn(phrase, spec)
         self.assertIn("公式化组合", spec)
-        self.assertIn("不预分配到某一路", spec)
+        self.assertIn("不限固定数量", spec)
+        self.assertIn("不预分配", spec)
+        self.assertIn("一致性问题", spec)
+        self.assertIn("惩罚扣分", spec)
         self.assertIn("允许改整体造型", spec)
         self.assertIn("禁止偏离原文主题与概念", spec)
         self.assertIn("禁止换成别的牌子", spec)
@@ -115,6 +129,55 @@ class RewritePromptPolicyTests(unittest.TestCase):
         for phrase in _COMBO_PHRASES:
             self.assertNotIn(phrase, DESIGN_MERIT_JUDGE_GUIDE)
         self.assertIn("interchangeable trunk-garment formula", DESIGN_MERIT_JUDGE_GUIDE)
+
+    def test_repair_brief_lists_consistency_and_penalties(self) -> None:
+        brief = format_exposed_repair_brief(
+            {
+                "metric_results": {
+                    "bilateral_coherence": {
+                        "applicable": True,
+                        "score_value": 0.25,
+                        "reason": "left sleeve and right sleeve are different garments",
+                    },
+                    "spatial_coherence": {
+                        "applicable": True,
+                        "score_value": 1.0,
+                        "reason": "layering is clear",
+                    },
+                },
+                "scores": {
+                    "quality_score": {
+                        "penalties": {
+                            "items": {
+                                "consistency_penalty": {
+                                    "score": 0.5,
+                                    "reason": "trunk left-right clash",
+                                },
+                                "formula_template_penalty": {
+                                    "score": 0.0,
+                                    "reason": "",
+                                },
+                                "coordination_penalty": {
+                                    "score": 0.75,
+                                    "reason": "oxford shoe against a sandal on the other foot",
+                                },
+                            }
+                        }
+                    }
+                },
+            }
+        )
+        self.assertIn("EXPOSED CONSISTENCY", brief)
+        self.assertIn("bilateral_coherence", brief)
+        self.assertIn("consistency_penalty", brief)
+        self.assertNotIn("spatial_coherence", brief)
+        self.assertIn("EXPOSED PENALTY DEDUCTIONS", brief)
+        self.assertIn("one footwear family", brief)
+        self.assertIn("contradictory binding", brief)
+        self.assertIn("coordination_penalty", brief)
+        self.assertNotIn("formula_template_penalty", brief)
+        self.assertEqual(format_exposed_repair_brief({}), "")
+        self.assertEqual(format_exposed_repair_brief(None), "")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,154 @@
+{
+  "purpose": "一致性维度负例。01–07 为同一套时装上同时出现的明显左右不对称；08–14 为要素与该条主题、概念严重不符；15–18 为同一要素自相矛盾。均为时装，不用户外装。只保留已生成图片的描述。",
+  "counts": {
+    "asymmetry": 7,
+    "style_clash": 7,
+    "same_element_contradiction": 4
+  },
+  "cases": [
+    {
+      "file": "01_asymmetry.txt",
+      "defect": "asymmetry",
+      "defect_zh": "明显不对称：同一夹克左半套精裁羊毛，右半套亮片丝绸，左右裤和左右鞋同时分裂",
+      "theme": "黑色手工对比",
+      "concept": "结构化黑夹克作为暗底，让钩针花卉贴花成为识别点",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/01_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__001_media_cha_biarritz_ps27_003_text_description.md"
+    },
+    {
+      "file": "02_asymmetry.txt",
+      "defect": "asymmetry",
+      "defect_zh": "明显不对称：同一件奶油外套左半是粗花呢精裁，右半是亮片裹领，左右裤与左右鞋同时两套",
+      "theme": "象牙粗花呢沙龙",
+      "concept": "敞开的奶油粗花呢框住黑色皮质内层",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/09_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__009_media_cha_biarritz_ps27_028_text_description.md"
+    },
+    {
+      "file": "03_asymmetry.txt",
+      "defect": "asymmetry",
+      "defect_zh": "明显不对称：同一件印花大衣左半长袖立领及膝，右半无袖深V曳地，左右鞋同时两族",
+      "theme": "羽毛勾勒的印花立柱",
+      "concept": "水色羽毛路径把蓝绿印花大衣从领口画到下摆",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/17_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__017_media_cha_biarritz_ps27_057_text_description.md"
+    },
+    {
+      "file": "04_asymmetry.txt",
+      "defect": "asymmetry",
+      "defect_zh": "明显不对称：同一条裙左腿羊毛铅笔、右腿丝绸阔腿，左袖长、右袖无，左右鞋两族",
+      "theme": "红色图形线",
+      "concept": "一条红色门襟和高开衩把奶油裙组织起来",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/33_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__033_media_cha_biarritz_ps27_016_text_description.md"
+    },
+    {
+      "file": "05_asymmetry.txt",
+      "defect": "asymmetry",
+      "defect_zh": "明显不对称：同一件白夹克左半短袖短裤，右半及地丝绸袖和阔腿，左右鞋两族",
+      "theme": "粉笔白沙龙短裁",
+      "concept": "及腰白帆布夹克打开，露出银行条纹衬衫",
+      "source": "workflow_0/2026-06-06/chapter_01/look_01.txt"
+    },
+    {
+      "file": "06_asymmetry.txt",
+      "defect": "asymmetry",
+      "defect_zh": "明显不对称：同一套海军剪裁左半角扣长袖羊毛裤，右半单肩丝绸阔腿，左右鞋两族",
+      "theme": "海军角扣精裁",
+      "concept": "牛角扣海军夹克把工装收成礼服级剪裁",
+      "source": "workflow_0/2026-06-06/chapter_02/look_01.txt"
+    },
+    {
+      "file": "07_asymmetry.txt",
+      "defect": "asymmetry",
+      "defect_zh": "明显不对称：同一件针织左半长袖条纹迷你裙，右半无袖并接及地丝绸，左右鞋两族",
+      "theme": "条纹袖口针织",
+      "concept": "奶油、黑、红的层叠袖口条纹是这件短针织的识别点",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/73_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__073_media_cha_biarritz_ps27_069_text_description.md"
+    },
+    {
+      "file": "08_style_clash.txt",
+      "defect": "style_clash",
+      "defect_zh": "要素与主题严重不符：手工日装黑底贴花上接了白纱新娘头纱和教堂长曳",
+      "theme": "夜花园刺绣",
+      "concept": "黑底上的彩色钩针花卉应保持手工日装的密度",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/01_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__001_media_cha_biarritz_ps27_003_text_description.md"
+    },
+    {
+      "file": "09_style_clash.txt",
+      "defect": "style_clash",
+      "defect_zh": "要素与主题严重不符：白天哑光粗花呢上接了加冕礼的金锦袍和王冠",
+      "theme": "日间罗纹粗花呢",
+      "concept": "箱型奶油粗花呢应保持白天沙龙的哑光",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/09_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__009_media_cha_biarritz_ps27_028_text_description.md"
+    },
+    {
+      "file": "10_style_clash.txt",
+      "defect": "style_clash",
+      "defect_zh": "要素与主题严重不符：安静奶油立柱上接了绯红弗拉明戈层叠裙",
+      "theme": "奶油典礼",
+      "concept": "金属花卉胸针扣住的短斗篷应保持安静的单色立柱",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/49_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__049_media_cha_biarritz_ps27_040_text_description.md"
+    },
+    {
+      "file": "11_style_clash.txt",
+      "defect": "style_clash",
+      "defect_zh": "要素与主题严重不符：轻快图形百褶上接了及地丧服黑纱",
+      "theme": "图形百褶",
+      "concept": "点线与圆形纹样应让黑色上衣和条纹百褶裙保持轻快",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/57_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__057_media_cha_biarritz_ps27_048_text_description.md"
+    },
+    {
+      "file": "12_style_clash.txt",
+      "defect": "style_clash",
+      "defect_zh": "要素与主题严重不符：私密情书大衣内层改成假面舞会菱格与面具",
+      "theme": "密封情书",
+      "concept": "墨黑羊毛大衣只在走动时露出羊皮纸内层",
+      "source": "workflow_0/2026-04-02/chapter_01/look_01.txt"
+    },
+    {
+      "file": "13_style_clash.txt",
+      "defect": "style_clash",
+      "defect_zh": "要素与主题严重不符：腮红舞会纱裙上方接了男装晨礼服燕尾和礼帽",
+      "theme": "腮红舞会纱",
+      "concept": "水晶薄纱裙应以舞会礼服的完整晚装呈现",
+      "source": "workflow_0/2026-06-06/chapter_01/look_01.txt"
+    },
+    {
+      "file": "14_style_clash.txt",
+      "defect": "style_clash",
+      "defect_zh": "要素与主题严重不符：安静条纹及膝套装上接了洛可可撑裙和贴片",
+      "theme": "条纹立柱",
+      "concept": "米色地上的红绿竖条应保持一条安静的及膝套装",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/41_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__041_media_cha_biarritz_ps27_027_text_description.md"
+    },
+    {
+      "file": "15_same_element_contradiction.txt",
+      "defect": "same_element_contradiction",
+      "defect_zh": "同要素矛盾：同一夹克既无领又翻领，既及臀又及地；下装既是骑行短裤又是阔腿羊毛裤",
+      "theme": "无领黑箱型",
+      "concept": "圆领、及臀的黑夹克配贴花，下装是贴身黑短裤",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/01_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__001_media_cha_biarritz_ps27_003_text_description.md"
+    },
+    {
+      "file": "16_same_element_contradiction.txt",
+      "defect": "same_element_contradiction",
+      "defect_zh": "同要素矛盾：同一印花大衣既无袖又长袖，既及膝又曳地，立领同时是深V",
+      "theme": "立领及膝印花大衣",
+      "concept": "高立领和及膝直筒决定这件蓝绿印花大衣",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/17_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__017_media_cha_biarritz_ps27_057_text_description.md"
+    },
+    {
+      "file": "17_same_element_contradiction.txt",
+      "defect": "same_element_contradiction",
+      "defect_zh": "同要素矛盾：同一条红黑吊带裙方领与立领并存，红底与全黑并存，中长与短上衣下摆并存",
+      "theme": "悬垂丝带",
+      "concept": "红黑米白的吊带丝带从肩部金饰垂下，构成裙子的线性",
+      "source": "wgsn_batch_image_inverse/20260524T044337Z/65_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__065_media_cha_biarritz_ps27_061_text_description.md"
+    },
+    {
+      "file": "18_same_element_contradiction.txt",
+      "defect": "same_element_contradiction",
+      "defect_zh": "同要素矛盾：同一件墨黑大衣暗门襟与双排扣并存，及小腿与短腰并存，羊毛与亮片是同一件",
+      "theme": "羊皮纸内层",
+      "concept": "墨黑窄大衣框住羊皮纸丝绸衬衫和暖灰细裤",
+      "source": "workflow_0/2026-04-02/chapter_01/looks_original/look_03.txt"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from plugins.parallel_k_rewrite import generate_k_parallel_rewrites
+from plugins.parallel_k_rewrite.k_candidate_generator import format_exposed_repair_brief
 from plugins.text_description_evaluator.design_text_evaluator_api import (
     DesignTextEvaluator,
     JudgeConnectionError,
@@ -56,20 +57,26 @@ def _inject_original_as_candidate(
     source_text: str,
     *,
     source_name: str,
+    evaluation: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Keep the unrevised draft in the group as a low-reward contrast (negatives)."""
-    try:
-        ev = evaluator.evaluate_text(source_text, source_name=source_name)
+    if evaluation is not None:
+        ev = evaluation
         skip = None
         eval_err = None
-    except JudgeConnectionError:
-        raise
-    except Exception as exc:  # noqa: BLE001
-        if is_connection_failure(exc):
-            raise JudgeConnectionError(str(exc)) from exc
-        ev = None
-        skip = "judge_eval_error"
-        eval_err = str(exc)
+    else:
+        try:
+            ev = evaluator.evaluate_text(source_text, source_name=source_name)
+            skip = None
+            eval_err = None
+        except JudgeConnectionError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            if is_connection_failure(exc):
+                raise JudgeConnectionError(str(exc)) from exc
+            ev = None
+            skip = "judge_eval_error"
+            eval_err = str(exc)
     cands = list(parallel_result.get("candidates") or [])
     row: Dict[str, Any] = {
         "candidate_index": -1,
@@ -407,12 +414,25 @@ def main() -> None:
         role = str(src.get("role") or "")
         print(f"[{i}/{n_pending}] {role} {sid}", flush=True)
         try:
+            try:
+                baseline_eval = evaluator.evaluate_text(text, source_name=f"{sid}.baseline")
+            except JudgeConnectionError:
+                raise
+            except Exception as exc:  # noqa: BLE001
+                if is_connection_failure(exc):
+                    raise JudgeConnectionError(str(exc)) from exc
+                print(f"  baseline eval failed, rewrite without brief: {exc}", flush=True)
+                baseline_eval = None
+            repair = format_exposed_repair_brief(baseline_eval)
+            extra = f"{biz}\n\n{repair}".strip() if repair else biz
+            if repair:
+                print(f"  repair brief attached ({len(repair)} chars)", flush=True)
             result = generate_k_parallel_rewrites(
                 text,
                 k=args.k,
                 evaluator=evaluator,
                 group_id=sid,
-                extra_context=biz,
+                extra_context=extra,
             )
             if inject_neg and role == "negative":
                 _inject_original_as_candidate(
@@ -420,6 +440,7 @@ def main() -> None:
                     result,
                     text,
                     source_name=f"{sid}.original",
+                    evaluation=baseline_eval,
                 )
             conn_err = _first_connection_error_from_result(result)
             if conn_err:
@@ -436,7 +457,7 @@ def main() -> None:
             result,
             context={
                 "shared_source_text": text,
-                "business_context": biz,
+                "business_context": extra,
                 "source_role": role,
                 "source_path": src.get("path"),
                 "instruction_summary": "Rewrite the look into a grounded T2I fashion prompt.",

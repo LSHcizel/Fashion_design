@@ -17,6 +17,7 @@ DEFAULT_NEGATIVE_DIRS = [
     REPO / "fashion_research_dir" / "workflow_0" / "2026-04-02",
 ]
 DEFAULT_OUT = REPO / "training" / "runs" / "corpus" / "source_corpus.jsonl"
+DEFAULT_CONSISTENCY_DIR = REPO / "fashion_research_dir" / "consistency_defect_cases"
 
 _TEXT_DESC_RE = re.compile(
     r"^##\s*text_description\s*\n+(.*?)(?=\n##\s|\Z)",
@@ -161,11 +162,59 @@ def bootstrap_identity_sft(
     return n
 
 
+def iter_consistency_defect_sources(root: Path) -> Iterable[Dict[str, Any]]:
+    """18 条一致性负例：角色为 negative，供 K 路采集直接读取。"""
+    manifest_by_file: Dict[str, Dict[str, Any]] = {}
+    man = root / "manifest.json"
+    if man.is_file():
+        data = json.loads(man.read_text(encoding="utf-8"))
+        for case in data.get("cases") or []:
+            if isinstance(case, dict) and case.get("file"):
+                manifest_by_file[str(case["file"])] = case
+    files = sorted(p for p in root.glob("[0-9][0-9]_*.txt") if p.is_file())
+    for path in files:
+        text = path.read_text(encoding="utf-8").strip()
+        if not text:
+            continue
+        meta = manifest_by_file.get(path.name, {})
+        theme = str(meta.get("theme") or "").strip()
+        concept = str(meta.get("concept") or "").strip()
+        defect = str(meta.get("defect_zh") or meta.get("defect") or "").strip()
+        yield {
+            "source_id": f"consistency_{path.stem}",
+            "role": "negative",
+            "path": str(path.relative_to(REPO)).replace("\\", "/"),
+            "text": text,
+            "business_context": (
+                "Consistency-defect look. "
+                f"Stated theme: {theme}. Stated concept: {concept}. Defect: {defect}. "
+                "Keep that stated theme and concept. "
+                "Clear stacked left-right trunk splits, same-element contradictions, "
+                "and any garment that belongs to a different theme or concept."
+            ),
+        }
+
+
+def build_consistency_corpus(root: Path, out_path: Path) -> Dict[str, int]:
+    rows = list(iter_consistency_defect_sources(root))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    return {"n_total": len(rows), "out": str(out_path)}
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--positive-dir", type=Path, default=DEFAULT_POSITIVE_DIR)
     p.add_argument("--negative-dir", type=Path, action="append", default=None)
     p.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    p.add_argument(
+        "--consistency-dir",
+        type=Path,
+        default=None,
+        help="只把该目录下的一致性负例写成 K 路语料，不混入逆解析正样本",
+    )
     p.add_argument(
         "--sft-out",
         type=Path,
@@ -177,6 +226,12 @@ def main() -> None:
         default=REPO / "plugins" / "text_description_evaluator" / "fashion_sys_prompt.txt",
     )
     args = p.parse_args()
+    if args.consistency_dir is not None:
+        root = args.consistency_dir
+        out = args.out if args.out != DEFAULT_OUT else root / "source_corpus.jsonl"
+        stats = build_consistency_corpus(root, out)
+        print(json.dumps(stats, ensure_ascii=False, indent=2))
+        return
     neg_dirs = args.negative_dir or DEFAULT_NEGATIVE_DIRS
     stats = build_corpus(positive_dir=args.positive_dir, negative_dirs=neg_dirs, out_path=args.out)
     n_sft = bootstrap_identity_sft(args.out, args.sft_out, system_prompt_path=args.system_prompt_file)
