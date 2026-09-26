@@ -150,8 +150,8 @@ def format_exposed_repair_brief(evaluation: Optional[Dict[str, Any]]) -> str:
         "Visible ideas are not capped at a fixed count. Each idea must still serve the theme "
         "and concept extracted from SOURCE.",
         "Resolve every consistency problem below so the same failure would not recur.",
-        "Lower every listed penalty. Rephrase or merge first; omit the smallest span only if "
-        "rephrase would leave the same harm. Do not add a new consistency clash or a new penalty.",
+        "Lower every listed penalty by deleting the conflicting branch. "
+        "A fluent paragraph that still contains both alternatives has not been repaired.",
         REWRITE_CONSISTENCY_REPAIR,
     ]
     if consistency_lines:
@@ -175,15 +175,18 @@ REWRITE_BRAND_LOGO_LOCK = (
 )
 
 REWRITE_CONSISTENCY_REPAIR = (
-    "CONSISTENCY REPAIR: Clear trunk inconsistency on three axes, matching the scored dimensions. "
-    "(1) Stacked left-right splits (bilateral coherence, consistency and coordination penalties): "
-    "one sleeve grammar, one bottom, one footwear family, and at most one mild local asymmetry. "
-    "Delete the weaker side rather than keeping both. "
-    "(2) Same-element contradiction (consistency penalty on one garment): one element keeps one "
-    "binding — one neckline, one sleeve state, one length, one closure, one shell material. "
-    "Delete the contradictory binding. "
-    "(3) Theme or concept clash (coordination penalty, elements that do not serve the extracted "
-    "theme and concept): delete garments that belong to a different theme or concept. "
+    "CONSISTENCY REPAIR (must unify; keeping both sides is a failed rewrite): "
+    "The final paragraph must be one wearable look. Do not smooth the conflict into fluent prose "
+    "that still lists both alternatives. "
+    "(1) Left-right trunk splits: output one sleeve grammar, one bottom, and one footwear family. "
+    "Delete the other side. Do not keep a left half and a right half as two garment identities. "
+    "At most one mild detail may differ (one cuff, one hem dip), not a second sleeve, leg, or shoe. "
+    "(2) Same-element contradiction: one element keeps one binding — one neckline, one sleeve state, "
+    "one length, one closure, one shell material. Delete the contradictory binding. "
+    "Do not write that the garment is available in two styles, or that it transitions between two "
+    "incompatible values. "
+    "(3) Theme or concept clash: delete every garment that belongs to a different theme or concept. "
+    "Do not keep it as an inner layer, a second subject, or a cohesive contrast. "
     "Do not add a new clash."
 )
 
