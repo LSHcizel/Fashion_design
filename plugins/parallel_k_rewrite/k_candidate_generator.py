@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 from ..text_description_evaluator.design_text_evaluator_api import (
     JudgeConnectionError,
+    detect_consistency_conflicts,
     grpo_parallel_k_rewrite_config,
     is_connection_failure,
 )
@@ -63,8 +64,9 @@ REWRITE_DESIGN_MERIT = (
     "Every idea must serve the theme and concept already extracted from SOURCE, and stay grounded "
     "on parts and layers. "
     "Examples of idea kinds (a menu, not an assignment and not a quota): allover surface field; "
-    "trim/appliqué path along neckline, front, hem, or cuff; open outer over an inner that would "
-    "still read alone; or another equally specific visible idea. "
+    "trim/appliqué path along neckline, front, hem, or cuff; open outer over a same-theme inner "
+    "that would still read alone. "
+    "A second sleeve, a second bottom, a second shoe, or a garment from another theme is not an idea. "
     "Do not merely paraphrase SOURCE, retighten wording, or only change pose/background. "
     "If SOURCE already has ideas, you may strengthen, relocate/rescale, drop, or add ideas that "
     "still belong to the extracted theme and concept — including new color, pairing, and detail "
@@ -97,10 +99,73 @@ def _clip_reason(text: str, limit: int = 360) -> str:
     return s[: limit - 1].rstrip() + "…"
 
 
-def format_exposed_repair_brief(evaluation: Optional[Dict[str, Any]]) -> str:
-    """把原文评判里已暴露的一致性问题和惩罚扣分写成改写必须处理的简报。"""
-    if not isinstance(evaluation, dict):
+def _reason_for_brief(text: str) -> str:
+    """中文评判理由会把改写带成中文，简报里只留英文理由。"""
+    reason = _clip_reason(text)
+    cjk = len(re.findall(r"[\u4e00-\u9fff]", reason))
+    latin = len(re.findall(r"[A-Za-z]", reason))
+    if cjk and cjk >= latin:
         return ""
+    return reason
+
+
+def format_conflict_target(source_text: str) -> str:
+    """按正文里的冲突类型写删除指令，而不是再复述两边。"""
+    found = detect_consistency_conflicts(source_text or "")
+    if not found.get("active"):
+        return ""
+    lines = [
+        "TARGETED DELETE (do this first; do not name the deleted branch in the paragraph):"
+    ]
+    zones = found.get("zones") or []
+    if zones:
+        lines.append(
+            "Left-right split in "
+            + ", ".join(zones)
+            + ". Keep one garment in each of those zones. Do not write left and right as two garments."
+        )
+    if int(found.get("same_element_bindings") or 0) > 0:
+        lines.append(
+            "Same element has two bindings. Keep one neckline, one sleeve state, one length, "
+            "one closure, and one shell. Delete the contradictory binding."
+        )
+    foreign = found.get("foreign_terms") or []
+    if foreign:
+        lines.append(
+            "These names are a delete list for you. They must not appear in the paragraph, "
+            "including after no, without, or not: "
+            + ", ".join(foreign[:8])
+            + "."
+        )
+    alternatives = found.get("alternative_slots") or []
+    if alternatives:
+        lines.append(
+            "Or-choice in "
+            + ", ".join(alternatives)
+            + ". Name one garment in that slot. Do not write or between two bottoms, two shoes, "
+            "two necklines, or two sleeve states."
+        )
+    if found.get("two_sleeve_states"):
+        lines.append(
+            "Two sleeve states. Keep one sleeve grammar for both arms. "
+            "Do not recast the split as one-shoulder, and do not say the other side is sleeveless."
+        )
+    if found.get("repair_voice"):
+        lines.append(
+            "Repair narration is in the paragraph. Delete conflicting, replace, delete, restore, "
+            "and do not. Write only the garment the camera sees."
+        )
+    return "\n".join(lines)
+
+
+def format_exposed_repair_brief(
+    evaluation: Optional[Dict[str, Any]],
+    source_text: str = "",
+) -> str:
+    """把原文评判里已暴露的一致性问题和惩罚扣分写成改写必须处理的简报。"""
+    target = format_conflict_target(source_text) if (source_text or "").strip() else ""
+    if not isinstance(evaluation, dict):
+        return target
 
     consistency_lines: List[str] = []
     metric_results = evaluation.get("metric_results") or {}
@@ -115,7 +180,7 @@ def format_exposed_repair_brief(evaluation: Optional[Dict[str, Any]]) -> str:
                 continue
             if score >= 1.0:
                 continue
-            reason = _clip_reason(str(row.get("reason") or ""))
+            reason = _reason_for_brief(str(row.get("reason") or ""))
             consistency_lines.append(
                 f"- {label} ({key}) score={score:.2f}" + (f": {reason}" if reason else "")
             )
@@ -136,21 +201,24 @@ def format_exposed_repair_brief(evaluation: Optional[Dict[str, Any]]) -> str:
             if score <= 0:
                 continue
             label = _PENALTY_LABELS.get(str(key), str(key))
-            reason = _clip_reason(str(item.get("reason") or ""))
+            reason = _reason_for_brief(str(item.get("reason") or ""))
             line = f"- {label} ({key}) score={score:.2f}" + (f": {reason}" if reason else "")
             penalty_lines.append(line)
             if key == "consistency_penalty":
                 consistency_lines.append(line)
 
-    if not consistency_lines and not penalty_lines:
+    if not consistency_lines and not penalty_lines and not target:
         return ""
 
     parts = [
         "REPAIR BRIEF (from the current evaluation of SOURCE; required):",
+        "Write the paragraph in English. Do not copy these notes into it.",
         "Delete one side of each split below. Do not keep both garments in order to preserve a visible idea.",
         "A fluent paragraph that still names both alternatives has not been repaired.",
         REWRITE_CONSISTENCY_REPAIR,
     ]
+    if target:
+        parts.insert(1, target)
     if consistency_lines:
         parts.append("EXPOSED CONSISTENCY:")
         parts.extend(consistency_lines)
@@ -172,27 +240,35 @@ REWRITE_BRAND_LOGO_LOCK = (
 )
 
 REWRITE_CONSISTENCY_REPAIR = (
-    "CONSISTENCY REPAIR. Before writing the paragraph, delete the other side. "
+    "CONSISTENCY REPAIR. Write the paragraph in English. Before any redesign, delete the conflict. "
     "Keeping both garment identities is a failed rewrite. "
-    "If the two sleeves are different garments, name one sleeve grammar and do not name the other. "
+    "Left-right split: if the two sleeves are different garments, name one sleeve grammar and do not name the other. "
     "If the two legs are different bottoms, name one bottom and do not name the other. "
     "If the two feet are different shoes, name one footwear family and do not name the other. "
-    "Do not write a left half and a right half. Do not call the pair symmetrical, deconstructed, "
-    "or cohesive while both garment names remain. "
-    "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that one garment "
+    "Do not write a left half and a right half. "
+    "Same-element contradiction: keep one binding and delete the contradictory binding. "
+    "One neckline, one sleeve state, one length, one closure, one shell. Do not offer two styles. "
+    "Other theme: delete every garment that belongs to a different theme or concept. "
+    "Do not keep it as an inner layer. "
+    "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on the kept garment "
     "is placement, not a second garment. "
-    "For a same-element contradiction, keep one binding and delete the contradictory binding. "
-    "Do not offer two styles. "
-    "Delete every garment that belongs to a different theme or concept. "
-    "Do not keep it as an inner layer."
+    "Name one bottom, one footwear family, one neckline, and one sleeve state. "
+    "Do not write or between two of them, and do not leave a choice for the image model. "
+    "A long sleeve on one side and a sleeveless or one-shoulder other side is still two sleeve states. "
+    "Name one sleeve for both arms. "
+    "The paragraph is only what the camera sees. Do not write conflicting, replace, delete, restore, or do not. "
+    "Do not name a removed garment, including after no, without, or not. "
+    "A Chinese note that lists both sides is the delete list. Do not translate it into the paragraph."
 )
 
 REWRITE_SHARED_STRATEGY = (
     "SHARED STRATEGY (theme/concept lock + logo lock; whole-look change inside that lock): "
     "1) Extract theme and concept from SOURCE only — there is no separate chapter brief. "
-    "2) You may change colors, garment pairing, and detail design — the whole look — so this "
-    "sample is not a wording-only clone of SOURCE; a generated image should be able to diverge. "
-    "Stay inside the extracted theme and concept. Visible ideas have no fixed count; each one "
+        "2) You may change colors, garment pairing, and detail design — the whole look — so this "
+        "sample is not a wording-only clone of SOURCE; a generated image should be able to diverge. "
+        "Stay inside the extracted theme and concept. Do not keep a second sleeve, bottom, shoe, "
+        "or another theme's garment in order to make the look fuller. "
+        "Visible ideas have no fixed count; each one "
     "must serve that extracted theme and concept. Idea kinds are a menu, not a quota and not a "
     "per-candidate assignment. "
     "3) Keep any original house logo/monogram as the same brand mark (placement/scale may change). "
@@ -236,13 +312,15 @@ def build_rewrite_user_prompt(
         )
     user += (
         "OUTPUT RULES:\n"
-        "1. Output exactly one coherent English paragraph: the optimized fashion image prompt only.\n"
+        "1. Output exactly one English paragraph: the optimized fashion image prompt only. Do not write Chinese.\n"
         "2. No markdown fences, no numbering, no preamble or commentary.\n"
-        "3. Lead with the visible ideas that serve the extracted theme and concept, then outer-to-inner visual order.\n"
+        "3. After the conflict is deleted, lead with the kept idea, then outer-to-inner visual order.\n"
         "4. Whole-look change is allowed (color, pairing, details) only inside SOURCE's theme and concept.\n"
         "5. If SOURCE or business context has a house logo/monogram, keep that same brand mark "
         "(placement and size may change; never another house).\n"
         "6. If a repair brief is present, resolve every listed consistency problem and lower every listed penalty.\n"
+        "7. Name one bottom, one shoe, one neckline, and one sleeve state. Do not write or between two of them.\n"
+        "8. Do not write conflicting, replace, delete, restore, or do not. Do not name a removed garment.\n"
     )
     return user
 

@@ -24,26 +24,13 @@ def _s_fp(evaluation: Dict[str, Any]) -> float:
     return float(s or 0.0)
 
 
-def _total_penalty(evaluation: Dict[str, Any]) -> float:
-    pt = (
-        (evaluation.get("scores") or {})
-        .get("quality_score", {})
-        .get("penalties", {})
-        .get("total_penalty")
-    )
-    if pt is None:
-        pt = ((evaluation.get("gates") or {}).get("penalty_gate") or {}).get("total_penalty")
-    return float(pt or 0.0)
-
-
-def rank_key(evaluation: Optional[Dict[str, Any]]) -> Tuple[int, float, float]:
-    """越大越好：双门限通过、S_fp 高、惩罚低。"""
+def rank_key(evaluation: Optional[Dict[str, Any]]) -> Tuple[int, float]:
+    """越大越好：双门限通过，然后总分高。惩罚不参与排序。"""
     if not isinstance(evaluation, dict):
-        return (0, -1.0, 0.0)
+        return (0, -1.0)
     return (
         1 if _gates_both_passed(evaluation) else 0,
         _s_fp(evaluation),
-        -_total_penalty(evaluation),
     )
 
 
@@ -64,10 +51,15 @@ def candidate_eligible(cand: Dict[str, Any]) -> bool:
 
 
 def pick_best_candidate(candidates: Iterable[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    eligible = [c for c in candidates if candidate_eligible(c)]
+    """双门限都过的候选里，取总分最高的一条。没有过门的候选则不选。"""
+    eligible = [
+        c
+        for c in candidates
+        if candidate_eligible(c) and _gates_both_passed(c.get("evaluation") or {})
+    ]
     if not eligible:
         return None
-    return max(eligible, key=lambda c: rank_key(c.get("evaluation")))
+    return max(eligible, key=lambda c: _s_fp(c.get("evaluation") or {}))
 
 
 def pick_rewrite_if_better(
@@ -76,7 +68,8 @@ def pick_rewrite_if_better(
     candidates: Iterable[Dict[str, Any]],
 ) -> Optional[Dict[str, Any]]:
     """
-    从 K 路里选评估最好的一条；仅当严格优于原文评估时返回该候选，否则 None（留原文）。
+    只在总分门和惩罚门都通过的改写里取 S_fp 最高的一条。
+    它高于原文时才替换；没有过门的改写不替换原文。
     """
     best = pick_best_candidate(candidates)
     if best is None:

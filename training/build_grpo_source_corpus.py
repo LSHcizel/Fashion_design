@@ -164,33 +164,22 @@ def bootstrap_identity_sft(
 
 def iter_consistency_defect_sources(root: Path) -> Iterable[Dict[str, Any]]:
     """18 条一致性负例：角色为 negative，供 K 路采集直接读取。"""
-    manifest_by_file: Dict[str, Dict[str, Any]] = {}
-    man = root / "manifest.json"
-    if man.is_file():
-        data = json.loads(man.read_text(encoding="utf-8"))
-        for case in data.get("cases") or []:
-            if isinstance(case, dict) and case.get("file"):
-                manifest_by_file[str(case["file"])] = case
     files = sorted(p for p in root.glob("[0-9][0-9]_*.txt") if p.is_file())
     for path in files:
         text = path.read_text(encoding="utf-8").strip()
         if not text:
             continue
-        meta = manifest_by_file.get(path.name, {})
-        theme = str(meta.get("theme") or "").strip()
-        concept = str(meta.get("concept") or "").strip()
-        defect = str(meta.get("defect_zh") or meta.get("defect") or "").strip()
         yield {
             "source_id": f"consistency_{path.stem}",
             "role": "negative",
             "path": str(path.relative_to(REPO)).replace("\\", "/"),
             "text": text,
             "business_context": (
-                "Consistency-defect look. "
-                f"Stated theme: {theme}. Stated concept: {concept}. Defect: {defect}. "
-                "Keep that stated theme and concept. "
-                "Clear stacked left-right trunk splits, same-element contradictions, "
-                "and any garment that belongs to a different theme or concept."
+                "Consistency-defect look. Keep the theme and concept named in SOURCE. "
+                "Delete the conflict in SOURCE: a left-right garment split, a same-element contradiction, "
+                "or a garment from a different theme or concept. "
+                "Do not keep the deleted garment as an inner layer. "
+                "Write the rewrite in English. Do not translate a Chinese note into the paragraph."
             ),
         }
 

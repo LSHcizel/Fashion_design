@@ -423,7 +423,7 @@ def main() -> None:
                     raise JudgeConnectionError(str(exc)) from exc
                 print(f"  baseline eval failed, rewrite without brief: {exc}", flush=True)
                 baseline_eval = None
-            repair = format_exposed_repair_brief(baseline_eval)
+            repair = format_exposed_repair_brief(baseline_eval, source_text=text)
             extra = f"{biz}\n\n{repair}".strip() if repair else biz
             if repair:
                 print(f"  repair brief attached ({len(repair)} chars)", flush=True)

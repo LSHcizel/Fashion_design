@@ -1,4 +1,4 @@
-"""K 路 vs 原文：过门优先、同分比惩罚、不优于则退回。"""
+"""K 路 vs 原文：双门限都过后，取总分最高的一条。"""
 
 from __future__ import annotations
 
@@ -43,10 +43,25 @@ class SelectBestTests(unittest.TestCase):
             rank_key(_ev(passed=False, s_fp=0.99, penalty=0.0)),
         )
 
-    def test_same_gate_prefers_lower_penalty(self) -> None:
-        high_pen = _ev(passed=False, s_fp=0.75, penalty=0.4)
-        low_pen = _ev(passed=False, s_fp=0.75, penalty=0.1)
-        self.assertTrue(is_strictly_better(low_pen, high_pen))
+    def test_among_passes_higher_score_wins(self) -> None:
+        lower_score = _ev(passed=True, s_fp=0.82, penalty=0.1)
+        higher_score = _ev(passed=True, s_fp=0.91, penalty=0.4)
+        self.assertTrue(is_strictly_better(higher_score, lower_score))
+        chosen = pick_best_candidate([
+            _cand(0, lower_score),
+            _cand(1, higher_score),
+        ])
+        self.assertEqual(chosen["candidate_index"], 1)
+
+    def test_failed_rewrite_does_not_replace_original(self) -> None:
+        baseline = _ev(passed=False, s_fp=0.72, penalty=0.6)
+        higher_but_failed = _cand(0, _ev(passed=False, s_fp=0.95, penalty=0.2))
+        self.assertIsNone(
+            pick_rewrite_if_better(
+                baseline_evaluation=baseline,
+                candidates=[higher_but_failed],
+            )
+        )
 
     def test_not_better_keeps_original(self) -> None:
         baseline = _ev(passed=False, s_fp=0.72, penalty=0.2)
@@ -60,6 +75,11 @@ class SelectBestTests(unittest.TestCase):
         chosen = pick_rewrite_if_better(baseline_evaluation=baseline, candidates=[better])
         self.assertIsNotNone(chosen)
         self.assertEqual(chosen["candidate_index"], 2)
+
+    def test_lower_passing_rewrite_does_not_replace_higher_original(self) -> None:
+        baseline = _ev(passed=True, s_fp=0.96, penalty=0.1)
+        lower = _cand(0, _ev(passed=True, s_fp=0.84, penalty=0.0))
+        self.assertIsNone(pick_rewrite_if_better(baseline_evaluation=baseline, candidates=[lower]))
 
     def test_skips_dupes_and_errors(self) -> None:
         good = _cand(1, _ev(passed=True, s_fp=0.9, penalty=0.0))

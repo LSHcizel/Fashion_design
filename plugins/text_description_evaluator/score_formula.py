@@ -482,7 +482,7 @@ def build_score_formula_breakdown(
         "formula_chain_symbolic": _formula_chain_symbolic(),
         "formula_one_liner": (
             "S_fp = s_fp_base = min(w_c·C + w_q·Q, cap_t); "
-            "R_content = s_fp_base（单条）或 clip(s_fp_base - β·z_len, 0, 1)（GRPO 组内）"
+            "惩罚不进总分。过双门限后取 S_fp 最高的一条"
         ),
         "outputs": {
             "S_fp": _r(fashion_prompt_score),

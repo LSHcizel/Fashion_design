@@ -22,8 +22,9 @@ class ConsistencyCorpusTests(unittest.TestCase):
         self.assertEqual(len(set(ids)), 18)
         for row in rows:
             self.assertEqual(row["role"], "negative")
-            self.assertIn("Stated theme:", row["business_context"])
             self.assertIn("different theme or concept", row["business_context"])
+            self.assertIn("Write the rewrite in English", row["business_context"])
+            self.assertNotIn("Stated theme:", row["business_context"])
             src = Path(row["path"])
             text = (DEFAULT_CONSISTENCY_DIR.parents[1] / src).read_text(encoding="utf-8").strip()
             self.assertEqual(row["text"], text)

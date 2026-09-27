@@ -324,26 +324,30 @@ DESIGN_MERIT_DIMENSIONS = {
 }
 # Single DesignMerit judge block: used only in the DesignMerit user prompt (not repeated in system).
 DESIGN_MERIT_JUDGE_GUIDE = (
-    "Score the identifying idea, not completeness / layout / theme / garment family. "
+    "Score the identifying idea, not completeness / layout / garment family. "
     "Test: swap color, material, and brand words — what still identifies the look?\n"
-    "High 0.75–1.0 (keep high even if buttons, collars, hems, or stitching also appear): "
-    "allover surface field as identity; edge path that draws the silhouette; "
-    "inner garment still readable if the outer is removed, and that inner still belongs to the stated theme.\n"
-    "Cap at 0.25, and do not keep the score high because the facts are specific: "
-    "design_signal_purity while one garment still has two incompatible bindings; "
-    "design_distinctiveness, silhouette_combination_originality, and design_signal_purity "
-    "while garments from a different theme or concept remain, including as an inner layer, "
-    "a second subject, or a cohesive contrast. That clash is not an identifying idea.\n"
-    "Low 0.25–0.5 — that metric has no identifying idea: "
-    "hem/cuff reveal, wrap, self-belt, tucked shirt, optional open-or-belted, "
-    "factory finishing, brand hardware, fabric-mood, theme dualities, "
-    "or a collection-shared interchangeable trunk-garment formula "
-    "that still reads the same after a color/material/brand swap. "
+    "DESIGN (may stay 0.75–1.0): one of these on a single identity — "
+    "an allover surface field (texture, print, or graphic panels of the same cloth); "
+    "an edge path that draws one silhouette (appliqué, trim, fringe, scallop, or beading "
+    "along the neckline, front, hem, cuff, or slit); "
+    "or an inner garment of the SAME theme that still reads when the outer is opened. "
+    "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that one garment "
+    "is placement, not a second idea and not a conflict.\n"
+    "CONFLICT is not design. Cap the metric at 0.25, and do not keep it high because the facts are specific: "
+    "two sleeve grammars, two bottoms, or two shoe types; "
+    "one garment with two bindings for neckline, sleeve, length, closure, or shell; "
+    "or a garment from another theme (bridal, coronation, flamenco, mourning, masquerade, "
+    "morning dress, rococo, or the same kind of foreign register), including as an inner layer. "
+    "Two trunks colliding in volume is not an identifying idea.\n"
+    "Low 0.25–0.5 when there is no design and no conflict: "
+    "hem/cuff reveal, self-belt, tucked shirt, factory finishing (concealed placket, topstitch, piping), "
+    "brand hardware, fabric-mood, theme dualities, "
+    "or a collection-shared interchangeable trunk-garment formula. "
+    "Factory finishing on one identity does not by itself force 0.25. "
     "Do not copy one score onto every axis. "
-    "Do not raise a look for precise cut if the idea is still that shared wardrobe. "
     "Do not lower merely for a coat, cropped jacket, or shorts as a category. Ignore T2I preamble.\n"
-    "Reason: name the idea in one clause, or none; then pick the score. "
-    "Evidence: quote that idea, or quote finishing/theme-only."
+    "Reason: name the idea in one clause, or name the conflict; then pick the score. "
+    "Evidence: quote that idea, or quote the conflicting garments."
 )
 # Per-axis floors after the judge. Shared series/finishing grammar stays low on idea axes.
 DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_ORDINARY = 0.25
@@ -382,10 +386,10 @@ _DESIGN_IDENTIFYING_SIGNATURES = (
     (
         "edge_path",
         re.compile(
-            r"(appliqu[eé]|frayed|fringe[d]?\b|ruffle|cutwork|sequin|crochet|"
+            r"(appliqu[eé]|frayed|fringe[d]?\b|cutwork|crochet|"
             r"bead(?:ed|work)|charm-like|tassel|rosette|feather trim|braided trim|"
             r"zigzag|scalloped|decorative (?:border|trim|edging)|banded trim|"
-            r"(?:trim|edging|border|binding)\w*.{0,60}"
+            r"(?:sequin|ruffle|trim|edging|border|binding)\w*.{0,80}"
             r"(?:along|down|at|from|outlines?|running|borders?)\s+"
             r"(?:the\s+)?(?:neckline|front|hem|cuff|opening|sleeve|slit|neck|waist))",
             re.I,
@@ -410,18 +414,9 @@ _DESIGN_IDENTIFYING_SIGNATURES = (
             r"(?:worn open(?:\s+at the neck)?\s+over|"
             r"sits open over|"
             r"opens (?:fully )?over|"
-            r"open-front \w+(?:/\w+)?(?: \w+){0,4} worn over)\s+.{0,120}?"
-            r"(shorts?|dress|skirt|vest|tunic|bike|cycling|stripe|top|shirt|layer)",
-            re.I,
-        ),
-    ),
-    (
-        "volume_collision",
-        re.compile(
-            r"(voluminous (?:skirt|volume|black)|sculptural (?:folded|peplum|volume)|"
-            r"architectural peplum|capelet|cape (?:sleeves?|panels?)|trailing volume|"
-            r"carried .{0,40}(?:coat|outerwear).{0,40}volume|"
-            r"wrapped waist with voluminous)",
+            r"open-front \w+(?:/\w+)?(?: \w+){0,4} worn over|"
+            r"frames a)\s+.{0,120}?"
+            r"(shorts?|dress|skirt|vest|tunic|bike|cycling|stripe|top|shirt|blouse|layer)",
             re.I,
         ),
     ),
@@ -491,24 +486,353 @@ def _design_merit_exempt_metrics(signatures: List[str]) -> Set[str]:
     for sig in signatures:
         if sig in ("surface_field", "edge_path"):
             exempt |= _SURFACE_EDGE_EXEMPT_METRICS
-        elif sig in ("second_identity", "volume_collision"):
+        elif sig == "second_identity":
             exempt |= _COMBO_EXEMPT_METRICS
     return exempt
 
 
-def compute_design_merit_metric_caps(text: str) -> Dict[str, Dict[str, Any]]:
-    """Per-axis floors: identifying ideas stay high; shared series/finishing grammar stays low."""
+# 左右对打：只认成对的左/右身体分区，并且两侧服装词不同。
+_LR_SIDE = re.compile(
+    r"\b(left|right)\s+(half|side|sleeve|arm|leg|foot|shoe)\b",
+    re.I,
+)
+_CN_LR_SIDE = re.compile(r"(左|右)(半边|半侧|半|侧|袖|臂|腿|脚|鞋)")
+_LR_ZONE = {
+    "half": "sleeve",
+    "side": "sleeve",
+    "sleeve": "sleeve",
+    "arm": "sleeve",
+    "半边": "sleeve",
+    "半侧": "sleeve",
+    "半": "sleeve",
+    "侧": "sleeve",
+    "袖": "sleeve",
+    "臂": "sleeve",
+    "leg": "leg",
+    "腿": "leg",
+    "foot": "shoe",
+    "shoe": "shoe",
+    "脚": "shoe",
+    "鞋": "shoe",
+}
+_ZONE_TOKEN = re.compile(
+    r"(wool|silk|sequin|tweed|satin|leather|gabardine|canvas|knit|crepe|"
+    r"pencil|culotte|palazzo|trouser|pants|shorts|skirt|harem|"
+    r"pump|sandal|boot|mule|oxford|ballet|slingback|stiletto|"
+    r"sleeveless|bishop|one-shoulder|cold shoulder|set-in|shawl|"
+    r"羊毛|丝绸|亮片|粗花呢|缎面|皮革|西裤|阔腿|铅笔裙|短裤|"
+    r"高跟鞋|凉鞋|短靴|穆勒|无袖|长袖|翻领)",
+    re.I,
+)
+# 同件互斥：原文用 “the same coat/hem/shell …” 把第二个绑定接上去。
+_SAME_BINDING = re.compile(
+    r"\b(?:the same|that same|those same)\s+"
+    r"(?:jacket|coat|dress|hem|shell|neckline|sleeve|sleeves|garment|lower garment)\b",
+    re.I,
+)
+_BINDING_PAIRS = (
+    (
+        re.compile(r"(concealed (?:button )?placket|hidden placket|暗门襟)", re.I),
+        re.compile(r"(double-breasted|double breasted|双排扣)", re.I),
+    ),
+    (
+        re.compile(r"(stand collar|mandarin collar|高立领|(?<![长短])立领)", re.I),
+        re.compile(r"(plunging|deep\s*v|square neck|方领|深\s*V)", re.I),
+    ),
+    (
+        re.compile(r"(sleeveless|cutaway armholes|无袖)", re.I),
+        re.compile(r"(long set-in sleeves|long sleeves|set-in sleeves|长袖|长直筒袖)", re.I),
+    ),
+)
+_CN_BOTH_BINDINGS = re.compile(r"既[^。]{0,16}又")
+# 用 or 并列两个不能同时穿的品类。材质不确定（silk or crepe）不在这三栏里。
+_OR_SPLIT = re.compile(r"\s+\bor\b\s+", re.I)
+_SLOT_TOKEN = {
+    "bottom": re.compile(
+        r"\b(skirts?|trousers?|pants|shorts|culottes?|palazzos?|harems?)\b",
+        re.I,
+    ),
+    "shoe": re.compile(
+        r"\b(flats?|pumps?|sandals?|boots?|mules?|oxfords?|slingbacks?|stilettos?|loafers?)\b",
+        re.I,
+    ),
+    "neckline": re.compile(
+        r"\b(strapless|off[-\s]?shoulder|one[-\s]?shoulder|square neck|halter|stand collar|plunging)\b",
+        re.I,
+    ),
+}
+_BARE_ARM = re.compile(
+    r"\b(?:sleeveless|cold shoulder|bare arm|one[-\s]?shoulder)\b",
+    re.I,
+)
+_COVERED_SLEEVE = re.compile(
+    r"\b(?:long|set-in|bishop|tailored)\s+(?:[A-Za-z]+\s+){0,2}sleeves?\b",
+    re.I,
+)
+_OTHER_SIDE_BARE = re.compile(
+    r"\bother side\b.{0,48}\b(?:sleeveless|one[-\s]?shoulder|bare)\b"
+    r"|\b(?:sleeveless|one[-\s]?shoulder)\b.{0,48}\bother side\b",
+    re.I,
+)
+_REPAIR_VOICE = re.compile(
+    r"\bconflicting\b|\bto replace the\b|\brestore a coherent\b|\bdo not\b|\bdelete the\b",
+    re.I,
+)
+# 另一主题：反面样例里种进去的异质服装，不把披肩、开衩、胸针算进去。
+_FOREIGN_THEME = re.compile(
+    r"(bridal|cathedral gown|tulle veil|orange-blossom|"
+    r"coronation|ermine|\bstate crown\b|\bcrown\b|"
+    r"flamenco|mourning|masquerade|"
+    r"morning dress|tailcoat|top hat|"
+    r"panniers?|powdered coiffure|beauty patch|rococo|robe à la française|"
+    r"新娘|头纱|加冕|王冠|弗拉明戈|丧服|假面|晨礼服|燕尾服|礼帽|撑裙|洛可可|美人痣)",
+    re.I,
+)
+CONSISTENCY_PENALTY_FLOOR = 0.75
+CONSISTENCY_PENALTY_SEVERE = 1.0
+_CONFLICT_QUALITY_METRICS = (
+    "generation_readiness",
+    "design_distinctiveness",
+    "silhouette_combination_originality",
+    "design_signal_purity",
+)
+
+
+def _slot_lemma(slot: str, token: str) -> str:
+    word = token.lower()
+    if slot == "bottom":
+        if word.startswith("skirt"):
+            return "skirt"
+        if word.startswith("trouser") or word.startswith("pant"):
+            return "trouser"
+        if word.startswith("short"):
+            return "shorts"
+        if word.startswith("culotte"):
+            return "culotte"
+        if word.startswith("palazzo"):
+            return "palazzo"
+        return "harem"
+    if slot == "shoe":
+        if word.startswith("flat"):
+            return "flat"
+        if word.startswith("pump"):
+            return "pump"
+        if word.startswith("sandal"):
+            return "sandal"
+        if word.startswith("boot"):
+            return "boot"
+        if word.startswith("mule"):
+            return "mule"
+        if word.startswith("oxford"):
+            return "oxford"
+        if word.startswith("slingback"):
+            return "slingback"
+        if word.startswith("stiletto"):
+            return "stiletto"
+        return "loafer"
+    return word
+
+
+_SLOT_FILLER = {
+    "a", "an", "the", "or", "and", "with", "in", "of", "her", "his", "its", "to", "for",
+}
+_UNCERTAINTY = re.compile(
+    r"\b(?:appears?\s+to\s+be|visible\s+as|seems?\s+to|suggesting|possibly|may\s+be|might\s+be)\b"
+    r"|-\s*like\b",
+    re.I,
+)
+
+
+def _has_slot_modifier(snippet: str, token: str) -> bool:
+    """品类词前还有自己的款式或颜色词。光写 skirt or shorts 不算两套。"""
+    head = snippet[: snippet.lower().rfind(token.lower())]
+    words = [w.lower() for w in re.findall(r"[A-Za-z]+(?:-[A-Za-z]+)?", head)]
+    return any(word not in _SLOT_FILLER for word in words[-3:])
+
+
+def _alternative_slots(body: str) -> List[str]:
+    """or 两边各是一个写全的不同品类。同一件衣服的两种叫法不算。"""
+    found: List[str] = []
+    for sentence in re.split(r"[。.!?;\n]", body):
+        if _UNCERTAINTY.search(sentence):
+            continue
+        parts = _OR_SPLIT.split(sentence)
+        if len(parts) < 2:
+            continue
+        for index in range(len(parts) - 1):
+            left = parts[index][-48:]
+            right = parts[index + 1][:48]
+            for slot, pattern in _SLOT_TOKEN.items():
+                left_hits = list(pattern.finditer(left))
+                right_hits = list(pattern.finditer(right))
+                if not left_hits or not right_hits:
+                    continue
+                left_lemmas = {_slot_lemma(slot, match.group(1)) for match in left_hits}
+                right_lemmas = {_slot_lemma(slot, match.group(1)) for match in right_hits}
+                if not left_lemmas.isdisjoint(right_lemmas):
+                    continue
+                if not _has_slot_modifier(left, left_hits[-1].group(1)):
+                    continue
+                if not _has_slot_modifier(right, right_hits[0].group(1)):
+                    continue
+                if slot not in found:
+                    found.append(slot)
+    return found
+
+
+def _has_two_sleeve_states(body: str) -> bool:
+    """一侧有袖、另一侧无袖，或把这种对打改写成单肩，仍是两种袖。"""
+    for sentence in re.split(r"[。.!?;\n]", body):
+        if _OTHER_SIDE_BARE.search(sentence):
+            return True
+        for bare in _BARE_ARM.finditer(sentence):
+            start = max(0, bare.start() - 80)
+            end = min(len(sentence), bare.end() + 80)
+            window = sentence[start:end]
+            if _COVERED_SLEEVE.search(window) and re.search(r"\b(?:while|other side)\b", window, re.I):
+                return True
+    return False
+
+
+def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
+    """区分设计与冲突。
+
+    设计（不在这里）：一套衣服上的表面场、沿边路径、同一主题里敞开后仍可读的内层，
+    以及胸针、偏心结、一条开衩、裹襟、垂褶、不齐下摆这类落点。
+    冲突：左右两套袖/裤/鞋、同一要素两个互斥绑定、另一主题的服装还在正文里、
+    用 or 并列两个品类、把左右袖改写成单肩、把改写说明写进正文。
+    """
+    body = text or ""
+    zones: Dict[str, Dict[str, Set[str]]] = {"sleeve": {}, "leg": {}, "shoe": {}}
+
+    def _note(zone: str, side: str, start: int) -> None:
+        window = body[start:start + 96]
+        tokens = {m.group(0).lower() for m in _ZONE_TOKEN.finditer(window)}
+        zones[zone].setdefault(side, set()).update(tokens)
+
+    for match in _LR_SIDE.finditer(body):
+        _note(_LR_ZONE[match.group(2).lower()], match.group(1).lower(), match.end())
+    for match in _CN_LR_SIDE.finditer(body):
+        side = "left" if match.group(1) == "左" else "right"
+        _note(_LR_ZONE[match.group(2)], side, match.end())
+
+    split_zones: List[str] = []
+    for zone, sides in zones.items():
+        left = sides.get("left")
+        right = sides.get("right")
+        if left is None or right is None:
+            continue
+        if left != right and (left or right):
+            split_zones.append(zone)
+
+    same_hits = len(_SAME_BINDING.findall(body)) + len(_CN_BOTH_BINDINGS.findall(body))
+    for sentence in re.split(r"[。.!?\n]", body):
+        for left_pat, right_pat in _BINDING_PAIRS:
+            if left_pat.search(sentence) and right_pat.search(sentence):
+                same_hits += 1
+    foreign = sorted({m.group(0).lower() for m in _FOREIGN_THEME.finditer(body)})
+    alternatives = _alternative_slots(body)
+    two_sleeve_states = _has_two_sleeve_states(body)
+    repair_voice = bool(_REPAIR_VOICE.search(body))
+    active = bool(
+        split_zones or same_hits or foreign or alternatives or two_sleeve_states or repair_voice
+    )
+    extra_hits = len(alternatives) + int(two_sleeve_states) + int(repair_voice)
+    severe = len(split_zones) >= 2 or same_hits >= 2 or extra_hits >= 2
+    reasons: List[str] = []
+    if split_zones:
+        reasons.append("left-right split in " + ", ".join(split_zones))
+    if same_hits:
+        reasons.append(f"same-element bindings ×{same_hits}")
+    if foreign:
+        reasons.append("foreign theme: " + ", ".join(foreign[:4]))
+    if alternatives:
+        reasons.append("or-choice in " + ", ".join(alternatives))
+    if two_sleeve_states:
+        reasons.append("two sleeve states")
+    if repair_voice:
+        reasons.append("repair narration")
+    return {
+        "active": active,
+        "severe": severe,
+        "zones": split_zones,
+        "same_element_bindings": same_hits,
+        "foreign_terms": foreign,
+        "alternative_slots": alternatives,
+        "two_sleeve_states": two_sleeve_states,
+        "repair_voice": repair_voice,
+        "reason": "; ".join(reasons),
+    }
+
+
+def apply_consistency_penalty_floor(penalties: Dict[str, Any], conflicts: Dict[str, Any]) -> Dict[str, Any]:
+    """裁判把冲突打成 0 时，仍把一致性和协调性抬到下限，再重算五项平均。"""
+    if not conflicts.get("active"):
+        return penalties
+    floor = CONSISTENCY_PENALTY_SEVERE if conflicts.get("severe") else CONSISTENCY_PENALTY_FLOOR
+    note = str(conflicts.get("reason") or "consistency conflict")
+    for key in ("consistency_penalty", "coordination_penalty"):
+        try:
+            current = float(penalties.get(key) or 0.0)
+        except (TypeError, ValueError):
+            current = 0.0
+        updated = max(current, floor)
+        penalties[key] = updated
+        item = (penalties.get("items") or {}).get(key)
+        if isinstance(item, dict):
+            item["score"] = updated
+            if current + 1e-9 < floor:
+                reason = (item.get("reason") or "").strip()
+                item["reason"] = (reason + " " if reason else "") + f"[code floor {floor:g}: {note}]"
+                if isinstance(penalties.get("reasons"), dict):
+                    penalties["reasons"][key] = item["reason"]
+    items = penalties.get("items") or {}
+    keys = [key for key in items if key in penalties]
+    if keys:
+        penalties["total_penalty"] = round(sum(float(penalties[key]) for key in keys) / len(keys), 4)
+    return penalties
+
+
+def apply_conflict_quality_caps(metric_results: Dict[str, Any], conflicts: Dict[str, Any]) -> None:
+    """冲突还在时，相关质量分在代码里封顶，不靠裁判记住提示。"""
+    if not conflicts.get("active"):
+        return
+    binding_cap = 0.0 if int(conflicts.get("same_element_bindings") or 0) >= 2 else 0.25
+    caps = {name: 0.25 for name in _CONFLICT_QUALITY_METRICS}
+    if int(conflicts.get("same_element_bindings") or 0) > 0:
+        caps["attribute_entity_binding"] = binding_cap
+    for name, cap in caps.items():
+        row = metric_results.get(name)
+        if not isinstance(row, dict) or not row.get("applicable"):
+            continue
+        try:
+            score = float(row.get("score_value"))
+        except (TypeError, ValueError):
+            continue
+        if score <= cap:
+            continue
+        row["score_value"] = cap
+        row["hit"] = 1 if cap >= QUALITY_FULL_HIT_THRESHOLD else 0
+        row["reason"] = (row.get("reason") or "") + f" [stays at {cap:g}: consistency conflict is not design]"
+
+
+def compute_design_merit_metric_caps(
+    text: str,
+    conflicts: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Dict[str, Any]]:
+    """Per-axis floors: identifying ideas stay high; shared series grammar stays low.
+
+    A consistency conflict is not an identifying idea, so it caps the idea axes
+    even when a surface, an edge, or a same-theme inner is also present.
+    Factory finishing on one identity does not force the 0.25 floor.
+    """
     signatures = list_design_identifying_signatures(text)
     cues = list_design_merit_cue_families(text)
-    exempt = _design_merit_exempt_metrics(signatures)
-    has_any_sig = bool(signatures)
-    has_surface_or_edge = any(s in signatures for s in ("surface_field", "edge_path"))
-    has_combo_sig = any(s in signatures for s in ("second_identity", "volume_collision"))
-    shared_wardrobe = (
-        cues["factory_finishing"]
-        or cues["ordinary_dressing"]
-        or cues["series_formula"]
-    )
+    conflict = conflicts if conflicts is not None else detect_consistency_conflicts(text)
+    exempt = set() if conflict.get("active") else _design_merit_exempt_metrics(signatures)
+    has_any_sig = bool(signatures) and not conflict.get("active")
+    has_combo_sig = "second_identity" in signatures and not conflict.get("active")
+    shared_wardrobe = cues["ordinary_dressing"] or cues["series_formula"]
     caps: Dict[str, Dict[str, Any]] = {}
 
     def _propose(metric: str, cap: float, reason: str) -> None:
@@ -539,13 +863,6 @@ def compute_design_merit_metric_caps(text: str) -> Dict[str, Dict[str, Any]]:
             "observation is cut/finishing, not an identifying idea",
         )
 
-    if cues["factory_finishing"] and not has_surface_or_edge:
-        _propose(
-            "craft_embellishment_salience",
-            DESIGN_MERIT_AUX_CAP_CRAFT,
-            "factory finishing is not identifying craft",
-        )
-
     if not has_combo_sig:
         if cues["ordinary_dressing"] or cues["series_formula"]:
             _propose(
@@ -557,7 +874,7 @@ def compute_design_merit_metric_caps(text: str) -> Dict[str, Dict[str, Any]]:
             _propose(
                 "silhouette_combination_originality",
                 DESIGN_MERIT_AUX_CAP_COMBINATION_WEAK,
-                "no second identity or volume collision",
+                "no same-theme inner identity",
             )
 
     if not has_any_sig:
@@ -574,10 +891,22 @@ def compute_design_merit_metric_caps(text: str) -> Dict[str, Dict[str, Any]]:
                 "no identifying idea",
             )
 
+    if conflict.get("active"):
+        for metric in (
+            "design_distinctiveness",
+            "silhouette_combination_originality",
+            "design_signal_purity",
+        ):
+            caps[metric] = {
+                "cap": DESIGN_MERIT_AUX_CAP_PURITY_THEME,
+                "reason": "consistency conflict is not an identifying idea",
+            }
+
     return {
         "caps": caps,
         "signatures": signatures,
         "cues": cues,
+        "conflicts": conflict,
         "exempt_metrics": sorted(exempt),
     }
 
@@ -1547,6 +1876,9 @@ class DesignTextEvaluator:
                     }
 
         quality_penalties = self.judge.judge_quality_penalties(text_for_judge)
+        conflicts = detect_consistency_conflicts(raw_text)
+        quality_penalties = apply_consistency_penalty_floor(quality_penalties, conflicts)
+        apply_conflict_quality_caps(metric_results, conflicts)
         module_scores = self._aggregate_module_scores(metric_results)
         axis_scores = self._aggregate_axis_scores(metric_results)
         quality_axis_score = axis_scores["quality_score"]["score"]
@@ -1629,6 +1961,7 @@ class DesignTextEvaluator:
                 "bonus_score": axis_scores["bonus_score"],
                 "fashion_prompt_score": fashion_prompt_score,
                 "s_fp_base": s_fp_base,
+                "consistency_conflicts": conflicts,
                 "length_disentangle": length_disentangle,
                 "weights": weights,
                 "total_cap": total_cap,

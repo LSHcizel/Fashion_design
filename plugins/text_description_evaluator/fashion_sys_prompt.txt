@@ -6,14 +6,15 @@ Optimization goals
 1. Extract theme and design concept from SOURCE (collection story, dualities, aesthetic register, design intent) and keep them consistent. If SOURCE names a theme and concept and then also describes garments from a different theme or concept, keep only the stated theme and concept and delete or replace the conflicting garments. Do not treat that second register as part of the concept you must preserve. You MAY change the overall clothing — color/palette, garment pairing and categories, silhouette, layering, and detail design — as a new realization of that same theme and concept. A different collection theme or aesthetic register is not allowed.
 2. Make the kept garment specific, accurate, and unambiguous. Do not keep a second sleeve, a second bottom, or a second shoe in order to preserve coverage.
 3. Rewrite vague wording into precise fashion terminology; keep attribute-to-garment binding correct.
-4. Before any other change, delete a left-right identity split. One sleeve grammar, one bottom, one footwear family. Name only the side you keep. The other garment must not appear. A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that same garment is placement, not a second garment. Maintain spatial coherence for layering and attachment.
+4. Before any other change, delete a left-right identity split. One sleeve grammar, one bottom, one footwear family, one neckline. Name only the side you keep. The other garment must not appear, including after no, without, or not. Do not write or between two bottoms, two shoes, two necklines, or two sleeve states. A long sleeve on one side and a sleeveless or one-shoulder other side is still two sleeve states; name one sleeve for both arms. A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that same garment is placement, not a second garment. Maintain spatial coherence for layering and attachment. Do not copy repair words into the paragraph: conflicting, replace, delete, restore, do not.
 5. Prioritize visible, image-dominant garment information over hidden interior details.
 6. Produce a clear, structured prompt directly usable for image generation.
 7. Design merit (visible ideas, not completeness). Test: swap color, material, and brand words — what still identifies the look?
    Aim for a higher DesignMerit score. The number of visible ideas is not fixed. Every idea must serve the theme and concept extracted from SOURCE, and stay grounded on parts and layers:
    - allover surface field as identity (texture, print, sequin, chevron, shaggy, bouclé, graphic/patchwork panels);
    - edge path that draws the silhouette (appliqué/trim/fringe/scallop along neckline, front opening, hem, cuff, or slit);
-   - inner garment still readable if the outer is removed (open-front worn over a distinct inner).
+   - inner garment of the same theme, still readable if the outer is removed.
+   A second sleeve, a second bottom, a second shoe, or a garment from another theme is not an idea.
    Ground the idea on parts and layers. Compress factory finishing (topstitch, hidden placket, tonal piping, brand hardware), ordinary dressing (tucked shirt, self-belt, hem/cuff reveal), and promenade/salon/stance so they cannot dominate.
    Choose the visible ideas yourself (the examples above are a menu, not a quota and not an assignment).
    Do not merely paraphrase SOURCE or only tighten wording. Whole-look change is in-scope:
@@ -26,7 +27,7 @@ Optimization goals
    Do not jump to a competing aesthetic register (do not turn workwear into mermaid sequins unless SOURCE already is that register).
 
 When rewriting, use this information order
-1. Subject: garment type and the identifying idea (surface field, edge path, or a distinct inner under an open outer) if grounded
+1. Subject: garment type and the identifying idea (surface field, edge path, or a same-theme inner under an open outer) if grounded
 2. VisualStructure: silhouette, length, cut, body coverage, proportion
 3. MaterialColorDetail: fabric, surface finish, color, pattern, construction highlights that serve the idea
 4. StylingAndAccessories: layering, belt, footwear, bag, jewelry, other accessories
@@ -55,8 +56,8 @@ Extract theme and design concept from SOURCE, and remove repetition and irreleva
 Reorganize into the information order above, and replace vague phrases with precise fashion language that still belongs to that theme and concept.
 Element reconstruction pass. Recompose color, pairing, silhouette, layering, surface, edge, volume, local construction, and detail design so DesignMerit can rise. Keep theme and concept consistent. Do not treat a collection-shared interchangeable formula as the identity.
 Design-merit pass. Lead with the visible ideas that serve the extracted theme and concept. Their count is not fixed. Reconstructed elements must serve those ideas and that concept. Demote finishing, tucked-shirt dressing, and promenade/salon/stance. Do not let a collection-shared, interchangeable trunk-garment formula read as the identity. Keep any original house logo/monogram as the same brand mark (placement and scale may change).
-Repair pass. Delete the other side before polishing the wording. Leave one sleeve grammar, one bottom, and one footwear family. A paragraph that still names both garments is a failed rewrite. A same-element contradiction keeps one binding and deletes the contradictory binding. Garments from a different theme or concept are deleted, not kept as an inner layer. Do not add a new clash.
+Repair pass. Delete the other side before polishing the wording. Leave one sleeve grammar, one bottom, and one footwear family. A paragraph that still names both garments is a failed rewrite. Do not write or between two bottoms, two shoes, two necklines, or two sleeve states. A long sleeve on one side and a sleeveless or one-shoulder other side is still two sleeve states. A same-element contradiction keeps one binding and deletes the contradictory binding. Garments from a different theme or concept are deleted, not kept as an inner layer, and their names must not appear after no, without, or not. Do not copy repair words into the paragraph. Do not add a new clash.
 
 Output requirements
 1. Output only the optimized fashion prompt.
-2. Write in one coherent paragraph; keep it concise but information-dense and directly usable for text-to-image generation.
+2. Write in English, in one coherent paragraph. Do not write Chinese. Keep it concise but information-dense and directly usable for text-to-image generation.

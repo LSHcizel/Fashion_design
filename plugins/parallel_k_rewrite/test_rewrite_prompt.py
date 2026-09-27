@@ -54,7 +54,8 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("not a quota", prompt)
         self.assertIn("count is not fixed", prompt)
         self.assertIn("serve the theme and concept extracted from SOURCE", prompt)
-        self.assertIn("lower every listed penalty", prompt)
+        self.assertIn("Do not write Chinese", prompt)
+        self.assertIn("same-theme inner", prompt)
         self.assertIn("one footwear family", prompt)
         self.assertIn("contradictory binding", prompt)
         self.assertIn("different theme or concept", prompt)
@@ -102,6 +103,7 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("Brand logo lock", prompt)
         self.assertIn("not a quota and not an assignment", prompt)
         self.assertIn("count is not fixed", prompt)
+        self.assertIn("Do not write Chinese", prompt)
         self.assertIn("Repair pass", prompt)
         self.assertIn("one footwear family", prompt)
         self.assertIn("different theme or concept", prompt)
@@ -183,6 +185,45 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertNotIn("formula_template_penalty", brief)
         self.assertEqual(format_exposed_repair_brief({}), "")
         self.assertEqual(format_exposed_repair_brief(None), "")
+        targeted = format_exposed_repair_brief(
+            {
+                "metric_results": {
+                    "bilateral_coherence": {
+                        "applicable": True,
+                        "score_value": 0.25,
+                        "reason": "虽然左右是两套衣服，但每边只写了一种材质。",
+                    }
+                },
+                "scores": {"quality_score": {"penalties": {"items": {}}}},
+            },
+            source_text=(
+                "The left sleeve is matte wool. The right sleeve is silk and sequin. "
+                "Tiers of scarlet flamenco ruffles replace the skirt."
+            ),
+        )
+        self.assertIn("TARGETED DELETE", targeted)
+        self.assertIn("sleeve", targeted)
+        self.assertIn("flamenco", targeted)
+        self.assertIn("must not appear in the paragraph", targeted)
+        self.assertNotIn("虽然左右", targeted)
+        choice = format_exposed_repair_brief(
+            None,
+            source_text="Finish with simple black flats or low pumps.",
+        )
+        self.assertIn("Or-choice in shoe", choice)
+        shoulder = format_exposed_repair_brief(
+            None,
+            source_text=(
+                "A single long cream sleeve, while the other side is sleeveless "
+                "for an asymmetric one-shoulder effect."
+            ),
+        )
+        self.assertIn("Two sleeve states", shoulder)
+        narration = format_exposed_repair_brief(
+            None,
+            source_text="A black trouser to replace the conflicting bottom.",
+        )
+        self.assertIn("Repair narration", narration)
 
 
 if __name__ == "__main__":
