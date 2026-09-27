@@ -4,9 +4,9 @@ Your input is a text_description only. You do not see the image. Extract the the
 
 Optimization goals
 1. Extract theme and design concept from SOURCE (collection story, dualities, aesthetic register, design intent) and keep them consistent. If SOURCE names a theme and concept and then also describes garments from a different theme or concept, keep only the stated theme and concept and delete or replace the conflicting garments. Do not treat that second register as part of the concept you must preserve. You MAY change the overall clothing — color/palette, garment pairing and categories, silhouette, layering, and detail design — as a new realization of that same theme and concept. A different collection theme or aesthetic register is not allowed.
-2. Improve coverage and quality of important fashion information when it already exists in the input (internally: coverage = key fashion info present; quality = specific, accurate, unambiguous, well organized).
+2. Make the kept garment specific, accurate, and unambiguous. Do not keep a second sleeve, a second bottom, or a second shoe in order to preserve coverage.
 3. Rewrite vague wording into precise fashion terminology; keep attribute-to-garment binding correct.
-4. Keep left and right the same garment identity: one sleeve grammar, one bottom, one footwear family. On that one identity, personalized local placement may stay asymmetric, the way a finished runway look does: one brooch or appliqué on one chest, an off-center bow or sash, one slit, a wrap overlap, a diagonal drape, an irregular hem, or a graphic panel of the same cloth. Do not mirror those details away. Maintain spatial coherence for layering, inside-outside relations, and attachment positions.
+4. Before any other change, delete a left-right identity split. One sleeve grammar, one bottom, one footwear family. Name only the side you keep. The other garment must not appear. A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that same garment is placement, not a second garment. Maintain spatial coherence for layering and attachment.
 5. Prioritize visible, image-dominant garment information over hidden interior details.
 6. Produce a clear, structured prompt directly usable for image generation.
 7. Design merit (visible ideas, not completeness). Test: swap color, material, and brand words — what still identifies the look?
@@ -27,7 +27,7 @@ Optimization goals
 
 When rewriting, use this information order
 1. Subject: garment type and the identifying idea (surface field, edge path, or a distinct inner under an open outer) if grounded
-2. VisualStructure: silhouette, length, cut, body coverage, proportion, asymmetry
+2. VisualStructure: silhouette, length, cut, body coverage, proportion
 3. MaterialColorDetail: fabric, surface finish, color, pattern, construction highlights that serve the idea
 4. StylingAndAccessories: layering, belt, footwear, bag, jewelry, other accessories
 
@@ -38,9 +38,7 @@ Prefer precise terms (e.g. trench coat, column dress, pleated skirt, patent leat
 
 If the input describes only one garment, do not force full-look accessories. Attributes that remain must stay bound to the correct garment.
 
-This does not require keeping SOURCE's original palette, garment pairing, or SKU. The visual trunk is all defining clothing—outerwear, inner/base tops when described (shirts, tees, knit layers under jackets, dress bodices as a garment layer), bottoms, and footwear; inner and outer upper layers are each trunk when both are explicit garments. When the text explicitly describes them, trunk also includes outerwear/jacket/coat lining and trouser/pant inner lining or in-seam revealed lining. Treat shell vs lining as one coherent garment grammar unless the input clearly separates layers. Keep one silhouette, one bottom category, one footwear family, one primary palette, and one main material family. Symmetry is required at the identity: both sleeves share one sleeve grammar, both legs are one bottom, both feet are one footwear family, and each garment has one neckline, one length, one closure, and one shell. A single-breasted button row is that closure, not a left-right defect. Personalized asymmetry is allowed only as placement on that shared identity, and several such placements may coexist: one brooch or appliqué, an off-center bow or sash, one slit, a wrap overlap, a diagonal drape, an irregular hem, irregular floral placement, or a graphic panel that is the surface of the same garment. Do not delete those to force a mirror image. Do not keep a single upper-body garment as two incompatible garment languages on left vs right. On the first rewrite, delete a true identity split of any outerwear, inner top, bottom, or shoe. Do not wait for a later round. A bag carried on one side, and small left-right differences on belt, gloves, or jewelry, may remain.
-
-Do not output left-versus-right trunk identities in one look: different sleeve grammar, different pant-leg identity, or different footwear families. Delete the weaker side on the first rewrite. Do not keep both and call the pair deconstructed or intentional.
+This does not require keeping SOURCE's original palette, garment pairing, or SKU. The visual trunk is outerwear, inner tops, bottoms, and footwear. Both sleeves are one sleeve grammar, both legs are one bottom, and both feet are one footwear family. If the other side is a different garment, delete it in this rewrite and do not name it. Each garment has one neckline, one length, one closure, and one shell. A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that garment may stay. A single-breasted closure is not a second garment. A bag on one side may remain.
 
 Keep hidden or low-visibility details subordinate to visible silhouette, material, color, and styling. Make layering, under-over relations, and body placement explicit when important to the look.
 
@@ -48,9 +46,7 @@ For multiple waist or hip retention systems (wide belt, second belt, under-belt 
 
 For leg straps or harness with very wide or fluid trousers, use a compatible pant leg (straight or tapered where straps anchor) or describe plausible strap routing and anchor points grounded in the input. Do not imply a physically impossible bind over billowing fabric without that support in the input.
 
-When a penalty checklist, reason, or evidence is present, remove the failure in this rewrite. Delete the conflicting branch on the first rewrite. Do not keep both alternatives because the wording was softened.
-
-On a true left-right identity split, a same-element contradiction, or a theme or concept clash, delete the conflicting branch on the first rewrite. Do not stop at a softer sentence that still lists both alternatives. Leave one sleeve grammar, one bottom, one footwear family, and one binding per element. A second theme's garments are removed, not restyled as an inner layer. Keep personalized placement asymmetry that still belongs to that one identity.
+When a penalty checklist, reason, or evidence is present, remove the failure in this rewrite. Delete the conflicting branch. Do not keep both alternatives because the wording was softened.
 
 Brand logo lock. If SOURCE or business context describes a house logo, monogram, interlocking-letter mark, branded buckle, or letter motif on clothing or accessories, keep that SAME house and the SAME mark. You may change its placement and scale. You must not replace it with another brand's logo or monogram (do not turn a Chanel interlocking C / that house's mark into YSL, Dior, Gucci, or any other maison). Do not paraphrase a specific house mark into a generic "interlocking letters" that an image model could render as a different brand — keep the same mark identity. If no logo/monogram is present, do not invent another house's logo.
 
@@ -59,7 +55,7 @@ Extract theme and design concept from SOURCE, and remove repetition and irreleva
 Reorganize into the information order above, and replace vague phrases with precise fashion language that still belongs to that theme and concept.
 Element reconstruction pass. Recompose color, pairing, silhouette, layering, surface, edge, volume, local construction, and detail design so DesignMerit can rise. Keep theme and concept consistent. Do not treat a collection-shared interchangeable formula as the identity.
 Design-merit pass. Lead with the visible ideas that serve the extracted theme and concept. Their count is not fixed. Reconstructed elements must serve those ideas and that concept. Demote finishing, tucked-shirt dressing, and promenade/salon/stance. Do not let a collection-shared, interchangeable trunk-garment formula read as the identity. Keep any original house logo/monogram as the same brand mark (placement and scale may change).
-Repair pass. Unify identities on the first rewrite. Deleting a true left-right identity split is allowed immediately, and does not wait for a later round. Do not delete personalized placement that still sits on one shared garment. Keeping both garment identities in fluent prose is a failed rewrite. Left-right trunk splits become one sleeve grammar, one bottom, and one footwear family. Delete the other side, and do not keep a left half and a right half as two garment identities. A same-element contradiction keeps one binding and deletes the contradictory binding. Do not offer two styles or transition between incompatible values. Garments that belong to a different theme or concept are deleted, not kept as an inner layer, a second subject, or a cohesive contrast. Do not add a new consistency clash or a new penalty.
+Repair pass. Delete the other side before polishing the wording. Leave one sleeve grammar, one bottom, and one footwear family. A paragraph that still names both garments is a failed rewrite. A same-element contradiction keeps one binding and deletes the contradictory binding. Garments from a different theme or concept are deleted, not kept as an inner layer. Do not add a new clash.
 
 Output requirements
 1. Output only the optimized fashion prompt.

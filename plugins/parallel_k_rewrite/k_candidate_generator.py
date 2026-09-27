@@ -147,11 +147,8 @@ def format_exposed_repair_brief(evaluation: Optional[Dict[str, Any]]) -> str:
 
     parts = [
         "REPAIR BRIEF (from the current evaluation of SOURCE; required):",
-        "Visible ideas are not capped at a fixed count. Each idea must still serve the theme "
-        "and concept extracted from SOURCE.",
-        "Resolve every consistency problem below so the same failure would not recur.",
-        "Lower every listed penalty by deleting the conflicting branch. "
-        "A fluent paragraph that still contains both alternatives has not been repaired.",
+        "Delete one side of each split below. Do not keep both garments in order to preserve a visible idea.",
+        "A fluent paragraph that still names both alternatives has not been repaired.",
         REWRITE_CONSISTENCY_REPAIR,
     ]
     if consistency_lines:
@@ -175,25 +172,19 @@ REWRITE_BRAND_LOGO_LOCK = (
 )
 
 REWRITE_CONSISTENCY_REPAIR = (
-    "CONSISTENCY REPAIR. Unify garment identity on the first rewrite. "
-    "Deleting a true left-right identity split is allowed immediately and does not wait for a later round. "
+    "CONSISTENCY REPAIR. Before writing the paragraph, delete the other side. "
     "Keeping both garment identities is a failed rewrite. "
-    "The final paragraph must be one wearable look. Do not smooth the conflict into fluent prose "
-    "that still lists both alternatives. "
-    "Symmetry is required where the two sides would be different garments: one sleeve grammar, "
-    "one bottom, and one footwear family. Delete the other side. "
-    "Do not keep a left half and a right half as two garment identities. "
-    "Personalized asymmetry may stay when it is only placement on that shared identity, "
-    "and more than one such placement may coexist: one brooch or appliqué, an off-center bow or sash, "
-    "one slit, a wrap overlap, a diagonal drape, an irregular hem, or a graphic panel of the same cloth. "
-    "Do not mirror those away. A single-breasted closure is not a defect. "
-    "For a same-element contradiction, one element keeps one binding — one neckline, one sleeve state, "
-    "one length, one closure, one shell material. Delete the contradictory binding. "
-    "Do not write that the garment is available in two styles, or that it transitions between two "
-    "incompatible values. "
-    "For a theme or concept clash, delete every garment that belongs to a different theme or concept. "
-    "Do not keep it as an inner layer, a second subject, or a cohesive contrast. "
-    "Do not add a new clash."
+    "If the two sleeves are different garments, name one sleeve grammar and do not name the other. "
+    "If the two legs are different bottoms, name one bottom and do not name the other. "
+    "If the two feet are different shoes, name one footwear family and do not name the other. "
+    "Do not write a left half and a right half. Do not call the pair symmetrical, deconstructed, "
+    "or cohesive while both garment names remain. "
+    "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that one garment "
+    "is placement, not a second garment. "
+    "For a same-element contradiction, keep one binding and delete the contradictory binding. "
+    "Do not offer two styles. "
+    "Delete every garment that belongs to a different theme or concept. "
+    "Do not keep it as an inner layer."
 )
 
 REWRITE_SHARED_STRATEGY = (
@@ -206,9 +197,8 @@ REWRITE_SHARED_STRATEGY = (
     "per-candidate assignment. "
     "3) Keep any original house logo/monogram as the same brand mark (placement/scale may change). "
     "4) Output one coherent English paragraph. "
-    "5) If a repair brief is attached, resolve its exposed consistency problems and lower its "
-    "exposed penalty deductions. "
-    f"6) {REWRITE_CONSISTENCY_REPAIR}"
+    "5) If a repair brief is attached, delete the garment it flags and lower its exposed penalty deductions. "
+    "6) Obey the consistency repair above. Delete the other side."
 )
 
 # Backward-compatible name used by workflow extra_context.
@@ -230,6 +220,7 @@ def build_rewrite_user_prompt(
         "You may change the overall clothing (color, pairing, detail design) as long as the "
         "extracted theme and concept stay the same. "
         "Candidates are sampled separately at different temperatures.\n\n"
+        f"{REWRITE_CONSISTENCY_REPAIR}\n\n"
         f"{REWRITE_SHARED_STRATEGY}\n"
         f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
         f"{REWRITE_WHOLE_LOOK_SCOPE}\n"

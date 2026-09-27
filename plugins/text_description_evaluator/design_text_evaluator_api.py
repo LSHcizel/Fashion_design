@@ -276,7 +276,12 @@ DESIGN_MERIT_JUDGE_GUIDE = (
     "Test: swap color, material, and brand words — what still identifies the look?\n"
     "High 0.75–1.0 (keep high even if buttons, collars, hems, or stitching also appear): "
     "allover surface field as identity; edge path that draws the silhouette; "
-    "inner garment still readable if the outer is removed; trunk surface/volume collision.\n"
+    "inner garment still readable if the outer is removed, and that inner still belongs to the stated theme.\n"
+    "Cap at 0.25, and do not keep the score high because the facts are specific: "
+    "design_signal_purity while one garment still has two incompatible bindings; "
+    "design_distinctiveness, silhouette_combination_originality, and design_signal_purity "
+    "while garments from a different theme or concept remain, including as an inner layer, "
+    "a second subject, or a cohesive contrast. That clash is not an identifying idea.\n"
     "Low 0.25–0.5 — that metric has no identifying idea: "
     "hem/cuff reveal, wrap, self-belt, tucked shirt, optional open-or-belted, "
     "factory finishing, brand hardware, fabric-mood, theme dualities, "
@@ -656,13 +661,13 @@ Judging principles:
 3. Only mark hit=1 when the text clearly supports it. Do not hallucinate missing facts.
 4. applicable decides whether a metric should enter scoring for this text. If applicable is false, hit must be null.
 5. evidence should quote short spans from the original text whenever possible. Each evidence array has at most 3 short quotes (under 20 words each); do not enumerate the whole look.
-6. When bilateral differences exist, distinguish trunk from accessories. Trunk = all clothing that defines the worn look: outerwear, inner/base tops, bottoms, and footwear. If the text still gives the trunk two sleeve grammars, two leg garments, or two shoe types, bilateral_coherence must be at most 0.5; if two or more of those zones remain, at most 0.25. Calling the split cohesive or deconstructed does not raise the score. Score 0.75 or above only when sleeve, bottom, and shoe are each one identity. Local placement on that one identity is not a split and must not lower the score: one brooch or appliqué, an off-center bow or sash, one slit, a wrap overlap, a diagonal drape, an irregular hem, or a graphic panel of the same garment. A single-breasted closure is not a left-right defect. A same-element contradiction (one garment, two incompatible bindings for neckline, sleeve, length, closure, or shell material) scores attribute binding at most 0.25 until one binding remains. Mild accessory-only differences are lenient only when the trunk is already one identity.
+6. When bilateral differences exist, distinguish trunk from accessories. Trunk = all clothing that defines the worn look: outerwear, inner/base tops, bottoms, and footwear. If the text still gives the trunk two sleeve grammars, two leg garments, or two shoe types, bilateral_coherence must be at most 0.5; if two or more of those zones remain, at most 0.25. Calling the split cohesive or deconstructed does not raise the score. Score 0.75 or above only when sleeve, bottom, and shoe are each one identity. Local placement on that one identity is not a split and must not lower the score: one brooch or appliqué, an off-center bow or sash, one slit, a wrap overlap, a diagonal drape, an irregular hem, or a graphic panel of the same garment. A single-breasted closure is not a left-right defect. A same-element contradiction (one garment, two incompatible bindings for neckline, sleeve, length, closure, or shell material) scores attribute_entity_binding, generation_readiness, and design_signal_purity at most 0.25 until one binding remains. Two or more conflicting bindings score attribute_entity_binding 0.0. Clear or Chinese wording does not raise these scores. Garments from a different theme or concept that are still in the text, including as an inner layer, a second subject, or a cohesive contrast, score design_distinctiveness, silhouette_combination_originality, design_signal_purity, and generation_readiness at most 0.25. Do not treat that clash as an identifying idea or as a readable inner identity. These caps override the dimension rubric, a visible-facts floor, and any instruction to keep a specific description high. Mild accessory-only differences are lenient only when the trunk is already one identity.
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
-9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale.
+9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale. An explicit score cap in a metric rule overrides that rubric.
 10. For DesignMerit, score only the identifying idea (module guide). Completeness, precision, and imageability are other modules. Ignore T2I preamble.
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
-12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich.
+12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich. Imaging-rich wording does not override a same-element or theme-clash score cap.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
 14. Output strict JSON only. Do not output markdown fences or extra commentary.
 
@@ -808,10 +813,10 @@ Return format:
             "UNIFIED RULE for consistency_penalty and coordination_penalty (asymmetry-related): be STRICT when inconsistency sits on trunk garments—outerwear, inner/base tops (shirts, tees, inner knit layers), bottoms, footwear; inner and outer upper-body layers are both trunk when each is a described garment. "
             "When explicitly described, outerwear lining and trouser inner lining (including lining visible through slits) count as trunk together with shell fabric—they must not read as two unrelated garment identities unless clearly separated as under-layer vs outer. "
             "Trunk left-right or same-garment conflicting identities must be penalized while those facts remain in the text. Fluent prose, the word cohesive, or a shared color does not lower the score. "
-            "HARD FLOOR: one remaining trunk left-right identity split (different sleeve grammar, different leg garment, or different shoe type) means consistency_penalty and coordination_penalty are each at least 0.5; two or more of those zones still present means each is at least 0.75. "
-            "Same-element contradiction (one garment given two incompatible necklines, sleeve states, lengths, closures, or shell materials, including 'available in two styles' or 'transitions from A to B') means consistency_penalty at least 0.5 until only one binding remains. "
-            "A second theme or concept's garments still present (as an inner layer, a second subject, or a claimed cohesive contrast) means coordination_penalty at least 0.5 until those garments are gone. "
-            "Score 0 only after the conflicting branch is actually absent. "
+            "HARD FLOOR: one remaining trunk left-right identity split (different sleeve grammar, different leg garment, or different shoe type) means consistency_penalty and coordination_penalty are each at least 0.75; scores 0, 0.25, and 0.5 are forbidden while that split remains. Two or more of those zones still present means each penalty is 1.0. "
+            "Same-element contradiction (one garment given two incompatible necklines, sleeve states, lengths, closures, or shell materials, including 'available in two styles' or 'transitions from A to B') means consistency_penalty at least 0.75; two or more conflicting bindings on the same garment means 1.0. "
+            "A second theme or concept's garments still present (as an inner layer, a second subject, or a claimed cohesive contrast) means coordination_penalty at least 0.75 until those garments are gone. "
+            "Chinese wording, a claim of symmetry, or the word cohesive does not lower these scores. Score 0 only after the conflicting branch is actually absent. "
             "Do NOT raise these two penalties for small, accessory-only bilateral differences when all trunk coat/inner/pants/shoes are already one identity.\n"
             "Apply coordination_penalty and consistency_penalty strictly when a single upper garment combines incompatible styling languages on left vs right "
             "(e.g., half tailored suit vs half cold-shoulder bishop silk) without one coherent design grammar; also when one coat stacks incompatible collar/military/armor codes without layering rationale.\n"
@@ -837,11 +842,11 @@ Return format:
             },
             "consistency_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-                "judge_guidance": "Trunk left-right identity splits and same-element contradictions must be scored while the conflicting facts remain. One zone (sleeve, leg, or shoe) still split: consistency_penalty ≥ 0.5; two or more zones: ≥ 0.75. Same garment with two incompatible necklines, sleeve states, lengths, closures, or shell materials, including 'available in two styles': ≥ 0.5. Fluent wording does not justify 0. Score 0 only when one binding remains. Do not raise for mild accessory-only differences when the trunk is already one identity.",
+                "judge_guidance": "Trunk left-right identity splits and same-element contradictions must be scored while the conflicting facts remain. One zone (sleeve, leg, or shoe) still split: consistency_penalty ≥ 0.75, and 0, 0.25, and 0.5 are forbidden. Two or more zones: 1.0. Same garment with two incompatible necklines, sleeve states, lengths, closures, or shell materials, including 'available in two styles': ≥ 0.75; two or more conflicting bindings: 1.0. Fluent or Chinese wording does not justify 0. Score 0 only when one binding remains. Do not raise for mild accessory-only differences when the trunk is already one identity.",
             },
             "coordination_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-                "judge_guidance": "Trunk left-right identity splits use the same floor as consistency_penalty: one zone ≥ 0.5, two or more zones ≥ 0.75. Garments from a different theme or concept that are still in the text (kept as an inner layer, a second subject, or a cohesive contrast) mean coordination_penalty ≥ 0.5 until they are gone. Fluent wording does not justify 0. Do not raise for mild accessory-only asymmetry when the trunk is already one identity.",
+                "judge_guidance": "Trunk left-right identity splits use the same floor as consistency_penalty: one zone ≥ 0.75 (0, 0.25, and 0.5 are forbidden), two or more zones = 1.0. Garments from a different theme or concept that are still in the text (kept as an inner layer, a second subject, or a cohesive contrast) mean coordination_penalty ≥ 0.75 until they are gone. Fluent or Chinese wording does not justify 0. Do not raise for mild accessory-only asymmetry when the trunk is already one identity.",
             },
             "rationality_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -952,6 +957,7 @@ Return format:
                 scale_rules += (
                     f"\n{module_name} module — T2I content priority (ignore layout):\n"
                     "- High: sentences map to visible pixels (garment form, material, color, trim path, layering, accessory placement).\n"
+                    "- generation_readiness stays at most 0.25 while a same-element contradiction or a second theme's garments remain. Specific visible facts do not raise it.\n"
                     "- Low: model stance/pose, abstract salon/promenade/identity essay dominating over visible facts.\n"
                     "- IGNORE standard T2I preamble: Please generate female models and the matching clothing for them.\n"
                     "- Do NOT penalize numbered sections or bullet lists if content is imaging-rich and semantically ordered.\n"
@@ -1631,11 +1637,27 @@ class DesignTextEvaluator:
     MIN_VALIDATED_TEXT_LENGTH = 20
 
     CORE_GARMENT_KEYWORDS = [
-        "coat", "jacket", "blazer", "suit", "dress", "skirt", "trousers", "pants",
-        "pant", "jeans", "shirt", "blouse", "top", "sweater", "cardigan", "vest",
-        "gown", "robe", "cape", "cloak", "tunic", "bodysuit", "jumpsuit", "romper",
+        # Outerwear and one-piece. Substring match, so plurals and compounds count.
+        "coat", "jacket", "blazer", "suit", "trench", "parka", "anorak", "bomber",
+        "blouson", "gilet", "cape", "cloak", "robe", "gown", "dress", "frock",
+        "jumpsuit", "playsuit", "romper", "bodysuit", "overalls", "dungaree",
+        "cheongsam", "qipao",
+        # Tops, including knit as the garment name.
+        "shirt", "blouse", "top", "sweater", "cardigan", "pullover", "jumper",
+        "knit", "knitwear", "hoodie", "sweatshirt", "tunic", "vest", "bodice",
+        "bustier", "corset", "camisole", "halter", "polo",
+        # Bottoms.
+        "skirt", "trousers", "pants", "pant", "jeans", "shorts", "culotte",
+        "legging", "palazzo", "kilt", "mini",
+        # Footwear. These name the worn shoe, not a second garment system.
+        "shoe", "pump", "mule", "sandal", "boot", "heel", "loafer", "oxford",
+        "sneaker", "trainer", "stiletto", "slingback", "espadrille", "brogue",
+        # Chinese category names and near-synonyms.
         "西装", "外套", "大衣", "风衣", "夹克", "衬衫", "连衣裙", "裙子", "裤",
-        "毛衣", "针织", "卫衣", "运动服", "套装", "旗袍", "马甲", "斗篷",
+        "毛衣", "毛衫", "开衫", "针织", "卫衣", "运动服", "套装", "旗袍", "马甲",
+        "斗篷", "披肩", "上衣", "吊带", "背心", "罩衫", "短裙", "半裙", "长裙",
+        "短裤", "西裤", "礼服", "连体", "皮鞋", "高跟", "凉鞋", "靴子", "短靴",
+        "穆勒", "运动鞋",
     ]
 
     def _validate_optimized_text(self, optimized_text: str, original_text: str) -> str:
