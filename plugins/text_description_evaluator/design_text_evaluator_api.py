@@ -812,6 +812,55 @@ def conflict_quality_cap(conflicts: Dict[str, Any]) -> Optional[float]:
     return CONFLICT_QUALITY_CAP
 
 
+def _nearby_binding_hits(body: str) -> int:
+    """互斥属性拆到相邻句时仍然算冲突。袖型对打仍只看同一句，避免内层无袖被误伤。"""
+    hits = 0
+    for left_pat, right_pat in _BINDING_PAIRS[:3]:
+        for left in left_pat.finditer(body):
+            window = body[max(0, left.start() - 320) : min(len(body), left.end() + 320)]
+            if right_pat.search(window):
+                hits += 1
+                break
+    for short in _SHORT_HEM.finditer(body):
+        window = body[max(0, short.start() - 400) : min(len(body), short.end() + 400)]
+        if re.search(r"\bhem\b", window, re.I) and _FLOOR_HEM.search(window):
+            hits += 1
+            break
+    return hits
+
+
+_LAYERING_WORD = re.compile(r"\b(?:under|over|beneath|below)\b", re.I)
+
+
+_SECOND_BOTTOM_CUE = re.compile(
+    r"\b(?:that same|lower body|instead of)\b",
+    re.I,
+)
+
+
+def _unlayered_bottom_pair(body: str) -> bool:
+    """同一套下装被写成第二种裤子，且没有叠穿在同一句里。单数 short 不当下装。"""
+    if not _SECOND_BOTTOM_CUE.search(body):
+        return False
+    layered_together: Set[str] = set()
+    all_lemmas: Set[str] = set()
+    for sentence in re.split(r"[。.!?;\n]", body):
+        lemmas: Set[str] = set()
+        for match in _BOTTOM_WORD.finditer(sentence):
+            token = match.group(1)
+            if token.lower() == "short":
+                continue
+            lemmas.add(_slot_lemma("bottom", token))
+        if not lemmas:
+            continue
+        if len(lemmas) >= 2 and re.search(r"\bor\b", sentence, re.I):
+            continue
+        all_lemmas |= lemmas
+        if len(lemmas) >= 2 and _LAYERING_WORD.search(sentence):
+            layered_together |= lemmas
+    return len(all_lemmas - layered_together) >= 2
+
+
 def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
     """区分设计与冲突。
 
@@ -850,8 +899,11 @@ def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
         split_zones.append("leg")
     if _unlabeled_counterpart(body, _SHOE_WORD, "shoe") and "shoe" not in split_zones:
         split_zones.append("shoe")
+    if _unlayered_bottom_pair(body) and "leg" not in split_zones:
+        split_zones.append("leg")
 
     same_hits = len(_SAME_BINDING.findall(body)) + len(_CN_BOTH_BINDINGS.findall(body))
+    same_hits += _nearby_binding_hits(body)
     for sentence in re.split(r"[。.!?\n]", body):
         for left_pat, right_pat in _BINDING_PAIRS:
             if left_pat.search(sentence) and right_pat.search(sentence):

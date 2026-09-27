@@ -109,6 +109,90 @@ def _reason_for_brief(text: str) -> str:
     return reason
 
 
+_SIDE_SLOT = r"(?:half|side|sleeve|arm|leg|foot|shoe)"
+
+
+def _clause_side(clause: str) -> str:
+    """一句里只有一侧时返回 left 或 right。左右都有则返回 both。"""
+    left = re.search(rf"\bleft\s+{_SIDE_SLOT}\b", clause, re.I) or re.search(
+        r"\bon the left\b(?!\s+front\b)", clause, re.I
+    )
+    right = re.search(rf"\bright\s+{_SIDE_SLOT}\b", clause, re.I) or re.search(
+        r"\bon the right\b", clause, re.I
+    )
+    if left and right:
+        return "both"
+    if right:
+        return "right"
+    if left:
+        return "left"
+    return ""
+
+
+def _garment_payload(clause: str) -> str:
+    """去掉 left/right 前缀，只留衣服本身，避免模型把侧别词抄进正文。"""
+    text = re.sub(r"^at the same time\s+", "", clause.strip(), flags=re.I)
+    text = re.sub(rf"^(?:the\s+)?(?:left|right)\s+{_SIDE_SLOT}\b", "", text, flags=re.I)
+    text = re.sub(
+        r"^(?:of\s+(?:this|the|that)\s+(?:one\s+)?(?:same\s+)?[A-Za-z]+\s+)?"
+        r"(?:is|are|reads as|has)\s+",
+        "",
+        text.strip(),
+        flags=re.I,
+    )
+    text = re.sub(r"\s+on the left(?:\s+(?:leg|foot|side|arm))?\b", "", text, flags=re.I)
+    return text.strip(" ,;.")
+
+
+def _left_right_action(source_text: str) -> str:
+    """把左右两套拆成必须留下的名词和必须删除的名词。"""
+    keep: List[str] = []
+    delete: List[str] = []
+    chunks = re.split(r"(?<=[.;])\s+|\s+\bwhile\b\s+", source_text or "")
+    pending: List[str] = []
+    for chunk in chunks:
+        clause = chunk.strip(" ;.")
+        if not clause:
+            continue
+        side = _clause_side(clause)
+        if side == "both":
+            pieces = re.split(r"\s+and\s+(?=the\s+right\b)", clause, flags=re.I)
+            pending.extend(pieces)
+            continue
+        pending.append(clause)
+    expanded: List[str] = []
+    for clause in pending:
+        if _clause_side(clause) == "right" and re.search(r"\band\s+the\s+right\b", clause, re.I):
+            expanded.extend(re.split(r"\s+and\s+(?=the\s+right\b)", clause, flags=re.I))
+        else:
+            expanded.append(clause)
+    for clause in expanded:
+        side = _clause_side(clause)
+        payload = _garment_payload(clause)
+        if side == "left" and payload:
+            keep.append(payload)
+        elif side == "right" and payload:
+            delete.append(payload)
+    if not delete:
+        return ""
+    lines = [
+        "LEFT-RIGHT DELETE ACTION. Do this before any other wording.",
+        "Write only the KEEP garments. Drop the words left and right.",
+        "KEEP THESE GARMENTS ONLY:",
+    ]
+    lines.extend(f"- {item}" for item in keep)
+    lines.append(
+        "DELETE THESE GARMENTS. They must not appear in the paragraph, "
+        "including after while, transitions to, no, without, or not:"
+    )
+    lines.extend(f"- {item}" for item in delete)
+    lines.append(
+        "Copying a DELETE line into the paragraph, or rewriting it as the other side, "
+        "an inner layer, or a contrast, is a failed rewrite."
+    )
+    return "\n".join(lines)
+
+
 def format_conflict_target(source_text: str) -> str:
     """按正文里的冲突类型写删除指令，而不是再复述两边。"""
     found = detect_consistency_conflicts(source_text or "")
@@ -118,22 +202,29 @@ def format_conflict_target(source_text: str) -> str:
         "TARGETED DELETE (do this first; do not name the deleted branch in the paragraph):"
     ]
     zones = found.get("zones") or []
-    if zones:
+    action = _left_right_action(source_text) if zones else ""
+    if action:
+        lines.append(action)
+    elif zones:
         lines.append(
             "Left-right split in "
             + ", ".join(zones)
-            + ". Keep one garment in each of those zones. Do not write left and right as two garments."
+            + ". KEEP the branch that matches the named theme and concept, the garments before "
+            "'at the same time'. DELETE the other side completely. Do not copy both noun phrases. "
+            "Do not bring the deleted side back with while, transitions to, on the right, "
+            "the other side, an inner layer, or a contrast."
         )
     if int(found.get("same_element_bindings") or 0) > 0:
         lines.append(
-            "Same element has two bindings. Keep one neckline, one sleeve state, one length, "
-            "one closure, and one shell. Delete the contradictory binding."
+            "Same element has two bindings. KEEP the binding named in the concept sentence. "
+            "DELETE the later binding on that same element, including when it is moved to the next sentence. "
+            "One neckline, one sleeve state, one length, one closure, and one shell."
         )
     foreign = found.get("foreign_terms") or []
     if foreign:
         lines.append(
             "These names are a delete list for you. They must not appear in the paragraph, "
-            "including after no, without, or not: "
+            "including after no, without, or not, and not as an inner layer or a reveal: "
             + ", ".join(foreign[:8])
             + "."
         )
@@ -248,6 +339,8 @@ REWRITE_CONSISTENCY_REPAIR = (
     "one neckline, one length, one closure, and one shell. "
     "The deleted set must not remain as the other side, another version, an inner layer, or a contrast. "
     "A fluent sentence that still contains both sets is a failed rewrite. "
+    "Do not keep the deleted set with while, transitions to, or on the right. "
+    "When KEEP and DELETE lines are attached, write from the KEEP lines only. "
     "Left-right split: if the two sleeves are different garments, name one sleeve grammar and do not name the other. "
     "If the two legs are different bottoms, name one bottom and do not name the other. "
     "If the two feet are different shoes, name one footwear family and do not name the other. "
@@ -299,7 +392,8 @@ def build_rewrite_user_prompt(
         f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
         "Candidates are sampled separately at different temperatures.\n"
         "The SOURCE TEXT below is complete. Any BUSINESS CONTEXT below is complete. "
-        "Read both in full, then rewrite that source. Do not rewrite these instructions.\n\n"
+        "Read both in full so you can see which set matches the theme. "
+        "Then write only that kept set. Do not copy every garment noun.\n\n"
         f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
     )
     if extra_context.strip():
@@ -329,7 +423,7 @@ def build_rewrite_user_prompt(
         "one shoe, one neckline, one length, one closure, one shell. Do not write or between two of them. "
         "Do not keep the other set as the other side, another version, an inner layer, or a contrast.\n"
         "8. Do not write conflicting, replace, delete, restore, or do not. Do not name a removed garment.\n"
-        "9. The paragraph is a rewrite of the SOURCE TEXT above. Use that full text and the business context above.\n"
+        "9. Output only the kept set from the SOURCE TEXT above. Omitting the other set is required.\n"
     )
     return user
 

@@ -136,6 +136,25 @@ class ConflictDefinitionTests(unittest.TestCase):
             self.assertEqual(conflict_quality_cap(found), 0.25)
         clear = conflict_quality_cap({"active": False})
         self.assertIsNone(clear)
+        split_across_sentences = {
+            "two bottoms": (
+                "A black box jacket with a wide notched lapel, cropped to the hip, over fitted black shorts. "
+                "The lower body consists of wide ivory wool trousers."
+            ),
+            "neck then hem": (
+                "A high stand-collar knee coat with a straight hem just below the knee. "
+                "The coat is sleeveless with a deep plunging V neck to the waist. "
+                "The hem sweeps the floor in a luxurious train."
+            ),
+            "two closures": (
+                "A narrow ink coat with a concealed button placket frames a silk blouse. "
+                "The coat is a double-breasted style with six exposed buttons."
+            ),
+        }
+        for name, text in split_across_sentences.items():
+            found = detect_consistency_conflicts(text)
+            self.assertTrue(found["active"], name)
+            self.assertEqual(conflict_quality_cap(found), 0.25)
 
     def test_penalty_floor_does_not_enter_total_score(self) -> None:
         penalties = {
