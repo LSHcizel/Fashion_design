@@ -129,6 +129,10 @@ class ConflictDefinitionTests(unittest.TestCase):
                 "The coat is available in matte wool-gabardine, with a liquid mirror sequin version."
             ),
             "theme": "The inner layer features a harlequin bodice and a jeweled mask.",
+            "squared_neck": (
+                "The column dress has a squared neckline that scoops between narrow black straps, "
+                "and also functions as a high stand collar without straps."
+            ),
         }
         for name, text in dirty.items():
             found = detect_consistency_conflicts(text)

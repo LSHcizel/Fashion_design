@@ -537,7 +537,10 @@ _BINDING_PAIRS = (
     ),
     (
         re.compile(r"(stand[\s-]collar|mandarin collar|高立领|(?<![长短])立领)", re.I),
-        re.compile(r"(plunging|deep\s*v|square[\s-](?:neck|scoop)|方领|深\s*V)", re.I),
+        re.compile(
+            r"(plunging|deep\s*v|square[d]?(?:\s+to\s+scoop|[\s-]neck(?:line)?|[\s-]scoop)|方领|深\s*V)",
+            re.I,
+        ),
     ),
     (
         re.compile(r"\bcollarless\b", re.I),

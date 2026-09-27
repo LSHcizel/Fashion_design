@@ -144,6 +144,45 @@ def _garment_payload(clause: str) -> str:
     return text.strip(" ,;.")
 
 
+_LEFT_RIGHT_EXAMPLE = (
+    "LEFT-RIGHT EXAMPLE. Copy this edit. Do not copy the example's clothes.\n"
+    "Source: The left half is a matte wool jacket and a black trouser. "
+    "The right half is a silk dress and a red sandal.\n"
+    "Rewrite: A matte wool jacket and a black trouser.\n"
+    "On the SOURCE above, the kept side is the whole look. "
+    "Write only the KEEP lines when they are listed. "
+    "Do not write left or right. Do not write a DELETE line, "
+    "and do not bring it back as the other side, one shoulder, an inner layer, or a contrast."
+)
+
+
+_FOREIGN_SHOE = re.compile(
+    r"((?:[A-Za-z'-]+\s+){0,3}"
+    r"(?:stilettos?|mules?|pumps?|sandals?|boots?|oxfords?|flats?|slingbacks?|loafers?))",
+    re.I,
+)
+
+
+def _shoes_with_foreign_theme(source_text: str, terms: List[str]) -> List[str]:
+    """异主题那一句里点名的鞋，跟那些词一起删。不把穆勒或细高跟做成全局禁词。"""
+    if not terms:
+        return []
+    found: List[str] = []
+    seen = set()
+    for sentence in re.split(r"[。.!?;\n]", source_text or ""):
+        low = sentence.lower()
+        if not any(term.lower() in low for term in terms):
+            continue
+        for match in _FOREIGN_SHOE.finditer(sentence):
+            snippet = re.sub(r"^(?:with|and|the|a|an)\s+", "", match.group(1).strip(" ,;."), flags=re.I)
+            key = snippet.lower()
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            found.append(snippet)
+    return found
+
+
 def _left_right_action(source_text: str) -> str:
     """把左右两套拆成必须留下的名词和必须删除的名词。"""
     keep: List[str] = []
@@ -176,8 +215,6 @@ def _left_right_action(source_text: str) -> str:
     if not delete:
         return ""
     lines = [
-        "LEFT-RIGHT DELETE ACTION. Do this before any other wording.",
-        "Write only the KEEP garments. Drop the words left and right.",
         "KEEP THESE GARMENTS ONLY:",
     ]
     lines.extend(f"- {item}" for item in keep)
@@ -202,23 +239,26 @@ def format_conflict_target(source_text: str) -> str:
         "TARGETED DELETE (do this first; do not name the deleted branch in the paragraph):"
     ]
     zones = found.get("zones") or []
-    action = _left_right_action(source_text) if zones else ""
+    action = _left_right_action(source_text)
+    if action or zones or found.get("two_sleeve_states"):
+        lines.append(_LEFT_RIGHT_EXAMPLE)
     if action:
         lines.append(action)
-    elif zones:
+    elif zones or found.get("two_sleeve_states"):
         lines.append(
-            "Left-right split in "
-            + ", ".join(zones)
-            + ". KEEP the branch that matches the named theme and concept, the garments before "
-            "'at the same time'. DELETE the other side completely. Do not copy both noun phrases. "
-            "Do not bring the deleted side back with while, transitions to, on the right, "
-            "the other side, an inner layer, or a contrast."
+            "Keep the side that matches the concept, the garments before 'at the same time'. "
+            "Delete the other side."
         )
     if int(found.get("same_element_bindings") or 0) > 0:
         lines.append(
-            "Same element has two bindings. KEEP the binding named in the concept sentence. "
-            "DELETE the later binding on that same element, including when it is moved to the next sentence. "
-            "One neckline, one sleeve state, one length, one closure, and one shell."
+            "SAME-ELEMENT EXAMPLE. Copy this edit. Do not copy the example's clothes.\n"
+            "Source: The coat closes with a concealed placket. "
+            "The same coat also functions as double-breasted.\n"
+            "Rewrite: The coat closes with a concealed placket.\n"
+            "On the SOURCE above, keep the binding named in the concept. "
+            "Delete the later binding on that same piece. "
+            "Do not join the two with also, and, or functions as, "
+            "and do not move the deleted binding into the next sentence."
         )
     foreign = found.get("foreign_terms") or []
     if foreign:
@@ -228,6 +268,16 @@ def format_conflict_target(source_text: str) -> str:
             + ", ".join(foreign[:8])
             + "."
         )
+        lines.append(
+            "Do not rename a deleted garment into a new pattern, a new shoe, or an inner layer."
+        )
+        foreign_shoes = _shoes_with_foreign_theme(source_text, foreign)
+        if foreign_shoes:
+            lines.append(
+                "Also delete the shoes named with that other theme. Do not rename them: "
+                + "; ".join(foreign_shoes)
+                + "."
+            )
     alternatives = found.get("alternative_slots") or []
     if alternatives:
         lines.append(
@@ -235,11 +285,6 @@ def format_conflict_target(source_text: str) -> str:
             + ", ".join(alternatives)
             + ". Name one garment in that slot. Do not write or between two bottoms, two shoes, "
             "two necklines, or two sleeve states."
-        )
-    if found.get("two_sleeve_states"):
-        lines.append(
-            "Two sleeve states. Keep one sleeve grammar for both arms. "
-            "Do not recast the split as one-shoulder, and do not say the other side is sleeveless."
         )
     if found.get("repair_voice"):
         lines.append(
@@ -341,20 +386,15 @@ REWRITE_CONSISTENCY_REPAIR = (
     "A fluent sentence that still contains both sets is a failed rewrite. "
     "Do not keep the deleted set with while, transitions to, or on the right. "
     "When KEEP and DELETE lines are attached, write from the KEEP lines only. "
-    "Left-right split: if the two sleeves are different garments, name one sleeve grammar and do not name the other. "
-    "If the two legs are different bottoms, name one bottom and do not name the other. "
-    "If the two feet are different shoes, name one footwear family and do not name the other. "
-    "Do not write a left half and a right half. "
+    "When a LEFT-RIGHT EXAMPLE is attached, copy that edit and do not copy its clothes. "
     "Same-element contradiction: keep one binding and delete the contradictory binding. "
-    "One neckline, one sleeve state, one length, one closure, one shell. Do not offer two styles. "
+    "When a SAME-ELEMENT EXAMPLE is attached, copy that edit and do not copy its clothes. "
     "Other theme: delete every garment that belongs to a different theme or concept. "
     "Do not keep it as an inner layer. "
     "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on the kept garment "
     "is placement, not a second garment. "
     "Name one bottom, one footwear family, one neckline, and one sleeve state. "
     "Do not write or between two of them, and do not leave a choice for the image model. "
-    "A long sleeve on one side and a sleeveless or one-shoulder other side is still two sleeve states. "
-    "Name one sleeve for both arms. "
     "The paragraph is only what the camera sees. Do not write conflicting, replace, delete, restore, or do not. "
     "Do not name a removed garment, including after no, without, or not. "
     "A Chinese note that lists both sides is the delete list. Do not translate it into the paragraph."

@@ -121,6 +121,8 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("does not require keeping SOURCE's original palette", prompt)
         self.assertIn("Drop the other set", prompt)
         self.assertIn("Keeping every noun is a failed rewrite", prompt)
+        self.assertIn("SAME-ELEMENT EXAMPLE", prompt)
+        self.assertIn("LEFT-RIGHT EXAMPLE", prompt)
         self.assertNotIn("do not drop a kept garment", prompt)
         self.assertNotIn("assigned a specific identifying-idea kind", prompt)
         for phrase in _COMBO_PHRASES:
@@ -236,12 +238,48 @@ class RewritePromptPolicyTests(unittest.TestCase):
                 "for an asymmetric one-shoulder effect."
             ),
         )
-        self.assertIn("Two sleeve states", shoulder)
+        self.assertIn("LEFT-RIGHT EXAMPLE", shoulder)
+        self.assertNotIn("Two sleeve states", shoulder)
         narration = format_exposed_repair_brief(
             None,
             source_text="A black trouser to replace the conflicting bottom.",
         )
         self.assertIn("Repair narration", narration)
+        same = format_exposed_repair_brief(
+            None,
+            source_text=(
+                "The neckline is square to scoop between narrow black straps, "
+                "and the same neckline is a high stand collar."
+            ),
+        )
+        self.assertIn("SAME-ELEMENT EXAMPLE", same)
+        self.assertIn("also functions as", same)
+        self.assertIn("Do not copy the example's clothes", same)
+        self.assertNotIn("one closure, and one shell", same)
+        sleeve = format_exposed_repair_brief(
+            None,
+            source_text=(
+                "At the same time the left sleeve is a long cream sleeve with a bold red cuff, "
+                "while the right arm of the same top is sleeveless. "
+                "The left shoe is a red patent slingback pump; the right shoe is a cream satin ballet flat."
+            ),
+        )
+        self.assertIn("LEFT-RIGHT EXAMPLE", sleeve)
+        self.assertIn("KEEP THESE GARMENTS ONLY", sleeve)
+        self.assertIn("long cream sleeve with a bold red cuff", sleeve)
+        self.assertIn("Do not write left or right", sleeve)
+        self.assertNotIn("sleeves on both arms", sleeve)
+        self.assertNotIn("if the two sleeves", sleeve)
+        self.assertNotIn("if the two legs", sleeve)
+        self.assertNotIn("if the two feet", sleeve)
+        foreign = format_exposed_repair_brief(
+            None,
+            source_text=(
+                "When it opens, the inner layer is a harlequin bodice and crystal stilettos."
+            ),
+        )
+        self.assertIn("crystal stilettos", foreign)
+        self.assertIn("Do not rename a deleted garment", foreign)
 
 
 if __name__ == "__main__":
