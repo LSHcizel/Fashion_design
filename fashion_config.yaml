@@ -140,7 +140,7 @@ text-evaluator:
   # optimize 内部双门限（两门均通过则早停）
   # 注意：与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json optimization_gates 保持一致
   score-gate-min: 0.8
-  penalty-gate-max: 0.5
+  penalty-gate-max: 0.25
   # 双门限失败时用 8001 改写器 K 路改写，8000 裁判选优于原文的一条
   rewrite-on-gate-fail: true
 

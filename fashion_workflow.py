@@ -1961,7 +1961,7 @@ class TextEvaluatorConfig:
     adaptive_penalty_threshold: float = 0.05
     # 双门限（与 spec optimization_gates / evaluate_text 一致）
     score_gate_min: float = 0.8
-    penalty_gate_max: float = 0.5
+    penalty_gate_max: float = 0.25
     # API 配置（None 表示从 spec 默认读取）
     evaluator_api_key: str | None = None
     evaluator_api_base: str | None = None
@@ -2076,7 +2076,7 @@ def parse_yaml(yaml_file_loc):
     parser.evaluator_adaptive_min_quality_score = float(ev.get("adaptive-min-quality-score", 0.80))
     parser.evaluator_adaptive_penalty_threshold = float(ev.get("adaptive-penalty-threshold", 0.05))
     parser.evaluator_score_gate_min = float(ev.get("score-gate-min", 0.8))
-    parser.evaluator_penalty_gate_max = float(ev.get("penalty-gate-max", 0.5))
+    parser.evaluator_penalty_gate_max = float(ev.get("penalty-gate-max", 0.25))
     parser.evaluator_api_key = ev.get("api-key") or None
     parser.evaluator_api_base = ev.get("api-base") or None
     parser.evaluator_model = ev.get("model") or None

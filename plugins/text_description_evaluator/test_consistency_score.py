@@ -8,6 +8,7 @@ from pathlib import Path
 from plugins.text_description_evaluator.design_text_evaluator_api import (
     apply_consistency_penalty_floor,
     compute_design_merit_metric_caps,
+    conflict_quality_cap,
     detect_consistency_conflicts,
     list_design_identifying_signatures,
 )
@@ -108,6 +109,33 @@ class ConflictDefinitionTests(unittest.TestCase):
         )
         self.assertFalse(detect_consistency_conflicts(material)["active"])
         self.assertFalse(detect_consistency_conflicts(layered)["active"])
+
+    def test_dirty_rewrites_keep_asymmetry_and_contradictory_positions(self) -> None:
+        dirty = {
+            "sides": (
+                "Black wool trousers with a crease on the left leg and a red silk culotte on the right. "
+                "Closed black satin court pumps on the left foot and an open red silk evening sandal on the right."
+            ),
+            "sleeves": (
+                "A cropped sleeve ending above the elbow opens over a navy short. "
+                "Over the right half, the jacket has a floor-grazing liquid-black silk sleeve."
+            ),
+            "collar": "A black collarless jacket cropped to the hip features a wide notched lapel.",
+            "neck_and_hem": (
+                "A high stand-collar coat with a deep plunging V neckline. "
+                "The straight hem just below the knee creates a floor-sweeping train."
+            ),
+            "shell": (
+                "The coat is available in matte wool-gabardine, with a liquid mirror sequin version."
+            ),
+            "theme": "The inner layer features a harlequin bodice and a jeweled mask.",
+        }
+        for name, text in dirty.items():
+            found = detect_consistency_conflicts(text)
+            self.assertTrue(found["active"], name)
+            self.assertEqual(conflict_quality_cap(found), 0.25)
+        clear = conflict_quality_cap({"active": False})
+        self.assertIsNone(clear)
 
     def test_penalty_floor_does_not_enter_total_score(self) -> None:
         penalties = {

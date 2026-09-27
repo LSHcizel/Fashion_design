@@ -536,8 +536,12 @@ _BINDING_PAIRS = (
         re.compile(r"(double-breasted|double breasted|双排扣)", re.I),
     ),
     (
-        re.compile(r"(stand collar|mandarin collar|高立领|(?<![长短])立领)", re.I),
-        re.compile(r"(plunging|deep\s*v|square neck|方领|深\s*V)", re.I),
+        re.compile(r"(stand[\s-]collar|mandarin collar|高立领|(?<![长短])立领)", re.I),
+        re.compile(r"(plunging|deep\s*v|square[\s-](?:neck|scoop)|方领|深\s*V)", re.I),
+    ),
+    (
+        re.compile(r"\bcollarless\b", re.I),
+        re.compile(r"\bnotched lapel\b", re.I),
     ),
     (
         re.compile(r"(sleeveless|cutaway armholes|无袖)", re.I),
@@ -549,7 +553,7 @@ _CN_BOTH_BINDINGS = re.compile(r"既[^。]{0,16}又")
 _OR_SPLIT = re.compile(r"\s+\bor\b\s+", re.I)
 _SLOT_TOKEN = {
     "bottom": re.compile(
-        r"\b(skirts?|trousers?|pants|shorts|culottes?|palazzos?|harems?)\b",
+        r"\b(skirts?|trousers?|pants?|shorts?(?!\s+(?:sleeve|draped|drape|cap|hair))|culottes?|palazzos?|harems?)\b",
         re.I,
     ),
     "shoe": re.compile(
@@ -585,11 +589,45 @@ _FOREIGN_THEME = re.compile(
     r"flamenco|mourning|masquerade|"
     r"morning dress|tailcoat|top hat|"
     r"panniers?|powdered coiffure|beauty patch|rococo|robe à la française|"
+    r"harlequin|masquerade mask|jeweled mask|feathered fan|"
     r"新娘|头纱|加冕|王冠|弗拉明戈|丧服|假面|晨礼服|燕尾服|礼帽|撑裙|洛可可|美人痣)",
     re.I,
 )
 CONSISTENCY_PENALTY_FLOOR = 0.75
 CONSISTENCY_PENALTY_SEVERE = 1.0
+# 冲突还在时，质量项是总分里的 0.8 加成，封在这里，脏稿的 S_fp 起不来。
+CONFLICT_QUALITY_CAP = 0.25
+_SIDE_MARK = re.compile(
+    r"\b(left|right)\s+(half|side|sleeve|arm|leg|foot|shoe)\b"
+    r"|\bon the (left|right)\b(?!\s+front\b)",
+    re.I,
+)
+_BOTTOM_WORD = re.compile(
+    r"\b(skirts?|trousers?|pants?|shorts?(?!\s+(?:sleeve|draped|drape|cap|hair))|culottes?|palazzos?|harems?)\b",
+    re.I,
+)
+_SHOE_WORD = re.compile(
+    r"\b(pumps?|sandals?|boots?|mules?|oxfords?|flats?|slingbacks?|stilettos?|loafers?)\b",
+    re.I,
+)
+_SLEEVE_WORD = re.compile(
+    r"\b(?:sleeveless|cold shoulder|one[\s-]shoulder|bishop|set[\s-]in|cropped sleeve)\b"
+    r"|\bfloor[\s-]grazing(?:\s+[A-Za-z]+){0,4}\s+sleeve\b",
+    re.I,
+)
+_SHORT_SLEEVE = re.compile(r"\b(?:cropped sleeve|above the elbow|elbow-length sleeve)\b", re.I)
+_LONG_SLEEVE = re.compile(
+    r"\b(?:bishop|set[\s-]in|long)\s+(?:[A-Za-z]+(?:-[A-Za-z]+)*\s+){0,3}sleeves?\b"
+    r"|\bfloor[\s-]grazing(?:\s+[A-Za-z]+(?:-[A-Za-z]+)*){0,4}\s+sleeve\b"
+    r"|\bsleeves?\s+to the (?:wrist|knee)\b",
+    re.I,
+)
+_SHELL_VERSION = re.compile(r"\b(?:available in|either version)\b", re.I)
+_SHORT_HEM = re.compile(r"(just below the knee|knee-length)", re.I)
+_FLOOR_HEM = re.compile(
+    r"(floor[\s-]sweeping|floor[\s-]length|floor[\s-]grazing|pools on the floor)",
+    re.I,
+)
 _CONFLICT_QUALITY_METRICS = (
     "generation_readiness",
     "design_distinctiveness",
@@ -686,12 +724,92 @@ def _has_two_sleeve_states(body: str) -> bool:
         if _OTHER_SIDE_BARE.search(sentence):
             return True
         for bare in _BARE_ARM.finditer(sentence):
-            start = max(0, bare.start() - 80)
-            end = min(len(sentence), bare.end() + 80)
+            start = max(0, bare.start() - 40)
+            end = min(len(sentence), bare.end() + 40)
             window = sentence[start:end]
-            if _COVERED_SLEEVE.search(window) and re.search(r"\b(?:while|other side)\b", window, re.I):
+            if _COVERED_SLEEVE.search(window):
                 return True
     return False
+
+
+def _garment_lemmas(pattern, text: str, slot: str) -> Set[str]:
+    return {_slot_lemma(slot, match.group(1)) for match in pattern.finditer(text)}
+
+
+def _clause_zones(sentence: str) -> List[str]:
+    """把每个裤、鞋、袖词归到最近的左/右。on the right 带出的另一件也算分套。"""
+    marks = list(_SIDE_MARK.finditer(sentence))
+    found: List[str] = []
+    if len(marks) >= 2:
+        buckets: Dict[str, Dict[str, Set[str]]] = {"sleeve": {}, "leg": {}, "shoe": {}}
+
+        def _side(mark: re.Match) -> str:
+            return (mark.group(1) or mark.group(3) or "").lower()
+
+        def _nearest(pos: int) -> re.Match:
+            return min(
+                marks,
+                key=lambda mark: min(abs(pos - mark.start()), abs(pos - mark.end())),
+            )
+
+        for pattern, zone, slot in (
+            (_SLEEVE_WORD, "sleeve", ""),
+            (_BOTTOM_WORD, "leg", "bottom"),
+            (_SHOE_WORD, "shoe", "shoe"),
+        ):
+            for match in pattern.finditer(sentence):
+                side = _side(_nearest(match.start()))
+                if not side:
+                    continue
+                token = _slot_lemma(slot, match.group(1)) if slot else match.group(0).lower()
+                buckets[zone].setdefault(side, set()).add(token)
+        for zone, sides in buckets.items():
+            left = sides.get("left") or set()
+            right = sides.get("right") or set()
+            if left and right and left.isdisjoint(right):
+                found.append(zone)
+    if re.search(r"\bwhile\b", sentence, re.I):
+        if len(_garment_lemmas(_BOTTOM_WORD, sentence, "bottom")) >= 2 and "leg" not in found:
+            found.append("leg")
+        if len(_garment_lemmas(_SHOE_WORD, sentence, "shoe")) >= 2 and "shoe" not in found:
+            found.append("shoe")
+    return found
+
+
+def _unlabeled_counterpart(body: str, pattern, slot: str) -> bool:
+    """已经点了一侧，正文里又出现第二种裤或鞋。"""
+    lemmas: Set[str] = set()
+    sided = False
+    for sentence in re.split(r"[。.!?;\n]", body):
+        found = _garment_lemmas(pattern, sentence, slot)
+        if not found:
+            continue
+        lemmas |= found
+        if _SIDE_MARK.search(sentence):
+            sided = True
+    return sided and len(lemmas) >= 2
+
+
+def _sleeve_grammars_conflict(body: str) -> bool:
+    """短袖和拖地袖如果还写着左右袖或左右半边，仍是两种袖。左右腿不算。"""
+    sleeve_side = re.search(
+        r"\b(?:left|right)\s+(?:half|side|sleeve|arm)\b",
+        body,
+        re.I,
+    )
+    if not sleeve_side:
+        return False
+    short = bool(_SHORT_SLEEVE.search(body))
+    long = bool(_LONG_SLEEVE.search(body))
+    bare = bool(_BARE_ARM.search(body))
+    return sum(int(flag) for flag in (short, long, bare)) >= 2
+
+
+def conflict_quality_cap(conflicts: Dict[str, Any]) -> Optional[float]:
+    """冲突还在时，压低进入总分的质量加成。"""
+    if not conflicts.get("active"):
+        return None
+    return CONFLICT_QUALITY_CAP
 
 
 def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
@@ -724,15 +842,33 @@ def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
             continue
         if left != right and (left or right):
             split_zones.append(zone)
+    for sentence in re.split(r"[。.!?;\n]", body):
+        for zone in _clause_zones(sentence):
+            if zone not in split_zones:
+                split_zones.append(zone)
+    if _unlabeled_counterpart(body, _BOTTOM_WORD, "bottom") and "leg" not in split_zones:
+        split_zones.append("leg")
+    if _unlabeled_counterpart(body, _SHOE_WORD, "shoe") and "shoe" not in split_zones:
+        split_zones.append("shoe")
 
     same_hits = len(_SAME_BINDING.findall(body)) + len(_CN_BOTH_BINDINGS.findall(body))
     for sentence in re.split(r"[。.!?\n]", body):
         for left_pat, right_pat in _BINDING_PAIRS:
             if left_pat.search(sentence) and right_pat.search(sentence):
                 same_hits += 1
+        if _SHELL_VERSION.search(sentence) and re.search(r"sequin", sentence, re.I) and re.search(
+            r"wool|gabardine", sentence, re.I
+        ):
+            same_hits += 1
+        if (
+            re.search(r"\bhem\b", sentence, re.I)
+            and _SHORT_HEM.search(sentence)
+            and _FLOOR_HEM.search(sentence)
+        ):
+            same_hits += 1
     foreign = sorted({m.group(0).lower() for m in _FOREIGN_THEME.finditer(body)})
     alternatives = _alternative_slots(body)
-    two_sleeve_states = _has_two_sleeve_states(body)
+    two_sleeve_states = _has_two_sleeve_states(body) or _sleeve_grammars_conflict(body)
     repair_voice = bool(_REPAIR_VOICE.search(body))
     active = bool(
         split_zones or same_hits or foreign or alternatives or two_sleeve_states or repair_voice
@@ -1758,7 +1894,7 @@ class DesignTextEvaluator:
     def _resolve_optimization_gate_config(self, gate_config: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
         spec_gates = self.spec.get("optimization_gates", {}) or {}
         score_gate_min = float(spec_gates.get("score_gate_min", 0.8))
-        penalty_gate_max = float(spec_gates.get("penalty_gate_max", 0.5))
+        penalty_gate_max = float(spec_gates.get("penalty_gate_max", 0.25))
         if gate_config:
             if gate_config.get("score_gate_min") is not None:
                 score_gate_min = float(gate_config["score_gate_min"])
@@ -1889,6 +2025,9 @@ class DesignTextEvaluator:
         quality_cap = 1.0
         if module_scores.get("BindingAccuracy", {}).get("score", 1.0) < 0.5:
             quality_cap = min(quality_cap, 0.6)
+        addition_cap = conflict_quality_cap(conflicts)
+        if addition_cap is not None:
+            quality_cap = min(quality_cap, addition_cap)
         # penalties 不参与 S_fp / R_content；仅用于 penalty_gate（见 spec score_composition）。
         quality_effective = round(min(quality_weighted, quality_cap), 4)
 

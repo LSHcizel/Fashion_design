@@ -63,7 +63,7 @@ def backfill_gate_thresholds_in_jsonl(
     jsonl_path: Path,
     *,
     score_gate_threshold: float = 0.7,
-    penalty_gate_threshold: float = 0.5,
+    penalty_gate_threshold: float = 0.25,
 ) -> int:
     """为已有 scores.jsonl 行补写 score_gate_threshold / penalty_gate_threshold。"""
     jsonl_path = Path(jsonl_path)
@@ -101,7 +101,7 @@ def load_gate_thresholds_from_fashion_config(config_path: Path) -> Dict[str, flo
     te = dict(cfg.get("text-evaluator") or {})
     return {
         "score_gate_threshold": float(te.get("score-gate-min", 0.8)),
-        "penalty_gate_threshold": float(te.get("penalty-gate-max", 0.5)),
+        "penalty_gate_threshold": float(te.get("penalty-gate-max", 0.25)),
     }
 
 

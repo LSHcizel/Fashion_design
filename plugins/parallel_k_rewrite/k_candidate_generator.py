@@ -213,9 +213,11 @@ def format_exposed_repair_brief(
     parts = [
         "REPAIR BRIEF (from the current evaluation of SOURCE; required):",
         "Write the paragraph in English. Do not copy these notes into it.",
-        "Delete one side of each split below. Do not keep both garments in order to preserve a visible idea.",
+        "Delete the other set of clothes and strictly unify into one set. "
+        "One sleeve grammar, one bottom, one footwear family. "
+        "Keep one binding and delete the contradictory binding. "
+        "Do not keep both garments in order to preserve a visible idea.",
         "A fluent paragraph that still names both alternatives has not been repaired.",
-        REWRITE_CONSISTENCY_REPAIR,
     ]
     if target:
         parts.insert(1, target)
@@ -240,8 +242,12 @@ REWRITE_BRAND_LOGO_LOCK = (
 )
 
 REWRITE_CONSISTENCY_REPAIR = (
-    "CONSISTENCY REPAIR. Write the paragraph in English. Before any redesign, delete the conflict. "
-    "Keeping both garment identities is a failed rewrite. "
+    "STRICT UNIFICATION. Delete the other set of clothes before any redesign. "
+    "The finished paragraph is one set only: both arms share one sleeve grammar, "
+    "both legs share one bottom, both feet share one footwear family, and the garment has "
+    "one neckline, one length, one closure, and one shell. "
+    "The deleted set must not remain as the other side, another version, an inner layer, or a contrast. "
+    "A fluent sentence that still contains both sets is a failed rewrite. "
     "Left-right split: if the two sleeves are different garments, name one sleeve grammar and do not name the other. "
     "If the two legs are different bottoms, name one bottom and do not name the other. "
     "If the two feet are different shoes, name one footwear family and do not name the other. "
@@ -274,7 +280,7 @@ REWRITE_SHARED_STRATEGY = (
     "3) Keep any original house logo/monogram as the same brand mark (placement/scale may change). "
     "4) Output one coherent English paragraph. "
     "5) If a repair brief is attached, delete the garment it flags and lower its exposed penalty deductions. "
-    "6) Obey the consistency repair above. Delete the other side."
+    "6) Obey the consistency repair above. Delete the other set of clothes and strictly unify into one set."
 )
 
 # Backward-compatible name used by workflow extra_context.
@@ -287,22 +293,13 @@ def build_rewrite_user_prompt(
     candidate_index: int,
     extra_context: str = "",
 ) -> str:
-    """K 路改写 user prompt：可改整体造型（颜色/搭配/细节），主题与概念、品牌 logo 加锁。"""
+    """K 路改写 user prompt：原文和业务上下文在前，规则在后，避免 7B 先读长规则而漏掉正文。"""
     user = (
-        f"PARALLEL REWRITE TASK\n"
+        "PARALLEL REWRITE TASK\n"
         f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
-        f"This is an independent sample: choose the visible ideas yourself. "
-        "Their count is not fixed. Each idea must serve the theme and concept extracted from SOURCE. "
-        "You may change the overall clothing (color, pairing, detail design) as long as the "
-        "extracted theme and concept stay the same. "
-        "Candidates are sampled separately at different temperatures.\n\n"
-        f"{REWRITE_CONSISTENCY_REPAIR}\n\n"
-        f"{REWRITE_SHARED_STRATEGY}\n"
-        f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
-        f"{REWRITE_WHOLE_LOOK_SCOPE}\n"
-        f"{REWRITE_BRAND_LOGO_LOCK}\n"
-        f"{REWRITE_ELEMENT_RECONSTRUCTION}\n"
-        f"{REWRITE_DESIGN_MERIT}\n\n"
+        "Candidates are sampled separately at different temperatures.\n"
+        "The SOURCE TEXT below is complete. Any BUSINESS CONTEXT below is complete. "
+        "Read both in full, then rewrite that source. Do not rewrite these instructions.\n\n"
         f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
     )
     if extra_context.strip():
@@ -311,16 +308,28 @@ def build_rewrite_user_prompt(
             f"{extra_context.strip()}\n\n"
         )
     user += (
+        "RULES FOR THE TEXT ABOVE:\n"
+        "Their count is not fixed. Each idea must serve the theme and concept extracted from SOURCE.\n\n"
+        f"{REWRITE_CONSISTENCY_REPAIR}\n\n"
+        f"{REWRITE_SHARED_STRATEGY}\n"
+        f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
+        f"{REWRITE_WHOLE_LOOK_SCOPE}\n"
+        f"{REWRITE_BRAND_LOGO_LOCK}\n"
+        f"{REWRITE_ELEMENT_RECONSTRUCTION}\n"
+        f"{REWRITE_DESIGN_MERIT}\n\n"
         "OUTPUT RULES:\n"
         "1. Output exactly one English paragraph: the optimized fashion image prompt only. Do not write Chinese.\n"
         "2. No markdown fences, no numbering, no preamble or commentary.\n"
-        "3. After the conflict is deleted, lead with the kept idea, then outer-to-inner visual order.\n"
+        "3. After the other set of clothes is deleted, lead with the kept idea, then outer-to-inner visual order.\n"
         "4. Whole-look change is allowed (color, pairing, details) only inside SOURCE's theme and concept.\n"
         "5. If SOURCE or business context has a house logo/monogram, keep that same brand mark "
         "(placement and size may change; never another house).\n"
         "6. If a repair brief is present, resolve every listed consistency problem and lower every listed penalty.\n"
-        "7. Name one bottom, one shoe, one neckline, and one sleeve state. Do not write or between two of them.\n"
+        "7. Delete the other set of clothes and strictly unify into one set: one sleeve grammar, one bottom, "
+        "one shoe, one neckline, one length, one closure, one shell. Do not write or between two of them. "
+        "Do not keep the other set as the other side, another version, an inner layer, or a contrast.\n"
         "8. Do not write conflicting, replace, delete, restore, or do not. Do not name a removed garment.\n"
+        "9. The paragraph is a rewrite of the SOURCE TEXT above. Use that full text and the business context above.\n"
     )
     return user
 
@@ -531,7 +540,7 @@ def generate_k_parallel_rewrites(
         为 True（默认）时，对去重保留的候选调用 `evaluate_text`，门限与分数与
         `plugins/text_description_evaluator` 完全一致；False 则仅生成文本（旧行为）。
     gate_config :
-        传入 `evaluate_text` 的门限覆盖，例如 ``{"score_gate_min": 0.8, "penalty_gate_max": 0.5}``；
+        传入 `evaluate_text` 的门限覆盖，例如 ``{"score_gate_min": 0.8, "penalty_gate_max": 0.25}``；
         为 None 时使用 spec 中 ``optimization_gates`` 默认。
     eval_source_prefix :
         评判 `source_name` 前缀，单条为 ``{prefix}.c{index}``。

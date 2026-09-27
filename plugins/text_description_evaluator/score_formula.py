@@ -344,7 +344,7 @@ def build_score_formula_breakdown(
     gamma = float(rcfg.get("gamma_penalty") or 0.0)
     beta_z = float(rcfg.get("beta_z_len") or 0.0)
     tau_s = float(gates.get("score_gate_min", 0.8))
-    tau_p = float(gates.get("penalty_gate_max", 0.5))
+    tau_p = float(gates.get("penalty_gate_max", 0.25))
 
     cap_reasons: List[str] = []
     if module_scores:
