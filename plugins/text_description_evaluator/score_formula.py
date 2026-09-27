@@ -482,7 +482,7 @@ def build_score_formula_breakdown(
         "formula_chain_symbolic": _formula_chain_symbolic(),
         "formula_one_liner": (
             "S_fp = s_fp_base = min(w_c·C + w_q·Q, cap_t); "
-            "惩罚不进总分。过双门限后取 S_fp 最高的一条"
+            "惩罚不进总分。相对原文同时提高 S_fp 并降低惩罚时，取 S_fp 最高的一条；否则留原文"
         ),
         "outputs": {
             "S_fp": _r(fashion_prompt_score),

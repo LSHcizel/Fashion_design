@@ -141,7 +141,7 @@ text-evaluator:
   # 注意：与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json optimization_gates 保持一致
   score-gate-min: 0.8
   penalty-gate-max: 0.25
-  # 双门限失败时用 8001 改写器 K 路改写，8000 裁判选优于原文的一条
+  # 双门限失败时用 8001 改写器 K 路改写。采纳只看相对原文：总分更高且惩罚更低，再取总分最高的一条；否则留原文
   rewrite-on-gate-fail: true
 
   # 若需临时切回 GPT 评判：use-local: false，并留空下面三项（继承 grpo.design-text-evaluator）

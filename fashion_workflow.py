@@ -1647,8 +1647,8 @@ class FashionWorkflow:
 
         1. evaluator 未启用 → 透传
         2. 评原文；双门限均通过 → 保留原文本
-        3. 未通过且 ``rewrite_on_gate_fail`` → 8001 K 路改写，8000 选优于原文的一条并回写
-        4. 改写不优于原文或改写器不可用 → 保留原稿
+        3. 未通过且 ``rewrite_on_gate_fail`` → 8001 K 路改写；同时提高总分并降低惩罚的候选里，取总分最高的一条并回写
+        4. 没有同时做到这两点，或改写器不可用 → 保留原稿
         """
         cfg = self.evaluator_config
         evaluator = self.text_evaluator

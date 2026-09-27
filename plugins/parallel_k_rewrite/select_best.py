@@ -5,15 +5,6 @@ from __future__ import annotations
 from typing import Any, Dict, Iterable, Optional, Tuple
 
 
-def _gates_both_passed(evaluation: Dict[str, Any]) -> bool:
-    gates = evaluation.get("gates") or {}
-    if "both_passed" in gates:
-        return bool(gates["both_passed"])
-    return bool((gates.get("score_gate") or {}).get("passed")) and bool(
-        (gates.get("penalty_gate") or {}).get("passed")
-    )
-
-
 def _s_fp(evaluation: Dict[str, Any]) -> float:
     s = evaluation.get("total_score")
     if s is None:
@@ -24,21 +15,48 @@ def _s_fp(evaluation: Dict[str, Any]) -> float:
     return float(s or 0.0)
 
 
-def rank_key(evaluation: Optional[Dict[str, Any]]) -> Tuple[int, float]:
-    """越大越好：双门限通过，然后总分高。惩罚不参与排序。"""
+def _penalty(evaluation: Dict[str, Any]) -> Optional[float]:
+    penalties = (
+        (evaluation.get("scores") or {}).get("quality_score") or {}
+    ).get("penalties") or {}
+    if penalties.get("total_penalty") is not None:
+        return float(penalties["total_penalty"])
+    pg = (evaluation.get("gates") or {}).get("penalty_gate") or {}
+    if pg.get("total_penalty") is not None:
+        return float(pg["total_penalty"])
+    return None
+
+
+def rank_key(evaluation: Optional[Dict[str, Any]]) -> Tuple[float, float]:
+    """越大越好：先总分，总分相同再看更低的惩罚。"""
     if not isinstance(evaluation, dict):
-        return (0, -1.0)
+        return (-1.0, -1.0)
+    penalty = _penalty(evaluation)
     return (
-        1 if _gates_both_passed(evaluation) else 0,
         _s_fp(evaluation),
+        0.0 if penalty is None else -penalty,
     )
+
+
+def improves_score_and_penalty(
+    evaluation: Optional[Dict[str, Any]],
+    baseline: Optional[Dict[str, Any]],
+) -> bool:
+    """总分严格提高，并且惩罚严格降低。缺惩罚分视为做不到。"""
+    if not isinstance(evaluation, dict) or not isinstance(baseline, dict):
+        return False
+    new_penalty = _penalty(evaluation)
+    base_penalty = _penalty(baseline)
+    if new_penalty is None or base_penalty is None:
+        return False
+    return _s_fp(evaluation) > _s_fp(baseline) and new_penalty < base_penalty
 
 
 def is_strictly_better(
     evaluation: Optional[Dict[str, Any]],
     baseline: Optional[Dict[str, Any]],
 ) -> bool:
-    return rank_key(evaluation) > rank_key(baseline)
+    return improves_score_and_penalty(evaluation, baseline)
 
 
 def candidate_eligible(cand: Dict[str, Any]) -> bool:
@@ -50,16 +68,21 @@ def candidate_eligible(cand: Dict[str, Any]) -> bool:
     return isinstance(ev, dict)
 
 
-def pick_best_candidate(candidates: Iterable[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """双门限都过的候选里，取总分最高的一条。没有过门的候选则不选。"""
+def pick_best_candidate(
+    candidates: Iterable[Dict[str, Any]],
+    *,
+    baseline_evaluation: Optional[Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
+    """同时提高总分并降低惩罚的候选里，取效果最好的一条。"""
     eligible = [
         c
         for c in candidates
-        if candidate_eligible(c) and _gates_both_passed(c.get("evaluation") or {})
+        if candidate_eligible(c)
+        and improves_score_and_penalty(c.get("evaluation"), baseline_evaluation)
     ]
     if not eligible:
         return None
-    return max(eligible, key=lambda c: _s_fp(c.get("evaluation") or {}))
+    return max(eligible, key=lambda c: rank_key(c.get("evaluation")))
 
 
 def pick_rewrite_if_better(
@@ -68,12 +91,7 @@ def pick_rewrite_if_better(
     candidates: Iterable[Dict[str, Any]],
 ) -> Optional[Dict[str, Any]]:
     """
-    只在总分门和惩罚门都通过的改写里取 S_fp 最高的一条。
-    它高于原文时才替换；没有过门的改写不替换原文。
+    只采纳同时比原文总分更高、惩罚更低的改写，并在其中取总分最高的一条。
+    总分相同则取惩罚更低的一条。没有同时做到这两点的改写不替换原文。
     """
-    best = pick_best_candidate(candidates)
-    if best is None:
-        return None
-    if not is_strictly_better(best.get("evaluation"), baseline_evaluation):
-        return None
-    return best
+    return pick_best_candidate(candidates, baseline_evaluation=baseline_evaluation)
