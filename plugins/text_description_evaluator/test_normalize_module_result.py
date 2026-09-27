@@ -54,11 +54,31 @@ class JudgeJsonRetryTests(unittest.TestCase):
     def _judge(self) -> ApiLLMJudge:
         return ApiLLMJudge(api_key="local", api_base="http://127.0.0.1:8000/v1", model="dummy")
 
-    def test_extract_raises_on_truncated_json(self) -> None:
+    def test_extract_raises_on_unrecoverable_json(self) -> None:
         judge = self._judge()
         with self.assertRaises(ValueError) as ctx:
-            judge._parse_json(self.INCOMPLETE)
-        self.assertIn("incomplete JSON", str(ctx.exception))
+            judge._parse_json('{ "results": [ { "metric": ')
+        self.assertIn("valid JSON", str(ctx.exception))
+
+    def test_repetition_loop_is_closed_and_parsed(self) -> None:
+        judge = self._judge()
+        loop = '"red", "black", ' * 40
+        raw = (
+            '{\n'
+            '  "module": "MaterialColor",\n'
+            '  "results": [\n'
+            '    {\n'
+            '      "metric": "primary_color",\n'
+            '      "applicable": true,\n'
+            '      "score": 1,\n'
+            f'      "evidence": ["black", "white", {loop}\n'
+        )
+        parsed = judge._parse_json(raw)
+        evidence = parsed["results"][0]["evidence"]
+        self.assertEqual(parsed["results"][0]["metric"], "primary_color")
+        self.assertLessEqual(evidence.count("red"), 2)
+        self.assertLessEqual(evidence.count("black"), 2)
+        self.assertIn("white", evidence)
 
     def test_retry_then_empty_fallback(self) -> None:
         judge = self._judge()
@@ -66,7 +86,7 @@ class JudgeJsonRetryTests(unittest.TestCase):
 
         def raw_factory() -> str:
             calls["n"] += 1
-            return self.INCOMPLETE
+            return '{ "results": [ { "metric": '
 
         parsed = judge._parse_json_with_retry(raw_factory, label="test", attempts=3)
         self.assertEqual(parsed, {})
@@ -93,7 +113,8 @@ class JudgeJsonRetryTests(unittest.TestCase):
             "coverage_score",
         )
         self.assertEqual(out["results"][0]["metric"], "quantity_accuracy")
-        self.assertFalse(out["results"][0]["applicable"])
+        self.assertTrue(out["results"][0]["applicable"])
+        self.assertEqual(out["results"][0]["score"], 1.0)
 
 
 if __name__ == "__main__":

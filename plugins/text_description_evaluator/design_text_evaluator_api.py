@@ -27,6 +27,58 @@ class JudgeConnectionError(RuntimeError):
 
 
 JUDGE_JSON_PARSE_ATTEMPTS = 3
+# Temperature 0 still loops on short evidence tokens. vLLM lowers those logits.
+JUDGE_REPETITION_PENALTY = 1.1
+_JSON_STRING = r'"(?:\\.|[^"\\])*"'
+_REPEAT_SAME_JSON_STRING = re.compile(rf"({_JSON_STRING})(?:\s*,\s*\1){{2,}}")
+_REPEAT_PAIR_JSON_STRING = re.compile(
+    rf"({_JSON_STRING})\s*,\s*({_JSON_STRING})(?:\s*,\s*\1\s*,\s*\2){{2,}}"
+)
+
+
+def _collapse_repeated_json_strings(text: str) -> str:
+    """Drop a stuck evidence loop such as \"red\", \"black\", \"red\", \"black\"."""
+    prev = None
+    cur = text
+    while cur != prev:
+        prev = cur
+        cur = _REPEAT_PAIR_JSON_STRING.sub(r"\1, \2", cur)
+        cur = _REPEAT_SAME_JSON_STRING.sub(r"\1", cur)
+    return cur
+
+
+def _close_truncated_json(text: str) -> str:
+    """Close a JSON object cut off by max tokens after a repetition loop."""
+    start = text.find("{")
+    if start < 0:
+        return text
+    body = text[start:]
+    stack: List[str] = []
+    in_string = False
+    escape = False
+    for ch in body:
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch == "{":
+            stack.append("}")
+        elif ch == "[":
+            stack.append("]")
+        elif ch in "}]" and stack and stack[-1] == ch:
+            stack.pop()
+    if in_string:
+        body += '"'
+    body = re.sub(r",\s*$", "", body.rstrip())
+    while stack:
+        body += stack.pop()
+    return body
 
 
 _CONNECTION_FAILURE_MARKERS = (
@@ -1005,6 +1057,7 @@ Return format:
             system_prompt=system_prompt,
             user_content=user_prompt,
             response_format={"type": "json_object"},
+            repetition_penalty=JUDGE_REPETITION_PENALTY,
         )
 
     def _request_completion(
@@ -1016,6 +1069,7 @@ Return format:
         max_tokens: Optional[int] = None,
         top_p: Optional[float] = None,
         seed: Optional[int] = None,
+        repetition_penalty: Optional[float] = None,
     ) -> str:
         if isinstance(user_content, str):
             user_message: Dict[str, Any] = {"role": "user", "content": user_content}
@@ -1033,6 +1087,8 @@ Return format:
         }
         if seed is not None:
             payload["seed"] = seed
+        if repetition_penalty is not None:
+            payload["repetition_penalty"] = repetition_penalty
         if response_format is not None:
             payload["response_format"] = response_format
 
@@ -1137,11 +1193,16 @@ Return format:
 
     def _parse_json(self, raw_output: str) -> Dict:
         cleaned = self._clean_output(raw_output)
-        json_block = self._extract_first_json_object(cleaned)
+        collapsed = _collapse_repeated_json_strings(cleaned)
         try:
-            return json.loads(json_block)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"LLM judge did not return valid JSON:\n{cleaned}") from exc
+            return json.loads(self._extract_first_json_object(collapsed))
+        except (ValueError, json.JSONDecodeError):
+            repaired = _close_truncated_json(collapsed)
+            try:
+                return json.loads(repaired)
+            except json.JSONDecodeError as exc:
+                snippet = collapsed[:400]
+                raise ValueError(f"LLM judge did not return valid JSON:\n{snippet}") from exc
 
     def _parse_json_with_retry(
         self,
@@ -1164,7 +1225,7 @@ Return format:
                     label,
                     i + 1,
                     n,
-                    exc,
+                    str(exc).split("\n", 1)[0][:240],
                 )
         self.logger.warning(
             "%s giving up after %s parse error(s); treating output as empty",
