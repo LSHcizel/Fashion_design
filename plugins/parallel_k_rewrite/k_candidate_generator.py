@@ -149,10 +149,28 @@ _LEFT_RIGHT_EXAMPLE = (
     "Source: The left half is a matte wool jacket and a black trouser. "
     "The right half is a silk dress and a red sandal.\n"
     "Rewrite: A matte wool jacket and a black trouser.\n"
-    "On the SOURCE above, the kept side is the whole look. "
-    "Write only the KEEP lines when they are listed. "
-    "Do not write left or right. Do not write a DELETE line, "
-    "and do not bring it back as the other side, one shoulder, an inner layer, or a contrast."
+    "The kept side is the whole look. Write only the KEEP lines. Do not write left or right."
+)
+
+_SAME_ELEMENT_EXAMPLE = (
+    "SAME-ELEMENT EXAMPLES. Copy these edits. Do not copy the example's clothes.\n"
+    "Example 1. Source: The coat closes with a concealed placket. "
+    "The same coat also functions as double-breasted.\n"
+    "Rewrite: The coat closes with a concealed placket.\n"
+    "Example 2. Source: The jacket closes with a concealed placket and ends at the hip. "
+    "The same jacket is also double-breasted. The same hem brushes the floor.\n"
+    "Rewrite: The jacket closes with a concealed placket and ends at the hip.\n"
+    "Delete every later binding, not only one. "
+    "A DELETE line must not move onto another garment."
+)
+
+_SAME_AND_SPLIT = re.compile(
+    r"\s+and\s+(?=(?:the|that|those)\s+same\s+)",
+    re.I,
+)
+_SAME_LEAD = re.compile(
+    r"^(?:the|that|those)\s+same\s+[A-Za-z]+\s+(?:is|are|has|have|reads as)\s+(?:also\s+)?(?:given\s+)?",
+    re.I,
 )
 
 
@@ -212,20 +230,55 @@ def _left_right_action(source_text: str) -> str:
             keep.append(payload)
         elif side == "right" and payload:
             delete.append(payload)
+    return _keep_delete_block(keep, delete)
+
+
+def _binding_payload(clause: str) -> str:
+    text = _SAME_LEAD.sub("", clause.strip(" ;."))
+    return text.strip(" ,;.")
+
+
+def _same_element_action(source_text: str) -> str:
+    """概念句和 “the same” 之前的绑定留下，每个 “the same” 后面的绑定删除。"""
+    keep: List[str] = []
+    delete: List[str] = []
+    concept = re.search(r"\bConcept:\s*([^.]+)", source_text or "", re.I)
+    if concept:
+        keep.append(concept.group(1).strip(" ,;."))
+    for sentence in re.split(r"[。.!?;\n]", source_text or ""):
+        sentence = sentence.strip()
+        if not sentence or re.match(r"^(?:theme|concept)\b", sentence, re.I):
+            continue
+        parts = _SAME_AND_SPLIT.split(sentence)
+        if len(parts) == 1:
+            if re.match(r"^(?:the|that|those)\s+same\s+", sentence, re.I):
+                payload = _binding_payload(sentence)
+                if payload:
+                    delete.append(payload)
+            continue
+        kept = parts[0].strip(" ,;.")
+        if kept and not re.match(r"^(?:the|that|those)\s+same\s+", kept, re.I):
+            keep.append(kept)
+        for part in parts[1:]:
+            payload = _binding_payload(part)
+            if payload:
+                delete.append(payload)
+    return _keep_delete_block(keep, delete)
+
+
+def _keep_delete_block(keep: List[str], delete: List[str]) -> str:
     if not delete:
         return ""
-    lines = [
-        "KEEP THESE GARMENTS ONLY:",
-    ]
+    lines = ["KEEP THESE GARMENTS ONLY:"]
     lines.extend(f"- {item}" for item in keep)
     lines.append(
         "DELETE THESE GARMENTS. They must not appear in the paragraph, "
-        "including after while, transitions to, no, without, or not:"
+        "including on another garment, after while, transitions to, no, without, or not:"
     )
     lines.extend(f"- {item}" for item in delete)
     lines.append(
-        "Copying a DELETE line into the paragraph, or rewriting it as the other side, "
-        "an inner layer, or a contrast, is a failed rewrite."
+        "Copying a DELETE line, or moving it onto another garment, "
+        "is a failed rewrite."
     )
     return "\n".join(lines)
 
@@ -250,16 +303,10 @@ def format_conflict_target(source_text: str) -> str:
             "Delete the other side."
         )
     if int(found.get("same_element_bindings") or 0) > 0:
-        lines.append(
-            "SAME-ELEMENT EXAMPLE. Copy this edit. Do not copy the example's clothes.\n"
-            "Source: The coat closes with a concealed placket. "
-            "The same coat also functions as double-breasted.\n"
-            "Rewrite: The coat closes with a concealed placket.\n"
-            "On the SOURCE above, keep the binding named in the concept. "
-            "Delete the later binding on that same piece. "
-            "Do not join the two with also, and, or functions as, "
-            "and do not move the deleted binding into the next sentence."
-        )
+        lines.append(_SAME_ELEMENT_EXAMPLE)
+        same_action = _same_element_action(source_text)
+        if same_action:
+            lines.append(same_action)
     foreign = found.get("foreign_terms") or []
     if foreign:
         lines.append(
@@ -349,11 +396,8 @@ def format_exposed_repair_brief(
     parts = [
         "REPAIR BRIEF (from the current evaluation of SOURCE; required):",
         "Write the paragraph in English. Do not copy these notes into it.",
-        "Delete the other set of clothes and strictly unify into one set. "
-        "One sleeve grammar, one bottom, one footwear family. "
-        "Keep one binding and delete the contradictory binding. "
-        "Do not keep both garments in order to preserve a visible idea.",
-        "A fluent paragraph that still names both alternatives has not been repaired.",
+        "Delete the other set of clothes and strictly unify into one set: "
+        "one footwear family, and one contradictory binding removed.",
     ]
     if target:
         parts.insert(1, target)
@@ -378,26 +422,18 @@ REWRITE_BRAND_LOGO_LOCK = (
 )
 
 REWRITE_CONSISTENCY_REPAIR = (
-    "STRICT UNIFICATION. Delete the other set of clothes before any redesign. "
-    "The finished paragraph is one set only: both arms share one sleeve grammar, "
-    "both legs share one bottom, both feet share one footwear family, and the garment has "
-    "one neckline, one length, one closure, and one shell. "
-    "The deleted set must not remain as the other side, another version, an inner layer, or a contrast. "
+    "STRICT UNIFICATION. Delete the other set of clothes and strictly unify into one set: "
+    "one sleeve grammar, one bottom, one footwear family, one neckline, one length, one closure, one shell. "
+    "When KEEP and DELETE lines or a LEFT-RIGHT EXAMPLE or a SAME-ELEMENT EXAMPLE are attached, "
+    "copy that edit, write from the KEEP lines only, and do not copy the example's clothes. "
+    "A DELETE line must not appear on another garment. "
     "A fluent sentence that still contains both sets is a failed rewrite. "
-    "Do not keep the deleted set with while, transitions to, or on the right. "
-    "When KEEP and DELETE lines are attached, write from the KEEP lines only. "
-    "When a LEFT-RIGHT EXAMPLE is attached, copy that edit and do not copy its clothes. "
-    "Same-element contradiction: keep one binding and delete the contradictory binding. "
-    "When a SAME-ELEMENT EXAMPLE is attached, copy that edit and do not copy its clothes. "
-    "Other theme: delete every garment that belongs to a different theme or concept. "
-    "Do not keep it as an inner layer. "
+    "Keep one binding and delete the contradictory binding. "
     "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on the kept garment "
     "is placement, not a second garment. "
-    "Name one bottom, one footwear family, one neckline, and one sleeve state. "
-    "Do not write or between two of them, and do not leave a choice for the image model. "
-    "The paragraph is only what the camera sees. Do not write conflicting, replace, delete, restore, or do not. "
-    "Do not name a removed garment, including after no, without, or not. "
-    "A Chinese note that lists both sides is the delete list. Do not translate it into the paragraph."
+    "Do not write or between two bottoms, two shoes, two necklines, or two sleeve states. "
+    "Do not keep the deleted set with while, transitions to, or on the right. "
+    "The paragraph is only what the camera sees. Do not write conflicting, replace, delete, restore, or do not."
 )
 
 REWRITE_SHARED_STRATEGY = (
@@ -412,8 +448,8 @@ REWRITE_SHARED_STRATEGY = (
     "per-candidate assignment. "
     "3) Keep any original house logo/monogram as the same brand mark (placement/scale may change). "
     "4) Output one coherent English paragraph. "
-    "5) If a repair brief is attached, delete the garment it flags and lower its exposed penalty deductions. "
-    "6) Obey the consistency repair above. Delete the other set of clothes and strictly unify into one set."
+    "5) If a repair brief is attached, follow its KEEP and DELETE lines and lower its exposed penalty deductions. "
+    "6) Obey the consistency repair above."
 )
 
 # Backward-compatible name used by workflow extra_context.
@@ -459,11 +495,7 @@ def build_rewrite_user_prompt(
         "5. If SOURCE or business context has a house logo/monogram, keep that same brand mark "
         "(placement and size may change; never another house).\n"
         "6. If a repair brief is present, resolve every listed consistency problem and lower every listed penalty.\n"
-        "7. Delete the other set of clothes and strictly unify into one set: one sleeve grammar, one bottom, "
-        "one shoe, one neckline, one length, one closure, one shell. Do not write or between two of them. "
-        "Do not keep the other set as the other side, another version, an inner layer, or a contrast.\n"
-        "8. Do not write conflicting, replace, delete, restore, or do not. Do not name a removed garment.\n"
-        "9. Output only the kept set from the SOURCE TEXT above. Omitting the other set is required.\n"
+        "7. Output only the kept set from the SOURCE TEXT above. Omitting the other set is required.\n"
     )
     return user
 

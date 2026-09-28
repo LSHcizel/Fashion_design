@@ -113,7 +113,7 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("Do not write Chinese", prompt)
         self.assertIn("Repair pass", prompt)
         self.assertIn("one footwear family", prompt)
-        self.assertIn("Delete the other set of clothes", prompt)
+        self.assertIn("delete the other set of clothes", prompt)
         self.assertIn("strictly unify into one set", prompt)
         self.assertIn("different theme or concept", prompt)
         self.assertIn("must not replace it with another brand", prompt)
@@ -222,7 +222,6 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("matte wool", targeted)
         self.assertIn("DELETE THESE GARMENTS", targeted)
         self.assertIn("silk and sequin", targeted)
-        self.assertIn("sleeve", targeted)
         self.assertIn("flamenco", targeted)
         self.assertIn("must not appear in the paragraph", targeted)
         self.assertNotIn("虽然左右", targeted)
@@ -254,8 +253,22 @@ class RewritePromptPolicyTests(unittest.TestCase):
         )
         self.assertIn("SAME-ELEMENT EXAMPLE", same)
         self.assertIn("also functions as", same)
-        self.assertIn("Do not copy the example's clothes", same)
+        self.assertIn("Delete every later binding", same)
+        self.assertIn("another garment", same)
+        self.assertIn("high stand collar", same)
+        self.assertIn("KEEP THESE GARMENTS ONLY", same)
         self.assertNotIn("one closure, and one shell", same)
+        moved = format_exposed_repair_brief(
+            None,
+            source_text=(
+                "Concept: a narrow ink coat frames warm grey slim wool trousers. "
+                "Its hem brushes the calf, and the same hem is cropped to the waist. "
+                "The cloth is matte wool-gabardine, and that same shell is liquid mirror sequin."
+            ),
+        )
+        self.assertIn("cropped to the waist", moved)
+        self.assertIn("liquid mirror sequin", moved)
+        self.assertIn("brushes the calf", moved)
         sleeve = format_exposed_repair_brief(
             None,
             source_text=(

@@ -628,9 +628,21 @@ _LONG_SLEEVE = re.compile(
 _SHELL_VERSION = re.compile(r"\b(?:available in|either version)\b", re.I)
 _SHORT_HEM = re.compile(r"(just below the knee|knee-length)", re.I)
 _FLOOR_HEM = re.compile(
-    r"(floor[\s-]sweeping|floor[\s-]length|floor[\s-]grazing|pools on the floor)",
+    r"(brushes the floor|sweeps the floor|floor[\s-]sweeping|floor[\s-]length|floor[\s-]grazing|pools on the floor)",
     re.I,
 )
+_HEM_LENGTHS = (
+    ("hip", re.compile(r"cropped to the hip|hip-length", re.I)),
+    ("waist", re.compile(r"cropped to the waist", re.I)),
+    ("knee", re.compile(r"just below the knee|knee-length", re.I)),
+    ("calf", re.compile(r"brushes the calf|mid-calf|to the calf", re.I)),
+    ("floor", re.compile(
+        r"brushes the floor|sweeps the floor|floor[\s-](?:length|grazing|sweeping)|pools on the floor|(?:with|in)\s+a\s+train\b",
+        re.I,
+    )),
+)
+_OUTER_LENGTH_OWNER = re.compile(r"\b(?:jacket|coat|dress|hem)\b", re.I)
+_BOTTOM_LENGTH_OWNER = re.compile(r"\b(?:skirts?|trousers?|pants?|shorts?|gown)\b", re.I)
 _CONFLICT_QUALITY_METRICS = (
     "generation_readiness",
     "design_distinctiveness",
@@ -815,6 +827,33 @@ def conflict_quality_cap(conflicts: Dict[str, Any]) -> Optional[float]:
     return CONFLICT_QUALITY_CAP
 
 
+def _length_owner(sentence: str, start: int, end: int) -> str:
+    nearest = ""
+    nearest_dist = 10**9
+    for kind, pattern in (("bottom", _BOTTOM_LENGTH_OWNER), ("outer", _OUTER_LENGTH_OWNER)):
+        for match in pattern.finditer(sentence):
+            dist = min(abs(match.start() - start), abs(match.end() - end))
+            if dist < nearest_dist:
+                nearest_dist = dist
+                nearest = kind
+    return nearest
+
+
+def _two_lengths_one_piece(sentence: str) -> bool:
+    """同一件外套、大衣或下摆上的两个长度是冲突。短外套配拖地裙是叠穿。"""
+    found = []
+    for name, pattern in _HEM_LENGTHS:
+        for match in pattern.finditer(sentence):
+            found.append((name, _length_owner(sentence, match.start(), match.end())))
+    classes = {name for name, _owner in found}
+    if len(classes) < 2:
+        return False
+    owners = {owner for _name, owner in found if owner}
+    if "bottom" in owners and "outer" in owners:
+        return False
+    return True
+
+
 def _nearby_binding_hits(body: str) -> int:
     """互斥属性拆到相邻句时仍然算冲突。袖型对打仍只看同一句，避免内层无袖被误伤。"""
     hits = 0
@@ -919,7 +958,7 @@ def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
             re.search(r"\bhem\b", sentence, re.I)
             and _SHORT_HEM.search(sentence)
             and _FLOOR_HEM.search(sentence)
-        ):
+        ) or _two_lengths_one_piece(sentence):
             same_hits += 1
     foreign = sorted({m.group(0).lower() for m in _FOREIGN_THEME.finditer(body)})
     alternatives = _alternative_slots(body)

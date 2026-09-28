@@ -109,6 +109,8 @@ class ConflictDefinitionTests(unittest.TestCase):
         )
         self.assertFalse(detect_consistency_conflicts(material)["active"])
         self.assertFalse(detect_consistency_conflicts(layered)["active"])
+        layered_hem = "A wool jacket cropped to the hip over a floor-length silk skirt."
+        self.assertFalse(detect_consistency_conflicts(layered_hem)["active"])
 
     def test_dirty_rewrites_keep_asymmetry_and_contradictory_positions(self) -> None:
         dirty = {
@@ -132,6 +134,10 @@ class ConflictDefinitionTests(unittest.TestCase):
             "squared_neck": (
                 "The column dress has a squared neckline that scoops between narrow black straps, "
                 "and also functions as a high stand collar without straps."
+            ),
+            "hip_and_floor": (
+                "A matte wool jacket cropped to the hip, with floral appliqué along the front opening "
+                "and hem that brushes the floor, over fitted black shorts."
             ),
         }
         for name, text in dirty.items():
