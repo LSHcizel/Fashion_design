@@ -46,6 +46,8 @@ REWRITE_WHOLE_LOOK_SCOPE = (
     "and layering, and detail design (trim, surface, construction, local craft, accessories). "
     "A color restyle or a different pairing that still reads as that theme/concept is in-scope. "
     "Do not keep SOURCE's current SKU just to be faithful. "
+    "When a DELETE list is attached, color and detail may still change, and every garment "
+    "already in SOURCE that is not on that list stays. "
     "Out of scope: leaving the theme or design concept, or jumping to a competing register."
 )
 
@@ -53,7 +55,8 @@ REWRITE_ELEMENT_RECONSTRUCTION = (
     "ELEMENT RECONSTRUCTION: After extracting theme and concept, redesign the look's elements "
     "to raise DesignMerit: recompose color, pairing, silhouette, layering, surface, edge "
     "treatment, volume, local construction, and detail design while the theme and concept "
-    "still read as the same. Acceptable reconstruction may replace garments and details. "
+    "still read as the same. Acceptable reconstruction may change color and detail. "
+    "A garment that is not on the DELETE list stays. "
     "It must not abandon the extracted theme/concept, and must not treat a "
     "collection-shared interchangeable garment formula as the identity."
 )
@@ -68,9 +71,9 @@ REWRITE_DESIGN_MERIT = (
     "that would still read alone. "
     "A second sleeve, a second bottom, a second shoe, or a garment from another theme is not an idea. "
     "Do not merely paraphrase SOURCE, retighten wording, or only change pose/background. "
-    "If SOURCE already has ideas, you may strengthen, relocate/rescale, drop, or add ideas that "
-    "still belong to the extracted theme and concept — including new color, pairing, and detail "
-    "design — so the generated image can diverge from a clone of SOURCE's current SKU. "
+    "If SOURCE already has ideas, you may strengthen, relocate, or rescale them, and you may "
+    "change color and detail, so the generated image can diverge from a clone of SOURCE's "
+    "current SKU. A garment that is not on the DELETE list stays. "
     "If SOURCE is only formulaic wardrobe grammar, create visible ideas inside that theme. "
     "Do not treat factory finishing (topstitching, hidden placket), ordinary dressing "
     "(tucked shirt), brand hardware as identity, or theme dualities as the identity. "
@@ -146,10 +149,12 @@ def _garment_payload(clause: str) -> str:
 
 _LEFT_RIGHT_EXAMPLE = (
     "LEFT-RIGHT EXAMPLE. Copy this edit. Do not copy the example's clothes.\n"
-    "Source: The left half is a matte wool jacket and a black trouser. "
+    "Source: Gold buttons and a crochet bag remain. "
+    "The left half is a matte wool jacket and a black trouser. "
     "The right half is a silk dress and a red sandal.\n"
-    "Rewrite: A matte wool jacket and a black trouser.\n"
-    "The kept side is the whole look. Write only the KEEP lines. Do not write left or right."
+    "Rewrite: Gold buttons and a crochet bag remain, with a matte wool jacket and a black trouser.\n"
+    "Keep one side of the contradiction. Also keep every other garment already in SOURCE. "
+    "Do not write left or right."
 )
 
 _SAME_ELEMENT_EXAMPLE = (
@@ -161,22 +166,28 @@ _SAME_ELEMENT_EXAMPLE = (
     "The same jacket is also double-breasted. The same hem brushes the floor.\n"
     "Rewrite: The jacket closes with a concealed placket and ends at the hip.\n"
     "Delete every later binding, not only one. "
-    "A DELETE line must not move onto another garment."
+    "A DELETE line must not move onto another garment. "
+    "A button, a bag, a trim, or any other garment that is not a DELETE line stays."
 )
 
 _SAME_AND_SPLIT = re.compile(
     r"\s+and\s+(?=(?:the|that|those)\s+same\s+)",
     re.I,
 )
-_SAME_LEAD = re.compile(
-    r"^(?:the|that|those)\s+same\s+[A-Za-z]+\s+(?:is|are|has|have|reads as)\s+(?:also\s+)?(?:given\s+)?",
+_SAME_COPULA = re.compile(
+    r"^(?:the|that|those)\s+same\s+(?:[A-Za-z-]+\s+){1,3}"
+    r"(?:is|are|has|have|reads as)\s+(?:also\s+)?(?:given\s+)?",
+    re.I,
+)
+_SAME_NOUN = re.compile(
+    r"^(?:the|that|those)\s+same\s+[A-Za-z-]+\s+",
     re.I,
 )
 
 
 _FOREIGN_SHOE = re.compile(
     r"((?:[A-Za-z'-]+\s+){0,3}"
-    r"(?:stilettos?|mules?|pumps?|sandals?|boots?|oxfords?|flats?|slingbacks?|loafers?))",
+    r"(?:stilettos?|mules?|pumps?|sandals?|boots?|oxfords?|flats?|slingbacks?|loafers?|heels?|shoes?))",
     re.I,
 )
 
@@ -230,12 +241,17 @@ def _left_right_action(source_text: str) -> str:
             keep.append(payload)
         elif side == "right" and payload:
             delete.append(payload)
+        elif _shared_keep_clause(clause):
+            keep.append(clause)
     return _keep_delete_block(keep, delete)
 
 
 def _binding_payload(clause: str) -> str:
-    text = _SAME_LEAD.sub("", clause.strip(" ;."))
-    return text.strip(" ,;.")
+    text = clause.strip(" ;.")
+    stripped = _SAME_COPULA.sub("", text, count=1)
+    if stripped == text:
+        stripped = _SAME_NOUN.sub("", text, count=1)
+    return stripped.strip(" ,;.")
 
 
 def _same_element_action(source_text: str) -> str:
@@ -255,6 +271,8 @@ def _same_element_action(source_text: str) -> str:
                 payload = _binding_payload(sentence)
                 if payload:
                     delete.append(payload)
+            elif _shared_keep_clause(sentence):
+                keep.append(sentence)
             continue
         kept = parts[0].strip(" ,;.")
         if kept and not re.match(r"^(?:the|that|those)\s+same\s+", kept, re.I):
@@ -266,10 +284,47 @@ def _same_element_action(source_text: str) -> str:
     return _keep_delete_block(keep, delete)
 
 
+def _is_meta_clause(text: str) -> bool:
+    """说明句不是衣服：生成指令、主题对照，以及 whichever 这种改写旁白。"""
+    if re.match(r"^please generate\b", text, re.I):
+        return True
+    return bool(re.search(r"\b(?:do not share|do not belong|whichever)\b", text, re.I))
+
+
+def _shared_keep_clause(clause: str) -> bool:
+    """没有左右或 the same 的句子是已有要素，不因冲突被删掉。"""
+    text = re.sub(r"^at the same time\s+", "", clause.strip(), flags=re.I)
+    if not text or _is_meta_clause(text):
+        return False
+    return True
+
+
+def _foreign_keep_delete(source_text: str, terms: List[str]) -> str:
+    """异主题：白天那一套留下，冒号后的另一套删掉。"""
+    keep: List[str] = []
+    delete: List[str] = []
+    for sentence in re.split(r"[。.!?;\n]", source_text or ""):
+        sentence = sentence.strip()
+        if not sentence or _is_meta_clause(sentence):
+            continue
+        low = sentence.lower()
+        if any(term.lower() in low for term in terms):
+            payload = sentence.split(":")[-1]
+            payload = re.sub(r"\breplace the [^,.;]+", "", payload, flags=re.I)
+            payload = payload.strip(" ,;.")
+            if payload:
+                delete.append(payload)
+            continue
+        keep.append(sentence)
+    return _keep_delete_block(keep, delete)
+
+
 def _keep_delete_block(keep: List[str], delete: List[str]) -> str:
     if not delete:
         return ""
-    lines = ["KEEP THESE GARMENTS ONLY:"]
+    lines = [
+        "KEEP THIS SIDE OF THE CONTRADICTION, and keep every other garment already in SOURCE that is not listed under DELETE:",
+    ]
     lines.extend(f"- {item}" for item in keep)
     lines.append(
         "DELETE THESE GARMENTS. They must not appear in the paragraph, "
@@ -291,24 +346,20 @@ def format_conflict_target(source_text: str) -> str:
     lines = [
         "TARGETED DELETE (do this first; do not name the deleted branch in the paragraph):"
     ]
-    zones = found.get("zones") or []
     action = _left_right_action(source_text)
-    if action or zones or found.get("two_sleeve_states"):
-        lines.append(_LEFT_RIGHT_EXAMPLE)
     if action:
+        lines.append(_LEFT_RIGHT_EXAMPLE)
         lines.append(action)
-    elif zones or found.get("two_sleeve_states"):
-        lines.append(
-            "Keep the side that matches the concept, the garments before 'at the same time'. "
-            "Delete the other side."
-        )
     if int(found.get("same_element_bindings") or 0) > 0:
-        lines.append(_SAME_ELEMENT_EXAMPLE)
         same_action = _same_element_action(source_text)
         if same_action:
+            lines.append(_SAME_ELEMENT_EXAMPLE)
             lines.append(same_action)
     foreign = found.get("foreign_terms") or []
     if foreign:
+        foreign_action = _foreign_keep_delete(source_text, foreign)
+        if foreign_action:
+            lines.append(foreign_action)
         lines.append(
             "These names are a delete list for you. They must not appear in the paragraph, "
             "including after no, without, or not, and not as an inner layer or a reveal: "
@@ -425,7 +476,8 @@ REWRITE_CONSISTENCY_REPAIR = (
     "STRICT UNIFICATION. Delete the other set of clothes and strictly unify into one set: "
     "one sleeve grammar, one bottom, one footwear family, one neckline, one length, one closure, one shell. "
     "When KEEP and DELETE lines or a LEFT-RIGHT EXAMPLE or a SAME-ELEMENT EXAMPLE are attached, "
-    "copy that edit, write from the KEEP lines only, and do not copy the example's clothes. "
+    "copy that edit. Keep one side of each contradiction, and keep every other garment already in SOURCE. "
+    "Do not copy the example's clothes. "
     "A DELETE line must not appear on another garment. "
     "A fluent sentence that still contains both sets is a failed rewrite. "
     "Keep one binding and delete the contradictory binding. "
@@ -439,10 +491,10 @@ REWRITE_CONSISTENCY_REPAIR = (
 REWRITE_SHARED_STRATEGY = (
     "SHARED STRATEGY (theme/concept lock + logo lock; whole-look change inside that lock): "
     "1) Extract theme and concept from SOURCE only — there is no separate chapter brief. "
-        "2) You may change colors, garment pairing, and detail design — the whole look — so this "
-        "sample is not a wording-only clone of SOURCE; a generated image should be able to diverge. "
-        "Stay inside the extracted theme and concept. Do not keep a second sleeve, bottom, shoe, "
-        "or another theme's garment in order to make the look fuller. "
+        "2) You may change color and detail so this sample is not a wording-only clone of SOURCE. "
+        "Stay inside the extracted theme and concept. When a DELETE list is attached, every "
+        "garment already in SOURCE that is not on that list stays. Do not keep a second sleeve, "
+        "bottom, shoe, or another theme's garment in order to make the look fuller. "
         "Visible ideas have no fixed count; each one "
     "must serve that extracted theme and concept. Idea kinds are a menu, not a quota and not a "
     "per-candidate assignment. "
@@ -468,8 +520,8 @@ def build_rewrite_user_prompt(
         f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
         "Candidates are sampled separately at different temperatures.\n"
         "The SOURCE TEXT below is complete. Any BUSINESS CONTEXT below is complete. "
-        "Read both in full so you can see which set matches the theme. "
-        "Then write only that kept set. Do not copy every garment noun.\n\n"
+        "Read both in full so you can see which element contradicts another. "
+        "Keep one side of each contradiction. Keep every other garment already in SOURCE.\n\n"
         f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
     )
     if extra_context.strip():
@@ -495,7 +547,8 @@ def build_rewrite_user_prompt(
         "5. If SOURCE or business context has a house logo/monogram, keep that same brand mark "
         "(placement and size may change; never another house).\n"
         "6. If a repair brief is present, resolve every listed consistency problem and lower every listed penalty.\n"
-        "7. Output only the kept set from the SOURCE TEXT above. Omitting the other set is required.\n"
+        "7. Omit the contradictory side. Keep every other garment already in SOURCE. "
+        "Omitting the other set is required.\n"
     )
     return user
 
