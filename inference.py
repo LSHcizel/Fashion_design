@@ -62,6 +62,15 @@ def query_model(model_str, prompt, system_prompt, openai_api_key=None, gemini_ap
                 print("[local-llm] generation via local OpenAI-compatible endpoint")
             return local_answer
     except Exception as e:
+        local_model = False
+        try:
+            from plugins.local_llm import model_should_use_local
+
+            local_model = model_should_use_local(model_str)
+        except Exception:
+            local_model = False
+        if local_model:
+            raise
         print(f"[local-llm] fallback to remote API: {e}")
 
     preloaded_api = os.getenv('OPENAI_API_KEY')

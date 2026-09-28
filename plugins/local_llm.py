@@ -11,8 +11,9 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
@@ -110,6 +111,7 @@ def resolve_local_llm_endpoint() -> Optional[Dict[str, Any]]:
     timeout = int(cfg.get("timeout", 300))
     max_tokens = int(cfg.get("max-tokens", 4096))
     judge_max_tokens = int(cfg.get("judge-max-tokens", 2048))
+    max_model_len = int(cfg.get("max-model-len", 8192))
     verify_ssl = bool(cfg.get("verify-ssl", False))
     return {
         "api_base": api_base.rstrip("/"),
@@ -118,6 +120,7 @@ def resolve_local_llm_endpoint() -> Optional[Dict[str, Any]]:
         "timeout": timeout,
         "max_tokens": max_tokens,
         "judge_max_tokens": judge_max_tokens,
+        "max_model_len": max_model_len,
         "verify_ssl": verify_ssl,
     }
 
@@ -198,6 +201,142 @@ def workflow_vision_model_name() -> Optional[str]:
     return _opt_str(grpo_ev.get("vision-model"))
 
 
+_CONTEXT_OVERFLOW_RE = re.compile(
+    r"maximum context length is (\d+) tokens\..*?"
+    r"requested (\d+) output tokens and your prompt contains at least (\d+) input tokens",
+    re.DOTALL,
+)
+_MIN_COMPLETION_TOKENS = 1024
+_SECTION_SEP = "\n" + ("~" * 10) + "\n"
+_OMIT_NOTE = "\n[Middle omitted to fit the context window.]\n"
+_HISTORY_NOTE = "[Older history turns omitted to fit the context window.]\n"
+
+
+def _estimate_prompt_tokens(text: str) -> int:
+    """偏保守的 token 估计，用来在请求前把输出上限收进 max-model-len。"""
+    if not text:
+        return 0
+    try:
+        import tiktoken
+
+        counted = len(tiktoken.get_encoding("cl100k_base").encode(text))
+    except Exception:
+        counted = max(1, len(text) // 3)
+    return int(counted * 1.15) + 16
+
+
+def _keep_head_and_tail(text: str, token_budget: int) -> str:
+    """上下文过长时保留开头和结尾，去掉中段。主题和设计目标在开头。"""
+    if token_budget < 64:
+        token_budget = 64
+    if _estimate_prompt_tokens(text) <= token_budget:
+        return text
+    lo, hi = 0, len(text)
+    best = text[: min(len(text), 200)]
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        head_n = max(1, int(mid * 0.65))
+        tail_n = max(0, mid - head_n)
+        candidate = text[:head_n] + _OMIT_NOTE + (text[-tail_n:] if tail_n else "")
+        if _estimate_prompt_tokens(candidate) <= token_budget:
+            best = candidate
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return best
+
+
+def _split_agent_prompt(user_prompt: str) -> Optional[Tuple[str, str, str]]:
+    """按 BaseAgent 的分隔符拆成上下文、历史、当前目标。"""
+    parts = user_prompt.split(_SECTION_SEP)
+    if len(parts) < 3:
+        return None
+    return parts[0], _SECTION_SEP.join(parts[1:-1]), parts[-1]
+
+
+def _history_turns(history_block: str) -> List[str]:
+    text = history_block.strip()
+    if text.startswith("History:"):
+        text = text[len("History:") :].strip()
+    if not text:
+        return []
+    return [part.strip() for part in re.split(r"\n(?=Step #)", text) if part.strip()]
+
+
+def _join_history(turns: List[str], dropped: int) -> str:
+    lines: List[str] = ["History:"]
+    if dropped:
+        lines.append(_HISTORY_NOTE.rstrip("\n"))
+    lines.extend(turns)
+    return "\n".join(lines)
+
+
+def _assemble_agent_prompt(context: str, history: str, current: str) -> str:
+    return f"{context}{_SECTION_SEP}{history}{_SECTION_SEP}{current}"
+
+
+def _window_user_prompt(
+    system_prompt: str,
+    user_prompt: str,
+    input_budget: int,
+) -> Tuple[str, str]:
+    """滑动窗口：保住当前目标和主题上下文，从最旧的历史轮次开始丢。"""
+    user_budget = max(256, input_budget - _estimate_prompt_tokens(system_prompt))
+    if _estimate_prompt_tokens(user_prompt) <= user_budget:
+        return user_prompt, ""
+    split = _split_agent_prompt(user_prompt)
+    if split is None:
+        return _keep_head_and_tail(user_prompt, user_budget), "trimmed unstructured prompt"
+    context, history, current = split
+    turns = _history_turns(history)
+    dropped = 0
+    while turns and _estimate_prompt_tokens(
+        _assemble_agent_prompt(context, _join_history(turns, dropped), current)
+    ) > user_budget:
+        turns.pop(0)
+        dropped += 1
+    assembled = _assemble_agent_prompt(context, _join_history(turns, dropped), current)
+    if _estimate_prompt_tokens(assembled) <= user_budget:
+        note = f"dropped {dropped} oldest history turns" if dropped else ""
+        return assembled, note
+    overhead = _estimate_prompt_tokens(
+        _assemble_agent_prompt("", _join_history(turns, dropped), current)
+    )
+    context = _keep_head_and_tail(context, max(128, user_budget - overhead))
+    note = f"dropped {dropped} oldest history turns; trimmed context"
+    return _assemble_agent_prompt(context, _join_history(turns, dropped), current), note
+
+
+def _fit_local_prompt(
+    system_prompt: str,
+    user_prompt: str,
+    requested: int,
+    max_model_len: int,
+) -> Tuple[str, int, bool, str]:
+    """输入超出窗口时先滑动历史，再把输出上限收进剩余长度。"""
+    if max_model_len <= 0:
+        return user_prompt, requested, False, ""
+    input_budget = max(256, max_model_len - _MIN_COMPLETION_TOKENS)
+    user_prompt, note = _window_user_prompt(system_prompt, user_prompt, input_budget)
+    room = (
+        max_model_len
+        - _estimate_prompt_tokens(system_prompt)
+        - _estimate_prompt_tokens(user_prompt)
+    )
+    fitted = max(1, min(int(requested), int(room)))
+    changed = bool(note) or fitted != int(requested)
+    return user_prompt, fitted, changed, note
+
+
+def _context_overflow_budget(exc: BaseException) -> Optional[Tuple[int, int]]:
+    match = _CONTEXT_OVERFLOW_RE.search(str(exc))
+    if not match:
+        return None
+    max_len = int(match.group(1))
+    input_tokens = int(match.group(3))
+    return max_len, max_len - input_tokens
+
+
 def local_chat_completion(
     *,
     system_prompt: str,
@@ -219,6 +358,17 @@ def local_chat_completion(
         timeout=float(ep["timeout"]),
         max_retries=2,
     )
+    requested = int(max_tokens if max_tokens is not None else ep["max_tokens"])
+    max_model_len = int(ep.get("max_model_len") or 0)
+    user_prompt, fitted, adjusted, note = _fit_local_prompt(
+        system_prompt, user_prompt, requested, max_model_len
+    )
+    if adjusted:
+        detail = f"; {note}" if note else ""
+        print(
+            f"[local-llm] fit context window {max_model_len}: "
+            f"max_tokens {requested} -> {fitted}{detail}"
+        )
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
@@ -226,15 +376,38 @@ def local_chat_completion(
     kwargs: Dict[str, Any] = {
         "model": model or ep["model"],
         "messages": messages,
+        "max_tokens": fitted,
     }
     if temperature is not None:
         kwargs["temperature"] = temperature
-    if max_tokens is not None:
-        kwargs["max_tokens"] = max_tokens
-    else:
-        kwargs["max_tokens"] = ep["max_tokens"]
 
-    completion = client.chat.completions.create(**kwargs)
+    try:
+        completion = client.chat.completions.create(**kwargs)
+    except Exception as exc:
+        budget = _context_overflow_budget(exc)
+        if budget is None:
+            raise
+        window, room = budget
+        if room >= _MIN_COMPLETION_TOKENS:
+            kwargs["max_tokens"] = room
+            print(
+                f"[local-llm] context overflow on window {window}; "
+                f"retry max_tokens={room}"
+            )
+        else:
+            windowed, note = _window_user_prompt(
+                messages[0]["content"],
+                messages[1]["content"],
+                max(256, window - _MIN_COMPLETION_TOKENS),
+            )
+            messages[1]["content"] = windowed
+            kwargs["max_tokens"] = _MIN_COMPLETION_TOKENS
+            print(
+                f"[local-llm] context overflow on window {window}; "
+                f"retry max_tokens={kwargs['max_tokens']}"
+                + (f"; {note}" if note else "")
+            )
+        completion = client.chat.completions.create(**kwargs)
     answer = completion.choices[0].message.content
     if not answer:
         raise RuntimeError("local LLM returned empty content")
