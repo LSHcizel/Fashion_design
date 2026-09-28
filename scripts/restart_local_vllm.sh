@@ -30,7 +30,7 @@ else:
 api_base = (llm.get("api-base") or f"http://127.0.0.1:{default_port}/v1").rstrip("/")
 parsed = urlparse(api_base)
 port = parsed.port or (443 if parsed.scheme == "https" else default_port)
-max_len = llm.get("max-model-len", 8192)
+max_len = llm.get("max-model-len", 16384)
 print(llm.get("model", default_model), llm.get("model-path", default_path), port, max_len)
 PY
 )"

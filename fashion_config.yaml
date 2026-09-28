@@ -52,7 +52,7 @@ local-llm:
   api-key: "local"
   model: "Qwen2.5-7B-Instruct"
   model-path: "models/Qwen2.5-7B-Instruct"
-  max-model-len: 8192
+  max-model-len: 16384
   timeout: 300
   max-tokens: 4096
   verify-ssl: false
@@ -192,7 +192,7 @@ grpo:
     api-key: "local"
     model: "Qwen2.5-7B-Rewriter"
     model-path: "models/Qwen2.5-7B-Rewriter"
-    max-model-len: 8192
+    max-model-len: 16384
     timeout: 300
     max-tokens: 2048
     verify-ssl: false
