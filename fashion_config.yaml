@@ -94,26 +94,24 @@ text-only-mode: False
 task-notes:
   theme-analysis:
     - "When description is provided, extract description-derived key elements in English before the final THEME_ANALYSIS"
-    - "Deeply analyze Chanel brand history, Gabrielle Chanel's Biarritz legacy, and Matthieu Blazy's Cruise 2027 vision"
     - "Key aspects are holistic analysis only; produce exactly num-chapters sub-themes that synthesize across key aspects (not 1:1)"
-    - "Stay strictly on theme, but do not write a conservative recap: name daring chapter angles the brief already authorizes"
-    - "Focus on liberation, salon-to-beach duality, Basque craft references, and sporty elegance reframed for today"
+    - "Write the style the DesignMerit judge can score: one identifying idea per later look, newer than this house's interchangeable wardrobe, and still this theme"
+    - "A mood word, a theme duality, or another theme's garment is not a stronger style"
   
   concept-brainstorming:
-    - "Each chapter must deepen its sub-theme, then take a runway-scale leap inside that brief"
-    - "Each chapter should have a distinct visual and emotional tone"
-    - "Do not shrink the chapter into a polite, production-safe capsule of expected garments"
-    - "Identifying ideas per look should feel like visible risks the theme can still claim"
+    - "Each chapter names 2-4 look ideas the judge scores as design: a surface field, an edge path, or a same-theme inner worn open"
+    - "Each next idea updates the style and the combination, not only the color, material, or brand"
+    - "Do not invent novelty with two sleeve states, two bottoms, two shoes, or a garment from another theme"
   
   design-elements-proposal:
-    - "Design elements should align with the theme analysis, then make the theme visible in a bold way"
-    - "Consider materials, colors, silhouettes, and details as carriers of an idea, not a safe wardrobe list"
-    - "Provide sufficient diversity for each chapter; do not use feasibility as an excuse to stay conservative"
+    - "Weight the elements that remain after color, material, and brand words are swapped"
+    - "Craft that counts is a surface or an edge on one garment. Factory finishing is not an identifying element"
+    - "Keep each chapter's elements stylistically distinct inside the same theme"
   
   look-description-generation:
-    - "Look descriptions should be detailed and visually evocative"
-    - "Instantiate one identifying idea from the chapter's bold element pool"
-    - "Include all necessary visible details"
+    - "Open with one identifying idea and ground it on a part or layer, then write outer to inner"
+    - "The paragraph should read as this collection's style. A closing mood clause does not create that style"
+    - "Do not stack a second binding, a second bottom, or a second shoe to look more designed"
 
 # ─── Text Evaluator ──────────────────────────────────────────────────────────
 # 启用后，每个生成的 look 描述文本在保存前会自动进行质量评估；

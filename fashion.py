@@ -9,15 +9,16 @@ import httpx
 import openai
 
 
-# 前序阶段（主题 / 概念 / 元素）共用：贴合主题，但构思要大胆，避免安全成衣复述。
+# 前序阶段（主题 / 概念 / 元素）共用：新颖和风格必须是评分器 DesignMerit 会给高分的那种。
 _UPSTREAM_BOLD_CONCEPTION = (
-    "Creative stance (theme-true, not conservative): stay strictly inside the given theme, "
-    "brand codes, and (when given) sub-theme. Boldness is how the theme is made visible—"
-    "not a different brand, a different show, or generic fantasy off-brief. "
-    "Push silhouette, surface, proportion, craft, and look identities past safe commercial recap "
-    "or archive wardrobe lists. Prefer surprising but still theme-legible ideas: couture exaggeration, "
-    "unexpected surface and edge ideas, and memorable identifying ideas. "
-    "Timid ready-to-wear finishing, interchangeable separates, and polite restatements of the brief are failures."
+    "Creative stance (scored as DesignMerit): stay inside the given theme and sub-theme. "
+    "Novelty and style are one identifying idea made newer and more unmistakable than this house's "
+    "interchangeable wardrobe. The judge tests five things: the idea still identifies the look after "
+    "color, material, and brand words are swapped; it is anchored on a part or layer; the craft is a "
+    "surface or an edge, not factory finishing; the combination is not an ordinary layering formula; "
+    "and that one idea occupies the paragraph, so the collection's style is readable. "
+    "A mood adjective, a theme duality, or a second theme's garment is not a stronger style. "
+    "Timid ready-to-wear finishing and a polite restatement of the brief fail those tests."
 )
 
 
@@ -45,7 +46,12 @@ _DESIGN_MERIT_IDENTIFYING_IDEAS = (
     "NOT an identifying idea: only swapping color, material, or brand of the same look; "
     "hem/cuff reveal; self-belt; tucked shirt; hidden placket; topstitching; tonal piping; "
     "brand hardware; fabric-mood words; theme dualities. Those are wardrobe finishing, "
-    "and they do not replace a missing design."
+    "and they do not replace a missing design.\n"
+    "NOVELTY AND STYLE, as the judge scores them: make the idea newer than a shared trunk formula "
+    "(the same jacket, trouser, and shoe with a new color). Make the style this theme's own surface, "
+    "edge, or open inner, specific enough that the look is still recognizable as this collection "
+    "after the color and cloth change. Do not add a style by naming a mood, and do not add novelty "
+    "by a second sleeve, a second bottom, a second shoe, or another theme."
 )
 
 
@@ -348,9 +354,9 @@ class ConceptBrainstormingAgent(BaseAgent):
                 "inside that brief—new proportion, surface, or look identity the theme can still claim.\n"
                 "LOOKS DIRECTION — DesignMerit: name 2–4 DISTINCT identifying ideas for individual looks "
                 "in this chapter. Each look must update the idea—not only color, material, or brand of "
-                "the same identity. Idea kinds may include surface field, edge path, second inner identity, "
-                "volume/surface collision, or another equally specific visible idea; this is not a closed list. "
-                "Each idea should feel like a risk the theme authorizes, not a safer restatement of the last look. "
+                "the same identity. Use a surface field, an edge path, or a same-theme inner worn open. "
+                "Each next idea should be stylistically sharper and combinatorially newer than the last, "
+                "still claimed by this sub-theme. "
                 "Concept/Ambiance/Analysis may use theme language; The Looks must stay visual and specific.\n"
             )
         return phase_str
@@ -384,7 +390,7 @@ class ConceptBrainstormingAgent(BaseAgent):
                 "    *   **Garments:**\n"
                 "        [Garments and pieces that carry the leap, not an interchangeable capsule.]\n\n"
                 "    *   **Fabric & Color:**\n"
-                "        [Palette and surfaces that make the idea readable; unusual collisions welcome if on-theme.]\n\n"
+                "        [Palette and surfaces that make this theme's idea readable. A newer combination stays one garment identity.]\n\n"
                 "    *   **Identifying ideas (per look):**\n"
                 "        [2–4 distinct, bold look identities. Each: one clause naming an updated idea "
                 "plus the garments that carry it. Later looks must change the idea itself, "
@@ -740,7 +746,7 @@ class LookDescriptionAgent(BaseAgent):
                 "Look [Number]: [Look Name/Title]\n\n"
                 "[Single paragraph text_description: 800–1500 characters. Open with the identifying idea, then outer-to-inner visual order. "
                 "No numbered sections, no transitions between sections, no stance or scene commentary. "
-                "Ground the idea on parts/layers (trim along… / worn open over… / allover… / voluminous… vs flatter…).]\n\n"
+                "Ground the idea on parts/layers (trim along… / worn open over… / allover…).]\n\n"
                 "Key elements:\n"
                 "- [identifying idea in one clause]\n"
                 "- [where it is grounded: part or layer]\n"

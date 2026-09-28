@@ -2127,7 +2127,8 @@ if __name__ == "__main__":
     if not api_key:
         raise ValueError("API key must be provided via config file or environment variable")
 
-    # 处理设计目标和主题
+    # 正常入口只使用本 yaml 的品牌、主题、设计目标和 description。
+    # season_themes 的 index 由 scripts/run_season_index.py 单独读取，不从这里进入。
     if human_mode or args.design_target_prompt is None:
         design_target_prompt = input("请输入设计目标提示: ")
     else:
