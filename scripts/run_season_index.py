@@ -4,6 +4,9 @@
   python scripts/run_season_index.py
   python scripts/run_season_index.py --only gucci_ss27 prada_ss27
 
+已有完整 4 章 × 每章 look 的品牌会跳过。中断、缺 look 的主题会重新生成。
+加 --force 时，已完成的品牌也再跑一遍。
+
 模型、评分和 task-notes 仍用 fashion_config.yaml。
 品牌、主题、description、章节数、每章 look 数只读 index，不读配置里的
 brand / theme / description / design-target-prompt / num-chapters / num-looks。
@@ -125,6 +128,30 @@ def _select(rows: list[dict], only: list[str]) -> list[dict]:
     return picked
 
 
+def _run_is_complete(run_dir: Path, num_chapters: int, num_looks: int) -> bool:
+    """一套结果齐：每个 chapter 都有非空的 look_01.txt … look_NN.txt。"""
+    if not run_dir.is_dir():
+        return False
+    for chapter_idx in range(1, num_chapters + 1):
+        chapter_dir = run_dir / f"chapter_{chapter_idx:02d}"
+        for look_idx in range(1, num_looks + 1):
+            look_path = chapter_dir / f"look_{look_idx:02d}.txt"
+            if not look_path.is_file() or look_path.stat().st_size <= 0:
+                return False
+    return True
+
+
+def _completed_run(out_root: Path, brand_dir: str, num_chapters: int, num_looks: int) -> Path | None:
+    brand_out = out_root / brand_dir
+    if not brand_out.is_dir():
+        return None
+    found = None
+    for run_dir in sorted(path for path in brand_out.iterdir() if path.is_dir()):
+        if _run_is_complete(run_dir, num_chapters, num_looks):
+            found = run_dir
+    return found
+
+
 def _read_text(path: Path) -> str:
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -203,6 +230,11 @@ def main() -> None:
         default=4100,
         help="状态文件编号起点，避免覆盖 workflow_0",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="已有完整章节和 look 的品牌也重新生成",
+    )
     cli = parser.parse_args()
 
     os.chdir(ROOT)
@@ -217,8 +249,19 @@ def main() -> None:
     num_chapters = int(payload["num_chapters"])
     num_looks = int(payload["num_looks"])
     out_root = cli.index.parent / "generated"
+    pending = []
+    for row in rows:
+        done = _completed_run(out_root, str(row.get("dir") or ""), num_chapters, num_looks)
+        house = str(row.get("house") or row.get("dir") or "")
+        if done is not None and not cli.force:
+            print(f"跳过 {house}：已有完整 {num_chapters}×{num_looks} -> {done}")
+            continue
+        pending.append(row)
+    if not pending:
+        print("没有未完成的主题。")
+        return
     written = []
-    for offset, row in enumerate(rows):
+    for offset, row in enumerate(pending):
         written.append(
             run_one(
                 row,
