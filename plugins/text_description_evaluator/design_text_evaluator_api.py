@@ -324,13 +324,13 @@ DESIGN_MERIT_DIMENSIONS = {
 }
 # Single DesignMerit judge block: used only in the DesignMerit user prompt (not repeated in system).
 DESIGN_MERIT_JUDGE_GUIDE = (
-    "Score the identifying idea, not completeness / layout / garment family. "
-    "Test: swap color, material, and brand words — what still identifies the look?\n"
-    "DESIGN (may stay 0.75–1.0): one of these on a single identity — "
-    "an allover surface field (texture, print, or graphic panels of the same cloth); "
-    "an edge path that draws one silhouette (appliqué, trim, fringe, scallop, or beading "
+    "Score the feature that would still identify this look if color, fabric, and brand words were swapped. "
+    "Do not score completeness, layout, or garment category.\n"
+    "DESIGN (may stay 0.75–1.0): one of these on a single outfit — "
+    "a pattern, texture, or print covering the whole cloth; "
+    "decoration that traces one outline (appliqué, trim, fringe, scallop, or beading "
     "along the neckline, front, hem, cuff, or slit); "
-    "or an inner garment of the SAME theme that still reads when the outer is opened. "
+    "or an inner garment of the SAME theme that still reads as its own piece when the outer is opened. "
     "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that one garment "
     "is placement, not a second idea and not a conflict.\n"
     "CONFLICT is not design. Cap the metric at 0.25, and do not keep it high because the facts are specific: "
@@ -338,16 +338,16 @@ DESIGN_MERIT_JUDGE_GUIDE = (
     "one garment with two bindings for neckline, sleeve, length, closure, or shell; "
     "or a garment from another theme (bridal, coronation, flamenco, mourning, masquerade, "
     "morning dress, rococo, or the same kind of foreign register), including as an inner layer. "
-    "Two trunks colliding in volume is not an identifying idea.\n"
-    "Low 0.25–0.5 when there is no design and no conflict: "
+    "Two trunks colliding in volume is not one of those three features.\n"
+    "Low 0.25–0.5 when none of those three features is present and there is no conflict: "
     "hem/cuff reveal, self-belt, tucked shirt, factory finishing (concealed placket, topstitch, piping), "
     "brand hardware, fabric-mood, theme dualities, "
     "or a collection-shared interchangeable trunk-garment formula. "
     "Factory finishing on one identity does not by itself force 0.25. "
     "Do not copy one score onto every axis. "
     "Do not lower merely for a coat, cropped jacket, or shorts as a category. Ignore T2I preamble.\n"
-    "Reason: name the idea in one clause, or name the conflict; then pick the score. "
-    "Evidence: quote that idea, or quote the conflicting garments."
+    "Reason: name that feature in one clause, or name the conflict; then pick the score. "
+    "Evidence: quote that feature, or quote the conflicting garments."
 )
 # Per-axis floors after the judge. Shared series/finishing grammar stays low on idea axes.
 DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_ORDINARY = 0.25
@@ -995,6 +995,97 @@ def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
     }
 
 
+def _layout_board_body(text: str) -> str:
+    kept: List[str] = []
+    for line in (text or "").splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if _is_t2i_preamble(stripped) or _is_single_frame_line(stripped):
+            continue
+        kept.append(stripped)
+    return "\n".join(kept)
+
+
+def _positive_board_hit(text: str) -> bool:
+    for match in _BOARD_LAYOUT_RE.finditer(text or ""):
+        window = (text or "")[max(0, match.start() - 16):match.start()]
+        if re.search(r"(?i)\b(?:no|not|without|never)\b\s*$", window):
+            continue
+        return True
+    return False
+
+
+def detect_layout_board(text: str) -> Dict[str, Any]:
+    """正文若还在要拼贴、平铺、离身货品或 Look 编号，记为单帧失败。
+
+    官方单帧开场白（No collage, no flat lay…）不计入。
+    """
+    body = _layout_board_body(text)
+    classes: List[str] = []
+    if _LOOK_LABEL_RE.search(body):
+        classes.append("look label")
+    if _positive_board_hit(body):
+        classes.append("collage or flat lay")
+    if _OFF_BODY_RE.search(body):
+        classes.append("off-body catalog")
+    severe = len(classes) >= 2 or "collage or flat lay" in classes
+    return {
+        "active": bool(classes),
+        "severe": severe,
+        "classes": classes,
+        "reason": "; ".join(classes),
+    }
+
+
+def apply_layout_board_penalty_floor(penalties: Dict[str, Any], layout: Dict[str, Any]) -> Dict[str, Any]:
+    """拼贴/平铺/Look 编号还在时，把 generation_content_penalty 抬到高档。"""
+    if not layout.get("active"):
+        return penalties
+    floor = LAYOUT_BOARD_PENALTY_SEVERE if layout.get("severe") else LAYOUT_BOARD_PENALTY_FLOOR
+    note = str(layout.get("reason") or "single-frame layout")
+    key = "generation_content_penalty"
+    try:
+        current = float(penalties.get(key) or 0.0)
+    except (TypeError, ValueError):
+        current = 0.0
+    updated = max(current, floor)
+    penalties[key] = updated
+    item = (penalties.get("items") or {}).get(key)
+    if isinstance(item, dict):
+        item["score"] = updated
+        if current + 1e-9 < floor:
+            reason = (item.get("reason") or "").strip()
+            item["reason"] = (reason + " " if reason else "") + f"[code floor {floor:g}: {note}]"
+            if isinstance(penalties.get("reasons"), dict):
+                penalties["reasons"][key] = item["reason"]
+    items = penalties.get("items") or {}
+    keys = [name for name in items if name in penalties]
+    if keys:
+        penalties["total_penalty"] = round(sum(float(penalties[name]) for name in keys) / len(keys), 4)
+    return penalties
+
+
+def apply_layout_board_quality_caps(metric_results: Dict[str, Any], layout: Dict[str, Any]) -> None:
+    """单帧失败时，生成适配和可见性优先级封顶。"""
+    if not layout.get("active"):
+        return
+    note = str(layout.get("reason") or "single-frame layout")
+    for name in ("generation_readiness", "visibility_priority"):
+        row = metric_results.get(name)
+        if not isinstance(row, dict) or not row.get("applicable"):
+            continue
+        try:
+            score = float(row.get("score_value"))
+        except (TypeError, ValueError):
+            continue
+        if score <= 0.25:
+            continue
+        row["score_value"] = 0.25
+        row["hit"] = 0
+        row["reason"] = (row.get("reason") or "") + f" [stays at 0.25: {note}]"
+
+
 def apply_consistency_penalty_floor(penalties: Dict[str, Any], conflicts: Dict[str, Any]) -> Dict[str, Any]:
     """裁判把冲突打成 0 时，仍把一致性和协调性抬到下限，再重算五项平均。"""
     if not conflicts.get("active"):
@@ -1223,8 +1314,33 @@ def _is_t2i_preamble(line: str) -> bool:
     if stripped == _T2I_MANDATORY_LINE:
         return True
     return any(p.match(stripped) for p in _T2I_MANDATORY_PATTERNS)
+
+
+def _is_single_frame_line(line: str) -> bool:
+    """官方单帧开场白本身不计罚；正文里再写拼贴/平铺/Look 编号才计。"""
+    stripped = (line or "").strip()
+    return stripped.lower().startswith("one photograph of one woman at one moment")
+
+
 _SECTION_HEADER_RE = re.compile(r"^\s*\d+\.\s+The\s+", re.IGNORECASE)
-_LOOK_TITLE_RE = re.compile(r"^Look\s+\d+\s*:", re.IGNORECASE)
+_LOOK_TITLE_RE = re.compile(r"(?i)^look[\s_]+\d+\b")
+_LOOK_LABEL_RE = re.compile(r"(?i)\blook[\s_]+\d+\b")
+_BOARD_LAYOUT_RE = re.compile(
+    r"(?i)\b(?:collage|flat\s*-?\s*lay|flatlay|product\s+shot|lookbook|"
+    r"contact\s+sheet|ghost\s+mannequin|multiple\s+views|separate\s+panels)\b"
+)
+_OFF_BODY_RE = re.compile(
+    r"(?i)(?:"
+    r"if (?:the )?(?:outer|coat|jacket|layer).{0,48}removed"
+    r"|if removed"
+    r"|its own garment"
+    r"|read as its own"
+    r"|completes? the look"
+    r"|finish(?:es)? the look"
+    r")"
+)
+LAYOUT_BOARD_PENALTY_FLOOR = 0.75
+LAYOUT_BOARD_PENALTY_SEVERE = 1.0
 
 
 def strip_eval_boilerplate(text: str, *, preserve_structure: bool = False) -> str:
@@ -1243,7 +1359,7 @@ def strip_eval_boilerplate(text: str, *, preserve_structure: bool = False) -> st
             if kept_lines and kept_lines[-1] != "":
                 kept_lines.append("")
             continue
-        if _is_t2i_preamble(stripped):
+        if _is_t2i_preamble(stripped) or _is_single_frame_line(stripped):
             continue
         if stripped.lower() == "look textual description":
             continue
@@ -1277,8 +1393,8 @@ Judging principles:
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale. An explicit score cap in a metric rule overrides that rubric.
 10. For DesignMerit, score only the identifying idea (module guide). Completeness, precision, and imageability are other modules. Ignore T2I preamble.
-11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard T2I preamble line ("Please generate female models and the matching clothing for them." or Chinese equivalent) is fixed boilerplate—ignore it; never penalize it.
-12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable for T2I**; do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich. Imaging-rich wording does not override a same-element or theme-clash score cap.
+11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard single-frame line and the old T2I preamble are fixed boilerplate—ignore them; never penalize them alone. A Look number, a collage, a flat lay, a product shot, or an off-body catalog clause in the paragraph ("if removed", "its own garment", "complete the look") is not boilerplate: generation_readiness and visibility_priority stay at most 0.25 while it remains.
+12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable as one worn photograph**. Do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich. Imaging-rich wording does not override a same-element, theme-clash, or single-frame score cap. A Look title, collage, flat lay, product shot, second view, or off-body garment keeps generation_readiness at most 0.25.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
 14. Output strict JSON only. Do not output markdown fences or extra commentary.
 
@@ -1417,7 +1533,7 @@ Return format:
         user_prompt = (
             f"Text to evaluate:\n{text_description}\n\n"
             "Judge local penalty items for this fashion description as a generation prompt.\n"
-            "Focus on generation_content_penalty (non-imaging content: model pose/stance, redundant repeated facts, abstract editorial dilution—not the standard T2I preamble line), "
+            "Focus on generation_content_penalty (non-imaging content: model pose/stance, redundant repeated facts, abstract editorial dilution, and any request for a collage, flat lay, product shot, extra view, Look number, or an off-body garment—not the standard single-frame line or the old T2I preamble), "
             "formula_template_penalty (cruise formula, brand-symbol-only, mood/essay dilution of visible design facts—content semantics only, not layout), "
             "trunk-level consistency, styling coordination, and rationality under realistic material and wearing conditions.\n"
             "For formula_template_penalty: score holistically by overall formula severity—formula trunk, brand-symbol-only, mood/essay dilution, interchangeability across looks—not by counting paragraph titles or bullets.\n"
@@ -1433,6 +1549,7 @@ Return format:
             "(e.g., half tailored suit vs half cold-shoulder bishop silk) without one coherent design grammar; also when one coat stacks incompatible collar/military/armor codes without layering rationale.\n"
             "Raise coordination_penalty when leg harnesses conflict with very wide loose trousers without explainable attachment, or waist/hip has multiple belt-harness systems with unclear order; "
             "raise rationality_penalty when harness+trouser construction is physically implausible as ordinary wear.\n"
+            "HARD FLOOR for generation_content_penalty: if the paragraph still contains a Look number or look title, a collage, a flat lay, a product shot, a second view, or an off-body catalog clause (if removed, its own garment, complete the look, finish the look), the score is at least 0.75. Two or more of those, or an explicit collage/flat-lay/product-shot request, means 1.0. The official first line that says no collage and no flat lay is boilerplate and does not raise this penalty. Scores 0, 0.25, and 0.5 are forbidden while those facts remain in the paragraph.\n"
             "Each penalty score must be one of its allowed discrete values (typically 0, 0.25, 0.5, 0.75, 1.0), "
             "where higher means a worse issue, analogous to inverted quality rubric levels.\n"
             "Return JSON only."
@@ -1449,7 +1566,7 @@ Return format:
         return {
             "generation_content_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-                "judge_guidance": "Score by imaging content value. IGNORE standard T2I preamble (Please generate female models and the matching clothing for them. / 请生成女模…)—never raise penalty for it alone. ≥0.5 for: model stance/pose/psychology, repeated facts without new pixels, abstract salon/promenade/identity essay outweighing visible anchors. ≥0.75 if non-imaging layers stack and visible facts are sparse.",
+                "judge_guidance": "按**生图内容价值**分档。**0~0.25**：可见服装事实占主导；允许段末 1 句 palette/mood。**官方单帧开场白**（One photograph of one woman… / No collage, no flat lay）和旧开场白（Please generate female models and the matching clothing for them. / 请生成女模…）**不计罚、不升档**，评测管线通常会预先剥离。**硬下限**：正文仍有 Look 编号或标题、拼贴、平铺、产品图、第二机位，或离身货品句（if removed、its own garment、complete the look、finish the look）时，本惩罚 ≥ 0.75，禁止打 0、0.25、0.5；两类同时在，或明确要求 collage/flat lay/product shot，打 1.0。**≥0.5** 非成像内容占相当比重：(1) 模特姿态/走位/心理（stance should / forward step / poised / 模特应…）；(2) 同一可见事实多处重复无新增像素；(3) 抽象场域/身份/奢华评论明显多于可见锚点。**≥0.75**：上述叠加且可见事实稀疏。",
             },
             "consistency_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -1569,8 +1686,9 @@ Return format:
                     f"\n{module_name} module — T2I content priority (ignore layout):\n"
                     "- High: sentences map to visible pixels (garment form, material, color, trim path, layering, accessory placement).\n"
                     "- generation_readiness stays at most 0.25 while a same-element contradiction or a second theme's garments remain. Specific visible facts do not raise it.\n"
+                    "- generation_readiness and visibility_priority stay at most 0.25 while the paragraph still has a Look number, a collage, a flat lay, a product shot, a second view, or an off-body catalog clause (if removed, its own garment, complete the look). The official single-frame first line does not count.\n"
                     "- Low: model stance/pose, abstract salon/promenade/identity essay dominating over visible facts.\n"
-                    "- IGNORE standard T2I preamble: Please generate female models and the matching clothing for them.\n"
+                    "- IGNORE the official single-frame line and the old T2I preamble: Please generate female models and the matching clothing for them.\n"
                     "- Do NOT penalize numbered sections or bullet lists if content is imaging-rich and semantically ordered.\n"
                 )
             elif module_name == "ConceptBonus":
@@ -2107,8 +2225,11 @@ class DesignTextEvaluator:
 
         quality_penalties = self.judge.judge_quality_penalties(text_for_judge)
         conflicts = detect_consistency_conflicts(raw_text)
+        layout = detect_layout_board(raw_text)
         quality_penalties = apply_consistency_penalty_floor(quality_penalties, conflicts)
+        quality_penalties = apply_layout_board_penalty_floor(quality_penalties, layout)
         apply_conflict_quality_caps(metric_results, conflicts)
+        apply_layout_board_quality_caps(metric_results, layout)
         module_scores = self._aggregate_module_scores(metric_results)
         axis_scores = self._aggregate_axis_scores(metric_results)
         quality_axis_score = axis_scores["quality_score"]["score"]
@@ -2122,6 +2243,8 @@ class DesignTextEvaluator:
         addition_cap = conflict_quality_cap(conflicts)
         if addition_cap is not None:
             quality_cap = min(quality_cap, addition_cap)
+        if layout.get("active"):
+            quality_cap = min(quality_cap, CONFLICT_QUALITY_CAP)
         # penalties 不参与 S_fp / R_content；仅用于 penalty_gate（见 spec score_composition）。
         quality_effective = round(min(quality_weighted, quality_cap), 4)
 

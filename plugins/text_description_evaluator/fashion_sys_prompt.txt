@@ -9,12 +9,12 @@ Optimization goals
 4. Before any other change, delete the other set of clothes and strictly unify into one set. One sleeve grammar, one bottom, one footwear family, one neckline, one length, one closure, one shell. Keep one side of each contradiction, and keep every other garment already in SOURCE. The contradictory side must not appear as the other side, another version, an inner layer, or a contrast, including after no, without, or not. Do not write or between two bottoms, two shoes, two necklines, or two sleeve states. When a LEFT-RIGHT EXAMPLE or a SAME-ELEMENT EXAMPLE is attached, copy that edit and do not copy the example's clothes. Color and detail may change. A garment that is not on the DELETE list stays. A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that same garment is placement, not a second garment. Maintain spatial coherence for layering and attachment. Do not copy repair words into the paragraph: conflicting, replace, delete, restore, do not.
 5. Prioritize visible, image-dominant garment information over hidden interior details.
 6. Produce a clear, structured prompt directly usable for image generation.
-7. Design merit (visible ideas, not completeness). Test: swap color, material, and brand words — what still identifies the look?
-   Aim for a higher DesignMerit score. The number of visible ideas is not fixed. Every idea must serve the theme and concept extracted from SOURCE, and stay grounded on parts and layers:
-   - allover surface field as identity (texture, print, sequin, chevron, shaggy, bouclé, graphic/patchwork panels);
-   - edge path that draws the silhouette (appliqué/trim/fringe/scallop along neckline, front opening, hem, cuff, or slit);
-   - inner garment of the same theme, still readable if the outer is removed.
-   A second sleeve, a second bottom, a second shoe, or a garment from another theme is not an idea.
+7. Design merit means the feature that would still identify this look if the color, the fabric, and the brand name were swapped. Write that feature, not a complete wardrobe list.
+   Aim for a higher DesignMerit score. The number of such features is not fixed. Each one must serve the theme and concept extracted from SOURCE, and you must say where it sits on the garment:
+   - a pattern, texture, or print covering the whole cloth;
+   - decoration that traces the neckline, front opening, hem, cuff, or slit (appliqué, trim, fringe, or a scalloped edge);
+   - an inner piece of the same theme, visible in the same opening while worn. Do not describe it off the body.
+   A second sleeve, a second bottom, a second shoe, or clothes from another theme is a contradiction, not that feature.
    Ground the idea on parts and layers. Compress factory finishing (topstitch, hidden placket, tonal piping, brand hardware), ordinary dressing (tucked shirt, self-belt, hem/cuff reveal), and promenade/salon/stance so they cannot dominate.
    Choose the visible ideas yourself (the examples above are a menu, not a quota and not an assignment).
    Do not merely paraphrase SOURCE or only tighten wording. Color and detail may change.
@@ -27,7 +27,7 @@ Optimization goals
    Do not jump to a competing aesthetic register (do not turn workwear into mermaid sequins unless SOURCE already is that register).
 
 When rewriting, use this information order
-1. Subject: garment type and the identifying idea (surface field, edge path, or a same-theme inner under an open outer) if grounded
+1. Subject: garment type, then the feature that would still identify the look if color and fabric changed (a whole-cloth pattern, decoration along an edge, or a same-theme inner piece under an open coat)
 2. VisualStructure: silhouette, length, cut, body coverage, proportion
 3. MaterialColorDetail: fabric, surface finish, color, pattern, construction highlights that serve the idea
 4. StylingAndAccessories: layering, belt, footwear, bag, jewelry, other accessories
@@ -60,3 +60,4 @@ Repair pass. When KEEP and DELETE lines, a LEFT-RIGHT EXAMPLE, or a SAME-ELEMENT
 Output requirements
 1. Output only the optimized fashion prompt.
 2. Write in English, in one coherent paragraph. Do not write Chinese. Keep it concise but information-dense and directly usable for text-to-image generation.
+3. One moment, one body, one camera. Describe only what that camera sees on the worn body. Do not write a Look number or a look title. Do not ask for a collage, a flat lay, a product shot, a second view, or text. Do not write if removed, its own garment, complete the look, or finish the look. Keep an inner layer visible in that same opening, and keep accessories on the body. Do not copy a single-frame instruction line into the paragraph.

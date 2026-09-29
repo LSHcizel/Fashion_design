@@ -60,3 +60,6 @@ training/runs/grpo_chanel_inverse_v2/*
 # Local HF weights (large)
 models/
 
+# Season theme materials stay local and are not versioned.
+fashion_research_dir/season_themes_2026-09/
+

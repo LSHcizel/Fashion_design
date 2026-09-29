@@ -34,8 +34,8 @@ _DESIGN_MERIT_IDENTIFYING_IDEAS = (
     "panels of the SAME cloth.\n"
     "- Edge path: appliqué, trim, fringe, scallop, or beading that draws ONE silhouette along "
     "the neckline, front opening, hem, cuff, or slit.\n"
-    "- Same-theme inner: the outer is worn open so an inner of the SAME theme still reads "
-    "as its own garment if the outer is removed.\n"
+    "- Same-theme inner: the outer is worn open so an inner of the SAME theme is visible "
+    "in that opening and still identifiable while worn. Do not describe it off the body.\n"
     "Placement on that one garment is not a second idea and not a conflict: a brooch, an off-center bow, "
     "one slit, a wrap, a drape, or an uneven hem.\n"
     "CONFLICT (do not generate these, and do not call them design): "
@@ -569,7 +569,7 @@ class DesignElementsAgent(BaseAgent):
             "1. Identifying Design Ideas | Decorative Edge Path\n"
             "Appliqué, tufted trim, fringe, or beading runs as a continuous path along neckline or collar, front opening, and cuffs, drawing the silhouette. The path is the idea; a single brand button or tonal piping is not.\n\n"
             "1. Identifying Design Ideas | Open Outer, Second Inner Identity\n"
-            "The outer sits worn open over an inner that would still read as its own garment if the outer were removed: a graphic striped piece, printed two-piece, or distinct vest/dress—not a tucked shirt that only exists as jacket filling.\n\n"
+            "The outer sits worn open over an inner that stays visible in that opening and still identifiable while worn: a graphic striped piece, printed two-piece, or distinct vest/dress—not a tucked shirt that only exists as jacket filling, and not a garment shown off the body.\n\n"
             "2. Silhouette & Form | The Architectural Shoulder | 30%\n"
             "The primary visual signifier of \"armoring\" and borrowed masculine power. Exaggerated shoulder pads and sharp sleeve heads create a strong, horizontal line that grounds the look, creating a powerful A-line. This element projects confidence and stability, directly referencing 1930s menswear tailoring. The shoulders are *defined* and structured, not rounded, emphasizing the \"severe\" aesthetic. Heavy-duty internal construction with structured shoulder pads creates this architectural form.\n\n"
             "1. Silhouette & Form | The Columnar Torso\n"
@@ -666,24 +666,29 @@ class LookDescriptionAgent(BaseAgent):
         return ""
 
     @staticmethod
+    def _strip_key_elements_section(look_desc: str) -> str:
+        """丢掉段落之后的 Key elements 清单，最终结果只保留可直接生成的正文。"""
+        parts = re.split(r"(?im)^\s*key\s+elements\s*:\s*$", look_desc or "", maxsplit=1)
+        return parts[0].rstrip()
+
+    @staticmethod
     def _summarize_look_for_diversity(look_desc: str) -> str:
-        text = (look_desc or "").strip()
+        text = LookDescriptionAgent._strip_key_elements_section(look_desc).strip()
         if not text:
             return ""
-        key_match = re.split(r"(?im)^\s*key\s+elements\s*:\s*$", text, maxsplit=1)
-        if len(key_match) > 1:
-            bullets = [
-                ln.strip().lstrip("-*• ").strip()
-                for ln in key_match[1].splitlines()
-                if ln.strip().startswith(("-", "*", "•"))
-            ]
-            if bullets:
-                return "; ".join(bullets[:8])
         lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-        for ln in lines:
-            if ln.lower().startswith("look ") and ":" in ln:
-                return ln
-        compact = re.sub(r"\s+", " ", text)
+        prefixes = {
+            "please generate female models and the matching clothing for them.",
+            "one photograph of one woman at one moment, from one camera. show only what that camera sees on her body. no collage, no flat lay, no product shot, no extra views, no text.",
+        }
+        body_lines = [
+            ln for ln in lines
+            if ln.lower() not in prefixes and not re.match(r"(?i)^look[\s_]*\d+\b", ln)
+        ]
+        paragraph = " ".join(body_lines) if body_lines else " ".join(lines)
+        compact = re.sub(r"\s+", " ", paragraph).strip()
+        if not compact:
+            return ""
         return compact[:240] + ("..." if len(compact) > 240 else "")
 
     def phase_prompt(self, phase):
@@ -714,11 +719,17 @@ class LookDescriptionAgent(BaseAgent):
                 "Precise cut, hem reveal, or a tucked shirt is not grounding of an idea.\n"
                 "3. Use dense, concrete fashion language: garment category, silhouette, color, material/surface cues, layering, and construction that SERVES the identifying idea.\n"
                 "4. Do NOT write brand commentary, chapter narrative, scene metaphors, model stance/walk directions, or salon/promenade/seaworthy essay.\n"
-                "5. Do NOT use numbered sections (The Outerwear / The Foundation / The Details / The Finish). Single paragraph only.\n"
+                "5. Do NOT use numbered sections (The Outerwear / The Foundation / The Details / The Finish). Single paragraph only. "
+                "Do not append a Key elements heading, bullet list, or tag appendix after the paragraph.\n"
                 "6. If material is uncertain, use careful visible-language such as appears or suggests.\n"
                 "7. Theme and chapter context are for selecting the look only—do not copy narrative framing into the output.\n"
                 "8. Factory finishing (topstitch, hidden placket, piping, brand buckle) may appear only as a subordinate clause, never as the look's identity.\n"
-                "9. Ensure the look is reasonable and wearable. Use the exact look number specified in the research topic.\n"
+                "9. Ensure the look is reasonable and wearable.\n"
+                "10. One moment, one body, one camera. Describe only what that camera sees on the worn body.\n"
+                "11. Do not ask for a collage, a flat lay, a product shot, a second view, a back panel, or text in the image.\n"
+                "12. Do not write a Look number or a look title. The paragraph is the description.\n"
+                "13. Do not write that a piece is its own garment if removed, and do not close with "
+                "\"complete the look\" or \"finish the look\". Accessories stay on the body.\n"
                 "Do not copy example garments; copy only how an identifying idea is named and anchored to parts/layers.\n"
             )
         return phase_str
@@ -742,15 +753,12 @@ class LookDescriptionAgent(BaseAgent):
                 "When you have completed generating a look description, submit it using: ```LOOK_DESCRIPTION\ndescription here\n```\n"
                 "The output must follow this structure (generate ONLY ONE look description):\n\n"
                 "Mandatory line (must appear verbatim as the FIRST line inside the LOOK_DESCRIPTION block):\n"
-                "Please generate female models and the matching clothing for them.\n\n"
-                "Look [Number]: [Look Name/Title]\n\n"
-                "[Single paragraph text_description: 800–1500 characters. Open with the identifying idea, then outer-to-inner visual order. "
+                "One photograph of one woman at one moment, from one camera. Show only what that camera sees on her body. No collage, no flat lay, no product shot, no extra views, no text.\n\n"
+                "[Single paragraph text_description: 800–1500 characters. No Look number and no look title. "
+                "Open with the identifying idea, then outer-to-inner visual order of that one worn view. "
                 "No numbered sections, no transitions between sections, no stance or scene commentary. "
-                "Ground the idea on parts/layers (trim along… / worn open over… / allover…).]\n\n"
-                "Key elements:\n"
-                "- [identifying idea in one clause]\n"
-                "- [where it is grounded: part or layer]\n"
-                "- [6–10 further short visible element tags, one per line]\n\n"
+                "Ground the idea on parts/layers (trim along… / worn open over… / allover…). "
+                "Stop after this paragraph. Do not add Key elements or any other section.]\n\n"
                 "You can only use a SINGLE command per inference turn. Do not use more than one command per inference.\n"
                 "When performing a command, make sure to include the three ticks (```) at the top and bottom ```COMMAND\ntext\n``` "
                 "where COMMAND is the specific command you want to run (e.g. LOOK_DESCRIPTION, DIALOGUE).\n\n"
@@ -765,22 +773,13 @@ class LookDescriptionAgent(BaseAgent):
             "Example command for look description (format and identifying-idea pattern only; "
             "do NOT copy these garments—invent a different idea from the candidate elements):\n"
             "```LOOK_DESCRIPTION\n"
-            "Please generate female models and the matching clothing for them.\n\n"
-            "Look 01: Open Chevron Coat over Graphic Inner\n\n"
+            "One photograph of one woman at one moment, from one camera. Show only what that camera sees on her body. No collage, no flat lay, no product shot, no extra views, no text.\n\n"
             "A long open-front coat whose identity is an allover tactile field of repeated horizontal chevron-like waves "
             "in golden beige, cream, and dark flecks, hanging shaggy from shoulder to below the hip. "
             "Dense red-and-dark trim outlines the wide turned collar, front opening, and cuffs, drawing the coat silhouette "
             "as a continuous edge path. The coat is worn open over a close black tailored layer with broad lapel-like panels "
-            "falling into a deep V, exposing an asymmetric striped inner in red, white, black, green, and orange that would "
-            "still read as its own graphic garment if the coat were removed. Large dark-and-red drop earrings finish the look.\n\n"
-            "Key elements:\n"
-            "- allover chevron-wave shaggy coat surface\n"
-            "- trim path along collar, front opening, and cuffs\n"
-            "- open-front coat worn open over graphic striped inner\n"
-            "- wide turned collar\n"
-            "- deep V black inner layer\n"
-            "- red white black green orange stripes\n"
-            "- dark-and-red drop earrings\n"
+            "falling into a deep V, and an asymmetric striped inner in red, white, black, green, and orange shows at that opening. "
+            "Dark red drop earrings sit at the ears.\n"
             "```\n"
         )
 

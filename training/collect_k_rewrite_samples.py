@@ -26,9 +26,16 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
     load_default_evaluator,
 )
 from training.record_builder import rewrite_error_of
-from training.build_grpo_source_corpus import DEFAULT_OUT as DEFAULT_CORPUS
 from training.jsonl_logger import TrainingRunLogger
 from training.record_builder import sha256_text
+
+# Unified K-sample set: inverse descriptions and generated looks share one role.
+DEFAULT_CORPUS = (
+    REPO
+    / "fashion_research_dir"
+    / "k_rewrite_instructions_2026-09-29"
+    / "source_corpus.jsonl"
+)
 
 SCRIPT_MARKER = "collect_k_rewrite_samples.py"
 COMPLETED_NAME = "completed_groups.txt"
@@ -348,7 +355,12 @@ def main() -> None:
     p.add_argument("--run-id", type=str, default="grpo_chanel_inverse_v1")
     p.add_argument("--k", type=int, default=None)
     p.add_argument("--limit", type=int, default=0, help="0 = all sources")
-    p.add_argument("--roles", type=str, default="positive,negative")
+    p.add_argument(
+        "--roles",
+        type=str,
+        default="",
+        help="Comma-separated roles to keep. Empty keeps every row.",
+    )
     p.add_argument("--start", type=int, default=0)
     p.add_argument(
         "--no-inject-original-negatives",
@@ -372,7 +384,7 @@ def main() -> None:
     )
     args = p.parse_args()
     inject_neg = not args.no_inject_original_negatives
-    roles = [x.strip() for x in args.roles.split(",") if x.strip()]
+    roles = [x.strip() for x in args.roles.split(",") if x.strip()] or None
     corpus = _load_corpus(args.corpus, roles=roles, limit=0)
     corpus = corpus[args.start :]
     if args.limit > 0:

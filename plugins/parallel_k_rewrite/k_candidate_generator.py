@@ -62,19 +62,22 @@ REWRITE_ELEMENT_RECONSTRUCTION = (
 )
 
 REWRITE_DESIGN_MERIT = (
-    "DESIGN MERIT GOAL: Optimize for a higher DesignMerit score (visible ideas, not completeness). "
-    "The number of visible ideas is not fixed: use as many as this look needs, including more than one. "
-    "Every idea must serve the theme and concept already extracted from SOURCE, and stay grounded "
-    "on parts and layers. "
-    "Examples of idea kinds (a menu, not an assignment and not a quota): allover surface field; "
-    "trim/appliqué path along neckline, front, hem, or cuff; open outer over a same-theme inner "
-    "that would still read alone. "
-    "A second sleeve, a second bottom, a second shoe, or a garment from another theme is not an idea. "
+    "DESIGN MERIT GOAL: Optimize for a higher DesignMerit score. "
+    "Write the feature that would still identify this look if the color, the fabric, and the brand "
+    "name were swapped. Do not spend the paragraph on a complete wardrobe list. "
+    "The number of such features is not fixed: use as many as this look needs, including more than one. "
+    "Every feature must serve the theme and concept already extracted from SOURCE, and you must say "
+    "where it sits on the garment. "
+    "Examples (a menu, not an assignment and not a quota): a pattern, texture, or print covering the "
+    "whole cloth; decoration that traces the neckline, front, hem, or cuff; an open outer over a "
+    "same-theme inner piece visible in that opening while worn. "
+    "A second sleeve, a second bottom, a second shoe, or clothes from another theme is a contradiction, "
+    "not that feature. "
     "Do not merely paraphrase SOURCE, retighten wording, or only change pose/background. "
-    "If SOURCE already has ideas, you may strengthen, relocate, or rescale them, and you may "
+    "If SOURCE already has such a feature, you may strengthen, relocate, or rescale it, and you may "
     "change color and detail, so the generated image can diverge from a clone of SOURCE's "
     "current SKU. A garment that is not on the DELETE list stays. "
-    "If SOURCE is only formulaic wardrobe grammar, create visible ideas inside that theme. "
+    "If SOURCE is only formulaic wardrobe grammar, create that kind of feature inside that theme. "
     "Do not treat factory finishing (topstitching, hidden placket), ordinary dressing "
     "(tucked shirt), brand hardware as identity, or theme dualities as the identity. "
     "Compress promenade/salon/stance commentary. "
@@ -472,6 +475,15 @@ REWRITE_BRAND_LOGO_LOCK = (
     "If SOURCE has no logo/monogram, do not invent another house's logo."
 )
 
+REWRITE_SINGLE_FRAME = (
+    "SINGLE FRAME (hard): The paragraph is one moment, one body, one camera, and only what that "
+    "camera sees on the worn clothes. No collage, no flat lay, no product shot, no second view, "
+    "no back panel, and no text in the image. Do not write a Look number or a look title. "
+    "Do not write if removed, its own garment, complete the look, or finish the look. "
+    "An inner layer stays visible in the opening of this same view. Accessories stay on the body. "
+    "Do not copy the single-frame instruction line into the paragraph."
+)
+
 REWRITE_CONSISTENCY_REPAIR = (
     "STRICT UNIFICATION. Delete the other set of clothes and strictly unify into one set: "
     "one sleeve grammar, one bottom, one footwear family, one neckline, one length, one closure, one shell. "
@@ -533,6 +545,7 @@ def build_rewrite_user_prompt(
         "RULES FOR THE TEXT ABOVE:\n"
         "Their count is not fixed. Each idea must serve the theme and concept extracted from SOURCE.\n\n"
         f"{REWRITE_CONSISTENCY_REPAIR}\n\n"
+        f"{REWRITE_SINGLE_FRAME}\n\n"
         f"{REWRITE_SHARED_STRATEGY}\n"
         f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
         f"{REWRITE_WHOLE_LOOK_SCOPE}\n"
@@ -549,6 +562,8 @@ def build_rewrite_user_prompt(
         "6. If a repair brief is present, resolve every listed consistency problem and lower every listed penalty.\n"
         "7. Omit the contradictory side. Keep every other garment already in SOURCE. "
         "Omitting the other set is required.\n"
+        "8. One moment, one body, one camera. No Look number, no collage, no flat lay, "
+        "no product shot, and no off-body catalog sentence.\n"
     )
     return user
 

@@ -21,6 +21,7 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
     default_hf_local_grpo_model,
     default_hf_local_grpo_ref_model,
 )
+from training.step_metrics import WindowMeanMetrics
 
 from .data import completion_token_start, load_phase_b_rows, messages_from_phase_b_row, render_chat_text
 from .model_load import (
@@ -33,6 +34,7 @@ from .model_load import (
     same_model_path,
     should_use_lora,
 )
+from .metrics_callback import JsonlMetricsCallback
 from .modeling import grpo_loss, sequence_completion_log_probs
 from .trainer_compat import (
     merge_signature_columns,
@@ -133,6 +135,7 @@ class GRPOTrainer(Trainer):
         self.beta_kl = beta_kl
         self.kl_squared = kl_squared
         self.share_ref_via_disable_adapter = share_ref_via_disable_adapter
+        self._step_metrics = WindowMeanMetrics()
 
     def _set_signature_columns_if_needed(self):  # type: ignore[override]
         parent = getattr(super(), "_set_signature_columns_if_needed", None)
@@ -182,9 +185,21 @@ class GRPOTrainer(Trainer):
             beta_kl=self.beta_kl,
             kl_squared=self.kl_squared,
         )
+        self._step_metrics.add(
+            policy_term=float(pol.detach()),
+            kl_term=float(kl.detach()),
+            grpo_loss=float(loss.detach()),
+            mean_advantage=float(adv.detach().mean()),
+        )
         if return_outputs:
             return loss, {"policy_term": pol.detach(), "kl_term": kl.detach()}
         return loss
+
+    def log(self, logs, *args, **kwargs):  # type: ignore[override]
+        extra = self._step_metrics.flush()
+        if extra and isinstance(logs, dict):
+            logs.update(extra)
+        return super().log(logs, *args, **kwargs)
 
 
 def main() -> None:
@@ -317,6 +332,13 @@ def main() -> None:
         args=ta,
         train_dataset=ds,
         data_collator=collator,
+        callbacks=[
+            JsonlMetricsCallback(
+                args.out / "metrics.jsonl",
+                stage="grpo",
+                summary_keys=("loss", "grpo_loss", "policy_term", "kl_term", "mean_advantage"),
+            )
+        ],
         **trainer_processing_kwargs(tokenizer, trainer_cls=GRPOTrainer),
     )
     trainer.train()

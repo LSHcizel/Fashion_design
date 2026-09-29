@@ -17,6 +17,7 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
     default_odin_rm_model,
     grpo_odin_rm_config,
 )
+from training.step_metrics import append_metrics, progress_summary
 
 from .data import messages_from_record
 from .modeling import DualHeadRewardModel, odin_rm_loss
@@ -236,6 +237,7 @@ def train_heads_cached(
     lambda_orth: float,
     log_every: int,
     seed: int,
+    metrics_path: Optional[Path] = None,
 ) -> List[Dict[str, Any]]:
     rng = random.Random(seed)
     opt = torch.optim.AdamW(
@@ -279,6 +281,17 @@ def train_heads_cached(
                 )
                 row = {"step": step, "train": stats, "holdout": hold}
                 history.append(row)
+                if metrics_path is not None:
+                    append_metrics(
+                        metrics_path,
+                        {
+                            "stage": "rm",
+                            "event": "step",
+                            "global_step": step,
+                            **{f"train_{k}": v for k, v in stats.items()},
+                            **{f"holdout_{k}": v for k, v in hold.items()},
+                        },
+                    )
                 logger.info("step %s train=%s holdout=%s", step, stats, hold)
                 rm.head_q.train()
                 rm.head_l.train()
@@ -367,11 +380,13 @@ def main() -> None:
         max_length=args.max_length, device=device,
         system_prompt=args.system_prompt, encode_batch=args.encode_batch,
     )
+    metrics_jsonl = args.out / "metrics.jsonl"
     history = train_heads_cached(
         rm, cache, train_pairs, hold_pairs,
         device=device, epochs=args.epochs, batch=args.batch, lr=args.lr,
         lambda_corr=args.lambda_corr, lambda_orth=args.lambda_orth,
         log_every=args.log_every, seed=args.seed,
+        metrics_path=metrics_jsonl,
     )
     save_rm(
         rm, args.out,
@@ -387,16 +402,37 @@ def main() -> None:
             "history": history[-20:],
         },
     )
-    metrics_path = args.out / "train_metrics.json"
     hold_final = eval_pairs_cached(
         rm, cache, hold_pairs or train_pairs[: min(64, len(train_pairs))],
         device=device, lambda_corr=args.lambda_corr, lambda_orth=args.lambda_orth,
         batch=args.batch,
     )
-    metrics_path.write_text(
+    (args.out / "train_metrics.json").write_text(
         json.dumps({"holdout_or_train_probe": hold_final, "history": history}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    if len(history) >= 1:
+        first_train = history[0].get("train") or {}
+        last_train = history[-1].get("train") or {}
+        first_hold = history[0].get("holdout") or {}
+        last_hold = history[-1].get("holdout") or {}
+        summary = progress_summary(
+            stage="rm",
+            global_step=int(history[-1].get("step") or 0),
+            first={**{f"train_{k}": v for k, v in first_train.items()}, **{f"holdout_{k}": v for k, v in first_hold.items()}},
+            last={**{f"train_{k}": v for k, v in last_train.items()}, **{f"holdout_{k}": v for k, v in last_hold.items()}},
+            keys=(
+                "train_loss",
+                "train_L_rank",
+                "train_acc_sum",
+                "train_acc_q",
+                "holdout_loss",
+                "holdout_L_rank",
+                "holdout_acc_sum",
+                "holdout_acc_q",
+            ),
+        )
+        append_metrics(metrics_jsonl, summary)
     logger.info("saved %s  holdout=%s", args.out, hold_final)
 
 

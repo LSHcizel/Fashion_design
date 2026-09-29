@@ -1,0 +1,9 @@
+{"source": "06_asymmetry.txt", "error": "IncompleteRead(683086 bytes read, 838821 more expected)"}
+{"source": "10_style_clash.txt", "error": "IncompleteRead(1914316 bytes read, 93063 more expected)"}
+{"source": "17_same_element_contradiction.txt", "error": "IncompleteRead(458806 bytes read, 1257177 more expected)"}
+{"source": "18_same_element_contradiction.txt", "error": "IncompleteRead(174960 bytes read, 1640759 more expected)"}
+{"source": "20_same_element_contradiction.txt", "error": "Images API 服务端拒绝 (https://api.ohmygpt.com/v1/images/generations):\nHTTP 400 (url): {\"error\":{\"message\":\"Your request was rejected by the safety system. If you believe this is an error, contact us at Azure support ticket and include the request ID 15471aad-76ad-4281-b5e9-b19982fd217d. safety_violations=[sexual].\",\"type\":\"image_generation_user_error\",\"param\":null,\"code\":\"moderation_blocked\",\"moderation_details\":{\"moderation_stage\":\"output\",\"categories\":[\"sexual\"]}}}"}
+{"source": "10_style_clash.txt", "error": "IncompleteRead(355184 bytes read, 1717203 more expected)"}
+{"source": "17_same_element_contradiction.txt", "error": "IncompleteRead(1430916 bytes read, 492735 more expected)"}
+{"source": "18_same_element_contradiction.txt", "error": "IncompleteRead(1644400 bytes read, 21439 more expected)"}
+{"source": "17_same_element_contradiction.txt", "error": "Images API 服务端拒绝 (https://api.ohmygpt.com/v1/images/generations):\nHTTP 400 (url): {\"error\":{\"message\":\"Your request was rejected by the safety system. If you believe this is an error, contact us at Azure support ticket and include the request ID 3fabbaf4-3181-4719-9e9f-4f9ac037b027. safety_violations=[sexual].\",\"type\":\"image_generation_user_error\",\"param\":null,\"code\":\"moderation_blocked\",\"moderation_details\":{\"moderation_stage\":\"output\",\"categories\":[\"sexual\"]}}}"}

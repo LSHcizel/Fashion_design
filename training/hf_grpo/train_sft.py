@@ -30,6 +30,7 @@ from .model_load import (
     apply_lora,
     should_use_lora,
 )
+from .metrics_callback import JsonlMetricsCallback
 from .trainer_compat import trainer_processing_kwargs
 
 logger = logging.getLogger(__name__)
@@ -142,32 +143,35 @@ class TrainLossPlateauEarlyStopping(TrainerCallback):
             d = self.ema_decay
             self._ema = d * self._ema + (1.0 - d) * loss
         ema = self._ema
-        if state.global_step < self.min_global_steps:
-            return control
-        if self._best is None:
-            self._best = ema
-            self._strikes = 0
-            return control
-        thr = max(
-            self.min_abs_delta,
-            self.min_rel_delta * max(abs(self._best), 1e-8),
-        )
-        if (self._best - ema) > thr:
-            self._best = ema
-            self._strikes = 0
-        else:
-            self._strikes += 1
-            if self._strikes >= self.patience:
-                logger.info(
-                    "SFT 早停（训练 loss 平台）：best_ema=%.6f 当前 ema=%.6f，连续 %d 次 log 未优于 max(%g, %.2f%%×best)。"
-                    " 建议在核实 checkpoint 后进入 GRPO。",
-                    self._best,
-                    ema,
-                    self.patience,
+        if state.global_step >= self.min_global_steps:
+            if self._best is None:
+                self._best = ema
+                self._strikes = 0
+            else:
+                thr = max(
                     self.min_abs_delta,
-                    100.0 * self.min_rel_delta,
+                    self.min_rel_delta * max(abs(self._best), 1e-8),
                 )
-                control.should_training_stop = True
+                if (self._best - ema) > thr:
+                    self._best = ema
+                    self._strikes = 0
+                else:
+                    self._strikes += 1
+                    if self._strikes >= self.patience:
+                        logger.info(
+                            "SFT 早停（训练 loss 平台）：best_ema=%.6f 当前 ema=%.6f，连续 %d 次 log 未优于 max(%g, %.2f%%×best)。"
+                            " 建议在核实 checkpoint 后进入 GRPO。",
+                            self._best,
+                            ema,
+                            self.patience,
+                            self.min_abs_delta,
+                            100.0 * self.min_rel_delta,
+                        )
+                        control.should_training_stop = True
+        logs["loss_ema"] = ema
+        if self._best is not None:
+            logs["loss_best_ema"] = self._best
+        logs["early_stop_strikes"] = self._strikes
         return control
 
 
@@ -304,6 +308,13 @@ def main() -> None:
                 ema_decay=args.early_stop_ema_decay,
             )
         )
+    callbacks.append(
+        JsonlMetricsCallback(
+            args.out / "metrics.jsonl",
+            stage="sft",
+            summary_keys=("loss", "loss_ema"),
+        )
+    )
 
     trainer = Trainer(
         model=model,

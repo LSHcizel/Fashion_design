@@ -1086,16 +1086,14 @@ class FashionWorkflow:
                     print("Look Stylist (Regeneration): ", resp, "\n~~~~~~~~~~~")
                 
                 if "```LOOK_DESCRIPTION" in resp:
-                    look_desc = extract_prompt(resp, "LOOK_DESCRIPTION")
+                    look_desc = LookDescriptionAgent._strip_key_elements_section(
+                        extract_prompt(resp, "LOOK_DESCRIPTION")
+                    )
                     self.look_stylist.look_descriptions.append(look_desc)
                     
                     # 保存重新生成的look
                     if chapter_dir:
-                        required_line = "Please generate female models and the matching clothing for them."
-                        look_desc_to_save = look_desc
-                        head_lines = [ln.strip() for ln in (look_desc_to_save or "").splitlines()[:3]]
-                        if not head_lines or required_line not in head_lines:
-                            look_desc_to_save = required_line + "\n\n" + (look_desc_to_save.lstrip("\n") if look_desc_to_save else "")
+                        look_desc_to_save = self._ensure_look_file_prefix(look_desc)
                         
                         save_path = os.path.join(chapter_dir, f"look_{look_number:02d}.txt")
                         with open(save_path, "w", encoding="utf-8") as f:
@@ -1438,15 +1436,35 @@ class FashionWorkflow:
     # 文本评估（双门限；失败时可选 K 路改写）
     # ------------------------------------------------------------------ #
 
-    _LOOK_PROMPT_PREFIX = "Please generate female models and the matching clothing for them."
+    _LOOK_PROMPT_PREFIX = (
+        "One photograph of one woman at one moment, from one camera. "
+        "Show only what that camera sees on her body. "
+        "No collage, no flat lay, no product shot, no extra views, no text."
+    )
+    _OLD_LOOK_PROMPT_PREFIX = "Please generate female models and the matching clothing for them."
 
     @staticmethod
     def _ensure_look_file_prefix(text: str) -> str:
-        body = text or ""
-        head_lines = [ln.strip() for ln in body.splitlines()[:3]]
-        if FashionWorkflow._LOOK_PROMPT_PREFIX in head_lines:
-            return body
-        return FashionWorkflow._LOOK_PROMPT_PREFIX + "\n\n" + body.lstrip("\n")
+        body = LookDescriptionAgent._strip_key_elements_section(text or "")
+        kept: list[str] = []
+        for line in body.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                if kept and kept[-1] != "":
+                    kept.append("")
+                continue
+            if stripped in (
+                FashionWorkflow._LOOK_PROMPT_PREFIX,
+                FashionWorkflow._OLD_LOOK_PROMPT_PREFIX,
+            ):
+                continue
+            if re.match(r"(?i)^look[\s_]*\d+\b", stripped):
+                continue
+            stripped = re.sub(r"(?i)\blook[\s_]*\d+\b\s*:?\s*", "", stripped).strip()
+            if stripped:
+                kept.append(stripped)
+        prose = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+        return FashionWorkflow._LOOK_PROMPT_PREFIX + "\n\n" + prose
 
     def _active_penalties_from_eval(self, eval_result: dict) -> list:
         penalty_items = (
@@ -1601,7 +1619,7 @@ class FashionWorkflow:
             src.write_text(file_text, encoding="utf-8")
         descs = getattr(self.look_stylist, "look_descriptions", None)
         if isinstance(descs, list) and descs:
-            descs[-1] = new_text
+            descs[-1] = LookDescriptionAgent._strip_key_elements_section(new_text)
 
         self._fill_result_from_eval(result, ev)
         result["best_text"] = file_text
@@ -1780,16 +1798,14 @@ class FashionWorkflow:
                     print("Look Stylist: ", resp, "\n~~~~~~~~~~~")
 
                 if "```LOOK_DESCRIPTION" in resp:
-                    look_desc = extract_prompt(resp, "LOOK_DESCRIPTION")
+                    look_desc = LookDescriptionAgent._strip_key_elements_section(
+                        extract_prompt(resp, "LOOK_DESCRIPTION")
+                    )
                     look_descriptions.append(look_desc)
                     self.look_stylist.look_descriptions.append(look_desc)
                     
                     # 与写入 look_XX.txt 的文本一致（含首行补全），供评估/优化与 looks_original 对齐
-                    required_line = "Please generate female models and the matching clothing for them."
-                    look_desc_to_save = look_desc
-                    head_lines = [ln.strip() for ln in (look_desc_to_save or "").splitlines()[:3]]
-                    if not head_lines or required_line not in head_lines:
-                        look_desc_to_save = required_line + "\n\n" + (look_desc_to_save.lstrip("\n") if look_desc_to_save else "")
+                    look_desc_to_save = self._ensure_look_file_prefix(look_desc)
                     save_path = None
                     if group_dir:
                         save_path = os.path.join(group_dir, f"look_{look_idx + 1:02d}.txt")
@@ -1896,17 +1912,15 @@ class FashionWorkflow:
                     print("Look Stylist: ", resp, "\n~~~~~~~~~~~")
 
                 if "```LOOK_DESCRIPTION" in resp:
-                    look_desc = extract_prompt(resp, "LOOK_DESCRIPTION")
+                    look_desc = LookDescriptionAgent._strip_key_elements_section(
+                        extract_prompt(resp, "LOOK_DESCRIPTION")
+                    )
                     look_descriptions.append(look_desc)
                     self.look_stylist.look_descriptions.append(look_desc)
                     
                     # 保存结果到文件
                     if self.workflow_dir:
-                        required_line = "Please generate female models and the matching clothing for them."
-                        look_desc_to_save = look_desc
-                        head_lines = [ln.strip() for ln in (look_desc_to_save or "").splitlines()[:3]]
-                        if not head_lines or required_line not in head_lines:
-                            look_desc_to_save = required_line + "\n\n" + (look_desc_to_save.lstrip("\n") if look_desc_to_save else "")
+                        look_desc_to_save = self._ensure_look_file_prefix(look_desc)
                         save_path = os.path.join(self.workflow_dir, f"look_{look_idx + 1:02d}.txt")
                         os.makedirs(os.path.dirname(save_path), exist_ok=True)
                         with open(save_path, "w", encoding="utf-8") as f:
