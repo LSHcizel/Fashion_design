@@ -2085,6 +2085,13 @@ def parse_yaml(yaml_file_loc):
     parser.evaluator_rewrite_on_gate_fail = bool(ev.get("rewrite-on-gate-fail", True))
 
     grpo_ev = (config_data.get("grpo") or {}).get("design-text-evaluator") or {}
+    # use-local 为 true 时，text-evaluator 里留空的地址/模型必须保持为空，
+    # 否则会继承根级 ohmygpt 和 gpt-5.4-mini，被当成显式远程评判。
+    use_local_judge = ev.get("use-local")
+    if use_local_judge is None:
+        use_local_judge = bool((config_data.get("local-llm") or {}).get("use-for-text-evaluator", False))
+    else:
+        use_local_judge = bool(use_local_judge)
 
     def _gv(key: str):
         v = grpo_ev.get(key)
@@ -2092,16 +2099,17 @@ def parse_yaml(yaml_file_loc):
             return v.strip()
         return None
 
-    if not parser.evaluator_api_key:
-        parser.evaluator_api_key = _gv("api-key")
-    if not parser.evaluator_api_base:
-        parser.evaluator_api_base = _gv("api-base")
-    if not parser.evaluator_api_base:
-        rb = config_data.get("api-base")
-        if isinstance(rb, str) and rb.strip():
-            parser.evaluator_api_base = rb.strip()
-    if not parser.evaluator_model:
-        parser.evaluator_model = _gv("model")
+    if not use_local_judge:
+        if not parser.evaluator_api_key:
+            parser.evaluator_api_key = _gv("api-key")
+        if not parser.evaluator_api_base:
+            parser.evaluator_api_base = _gv("api-base")
+        if not parser.evaluator_api_base:
+            rb = config_data.get("api-base")
+            if isinstance(rb, str) and rb.strip():
+                parser.evaluator_api_base = rb.strip()
+        if not parser.evaluator_model:
+            parser.evaluator_model = _gv("model")
 
     return parser
 
