@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Union
+from collections import defaultdict
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 JsonPath = Union[str, Path]
 
@@ -126,6 +127,82 @@ def completion_token_start(
                 break
             plen = i + 1
     return max(plen, 1)
+
+
+def group_reward_std(members: List[Dict[str, Any]]) -> Optional[float]:
+    """组内奖励标准差。优先用导出时写下的 ``std_r_for_advantage``。"""
+    if not members:
+        return None
+    stats = members[0].get("group_stats") or {}
+    raw = stats.get("std_r_for_advantage")
+    if raw is not None:
+        return float(raw)
+    vals: List[float] = []
+    for row in members:
+        if row.get("R_content") is not None:
+            vals.append(float(row["R_content"]))
+        elif row.get("r_after_rank") is not None:
+            vals.append(float(row["r_after_rank"]))
+    if len(vals) < 2:
+        return None
+    mu = sum(vals) / len(vals)
+    var = sum((v - mu) ** 2 for v in vals) / len(vals)
+    return var ** 0.5
+
+
+def advantage_span(members: List[Dict[str, Any]]) -> float:
+    advs = [float(row["advantage"]) for row in members if row.get("advantage") is not None]
+    if len(advs) < 2:
+        return 0.0
+    return max(advs) - min(advs)
+
+
+def select_grpo_rows(
+    rows: List[Dict[str, Any]],
+    *,
+    min_reward_std: float = 0.05,
+) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
+    """
+    丢掉组内奖励几乎一样的组。
+
+    这种组标准化后优势会被放大成 ±1，梯度方向是噪声。
+    ``min_reward_std`` 作用在 ``R_content``（或导出时的奖励标准差）上，不是标准化后的优势。
+    """
+    buckets: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    order: List[str] = []
+    for i, row in enumerate(rows):
+        gid = str(row.get("group_id") or f"row-{i}")
+        if gid not in buckets:
+            order.append(gid)
+        buckets[gid].append(row)
+
+    kept: List[Dict[str, Any]] = []
+    dropped_small = 0
+    dropped_flat_adv = 0
+    dropped_short = 0
+    for gid in order:
+        members = buckets[gid]
+        if len(members) < 2:
+            dropped_short += 1
+            continue
+        std = group_reward_std(members)
+        if std is not None and std < float(min_reward_std):
+            dropped_small += 1
+            continue
+        if advantage_span(members) < 1e-6:
+            dropped_flat_adv += 1
+            continue
+        kept.extend(members)
+    summary = {
+        "groups_in": len(order),
+        "groups_kept": len(order) - dropped_small - dropped_flat_adv - dropped_short,
+        "groups_dropped_small_gap": dropped_small,
+        "groups_dropped_flat_advantage": dropped_flat_adv,
+        "groups_dropped_too_small": dropped_short,
+        "rows_in": len(rows),
+        "rows_kept": len(kept),
+    }
+    return kept, summary
 
 
 def build_prompt_only_messages(messages: List[Dict[str, str]]) -> List[Dict[str, str]]:

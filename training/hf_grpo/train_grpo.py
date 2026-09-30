@@ -1,19 +1,25 @@
-"""阶段 B：``phase_b_grpo.jsonl`` + 预计算 advantage → 组相对策略梯度 + KL(π||π_ref)。"""
+"""阶段 B：``phase_b_grpo.jsonl`` + 预计算 advantage → 组相对策略梯度 + KL(π||π_ref)。
+
+一次优化步只包含同一条原文的 K 个候选。策略项用 completion 的对数概率之和
+（再按组内 token 总数平均），不再让长句先除以自己的长度。
+"""
 
 from __future__ import annotations
 
 import argparse
 import logging
+import random
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset, Sampler
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     Trainer,
+    TrainerCallback,
     TrainingArguments,
 )
 
@@ -23,7 +29,13 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
 )
 from training.step_metrics import WindowMeanMetrics
 
-from .data import completion_token_start, load_phase_b_rows, messages_from_phase_b_row, render_chat_text
+from .data import (
+    completion_token_start,
+    load_phase_b_rows,
+    messages_from_phase_b_row,
+    render_chat_text,
+    select_grpo_rows,
+)
 from .model_load import (
     DEFAULT_LORA_ALPHA,
     DEFAULT_LORA_R,
@@ -35,7 +47,7 @@ from .model_load import (
     should_use_lora,
 )
 from .metrics_callback import JsonlMetricsCallback
-from .modeling import grpo_loss, sequence_completion_log_probs
+from .modeling import completion_token_counts, grpo_loss, sequence_completion_logprob_parts
 from .trainer_compat import (
     merge_signature_columns,
     trainer_processing_kwargs,
@@ -54,6 +66,7 @@ class PhaseBGRPODataset(Dataset):
         system_prompt: str = "",
     ) -> None:
         self.items: List[Dict[str, Any]] = []
+        self.group_ids: List[str] = []
         self.tokenizer = tokenizer
         self.max_length = max_length
         for row in rows:
@@ -79,6 +92,7 @@ class PhaseBGRPODataset(Dataset):
                     "advantage": float(adv),
                 }
             )
+            self.group_ids.append(str(row.get("group_id") or f"row-{len(self.group_ids)}"))
 
     def __len__(self) -> int:
         return len(self.items)
@@ -111,6 +125,46 @@ def _pad_grpo_batch(
     }
 
 
+class GroupBatchSampler(Sampler[List[int]]):
+    """每个 batch 是同一 ``group_id`` 的全部候选，组与组之间打乱。"""
+
+    def __init__(self, group_ids: List[str], seed: int = 0) -> None:
+        buckets: Dict[str, List[int]] = {}
+        order: List[str] = []
+        for i, gid in enumerate(group_ids):
+            if gid not in buckets:
+                order.append(gid)
+                buckets[gid] = []
+            buckets[gid].append(i)
+        self._order = order
+        self._buckets = buckets
+        self.seed = int(seed)
+        self.epoch = 0
+
+    def set_epoch(self, epoch: int) -> None:
+        self.epoch = int(epoch)
+
+    def __iter__(self) -> Iterator[List[int]]:
+        rng = random.Random(self.seed + self.epoch)
+        keys = list(self._order)
+        rng.shuffle(keys)
+        for key in keys:
+            yield list(self._buckets[key])
+
+    def __len__(self) -> int:
+        return len(self._order)
+
+
+class _GroupEpochCallback(TrainerCallback):
+    def __init__(self, sampler: GroupBatchSampler) -> None:
+        self.sampler = sampler
+
+    def on_epoch_begin(self, args, state, control, **kwargs):  # type: ignore[no-untyped-def]
+        epoch = int(state.epoch or 0)
+        self.sampler.set_epoch(epoch)
+        return control
+
+
 class GRPOCollator:
     def __init__(self, pad_token_id: int) -> None:
         self.pad_token_id = pad_token_id
@@ -126,6 +180,7 @@ class GRPOTrainer(Trainer):
         beta_kl: float = 0.04,
         kl_squared: bool = True,
         share_ref_via_disable_adapter: bool = False,
+        group_batch_sampler: Optional[GroupBatchSampler] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -135,6 +190,7 @@ class GRPOTrainer(Trainer):
         self.beta_kl = beta_kl
         self.kl_squared = kl_squared
         self.share_ref_via_disable_adapter = share_ref_via_disable_adapter
+        self.group_batch_sampler = group_batch_sampler
         self._step_metrics = WindowMeanMetrics()
 
     def _set_signature_columns_if_needed(self):  # type: ignore[override]
@@ -145,18 +201,29 @@ class GRPOTrainer(Trainer):
             getattr(self, "_signature_columns", None)
         )
 
-    def compute_loss(
+    def get_train_dataloader(self) -> DataLoader:
+        if self.group_batch_sampler is None:
+            return super().get_train_dataloader()
+        dataset = self.train_dataset
+        if dataset is None:
+            raise ValueError("Trainer: training requires a train_dataset.")
+        loader = DataLoader(
+            dataset,
+            batch_sampler=self.group_batch_sampler,
+            collate_fn=self.data_collator,
+            num_workers=0,
+            pin_memory=bool(getattr(self.args, "dataloader_pin_memory", True)),
+        )
+        return self.accelerator.prepare(loader)
+
+    def _pair_logprobs(
         self,
         model: nn.Module,
         inputs: Dict[str, torch.Tensor],
-        return_outputs: bool = False,
-        **_: Any,
-    ):
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         input_ids = inputs["input_ids"]
         attn = inputs["attention_mask"]
         comp_start = inputs["completion_start"]
-        adv = inputs["advantage"].to(model.device)
-
         out = model(input_ids=input_ids, attention_mask=attn)
         logits = out.logits
         if self.share_ref_via_disable_adapter:
@@ -174,16 +241,67 @@ class GRPOTrainer(Trainer):
                     attention_mask=attn.to(ref_dev),
                 )
                 ref_logits = ref_out.logits.to(device=logits.device, dtype=logits.dtype)
+        sum_p, _count_p, mean_p = sequence_completion_logprob_parts(
+            logits, input_ids, comp_start, attn
+        )
+        _sum_r, _count_r, mean_r = sequence_completion_logprob_parts(
+            ref_logits, input_ids, comp_start, attn
+        )
+        return sum_p, mean_p, mean_r
 
-        logp_p = sequence_completion_log_probs(logits, input_ids, comp_start, attn)
-        logp_r = sequence_completion_log_probs(ref_logits, input_ids, comp_start, attn)
+    def training_step(self, model: nn.Module, inputs: Dict[str, torch.Tensor], *args: Any, **kwargs: Any):
+        """一组候选分条前向，梯度累加后再更新。整组一次优化步，显存仍按单条。"""
+        model.train()
+        inputs = self._prepare_inputs(inputs)
+        n = int(inputs["input_ids"].shape[0])
+        counts = completion_token_counts(
+            inputs["input_ids"], inputs["completion_start"], inputs["attention_mask"]
+        )
+        total_tokens = counts.sum().clamp(min=1).to(dtype=torch.float32)
+        adv_all = inputs["advantage"]
+        pol_acc = torch.zeros((), device=adv_all.device)
+        kl_acc = torch.zeros((), device=adv_all.device)
+        loss_acc = torch.zeros((), device=adv_all.device)
+        for start in range(n):
+            part = {key: value[start : start + 1] for key, value in inputs.items()}
+            sum_p, mean_p, mean_r = self._pair_logprobs(model, part)
+            adv = part["advantage"]
+            pol = -(adv.detach() * sum_p).sum() / total_tokens.to(dtype=sum_p.dtype)
+            diff = mean_p - mean_r.detach()
+            kl = (diff ** 2).sum() / float(n)
+            loss = pol + float(self.beta_kl) * kl
+            self.accelerator.backward(loss)
+            pol_acc = pol_acc + pol.detach()
+            kl_acc = kl_acc + kl.detach()
+            loss_acc = loss_acc + loss.detach()
+        self._step_metrics.add(
+            policy_term=float(pol_acc),
+            kl_term=float(kl_acc),
+            grpo_loss=float(loss_acc),
+            mean_advantage=float(adv_all.detach().float().mean()),
+        )
+        return loss_acc.detach()
 
+    def compute_loss(
+        self,
+        model: nn.Module,
+        inputs: Dict[str, torch.Tensor],
+        return_outputs: bool = False,
+        **_: Any,
+    ):
+        adv = inputs["advantage"].to(model.device)
+        counts = completion_token_counts(
+            inputs["input_ids"], inputs["completion_start"], inputs["attention_mask"]
+        )
+        sum_p, mean_p, mean_r = self._pair_logprobs(model, inputs)
         loss, pol, kl = grpo_loss(
-            logp_p,
-            logp_r,
+            mean_p,
+            mean_r,
             adv,
             beta_kl=self.beta_kl,
             kl_squared=self.kl_squared,
+            sum_logp_policy=sum_p,
+            token_count=counts.to(dtype=sum_p.dtype),
         )
         self._step_metrics.add(
             policy_term=float(pol.detach()),
@@ -226,7 +344,18 @@ def main() -> None:
     p.add_argument("--epochs", type=float, default=1.0)
     p.add_argument("--lr", type=float, default=1e-6)
     p.add_argument("--batch", type=int, default=1)
-    p.add_argument("--grad-accum", type=int, default=8)
+    p.add_argument(
+        "--grad-accum",
+        type=int,
+        default=1,
+        help="按组更新时忽略。一次优化步就是同一原文的全部候选。",
+    )
+    p.add_argument(
+        "--min-reward-std",
+        type=float,
+        default=0.05,
+        help="组内 R_content 标准差低于此值则整组不训（避免把噪声标准化成 ±1）",
+    )
     p.add_argument("--beta-kl", type=float, default=0.04)
     p.add_argument(
         "--dtype",
@@ -252,6 +381,10 @@ def main() -> None:
     rows = load_phase_b_rows(args.jsonl)
     if not rows:
         raise SystemExit("empty jsonl")
+    rows, group_summary = select_grpo_rows(rows, min_reward_std=args.min_reward_std)
+    logger.info("GRPO 组过滤: %s", group_summary)
+    if not rows:
+        raise SystemExit("过滤后没有可训练的组：组内奖励差太小，或每组不足 2 条")
 
     tok_src = model_id
     adapter_tok = Path(model_id)
@@ -305,6 +438,13 @@ def main() -> None:
     ds = PhaseBGRPODataset(rows, tokenizer, args.max_length, system_prompt=sys_prompt)
     if len(ds) == 0:
         raise SystemExit("no rows with valid advantage")
+    group_sampler = GroupBatchSampler(ds.group_ids, seed=0)
+    logger.info(
+        "GRPO 按组更新：%s 组、%s 条。gradient_accumulation_steps=1（传入的 --grad-accum=%s 不跨组累积）",
+        len(group_sampler),
+        len(ds),
+        args.grad_accum,
+    )
     collator = GRPOCollator(tokenizer.pad_token_id or 0)
 
     use_bf16 = args.dtype == "bf16"
@@ -314,7 +454,7 @@ def main() -> None:
         num_train_epochs=args.epochs,
         learning_rate=args.lr,
         per_device_train_batch_size=args.batch,
-        gradient_accumulation_steps=args.grad_accum,
+        gradient_accumulation_steps=1,
         logging_steps=10,
         save_steps=500,
         bf16=use_bf16,
@@ -328,11 +468,13 @@ def main() -> None:
         ref_model=ref,
         beta_kl=args.beta_kl,
         share_ref_via_disable_adapter=share_ref,
+        group_batch_sampler=group_sampler,
         model=policy,
         args=ta,
         train_dataset=ds,
         data_collator=collator,
         callbacks=[
+            _GroupEpochCallback(group_sampler),
             JsonlMetricsCallback(
                 args.out / "metrics.jsonl",
                 stage="grpo",
