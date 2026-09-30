@@ -70,7 +70,7 @@ def main() -> None:
     p.add_argument("--grpo-rounds", type=int, default=None)
     p.add_argument("--grpo-epochs", type=float, default=None)
     p.add_argument("--grpo-lr", type=float, default=1e-6)
-    p.add_argument("--beta-kl", type=float, default=0.04)
+    p.add_argument("--beta-kl", type=float, default=0.001)
     p.add_argument("--sft-epochs", type=float, default=1.0)
     p.add_argument("--sft-no-early-stop", action="store_true")
     p.add_argument("--system-prompt-file", type=Path, default=None)
@@ -79,6 +79,17 @@ def main() -> None:
     p.add_argument("--skip-grpo", action="store_true", help="第 3 步只 SFT")
     p.add_argument("--stop-after-rm", action="store_true", help="只做第 2 步")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument(
+        "--no-apply-weights",
+        action="store_true",
+        help="GRPO 结束后不 merge、不改 rewriter-llm",
+    )
+    p.add_argument(
+        "--no-restart",
+        action="store_true",
+        help="导入权重时只改 yaml，不重启 8001",
+    )
+    p.add_argument("--vllm-gpu", default="1", help="改写器 GPU，默认 1；评分器仍在 0")
     args = p.parse_args()
 
     run_root = REPO_ROOT / "training" / "runs" / args.run_id
@@ -166,12 +177,25 @@ def main() -> None:
     if args.dry_run:
         rec_cmd.append("--dry-run")
 
-    logger.info("第 3 步：SFT + 短 GRPO → %s", train_work)
+    logger.info("第 3 步：SFT 一次 + 一轮短 GRPO → %s", train_work)
     _run(rec_cmd, dry_run=False)
+    if not args.skip_grpo and not args.no_apply_weights:
+        from training.run_next_grpo_round import import_latest_weights
+
+        logger.info("第 4 步：把本轮 LoRA merge 后导入改写器（只重启 8001）")
+        import_latest_weights(
+            run_id=args.run_id,
+            train_work=train_work,
+            dtype=args.dtype,
+            vllm_gpu=args.vllm_gpu,
+            restart=not args.no_restart,
+            dry_run=args.dry_run,
+        )
     logger.info(
-        "冷启动完成。RM=%s  改写器=%s  后续外循环: python -m training.run_next_grpo_round",
+        "冷启动完成。RM=%s  改写器=%s  下一轮采样: python -m training.run_next_grpo_round --run-id %s",
         odin_work / "rm",
         train_work / "grpo",
+        args.run_id,
     )
 
 

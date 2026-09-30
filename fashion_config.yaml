@@ -139,7 +139,9 @@ text-evaluator:
   # 注意：与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json optimization_gates 保持一致
   score-gate-min: 0.8
   penalty-gate-max: 0.25
-  # 双门限失败时用 8001 改写器 K 路改写。采纳只看相对原文：总分更高且惩罚更低，再取总分最高的一条；否则留原文
+  # 双门限失败时用 8001 改写器 K 路改写。采纳只看相对原文：总分更高且惩罚更低，再取总分最高的一条。
+  # 双门限通过，或改写被采纳的 look，进入单图 / 多图 reflect。改写未被采纳的 look 不纳入该子主题。
+  # 同章 look 都不被采纳时，删除该子主题记录，并新生成子主题补位，最多 3 次。
   rewrite-on-gate-fail: true
 
   # 若需临时切回 GPT 评判：use-local: false，并留空下面三项（继承 grpo.design-text-evaluator）
@@ -202,9 +204,10 @@ grpo:
     model: "models/Qwen2.5-7B-Rewriter"
     # KL 锚点 = 训练前改写器快照（勿指向基座 judge 目录）；多轮短 GRPO 仍锚在此，不随轮次更新
     ref-model: "models/Qwen2.5-7B-Rewriter"
-    # 冷启动只 SFT 一次；随后多轮短 GRPO，每轮结束后写验收摘要
-    grpo-rounds: 4
-    grpo-epochs-per-round: 0.25
+    # 冷启动只 SFT 一次。GRPO 对齐 PromptEnhancer 表 2：恒定学习率 1e-6、KL 系数 0.001、每轮 1 个 epoch。
+    # 同一份标签不连跑多轮。下一轮由 run_next_grpo_round 导入权重、重新采样、冻结 RM 打分后再 GRPO。
+    grpo-rounds: 1
+    grpo-epochs-per-round: 1.0
     # 24G 上 7B 全参反传会 OOM；训练脚本默认 LoRA r=16。大卡才加 --full-finetune
 
   # ODIN 档 3：冻住基座 7B，只训两个线性头 r_Q / r_L。不要指向 rewriter。
@@ -220,8 +223,8 @@ grpo:
     batch-pairs: 8
 
   parallel-k-rewrite:
-    # 并行改写候选条数（generate_k_parallel_rewrites 的 k；调用方未显式传入时使用）
-    k: 10
+    # 每条提示的改写条数，与论文 rollout 的 8 对齐。
+    k: 8
     max-workers: 4
     eval-max-workers: 5
     temperature-floor: 0.35

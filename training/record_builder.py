@@ -51,6 +51,14 @@ def _compact_scores_for_training(evaluation: Optional[Dict[str, Any]]) -> Option
         if r_enabled and isinstance(rc_block, dict) and rc_block.get("R_content") is not None
         else None
     )
+    module_scores = {}
+    raw_modules = sc.get("module_scores") or {}
+    if isinstance(raw_modules, dict):
+        for name, block in raw_modules.items():
+            if isinstance(block, dict) and block.get("score") is not None:
+                module_scores[str(name)] = float(block["score"])
+            elif isinstance(block, (int, float)):
+                module_scores[str(name)] = float(block)
     return {
         "S_fp": sfp_val,
         "R_content": r_scalar,
@@ -59,6 +67,7 @@ def _compact_scores_for_training(evaluation: Optional[Dict[str, Any]]) -> Option
         "quality_base_score": q.get("base_score"),
         "total_penalty": pen.get("total_penalty"),
         "weights": sc.get("weights"),
+        "module_scores": module_scores,
     }
 
 
@@ -213,6 +222,7 @@ def iter_records_from_parallel_result(
             "dedupe_reason": c.get("dedupe_reason"),
             "rewrite_error": c.get("error"),
             "evaluation_skipped": c.get("evaluation_skipped"),
+            "injected_original": bool(c.get("injected_original")),
         }
         yield build_training_record(
             group_id=gid,

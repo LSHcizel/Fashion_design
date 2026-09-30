@@ -759,7 +759,7 @@ def generate_k_parallel_rewrites(
     text_description : str
         当前待改写的时尚描述正文（与同组 K 条共享）。
     k : int, optional
-        候选条数；为 ``None`` 时使用 ``fashion_config.yaml`` → ``grpo.parallel-k-rewrite.k``（缺省 **10**）。
+        候选条数；为 ``None`` 时使用 ``fashion_config.yaml`` → ``grpo.parallel-k-rewrite.k``（缺省 **8**）。
     evaluator :
         可选；默认新建 `DesignTextEvaluator()` 以复用 `fashion_sys_prompt.txt` 与 API 配置。
     group_id :
@@ -788,7 +788,7 @@ def generate_k_parallel_rewrites(
     """
     _pk = grpo_parallel_k_rewrite_config()
     if k is None:
-        k = int(_pk.get("k", 10))
+        k = int(_pk.get("k", 8))
     if k < 1:
         raise ValueError("k must be >= 1")
     if "temperature-floor" in _pk:

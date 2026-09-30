@@ -7,7 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from training.accept_report import build_round_accept, summarize_rows
+from training.accept_report import build_round_accept, summarize_rows, summarize_score_lift
+from training.run_next_grpo_round import build_collect_cmd, build_grpo_cmd, import_latest_weights
 from argparse import Namespace
 
 from training.hf_grpo.run_recommended_training import (
@@ -73,6 +74,77 @@ class AcceptReportTests(unittest.TestCase):
         self.assertEqual(blob["cold_start"]["dual_head_rm"], "once")
         self.assertEqual(blob["cold_start"]["grpo"], "short_rounds")
         self.assertEqual(blob["epochs_this_round"], 0.25)
+        self.assertIsNone(blob["score_lift"])
+
+    def test_score_lift_pairs_rewrite_against_original_and_previous(self) -> None:
+        rows = [
+            {
+                "group_id": "g1",
+                "candidate_index": -1,
+                "S_fp": 0.40,
+                "scores_compact": {
+                    "quality_base_score": 0.30,
+                    "coverage_axis_score": 0.50,
+                    "module_scores": {"DesignMerit": 0.20, "InformationDensity": 0.40},
+                },
+                "gates_compact": {
+                    "score_gate_passed": False,
+                    "penalty_gate_passed": True,
+                    "both_passed": False,
+                },
+            },
+            {
+                "group_id": "g1",
+                "candidate_index": 0,
+                "S_fp": 0.80,
+                "scores_compact": {
+                    "quality_base_score": 0.70,
+                    "coverage_axis_score": 0.90,
+                    "module_scores": {"DesignMerit": 0.60, "InformationDensity": 0.80},
+                },
+                "gates_compact": {
+                    "score_gate_passed": True,
+                    "penalty_gate_passed": True,
+                    "both_passed": True,
+                },
+            },
+            {
+                "group_id": "g1",
+                "candidate_index": 1,
+                "S_fp": 0.60,
+                "scores_compact": {
+                    "quality_base_score": 0.50,
+                    "coverage_axis_score": 0.70,
+                    "module_scores": {"DesignMerit": 0.40, "InformationDensity": 0.60},
+                },
+                "gates_compact": {
+                    "score_gate_passed": False,
+                    "penalty_gate_passed": True,
+                    "both_passed": False,
+                },
+            },
+        ]
+        previous = {
+            "mean_S_fp": 0.50,
+            "mean_quality": 0.40,
+            "mean_coverage": 0.60,
+            "modules": {
+                "DesignMerit": {"mean": 0.30},
+                "InformationDensity": {"mean": 0.50},
+            },
+        }
+        lift = summarize_score_lift(rows, previous_rewrites=previous)
+        self.assertEqual(lift["rewrites"]["mean_S_fp"], 0.7)
+        self.assertEqual(lift["rewrites"]["mean_quality"], 0.6)
+        self.assertEqual(lift["lift_vs_original"]["groups"], 1)
+        self.assertEqual(lift["lift_vs_original"]["S_fp"], 0.3)
+        self.assertEqual(lift["lift_vs_original"]["quality"], 0.3)
+        self.assertEqual(lift["lift_vs_original"]["modules"]["DesignMerit"], 0.3)
+        self.assertEqual(lift["lift_vs_original"]["modules"]["InformationDensity"], 0.3)
+        self.assertEqual(lift["best_rewrite_lift_vs_original"]["S_fp"], 0.4)
+        self.assertEqual(lift["lift_vs_previous_round"]["S_fp"], 0.2)
+        self.assertEqual(lift["lift_vs_previous_round"]["quality"], 0.2)
+        self.assertEqual(lift["lift_vs_previous_round"]["modules"]["LanguageClarity"], None)
 
 
 class GrpoRoundPlanTests(unittest.TestCase):
@@ -137,6 +209,60 @@ class GrpoRoundPlanTests(unittest.TestCase):
         self.assertIn("--lora-r", cmd)
         self.assertIn("16", cmd)
         self.assertNotIn("--full-finetune", cmd)
+
+    def test_online_round_collects_then_one_grpo_without_sft(self) -> None:
+        collect = build_collect_cmd(
+            py="python",
+            corpus=Path("corpus.jsonl"),
+            collect_run_id="grpo_theme/online/round_05",
+            system_prompt_file=None,
+        )
+        self.assertIn("training.collect_k_rewrite_samples", collect)
+        self.assertIn("--no-resume", collect)
+        self.assertIn("grpo_theme/online/round_05", collect)
+        grpo = build_grpo_cmd(
+            py="python",
+            phase_b=Path("phase_b.jsonl"),
+            train_work=Path("hf"),
+            grpo_epochs=1.0,
+            grpo_lr=1e-6,
+            beta_kl=0.001,
+            dtype="bf16",
+            max_length=2048,
+            batch=1,
+            grad_accum=8,
+            grpo_policy="",
+            system_prompt_file=None,
+            dry_run=True,
+        )
+        self.assertIn("--skip-sft", grpo)
+        self.assertEqual(grpo[grpo.index("--grpo-rounds") + 1], "1")
+        self.assertNotIn("--phase-a", grpo)
+        self.assertIn("--dry-run", grpo)
+
+    def test_skip_reimport_when_stamp_matches(self) -> None:
+        from training.hf_grpo.manage_rewriter import write_applied_adapter
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            policy = root / "round_01"
+            policy.mkdir()
+            grpo = root / "hf" / "grpo"
+            write_latest(grpo, round_idx=1, policy_dir=policy, ref_dir="ref")
+            merged = root / "merged"
+            merged.mkdir()
+            write_applied_adapter(merged, policy)
+            out = import_latest_weights(
+                run_id="demo",
+                train_work=root / "hf",
+                dtype="bf16",
+                vllm_gpu="1",
+                restart=True,
+                dry_run=False,
+                skip_if_same=True,
+                merged=merged,
+            )
+            self.assertEqual(out, merged)
 
     def test_skip_sft_without_checkpoint_fails(self) -> None:
         with tempfile.TemporaryDirectory() as td:

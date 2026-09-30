@@ -38,6 +38,7 @@ CONFIG_PATH = REPO_ROOT / "fashion_config.yaml"
 DEFAULT_MODEL = "Qwen2.5-7B-Rewriter"
 DEFAULT_PATH = "models/Qwen2.5-7B-Rewriter"
 LATEST_NAME = "latest.json"
+APPLIED_STAMP = "applied_from.txt"
 
 
 def _clear_merged_out(out: Path) -> None:
@@ -56,6 +57,21 @@ def _clear_merged_out(out: Path) -> None:
 
 def default_merged_dir(run_id: str) -> Path:
     return REPO_ROOT / "models" / f"Qwen2.5-7B-Rewriter-{run_id}"
+
+
+def applied_stamp_path(merged: Path) -> Path:
+    return Path(merged) / APPLIED_STAMP
+
+
+def read_applied_adapter(merged: Path) -> str:
+    stamp = applied_stamp_path(merged)
+    if not stamp.is_file():
+        return ""
+    return stamp.read_text(encoding="utf-8").strip()
+
+
+def write_applied_adapter(merged: Path, adapter: Path) -> None:
+    applied_stamp_path(merged).write_text(str(Path(adapter).resolve()), encoding="utf-8")
 
 
 def latest_adapter_dir(run_id: str) -> Path:

@@ -1,9 +1,10 @@
 """
 短 GRPO 每轮后的验收摘要。
 
-本摘要统计的是当前 ``phase_b`` / samples 上的标签与门限，
-**不会**随刚写入的 policy 权重自动变化。要判断本轮改写器是否更好，
-需用该 policy 重新 K 路抽检后再跑本模块。
+``data`` 是当前 ``phase_b`` 的奖励与门限。``score_lift`` 是同一批样本上
+裁判的质量轴、七个质量模块和总分：改写相对同组原文的配对提升，以及
+相对上一轮改写均值的提升。这些分是采样时打的，不会随本轮梯度自动变化。
+要看刚写入的 policy，需用它重新采样后再跑本模块。
 """
 
 from __future__ import annotations
@@ -121,6 +122,237 @@ def summarize_rows(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+# 质量轴 Q 的七个模块。分数是模块内适用指标的平均，设计价值已含其五项子指标。
+QUALITY_MODULES = (
+    ("DesignMerit", "设计价值"),
+    ("InformationDensity", "信息密度"),
+    ("ConcisenessAndDensity", "可见性优先级"),
+    ("GenerationReadiness", "生成适配"),
+    ("BindingAccuracy", "属性绑定"),
+    ("LanguageClarity", "语言清晰"),
+    ("StructuralClarity", "结构清晰"),
+)
+
+
+def _as_float(value: Any) -> Optional[float]:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _is_original(rec: Dict[str, Any]) -> bool:
+    try:
+        if int(rec.get("candidate_index", 0)) < 0:
+            return True
+    except (TypeError, ValueError):
+        pass
+    return bool((rec.get("parallel_sampling") or {}).get("injected_original"))
+
+
+def _module_value(raw: Any) -> Optional[float]:
+    if isinstance(raw, dict):
+        return _as_float(raw.get("score"))
+    return _as_float(raw)
+
+
+def extract_axis_scores(rec: Dict[str, Any]) -> Dict[str, Any]:
+    """从一条样本取出总分、质量轴、覆盖轴和七个质量模块。"""
+    sc = rec.get("scores_compact") or {}
+    s_fp = _as_float(rec.get("S_fp"))
+    if s_fp is None:
+        s_fp = _as_float(sc.get("S_fp"))
+    quality = _as_float(sc.get("quality_base_score"))
+    if quality is None:
+        quality = _as_float(sc.get("quality_penalized_score"))
+    penalty = None
+    pen = rec.get("penalties")
+    if isinstance(pen, dict):
+        penalty = _as_float(pen.get("total_penalty"))
+    if penalty is None:
+        penalty = _as_float(sc.get("total_penalty"))
+    modules: Dict[str, Optional[float]] = {}
+    raw_modules = sc.get("module_scores") or {}
+    if isinstance(raw_modules, dict):
+        for name, _zh in QUALITY_MODULES:
+            modules[name] = _module_value(raw_modules.get(name))
+    gates = rec.get("gates_compact") or {}
+    return {
+        "S_fp": s_fp,
+        "quality": quality,
+        "coverage": _as_float(sc.get("coverage_axis_score")),
+        "total_penalty": penalty,
+        "modules": modules,
+        "score_gate_passed": gates.get("score_gate_passed") if gates else None,
+        "penalty_gate_passed": gates.get("penalty_gate_passed") if gates else None,
+        "both_passed": gates.get("both_passed") if gates else None,
+    }
+
+
+def _mean_optional(values: List[Optional[float]]) -> Optional[float]:
+    nums = [float(v) for v in values if v is not None]
+    return _mean(nums)
+
+
+def _rate_optional(flags: List[Any]) -> Optional[float]:
+    known = [f for f in flags if isinstance(f, bool)]
+    if not known:
+        return None
+    return _rate(sum(1 for f in known if f), len(known))
+
+
+def _snapshot(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    axes = [extract_axis_scores(rec) for rec in rows]
+    groups = {str(rec.get("group_id")) for rec in rows if rec.get("group_id")}
+    modules: Dict[str, Any] = {}
+    for name, zh in QUALITY_MODULES:
+        modules[name] = {
+            "zh": zh,
+            "mean": _mean_optional([a["modules"].get(name) for a in axes]),
+        }
+    return {
+        "rows": len(rows),
+        "groups": len(groups),
+        "mean_S_fp": _mean_optional([a["S_fp"] for a in axes]),
+        "mean_quality": _mean_optional([a["quality"] for a in axes]),
+        "mean_coverage": _mean_optional([a["coverage"] for a in axes]),
+        "mean_total_penalty": _mean_optional([a["total_penalty"] for a in axes]),
+        "score_gate_pass_rate": _rate_optional([a["score_gate_passed"] for a in axes]),
+        "penalty_gate_pass_rate": _rate_optional([a["penalty_gate_passed"] for a in axes]),
+        "both_gates_pass_rate": _rate_optional([a["both_passed"] for a in axes]),
+        "modules": modules,
+    }
+
+
+def _delta(later: Optional[float], earlier: Optional[float]) -> Optional[float]:
+    if later is None or earlier is None:
+        return None
+    return round(later - earlier, 6)
+
+
+def _lift_between(later: Dict[str, Any], earlier: Dict[str, Any]) -> Dict[str, Any]:
+    modules: Dict[str, Optional[float]] = {}
+    later_m = later.get("modules") or {}
+    earlier_m = earlier.get("modules") or {}
+    for name, _zh in QUALITY_MODULES:
+        modules[name] = _delta(
+            (later_m.get(name) or {}).get("mean"),
+            (earlier_m.get(name) or {}).get("mean"),
+        )
+    return {
+        "S_fp": _delta(later.get("mean_S_fp"), earlier.get("mean_S_fp")),
+        "quality": _delta(later.get("mean_quality"), earlier.get("mean_quality")),
+        "coverage": _delta(later.get("mean_coverage"), earlier.get("mean_coverage")),
+        "total_penalty": _delta(later.get("mean_total_penalty"), earlier.get("mean_total_penalty")),
+        "score_gate_pass_rate": _delta(
+            later.get("score_gate_pass_rate"), earlier.get("score_gate_pass_rate")
+        ),
+        "penalty_gate_pass_rate": _delta(
+            later.get("penalty_gate_pass_rate"), earlier.get("penalty_gate_pass_rate")
+        ),
+        "both_gates_pass_rate": _delta(
+            later.get("both_gates_pass_rate"), earlier.get("both_gates_pass_rate")
+        ),
+        "modules": modules,
+    }
+
+
+def _group_mean_axes(rows: List[Dict[str, Any]]) -> Dict[str, Optional[float]]:
+    axes = [extract_axis_scores(rec) for rec in rows]
+    out: Dict[str, Optional[float]] = {
+        "S_fp": _mean_optional([a["S_fp"] for a in axes]),
+        "quality": _mean_optional([a["quality"] for a in axes]),
+        "coverage": _mean_optional([a["coverage"] for a in axes]),
+        "total_penalty": _mean_optional([a["total_penalty"] for a in axes]),
+    }
+    for name, _zh in QUALITY_MODULES:
+        out[name] = _mean_optional([a["modules"].get(name) for a in axes])
+    return out
+
+
+def _paired_lift(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
+    """同一原文内：改写均值减去注入原文。再对有原文的组取平均。"""
+    buckets: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
+    for rec in rows:
+        gid = str(rec.get("group_id") or "")
+        if not gid:
+            continue
+        slot = buckets.setdefault(gid, {"original": [], "rewrite": []})
+        slot["original" if _is_original(rec) else "rewrite"].append(rec)
+
+    deltas: Dict[str, List[float]] = {
+        "S_fp": [],
+        "quality": [],
+        "coverage": [],
+        "total_penalty": [],
+    }
+    for name, _zh in QUALITY_MODULES:
+        deltas[name] = []
+    best_deltas: Dict[str, List[float]] = {k: [] for k in deltas}
+    paired = 0
+    for slot in buckets.values():
+        if not slot["original"] or not slot["rewrite"]:
+            continue
+        paired += 1
+        orig = _group_mean_axes(slot["original"])
+        rew = _group_mean_axes(slot["rewrite"])
+        for key, bucket in deltas.items():
+            d = _delta(rew.get(key), orig.get(key))
+            if d is not None:
+                bucket.append(d)
+        best = max(slot["rewrite"], key=lambda rec: extract_axis_scores(rec)["S_fp"] or -1.0)
+        best_axes = _group_mean_axes([best])
+        for key, bucket in best_deltas.items():
+            d = _delta(best_axes.get(key), orig.get(key))
+            if d is not None:
+                bucket.append(d)
+
+    def pack(src: Dict[str, List[float]]) -> Dict[str, Any]:
+        modules = {name: _mean(src[name]) for name, _zh in QUALITY_MODULES}
+        return {
+            "groups": paired,
+            "S_fp": _mean(src["S_fp"]),
+            "quality": _mean(src["quality"]),
+            "coverage": _mean(src["coverage"]),
+            "total_penalty": _mean(src["total_penalty"]),
+            "modules": modules,
+        }
+
+    return {"mean_rewrite": pack(deltas), "best_rewrite": pack(best_deltas)}
+
+
+def summarize_score_lift(
+    rows: Iterable[Dict[str, Any]],
+    *,
+    previous_rewrites: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """质量轴、模块分和总分：改写相对原文，以及相对上一轮改写均值。"""
+    materialized = list(rows)
+    rewrites = [rec for rec in materialized if not _is_original(rec)]
+    originals = [rec for rec in materialized if _is_original(rec)]
+    rewrite_snap = _snapshot(rewrites)
+    original_snap = _snapshot(originals)
+    paired = _paired_lift(materialized)
+    versus_previous = None
+    if previous_rewrites:
+        versus_previous = _lift_between(rewrite_snap, previous_rewrites)
+    return {
+        "note": (
+            "rewrites / originals 是本轮采样时裁判打的分，不是本轮梯度更新之后重新生成的。"
+            "lift_vs_original 只统计同时有原文和改写的组：组内改写均值减原文。"
+            "lift_vs_previous_round 是本轮改写均值减上一轮改写均值；两边原文集合不同时，这是总体水平差。"
+            "质量轴是 quality_base_score。模块分缺省时对应提升为 null，新采样会写入 module_scores。"
+        ),
+        "rewrites": rewrite_snap,
+        "originals": original_snap,
+        "lift_vs_original": paired["mean_rewrite"],
+        "best_rewrite_lift_vs_original": paired["best_rewrite"],
+        "lift_vs_previous_round": versus_previous,
+    }
+
+
 def summarize_jsonl(path: JsonPath) -> Dict[str, Any]:
     p = Path(path)
     summary = summarize_rows(read_jsonl(p))
@@ -143,6 +375,7 @@ def build_round_accept(
     ref_dir: str,
     epochs: float,
     data_summary: Dict[str, Any],
+    score_lift: Optional[Dict[str, Any]] = None,
     sft_dir: Optional[Path] = None,
     note: str = "",
 ) -> Dict[str, Any]:
@@ -159,11 +392,14 @@ def build_round_accept(
             "kl_ref": "frozen_at_cold_start",
         },
         "data": data_summary,
+        "score_lift": score_lift,
         "human_checklist": list(HUMAN_CHECKLIST),
         "note": note
         or (
-            "data 统计的是当前 phase_b 标签，不是本轮权重的在线表现。"
-            "验收本轮改写器请用 policy_dir 重新 K 路抽检；不满意则复用双头 RM、跳过 SFT，再开下一轮短 GRPO。"
+            "data 与 score_lift 统计的是当前 phase_b 上采样时的裁判分，不是本轮权重更新之后重新写出来的表现。"
+            "score_lift.lift_vs_original 是改写相对同组原文的质量轴、模块分和总分提升；"
+            "lift_vs_previous_round 是相对上一轮改写均值的提升。"
+            "验收刚写入的 policy 请用 policy_dir 重新 K 路抽检。"
         ),
     }
 

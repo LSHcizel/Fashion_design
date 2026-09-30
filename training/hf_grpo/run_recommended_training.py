@@ -226,6 +226,21 @@ def build_grpo_cmd(
     return grpo_cmd
 
 
+def _previous_rewrite_snapshot(out_dir: Path, round_idx: int) -> Optional[Dict[str, Any]]:
+    if round_idx <= 1:
+        return None
+    previous = grpo_round_dir(out_dir.parent, round_idx - 1) / "accept.json"
+    if not previous.is_file():
+        return None
+    try:
+        blob = json.loads(previous.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    lift = blob.get("score_lift") if isinstance(blob, dict) else None
+    rewrites = (lift or {}).get("rewrites") if isinstance(lift, dict) else None
+    return rewrites if isinstance(rewrites, dict) else None
+
+
 def _write_round_accept(
     *,
     round_idx: int,
@@ -237,23 +252,41 @@ def _write_round_accept(
 ) -> None:
     from training.accept_report import (
         build_round_accept,
+        read_jsonl,
         summarize_jsonl,
+        summarize_score_lift,
         write_json,
     )
 
+    rows = read_jsonl(phase_b)
+    score_lift = summarize_score_lift(
+        rows,
+        previous_rewrites=_previous_rewrite_snapshot(out_dir, round_idx),
+    )
     blob = build_round_accept(
         round_idx=round_idx,
         policy_dir=out_dir,
         ref_dir=ref,
         epochs=epochs,
         data_summary=summarize_jsonl(phase_b),
+        score_lift=score_lift,
         sft_dir=sft_out if sft_out.is_dir() else None,
     )
     write_json(out_dir / "accept.json", blob)
     log_path = out_dir.parent / ACCEPT_LOG_NAME
     with log_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(blob, ensure_ascii=False) + "\n")
-    logger.info("验收摘要 round=%s → %s", round_idx, out_dir / "accept.json")
+    versus_original = score_lift.get("lift_vs_original") or {}
+    versus_previous = score_lift.get("lift_vs_previous_round") or {}
+    logger.info(
+        "验收摘要 round=%s → %s ；相对原文 质量轴 %s 总分 %s ；相对上一轮 质量轴 %s 总分 %s",
+        round_idx,
+        out_dir / "accept.json",
+        versus_original.get("quality"),
+        versus_original.get("S_fp"),
+        versus_previous.get("quality") if versus_previous else None,
+        versus_previous.get("S_fp") if versus_previous else None,
+    )
 
 
 def main() -> None:
@@ -304,10 +337,10 @@ def main() -> None:
         "--grpo-epochs",
         type=float,
         default=None,
-        help="每一轮的 epoch；空则读 yaml grpo-epochs-per-round（缺省 0.25）",
+        help="每一轮的 epoch；空则读 yaml grpo-epochs-per-round（缺省 1）",
     )
     p.add_argument("--grpo-lr", type=float, default=1e-6)
-    p.add_argument("--beta-kl", type=float, default=0.04)
+    p.add_argument("--beta-kl", type=float, default=0.001)
     p.add_argument(
         "--grpo-policy",
         type=str,
@@ -358,6 +391,11 @@ def main() -> None:
         args.grpo_epochs = default_hf_grpo_epochs_per_round()
     if args.grpo_rounds < 1:
         raise SystemExit("grpo-rounds 必须 >= 1")
+    if args.grpo_rounds > 1:
+        logger.warning(
+            "同一份 phase_b 将连跑 %s 轮，中间不会重新采样。在线循环用 python -m training.run_next_grpo_round --run-id <id>",
+            args.grpo_rounds,
+        )
 
     base = (args.base_model or "").strip() or default_hf_local_grpo_model()
     ref = default_hf_local_grpo_ref_model()

@@ -177,7 +177,7 @@ class GRPOTrainer(Trainer):
     def __init__(
         self,
         ref_model: Optional[nn.Module] = None,
-        beta_kl: float = 0.04,
+        beta_kl: float = 0.001,
         kl_squared: bool = True,
         share_ref_via_disable_adapter: bool = False,
         group_batch_sampler: Optional[GroupBatchSampler] = None,
@@ -356,7 +356,7 @@ def main() -> None:
         default=0.05,
         help="组内 R_content 标准差低于此值则整组不训（避免把噪声标准化成 ±1）",
     )
-    p.add_argument("--beta-kl", type=float, default=0.04)
+    p.add_argument("--beta-kl", type=float, default=0.001)
     p.add_argument(
         "--dtype",
         choices=["bf16", "fp16", "fp32"],
@@ -453,6 +453,7 @@ def main() -> None:
         output_dir=str(args.out),
         num_train_epochs=args.epochs,
         learning_rate=args.lr,
+        lr_scheduler_type="constant",
         per_device_train_batch_size=args.batch,
         gradient_accumulation_steps=1,
         logging_steps=10,

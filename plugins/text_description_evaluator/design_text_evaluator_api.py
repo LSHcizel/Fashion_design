@@ -231,22 +231,22 @@ def default_hf_local_grpo_ref_model() -> str:
 
 
 def default_hf_grpo_rounds() -> int:
-    """冷启动后短 GRPO 轮数；``grpo.hf-local-training.grpo-rounds``，缺省 4。"""
+    """冷启动后 GRPO 轮数；``grpo.hf-local-training.grpo-rounds``，缺省 1。"""
     hf = grpo_hf_local_training_config()
     try:
-        return max(1, int(hf.get("grpo-rounds", 4)))
+        return max(1, int(hf.get("grpo-rounds", 1)))
     except (TypeError, ValueError):
-        return 4
+        return 1
 
 
 def default_hf_grpo_epochs_per_round() -> float:
-    """每轮短 GRPO 的 epoch；``grpo.hf-local-training.grpo-epochs-per-round``，缺省 0.25。"""
+    """每轮 GRPO 的 epoch；``grpo.hf-local-training.grpo-epochs-per-round``，缺省 1。"""
     hf = grpo_hf_local_training_config()
     try:
-        val = float(hf.get("grpo-epochs-per-round", 0.25))
+        val = float(hf.get("grpo-epochs-per-round", 1.0))
     except (TypeError, ValueError):
-        return 0.25
-    return val if val > 0 else 0.25
+        return 1.0
+    return val if val > 0 else 1.0
 
 
 def grpo_odin_rm_config() -> Dict[str, Any]:
@@ -331,8 +331,7 @@ DESIGN_MERIT_JUDGE_GUIDE = (
     "decoration that traces one outline (appliqué, trim, fringe, scallop, or beading "
     "along the neckline, front, hem, cuff, or slit); "
     "or an inner garment of the SAME theme that still reads as its own piece when the outer is opened. "
-    "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on that one garment "
-    "is placement, not a second idea and not a conflict.\n"
+    "A small placement on one side of that same garment is not a second idea and not a conflict.\n"
     "CONFLICT is not design. Cap the metric at 0.25, and do not keep it high because the facts are specific: "
     "two sleeve grammars, two bottoms, or two shoe types; "
     "one garment with two bindings for neckline, sleeve, length, closure, or shell; "
@@ -1067,11 +1066,11 @@ def apply_layout_board_penalty_floor(penalties: Dict[str, Any], layout: Dict[str
 
 
 def apply_layout_board_quality_caps(metric_results: Dict[str, Any], layout: Dict[str, Any]) -> None:
-    """单帧失败时，生成适配和可见性优先级封顶。"""
+    """单帧失败时，生成适配、可见性优先级和信息密度封顶。"""
     if not layout.get("active"):
         return
     note = str(layout.get("reason") or "single-frame layout")
-    for name in ("generation_readiness", "visibility_priority"):
+    for name in ("generation_readiness", "visibility_priority", "information_density"):
         row = metric_results.get(name)
         if not isinstance(row, dict) or not row.get("applicable"):
             continue
@@ -1135,6 +1134,16 @@ def apply_conflict_quality_caps(metric_results: Dict[str, Any], conflicts: Dict[
         row["score_value"] = cap
         row["hit"] = 1 if cap >= QUALITY_FULL_HIT_THRESHOLD else 0
         row["reason"] = (row.get("reason") or "") + f" [stays at {cap:g}: consistency conflict is not design]"
+    density = metric_results.get("information_density")
+    if isinstance(density, dict) and density.get("applicable"):
+        try:
+            density_score = float(density.get("score_value"))
+        except (TypeError, ValueError):
+            density_score = 0.0
+        if density_score > 0.5:
+            density["score_value"] = 0.5
+            density["hit"] = 1 if 0.5 >= QUALITY_FULL_HIT_THRESHOLD else 0
+            density["reason"] = (density.get("reason") or "") + " [stays at 0.5: a second identity is not an extra imageable fact]"
 
 
 def compute_design_merit_metric_caps(
@@ -1388,7 +1397,7 @@ Judging principles:
 3. Only mark hit=1 when the text clearly supports it. Do not hallucinate missing facts.
 4. applicable decides whether a metric should enter scoring for this text. If applicable is false, hit must be null.
 5. evidence should quote short spans from the original text whenever possible. Each evidence array has at most 3 short quotes (under 20 words each); do not enumerate the whole look.
-6. When bilateral differences exist, distinguish trunk from accessories. Trunk = all clothing that defines the worn look: outerwear, inner/base tops, bottoms, and footwear. If the text still gives the trunk two sleeve grammars, two leg garments, or two shoe types, bilateral_coherence must be at most 0.5; if two or more of those zones remain, at most 0.25. Calling the split cohesive or deconstructed does not raise the score. Score 0.75 or above only when sleeve, bottom, and shoe are each one identity. Local placement on that one identity is not a split and must not lower the score: one brooch or appliqué, an off-center bow or sash, one slit, a wrap overlap, a diagonal drape, an irregular hem, or a graphic panel of the same garment. A single-breasted closure is not a left-right defect. A same-element contradiction (one garment, two incompatible bindings for neckline, sleeve, length, closure, or shell material) scores attribute_entity_binding, generation_readiness, and design_signal_purity at most 0.25 until one binding remains. Two or more conflicting bindings score attribute_entity_binding 0.0. Clear or Chinese wording does not raise these scores. Garments from a different theme or concept that are still in the text, including as an inner layer, a second subject, or a cohesive contrast, score design_distinctiveness, silhouette_combination_originality, design_signal_purity, and generation_readiness at most 0.25. Do not treat that clash as an identifying idea or as a readable inner identity. These caps override the dimension rubric, a visible-facts floor, and any instruction to keep a specific description high. Mild accessory-only differences are lenient only when the trunk is already one identity.
+6. When bilateral differences exist, distinguish trunk from accessories. Trunk = all clothing that defines the worn look: outerwear, inner/base tops, bottoms, and footwear. If the text still gives the trunk two sleeve grammars, two leg garments, or two shoe types, bilateral_coherence must be at most 0.5; if two or more of those zones remain, at most 0.25. Calling the split cohesive or deconstructed does not raise the score. Score 0.75 or above only when sleeve, bottom, and shoe are each one identity. A small placement on one side of that same garment is not a second identity and must not lower the score. A single-breasted closure is not a left-right defect. A same-element contradiction (one garment, two incompatible bindings for neckline, sleeve, length, closure, or shell material) scores attribute_entity_binding, generation_readiness, and design_signal_purity at most 0.25 until one binding remains. Two or more conflicting bindings score attribute_entity_binding 0.0. Clear or Chinese wording does not raise these scores. Garments from a different theme or concept that are still in the text, including as an inner layer, a second subject, or a cohesive contrast, score design_distinctiveness, silhouette_combination_originality, design_signal_purity, and generation_readiness at most 0.25. Do not treat that clash as an identifying idea or as a readable inner identity. These caps override the dimension rubric, a visible-facts floor, and any instruction to keep a specific description high. Mild accessory-only differences are lenient only when the trunk is already one identity.
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale. An explicit score cap in a metric rule overrides that rubric.
@@ -1396,7 +1405,8 @@ Judging principles:
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard single-frame line and the old T2I preamble are fixed boilerplate—ignore them; never penalize them alone. A Look number, a collage, a flat lay, a product shot, or an off-body catalog clause in the paragraph ("if removed", "its own garment", "complete the look") is not boilerplate: generation_readiness and visibility_priority stay at most 0.25 while it remains.
 12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable as one worn photograph**. Do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich. Imaging-rich wording does not override a same-element, theme-clash, or single-frame score cap. A Look title, collage, flat lay, product shot, second view, or off-body garment keeps generation_readiness at most 0.25.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
-14. Output strict JSON only. Do not output markdown fences or extra commentary.
+14. For information_density, score whether each clause adds a new imageable fact. Do not score character count: shorter is not higher, longer is not lower. High density keeps the identifying anchors (craft path, the surface that makes this look recognizable, inside-outside layering) and does not restate them. Dropping those anchors to get a shorter paragraph caps the score at 0.5. A near-copy or a fact rewritten in new words is restatement, not a new fact. One closing palette/mood sentence does not lower the score. Two identities or a same-element contradiction still in the text caps the score at 0.5.
+15. Output strict JSON only. Do not output markdown fences or extra commentary.
 
 Return format:
 {
@@ -1681,7 +1691,17 @@ Return format:
                     "- 0.0 = missing, wrong, unusable, or seriously poor for that metric\n"
                     "Do not give 1.0 unless the metric is satisfied at a near-perfect prompt level under its own rubric.\n"
                 )
-            if module_name in ("ConcisenessAndDensity", "GenerationReadiness", "StructuralClarity"):
+            if module_name == "InformationDensity":
+                scale_rules += (
+                    "\nInformationDensity — facts per clause, not length:\n"
+                    "- 1.0 only when identifying anchors remain (craft path, recognizable surface, layering) and almost every sentence adds a new imageable fact.\n"
+                    "- Do not reward brevity. A short text that drops those anchors stays at most 0.5.\n"
+                    "- Do not penalize length while new imageable facts are still being added.\n"
+                    "- Restating the same fact, or a near-copy of the source, is not a new fact.\n"
+                    "- One closing palette/mood sentence does not lower the score.\n"
+                    "- Two identities or a same-element contradiction still in the text: at most 0.5.\n"
+                )
+            elif module_name in ("ConcisenessAndDensity", "GenerationReadiness", "StructuralClarity"):
                 scale_rules += (
                     f"\n{module_name} module — T2I content priority (ignore layout):\n"
                     "- High: sentences map to visible pixels (garment form, material, color, trim path, layering, accessory placement).\n"
@@ -1717,6 +1737,14 @@ Return format:
                 "4. evidence should quote short phrases from the original text when possible.\n"
                 "5. For quality metrics, be strict about prompt usefulness, precision, structure, concision, spatial imageability, and internal visual coherence.\n"
                 "6. Return JSON only.\n\n"
+            )
+        if any(isinstance(spec, dict) and spec.get("few_shot") for spec in metric_specs):
+            scale_rules += (
+                "\nFew-shot template:\n"
+                "- Items under few_shot are calibration examples. Do not score them as the text under evaluation.\n"
+                "- Match the example with the same pattern, then use that score.\n"
+                "- Do not score above an example that shows the same defect.\n"
+                "- A shorter paragraph is not by itself a higher score.\n"
             )
         extra = f"{extra_guidance.strip()}\n\n" if extra_guidance and extra_guidance.strip() else ""
         return (
@@ -2486,6 +2514,9 @@ class DesignTextEvaluator:
                     reference_corpus = dimension_cfg.get("reference_corpus")
                     if reference_corpus:
                         metric_spec["reference_corpus"] = reference_corpus
+            few_shot = metric_cfg.get("few_shot")
+            if few_shot:
+                metric_spec["few_shot"] = few_shot
             metric_specs.append(metric_spec)
         return metric_specs
 

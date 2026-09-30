@@ -3,43 +3,13 @@
   "instruction": "plugins/parallel_k_rewrite/k_candidate_generator.py build_rewrite_user_prompt",
   "system_prompt": "plugins/text_description_evaluator/fashion_sys_prompt.txt",
   "n_inverse_before": 79,
-  "n_inverse": 50,
-  "n_inverse_dropped": 29,
-  "n_生成描述": 39,
+  "n_inverse": 100,
+  "n_inverse_dropped": 0,
+  "n_生成描述": 50,
   "inverse_selection": "sorted *_text_description.md, 50 indices evenly spaced across 79",
-  "n_total": 89,
+  "n_total": 150,
   "theme_rule": "13 looks used for gpt-image-2, plus the highest-S_fp look from each remaining scored sub-theme in theme_runs",
-  "dropped_inverse": [
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/02_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__002_media_cha_biarritz_ps27_006_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/05_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__005_media_cha_biarritz_ps27_015_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/08_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__008_media_cha_biarritz_ps27_026_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/10_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__010_media_cha_biarritz_ps27_031_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/13_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__013_media_cha_biarritz_ps27_038_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/16_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__016_media_cha_biarritz_ps27_056_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/18_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__018_media_cha_biarritz_ps27_059_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/21_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__021_media_cha_biarritz_ps27_077_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/24_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__024_media_cha_biarritz_ps27_002_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/27_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__027_media_cha_biarritz_ps27_007_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/29_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__029_media_cha_biarritz_ps27_010_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/32_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__032_media_cha_biarritz_ps27_013_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/35_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__035_media_cha_biarritz_ps27_018_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/37_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__037_media_cha_biarritz_ps27_022_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/40_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__040_media_cha_biarritz_ps27_024_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/43_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__043_media_cha_biarritz_ps27_032_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/45_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__045_media_cha_biarritz_ps27_034_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/48_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__048_media_cha_biarritz_ps27_039_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/51_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__051_media_cha_biarritz_ps27_043_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/53_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__053_media_cha_biarritz_ps27_042_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/56_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__056_media_cha_biarritz_ps27_049_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/59_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__059_media_cha_biarritz_ps27_052_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/62_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__062_media_cha_biarritz_ps27_053_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/64_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__064_media_cha_biarritz_ps27_060_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/67_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__067_media_cha_biarritz_ps27_063_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/70_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__070_media_cha_biarritz_ps27_066_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/72_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__072_media_cha_biarritz_ps27_071_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/75_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__075_media_cha_biarritz_ps27_073_text_description.md",
-    "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/78_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__078_media_cha_biarritz_ps27_075_text_description.md"
-  ],
+  "dropped_inverse": [],
   "theme_runs": [
     "bottega_veneta_ss27/2026-09-28_02",
     "dior_fw26/2026-09-29",
@@ -87,7 +57,18 @@
     "fashion_research_dir/season_themes_2026-09/generated/saint_laurent_fw26/2026-09-29/chapter_04/look_02.txt",
     "fashion_research_dir/season_themes_2026-09/generated/dior_fw26/2026-09-29/chapter_02/look_02.txt",
     "fashion_research_dir/season_themes_2026-09/generated/dior_fw26/2026-09-29/chapter_03/look_03.txt",
-    "fashion_research_dir/season_themes_2026-09/generated/dior_fw26/2026-09-29/chapter_04/look_01.txt"
+    "fashion_research_dir/season_themes_2026-09/generated/dior_fw26/2026-09-29/chapter_04/look_01.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/bottega_veneta_ss27/2026-09-28/chapter_01/look_03.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/gucci_ss27/2026-09-28/chapter_01/look_02.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/gucci_ss27/2026-09-28/chapter_02/look_02.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/gucci_ss27/2026-09-28/chapter_03/look_01.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/gucci_ss27/2026-09-28/chapter_04/look_04.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/prada_ss27/2026-09-28/chapter_01/look_04.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/prada_ss27/2026-09-28/chapter_02/look_01.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/prada_ss27/2026-09-28/chapter_03/look_03.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/prada_ss27/2026-09-28/chapter_04/look_01.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/bottega_veneta_ss27/2026-09-28/chapter_02/look_01.txt",
+    "fashion_research_dir/season_themes_2026-09/generated/bottega_veneta_ss27/2026-09-28/chapter_02/look_02.txt"
   ],
   "theme_added_highest_score": [
     {
@@ -326,5 +307,193 @@
     "fashion_research_dir/workflow_0/2026-04-02/chapter_01/looks_original/look_04.txt"
   ],
   "sample_role": "source",
-  "role_policy": "one pool: every row is role=source. No positive/negative split in collection or training."
+  "role_policy": "one pool: every row is role=source. No positive/negative split in collection or training.",
+  "n_inverse_local": 79,
+  "n_inverse_web": 21,
+  "web_inverse": [
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/loewe_ss26_bell_leather_jacket_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/loewe",
+      "brand": "Loewe"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/loewe_ss26_scarf_dress_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/loewe",
+      "brand": "Loewe"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/loewe_ss26_shredded_leather_jeans_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/loewe",
+      "brand": "Loewe"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/loewe_ss26_pleated_leather_shirt_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/loewe",
+      "brand": "Loewe"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/loewe_ss26_wire_leather_tank_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/loewe",
+      "brand": "Loewe"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/loewe_ss26_printed_towel_dress_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/loewe",
+      "brand": "Loewe"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/alaia_ss26_cotton_tunic_fringe_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/azzedine-alaia",
+      "brand": "Alaïa"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/alaia_ss26_arched_silk_knit_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/azzedine-alaia",
+      "brand": "Alaïa"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/alaia_ss26_angled_knit_dress_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/azzedine-alaia",
+      "brand": "Alaïa"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/alaia_ss26_open_skirt_pants_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/azzedine-alaia",
+      "brand": "Alaïa"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/alaia_ss26_backless_sweater_leggings_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/azzedine-alaia",
+      "brand": "Alaïa"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/alaia_ss26_fringe_coat_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/azzedine-alaia",
+      "brand": "Alaïa"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/alaia_ss26_pannier_satin_skirt_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/azzedine-alaia",
+      "brand": "Alaïa"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/alaia_ss26_burnous_coat_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/azzedine-alaia",
+      "brand": "Alaïa"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/therow_ss26_shantung_pajama_vest_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/row",
+      "brand": "The Row"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/therow_ss26_yellow_cape_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/row",
+      "brand": "The Row"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/therow_ss26_cashmere_robe_coat_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/row",
+      "brand": "The Row"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/therow_ss26_washed_jersey_layers_text_description.md",
+      "source_url": "https://www.vogue.com/fashion-shows/spring-2026-ready-to-wear/row",
+      "brand": "The Row"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/schiaparelli_ss26_pebble_tailoring_text_description.md",
+      "source_url": "https://wwd.com/runway/spring-2026/paris/schiaparelli/review/",
+      "brand": "Schiaparelli"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/schiaparelli_ss26_punched_leather_shirt_text_description.md",
+      "source_url": "https://wwd.com/runway/spring-2026/paris/schiaparelli/review/",
+      "brand": "Schiaparelli"
+    },
+    {
+      "path": "fashion_research_dir/image_inverse/web_brand_ss26/schiaparelli_ss26_satin_chain_gown_text_description.md",
+      "source_url": "https://wwd.com/runway/spring-2026/paris/schiaparelli/review/",
+      "brand": "Schiaparelli"
+    }
+  ],
+  "generated_fill_to_50": [
+    {
+      "source_id": "theme_142_bottega_veneta_ss27_2026-09-28_chapter_01_look_03",
+      "brand": "Bottega Veneta",
+      "theme": "Intrecciato Adaptation",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/bottega_veneta_ss27/2026-09-28/chapter_01/look_03.txt",
+      "total_score_S_fp": 1.0
+    },
+    {
+      "source_id": "theme_143_gucci_ss27_2026-09-28_chapter_01_look_02",
+      "brand": "Gucci",
+      "theme": "The Horse-Riding Princess",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/gucci_ss27/2026-09-28/chapter_01/look_02.txt",
+      "total_score_S_fp": 1.0
+    },
+    {
+      "source_id": "theme_144_gucci_ss27_2026-09-28_chapter_02_look_02",
+      "brand": "Gucci",
+      "theme": "The Milanese Sciura",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/gucci_ss27/2026-09-28/chapter_02/look_02.txt",
+      "total_score_S_fp": 0.8278
+    },
+    {
+      "source_id": "theme_145_gucci_ss27_2026-09-28_chapter_03_look_01",
+      "brand": "Gucci",
+      "theme": "The Prep-School Brat",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/gucci_ss27/2026-09-28/chapter_03/look_01.txt",
+      "total_score_S_fp": 0.9579
+    },
+    {
+      "source_id": "theme_146_gucci_ss27_2026-09-28_chapter_04_look_04",
+      "brand": "Gucci",
+      "theme": "The Nightclub Siren",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/gucci_ss27/2026-09-28/chapter_04/look_04.txt",
+      "total_score_S_fp": 1.0
+    },
+    {
+      "source_id": "theme_147_prada_ss27_2026-09-28_chapter_01_look_04",
+      "brand": "Prada",
+      "theme": "The Skirt as Containment and Escape",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/prada_ss27/2026-09-28/chapter_01/look_04.txt",
+      "total_score_S_fp": 0.9894
+    },
+    {
+      "source_id": "theme_148_prada_ss27_2026-09-28_chapter_02_look_01",
+      "brand": "Prada",
+      "theme": "The Skirt as Canvas",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/prada_ss27/2026-09-28/chapter_02/look_01.txt",
+      "total_score_S_fp": 0.9579
+    },
+    {
+      "source_id": "theme_149_prada_ss27_2026-09-28_chapter_03_look_03",
+      "brand": "Prada",
+      "theme": "Subversion of Grace",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/prada_ss27/2026-09-28/chapter_03/look_03.txt",
+      "total_score_S_fp": 0.9894
+    },
+    {
+      "source_id": "theme_150_prada_ss27_2026-09-28_chapter_04_look_01",
+      "brand": "Prada",
+      "theme": "The Skirt as Canvas",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/prada_ss27/2026-09-28/chapter_04/look_01.txt",
+      "total_score_S_fp": 1.0
+    },
+    {
+      "source_id": "theme_151_bottega_veneta_ss27_2026-09-28_chapter_02_look_01",
+      "brand": "Bottega Veneta",
+      "theme": "Layered Transitions",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/bottega_veneta_ss27/2026-09-28/chapter_02/look_01.txt",
+      "total_score_S_fp": null
+    },
+    {
+      "source_id": "theme_152_bottega_veneta_ss27_2026-09-28_chapter_02_look_02",
+      "brand": "Bottega Veneta",
+      "theme": "Layered Transitions",
+      "path": "fashion_research_dir/season_themes_2026-09/generated/bottega_veneta_ss27/2026-09-28/chapter_02/look_02.txt",
+      "total_score_S_fp": null
+    }
+  ]
 }
