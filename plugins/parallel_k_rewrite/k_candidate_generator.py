@@ -648,6 +648,79 @@ def _one_rewrite(
         }
 
 
+def _score_one_candidate(
+    evaluator: "DesignTextEvaluator",
+    idx: int,
+    cand: Dict[str, Any],
+    *,
+    gate_config: Optional[Dict[str, Any]],
+    eval_source_prefix: str,
+) -> Tuple[int, Optional[Dict[str, Any]], Optional[str]]:
+    src = f"{eval_source_prefix}.c{idx}"
+    try:
+        result = evaluator.evaluate_text(cand["text"], source_name=src, gate_config=gate_config)
+        return idx, result, None
+    except JudgeConnectionError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        if is_connection_failure(exc):
+            raise JudgeConnectionError(str(exc)) from exc
+        return idx, None, str(exc)
+
+
+def _apply_candidate_eval(
+    cand: Dict[str, Any],
+    ev: Optional[Dict[str, Any]],
+    err: Optional[str],
+    *,
+    eval_source_prefix: str,
+) -> None:
+    if err:
+        cand["evaluation"] = None
+        cand["evaluation_skipped"] = "judge_eval_error"
+        cand["evaluation_error"] = err
+        logger.warning(
+            "skip evaluate for %s.c%s: %s",
+            eval_source_prefix,
+            cand.get("candidate_index"),
+            err,
+        )
+        return
+    cand["evaluation"] = ev
+
+
+def _finish_group_scores(
+    evaluator: "DesignTextEvaluator",
+    deduped: List[Dict[str, Any]],
+    eval_by_idx: Dict[int, Tuple[Optional[Dict[str, Any]], Optional[str]]],
+    *,
+    eval_source_prefix: str,
+) -> List[Dict[str, Any]]:
+    """把已经打完的分贴回候选，再做同组 z_len。重复项不进组内修正。"""
+    for cand in deduped:
+        if not cand.get("dedupe_kept"):
+            cand["evaluation"] = None
+            cand["evaluation_skipped"] = "duplicate_or_empty"
+            continue
+        if cand.get("error"):
+            cand["evaluation"] = None
+            cand["evaluation_skipped"] = "rewrite_error"
+            continue
+        idx = int(cand["candidate_index"])
+        ev, err = eval_by_idx.get(idx, (None, "missing_evaluation"))
+        _apply_candidate_eval(cand, ev, err, eval_source_prefix=eval_source_prefix)
+
+    ordered_evals: List[Dict[str, Any]] = []
+    for cand in sorted(deduped, key=lambda x: int(x["candidate_index"])):
+        ev = cand.get("evaluation")
+        if isinstance(ev, dict) and (ev.get("r_content") or {}).get("enabled"):
+            ordered_evals.append(ev)
+    if ordered_evals:
+        rcfg = evaluator.spec.get("r_content_for_rl") or {}
+        apply_group_z_len_r_content(ordered_evals, rcfg)
+    return ordered_evals
+
+
 def _evaluate_candidates_with_spec(
     evaluator: "DesignTextEvaluator",
     deduped: List[Dict[str, Any]],
@@ -676,63 +749,41 @@ def _evaluate_candidates_with_spec(
     if not work_items:
         return []
 
-    def run_one(
-        idx: int, cand: Dict[str, Any]
-    ) -> Tuple[int, Dict[str, Any], Optional[Dict[str, Any]], Optional[str]]:
-        src = f"{eval_source_prefix}.c{idx}"
-        try:
-            result = evaluator.evaluate_text(cand["text"], source_name=src, gate_config=gate_config)
-            return idx, cand, result, None
-        except JudgeConnectionError:
-            raise
-        except Exception as exc:  # noqa: BLE001
-            if is_connection_failure(exc):
-                raise JudgeConnectionError(str(exc)) from exc
-            return idx, cand, None, str(exc)
+    eval_by_idx: Dict[int, Tuple[Optional[Dict[str, Any]], Optional[str]]] = {}
+    n_workers = max(1, min(eval_max_workers, len(work_items)))
 
-    def _apply_eval(
-        cand: Dict[str, Any],
-        ev: Optional[Dict[str, Any]],
-        err: Optional[str],
-    ) -> None:
-        if err:
-            cand["evaluation"] = None
-            cand["evaluation_skipped"] = "judge_eval_error"
-            cand["evaluation_error"] = err
-            logger.warning(
-                "skip evaluate for %s.c%s: %s",
-                eval_source_prefix,
-                cand.get("candidate_index"),
-                err,
-            )
-            return
-        cand["evaluation"] = ev
+    def _store(idx: int, ev: Optional[Dict[str, Any]], err: Optional[str]) -> None:
+        eval_by_idx[idx] = (ev, err)
 
     if len(work_items) == 1:
         idx, cand = work_items[0]
-        _, _, ev, err = run_one(idx, cand)
-        _apply_eval(cand, ev, err)
+        scored_idx, ev, err = _score_one_candidate(
+            evaluator, idx, cand, gate_config=gate_config, eval_source_prefix=eval_source_prefix
+        )
+        _store(scored_idx, ev, err)
     else:
-        n_workers = max(1, min(eval_max_workers, len(work_items)))
-        futures = {}
         with ThreadPoolExecutor(max_workers=n_workers) as pool:
-            for idx, cand in work_items:
-                futures[pool.submit(run_one, idx, cand)] = (idx, cand)
+            futures = [
+                pool.submit(
+                    _score_one_candidate,
+                    evaluator,
+                    idx,
+                    cand,
+                    gate_config=gate_config,
+                    eval_source_prefix=eval_source_prefix,
+                )
+                for idx, cand in work_items
+            ]
             for fut in as_completed(futures):
-                idx, cand, ev, err = fut.result()
-                _apply_eval(cand, ev, err)
+                scored_idx, ev, err = fut.result()
+                _store(scored_idx, ev, err)
 
-    ordered_evals: List[Dict[str, Any]] = []
-    for c in sorted(deduped, key=lambda x: int(x["candidate_index"])):
-        ev = c.get("evaluation")
-        if isinstance(ev, dict) and (ev.get("r_content") or {}).get("enabled"):
-            ordered_evals.append(ev)
-
-    if ordered_evals:
-        rcfg = evaluator.spec.get("r_content_for_rl") or {}
-        apply_group_z_len_r_content(ordered_evals, rcfg)
-
-    return ordered_evals
+    return _finish_group_scores(
+        evaluator,
+        deduped,
+        eval_by_idx,
+        eval_source_prefix=eval_source_prefix,
+    )
 
 
 def generate_k_parallel_rewrites(
@@ -779,7 +830,7 @@ def generate_k_parallel_rewrites(
     eval_source_prefix :
         评判 `source_name` 前缀，单条为 ``{prefix}.c{index}``。
     eval_max_workers :
-        评判并发数；默认 ``min(k, 4)``（评判 API 调用更重，默认略保守）。
+        评判并发数；默认 ``min(k, 8)``。一条改写完成就送评分器，与其余改写重叠。
 
     Returns
     -------
@@ -808,11 +859,18 @@ def generate_k_parallel_rewrites(
     ev = evaluator or _default_evaluator()
     gid = group_id or str(uuid.uuid4())
     workers = min(k, max_workers) if max_workers is not None else min(k, 8)
+    eval_workers = eval_max_workers if eval_max_workers is not None else min(k, 8)
+    prefix = f"{eval_source_prefix}.{gid[:8]}"
 
-    futures = {}
-    with ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
-        for i in range(k):
-            futures[
+    rows: List[Dict[str, Any]] = []
+    eval_by_idx: Dict[int, Tuple[Optional[Dict[str, Any]], Optional[str]]] = {}
+    eval_pool: Optional[ThreadPoolExecutor] = (
+        ThreadPoolExecutor(max_workers=max(1, eval_workers)) if evaluate_candidates else None
+    )
+    eval_futures = []
+    try:
+        with ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
+            futures = [
                 ex.submit(
                     _one_rewrite,
                     ev,
@@ -824,28 +882,46 @@ def generate_k_parallel_rewrites(
                     temperature_step,
                     temperature_cap,
                 )
-            ] = i
+                for i in range(k)
+            ]
+            for fut in as_completed(futures):
+                row = fut.result()
+                rows.append(row)
+                if row.get("error") and is_connection_failure(row.get("error")):
+                    raise JudgeConnectionError(str(row.get("error")))
+                text = str(row.get("text") or "").strip()
+                if eval_pool is not None and not row.get("error") and text:
+                    eval_futures.append(
+                        eval_pool.submit(
+                            _score_one_candidate,
+                            ev,
+                            int(row["candidate_index"]),
+                            row,
+                            gate_config=gate_config,
+                            eval_source_prefix=prefix,
+                        )
+                    )
+        for fut in as_completed(eval_futures):
+            idx, scored, err = fut.result()
+            eval_by_idx[idx] = (scored, err)
+    finally:
+        if eval_pool is not None:
+            eval_pool.shutdown(wait=True, cancel_futures=True)
 
-        rows: List[Dict[str, Any]] = []
-        for fut in as_completed(futures):
-            rows.append(fut.result())
     rows.sort(key=lambda r: r["candidate_index"])
-
     deduped, dup_count = _dedupe_by_normalized_text(rows)
     errors = [r for r in deduped if r.get("error")]
     for row in errors:
         if is_connection_failure(row.get("error")):
             raise JudgeConnectionError(str(row.get("error")))
 
-    eval_workers = eval_max_workers if eval_max_workers is not None else min(k, 4)
     group_evals: List[Dict[str, Any]] = []
     if evaluate_candidates:
-        group_evals = _evaluate_candidates_with_spec(
+        group_evals = _finish_group_scores(
             ev,
             deduped,
-            gate_config=gate_config,
-            eval_source_prefix=f"{eval_source_prefix}.{gid[:8]}",
-            eval_max_workers=eval_workers,
+            eval_by_idx,
+            eval_source_prefix=prefix,
         )
 
     candidates_evaluated = sum(1 for c in deduped if c.get("evaluation") is not None)
