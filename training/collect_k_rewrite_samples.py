@@ -424,7 +424,7 @@ def main() -> None:
     n_pending = len(pending)
     pk = grpo_parallel_k_rewrite_config()
     k_each = int(args.k or pk.get("k") or 8)
-    rewrite_slots = int(pk.get("max-workers") or 16)
+    rewrite_slots = int(pk.get("max-workers") or 32)
     source_workers = max(1, rewrite_slots // max(k_each, 1))
     print(
         f"parallel sources={source_workers} k={k_each} "

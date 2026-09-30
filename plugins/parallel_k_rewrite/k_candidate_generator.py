@@ -818,7 +818,7 @@ def generate_k_parallel_rewrites(
     extra_context :
         各候选共享的额外业务说明（与同组字段对齐）。
     max_workers :
-        改写线程池大小；默认 ``min(k, 16)``。
+        改写线程池大小；默认 ``min(k, 32)``。
     temperature_floor / temperature_step / temperature_cap :
         按 candidate_index 递进温度；各路独立选择识别性想法，不预分配种类。
     evaluate_candidates :
@@ -830,7 +830,7 @@ def generate_k_parallel_rewrites(
     eval_source_prefix :
         评判 `source_name` 前缀，单条为 ``{prefix}.c{index}``。
     eval_max_workers :
-        评判并发数；默认 ``min(k, 16)``。一条改写完成就送评分器，与其余改写重叠。
+        评判并发数；默认 ``min(k, 32)``。一条改写完成就送评分器，与其余改写重叠。
 
     Returns
     -------
@@ -858,8 +858,8 @@ def generate_k_parallel_rewrites(
         eval_source_prefix = str(_pk["eval-source-prefix"])
     ev = evaluator or _default_evaluator()
     gid = group_id or str(uuid.uuid4())
-    workers = min(k, max_workers) if max_workers is not None else min(k, 16)
-    eval_workers = eval_max_workers if eval_max_workers is not None else min(k, 16)
+    workers = min(k, max_workers) if max_workers is not None else min(k, 32)
+    eval_workers = eval_max_workers if eval_max_workers is not None else min(k, 32)
     prefix = f"{eval_source_prefix}.{gid[:8]}"
 
     rows: List[Dict[str, Any]] = []
