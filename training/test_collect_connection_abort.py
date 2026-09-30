@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -16,6 +17,7 @@ from training.collect_k_rewrite_samples import (
     _bootstrap_completed,
     _connection_failed_group_ids,
     _purge_groups,
+    _schedule_sources,
 )
 from training.grpo_pipeline import default_include_for_training
 from training.record_builder import record_include_in_training
@@ -157,6 +159,29 @@ class OneRewriteAbortTests(unittest.TestCase):
         ):
             with self.assertRaises(JudgeConnectionError):
                 generate_k_parallel_rewrites("src", k=2, evaluator=object(), evaluate_candidates=False)
+
+    def test_rewrite_does_not_block_next_baseline(self) -> None:
+        baseline_started = []
+        second_baseline = threading.Event()
+
+        def baseline(item: int) -> int:
+            baseline_started.append(item)
+            if item == 2:
+                second_baseline.set()
+            return item
+
+        def rewrite(item: int) -> None:
+            if item == 1:
+                self.assertTrue(second_baseline.wait(timeout=3))
+
+        _schedule_sources(
+            [1, 2],
+            baseline,
+            rewrite,
+            baseline_workers=1,
+            rewrite_workers=1,
+        )
+        self.assertEqual(baseline_started, [1, 2])
 
 
 if __name__ == "__main__":

@@ -352,6 +352,61 @@ def _bootstrap_completed(jsonl: Path, completed_path: Path) -> Set[str]:
     return done
 
 
+def _schedule_sources(
+    items: List[Any],
+    baseline_fn,
+    rewrite_fn,
+    *,
+    baseline_workers: int,
+    rewrite_workers: int,
+) -> None:
+    """基线评分单独占一组线程，不排队等改写结束。
+
+    ``baseline_fn(item)`` 返回改写所需的载荷；返回 ``None`` 表示跳过该条。
+    一条基线一完成就提交改写，改写线程满了只排队，不占基线线程。
+    """
+    errors: List[BaseException] = []
+    err_lock = threading.Lock()
+    rewrite_futs = []
+    fut_lock = threading.Lock()
+
+    def _rewrite_one(payload: Any) -> None:
+        try:
+            rewrite_fn(payload)
+        except BaseException as exc:  # noqa: BLE001
+            with err_lock:
+                errors.append(exc)
+
+    rewrite_pool = ThreadPoolExecutor(max_workers=max(1, rewrite_workers))
+
+    def _on_baseline(fut) -> None:
+        exc = fut.exception()
+        if exc is not None:
+            with err_lock:
+                errors.append(exc)
+            return
+        payload = fut.result()
+        if payload is None:
+            return
+        rf = rewrite_pool.submit(_rewrite_one, payload)
+        with fut_lock:
+            rewrite_futs.append(rf)
+
+    baseline_pool = ThreadPoolExecutor(max_workers=max(1, baseline_workers))
+    try:
+        for item in items:
+            baseline_pool.submit(baseline_fn, item).add_done_callback(_on_baseline)
+        baseline_pool.shutdown(wait=True)
+        with fut_lock:
+            futs = list(rewrite_futs)
+        for fut in as_completed(futs):
+            fut.result()
+    finally:
+        rewrite_pool.shutdown(wait=True, cancel_futures=True)
+    if errors:
+        raise errors[0]
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
@@ -426,17 +481,19 @@ def main() -> None:
     k_each = int(args.k or pk.get("k") or 8)
     rewrite_slots = int(pk.get("max-workers") or 32)
     source_workers = max(1, rewrite_slots // max(k_each, 1))
+    baseline_workers = source_workers
     print(
-        f"parallel sources={source_workers} k={k_each} "
-        f"rewrite_slots={rewrite_slots}",
+        f"parallel sources={source_workers} baseline_workers={baseline_workers} "
+        f"k={k_each} rewrite_slots={rewrite_slots}",
         flush=True,
     )
     write_lock = threading.Lock()
     failed: Dict[str, BaseException] = {}
 
-    def _one_source(i: int, src: Dict[str, Any]) -> None:
+    def _baseline(item: tuple) -> Optional[Dict[str, Any]]:
         if failed:
-            return
+            return None
+        i, src = item
         sid = str(src.get("source_id") or f"src_{i}")
         text = str(src.get("text") or "").strip()
         biz = str(src.get("business_context") or "")
@@ -452,10 +509,33 @@ def main() -> None:
                     raise JudgeConnectionError(str(exc)) from exc
                 print(f"  baseline eval failed, rewrite without brief: {exc}", flush=True)
                 baseline_eval = None
-            repair = format_exposed_repair_brief(baseline_eval, source_text=text)
-            extra = f"{biz}\n\n{repair}".strip() if repair else biz
-            if repair:
-                print(f"  repair brief attached ({len(repair)} chars)", flush=True)
+        except JudgeConnectionError as exc:
+            with write_lock:
+                failed.setdefault(sid, exc)
+            return None
+        repair = format_exposed_repair_brief(baseline_eval, source_text=text)
+        extra = f"{biz}\n\n{repair}".strip() if repair else biz
+        if repair:
+            print(f"  repair brief attached ({len(repair)} chars)", flush=True)
+        return {
+            "i": i,
+            "src": src,
+            "sid": sid,
+            "text": text,
+            "role": role,
+            "extra": extra,
+            "baseline_eval": baseline_eval,
+        }
+
+    def _rewrite(payload: Dict[str, Any]) -> None:
+        if failed:
+            return
+        sid = payload["sid"]
+        text = payload["text"]
+        role = payload["role"]
+        extra = payload["extra"]
+        src = payload["src"]
+        try:
             result = generate_k_parallel_rewrites(
                 text,
                 k=args.k,
@@ -469,7 +549,7 @@ def main() -> None:
                     result,
                     text,
                     source_name=f"{sid}.original",
-                    evaluation=baseline_eval,
+                    evaluation=payload["baseline_eval"],
                 )
             conn_err = _first_connection_error_from_result(result)
             if conn_err:
@@ -495,10 +575,13 @@ def main() -> None:
             )
             _append_completed(completed_path, sid)
 
-    with ThreadPoolExecutor(max_workers=source_workers) as pool:
-        futures = [pool.submit(_one_source, i, src) for i, src in enumerate(pending, start=1)]
-        for fut in as_completed(futures):
-            fut.result()
+    _schedule_sources(
+        list(enumerate(pending, start=1)),
+        _baseline,
+        _rewrite,
+        baseline_workers=baseline_workers,
+        rewrite_workers=source_workers,
+    )
     if failed:
         sid, exc = next(iter(failed.items()))
         drop = _connection_failed_group_ids(logger.path())
