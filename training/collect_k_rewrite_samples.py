@@ -9,7 +9,9 @@ import os
 import signal
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
@@ -22,6 +24,7 @@ from plugins.parallel_k_rewrite.k_candidate_generator import format_exposed_repa
 from plugins.text_description_evaluator.design_text_evaluator_api import (
     DesignTextEvaluator,
     JudgeConnectionError,
+    grpo_parallel_k_rewrite_config,
     is_connection_failure,
     load_default_evaluator,
 )
@@ -419,7 +422,21 @@ def main() -> None:
 
     evaluator = load_default_evaluator()
     n_pending = len(pending)
-    for i, src in enumerate(pending, start=1):
+    pk = grpo_parallel_k_rewrite_config()
+    k_each = int(args.k or pk.get("k") or 8)
+    rewrite_slots = int(pk.get("max-workers") or 16)
+    source_workers = max(1, rewrite_slots // max(k_each, 1))
+    print(
+        f"parallel sources={source_workers} k={k_each} "
+        f"rewrite_slots={rewrite_slots}",
+        flush=True,
+    )
+    write_lock = threading.Lock()
+    failed: Dict[str, BaseException] = {}
+
+    def _one_source(i: int, src: Dict[str, Any]) -> None:
+        if failed:
+            return
         sid = str(src.get("source_id") or f"src_{i}")
         text = str(src.get("text") or "").strip()
         biz = str(src.get("business_context") or "")
@@ -458,26 +475,39 @@ def main() -> None:
             if conn_err:
                 raise JudgeConnectionError(conn_err)
         except JudgeConnectionError as exc:
-            drop = _connection_failed_group_ids(logger.path())
-            drop.add(sid)
-            n_drop = _purge_groups(logger.path(), completed_path, drop)
-            raise SystemExit(
-                f"connection failure on {sid}; aborted collection and "
-                f"deleted {n_drop} exception record(s) in {drop}"
-            ) from exc
-        logger.append_parallel_result(
-            result,
-            context={
-                "shared_source_text": text,
-                "business_context": extra,
-                "source_role": role,
-                "source_path": src.get("path"),
-                "instruction_summary": "Rewrite the look into a grounded T2I fashion prompt.",
-                "system_prompt_label": "fashion_sys_prompt.txt",
-            },
-            system_prompt_sha256=sys_hash,
-        )
-        _append_completed(completed_path, sid)
+            with write_lock:
+                failed.setdefault(sid, exc)
+            return
+        with write_lock:
+            if failed:
+                return
+            logger.append_parallel_result(
+                result,
+                context={
+                    "shared_source_text": text,
+                    "business_context": extra,
+                    "source_role": role,
+                    "source_path": src.get("path"),
+                    "instruction_summary": "Rewrite the look into a grounded T2I fashion prompt.",
+                    "system_prompt_label": "fashion_sys_prompt.txt",
+                },
+                system_prompt_sha256=sys_hash,
+            )
+            _append_completed(completed_path, sid)
+
+    with ThreadPoolExecutor(max_workers=source_workers) as pool:
+        futures = [pool.submit(_one_source, i, src) for i, src in enumerate(pending, start=1)]
+        for fut in as_completed(futures):
+            fut.result()
+    if failed:
+        sid, exc = next(iter(failed.items()))
+        drop = _connection_failed_group_ids(logger.path())
+        drop.add(sid)
+        n_drop = _purge_groups(logger.path(), completed_path, drop)
+        raise SystemExit(
+            f"connection failure on {sid}; aborted collection and "
+            f"deleted {n_drop} exception record(s) in {drop}"
+        ) from exc
     print("done", logger.path())
 
 

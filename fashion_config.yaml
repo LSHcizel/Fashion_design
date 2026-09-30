@@ -225,9 +225,10 @@ grpo:
   parallel-k-rewrite:
     # 每条提示的改写条数，与论文 rollout 的 8 对齐。
     k: 8
-    max-workers: 8
-    # 评分与改写重叠：一条改写完成就送评分器，最多 8 路同时打分。
-    eval-max-workers: 8
+    # 改写器同时在飞的请求数。K=8 时采集会并行两条原文，凑满 16 路。
+    max-workers: 16
+    # 评分与改写重叠：一条改写完成就送评分器，最多 16 路同时打分。
+    eval-max-workers: 16
     temperature-floor: 0.35
     temperature-step: 0.07
     temperature-cap: 0.90
