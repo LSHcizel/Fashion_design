@@ -1,0 +1,21 @@
+# all-in_fw26_00009 text_description
+
+## text_description
+
+Full-length runway look on a model wearing a pale champagne-gold, short-sleeved midi dress with a soft rounded neckline and a fitted upper body that releases into a flared A-line skirt ending below the knee. The dress has an allover delicate floral surface in muted pinks, greens, and light tones, with a subtly lustrous, textured appearance that reads as a decorative woven or embellished fabric. A large sculptural blush-pink rosette or flower corsage sits high at the front chest/neckline, creating a dramatic focal point and partially covering the bodice. The waist area appears gathered or twisted slightly off center, with vertical seaming or a front fold continuing down into the skirt, giving the silhouette a draped, cinched effect before expanding outward. Sleeves are short and close to the arm, while the skirt has structured volume and movement. The styling leaves the legs bare and pairs the romantic dress with heavy black platform footwear, appearing like chunky ankle boots or shoes with oversized ruffled/textured black detailing around the foot and ankle, creating a dark contrast to the pastel floral dress. The model’s long light-blonde hair is worn loose, and the overall mood is romantic, theatrical, and slightly surreal.
+
+## key_elements
+
+- pale champagne-gold floral midi dress
+- large blush-pink sculptural rosette at chest
+- short sleeves and rounded neckline
+- cinched/gathered waist with front fold
+- flared A-line below-knee skirt
+- bare legs
+- chunky black platform ruffled footwear
+- loose long blonde hair
+
+## uncertainty_notes
+
+- Fabric appears lustrous and textured, but exact material is not identifiable from the image.
+- Footwear details are partially obscured by dark ruffled volume and lighting.

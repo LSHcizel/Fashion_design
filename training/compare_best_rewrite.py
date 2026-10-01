@@ -2,6 +2,7 @@
 
 samples 里没有原文分时，在同目录维护 ``original_scores.jsonl``。
 已写入的原文不再打分；samples 里出现新组时再跑一次即可增量补上。
+本次若补打了原文分，只写缓存，不输出最好改写相对原文。
 
 用法::
 
@@ -234,6 +235,7 @@ def main() -> None:
     )
     if in_samples and not pending and not cache:
         print("samples 里已有原文分，不调用评分器", flush=True)
+    scored_now = False
     if pending and not args.no_score:
         print(f"scoring {len(pending)} new originals with {args.workers} workers", flush=True)
         fresh = _score_originals(pending, workers=args.workers, cache_path=cache_path)
@@ -241,8 +243,13 @@ def main() -> None:
             gid = str(rec.get("group_id") or "")
             if gid:
                 cache[gid] = rec
+        scored_now = True
     elif pending:
         print(f"skip scoring; {len(pending)} groups still have no original score", flush=True)
+    # 本地语料评分只补原文分，不和改写比高低。
+    if scored_now:
+        print(f"corpus scores cached={len(cache)} file={cache_path}", flush=True)
+        return
     already = set(in_samples)
     rows.extend(rec for gid, rec in cache.items() if gid not in already)
     lift = summarize_score_lift(rows)

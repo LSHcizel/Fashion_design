@@ -1,0 +1,20 @@
+{
+  "image_path": "e:\\fashion_agents_project\\fashion_research_dir\\image_inverse\\vogue_cn_fw26\\erdem_fw26_00019.jpg",
+  "text_description": "Full-length runway look built around a dark charcoal tailored mini silhouette layered with translucent grey tulle or organza. The base reads as a structured blazer-dress or long jacket with sharp shoulders, long sleeves, a deep V front with lapel-like edges, and a nipped waist that opens into a short hem above mid-thigh. Over it sits a sheer, pale grey overlay with visible vertical and diagonal striping that fans across the torso and sleeves, softening the tailoring and extending outward into a light, airy, uneven mini-skirt volume around the hips and upper thighs. White and silvery floral embroidery or appliqué clusters are scattered symmetrically across the chest, shoulders, sleeves, waist, and transparent hem, giving the dark tailoring an ornate eveningwear surface. A white high-neck blouse or collar layer is visible underneath, finished with small ruffled edges at the throat and cuffs/neck area, adding a Victorian contrast to the severe tailoring. The legs are bare, and the look is grounded with black lace-up oxford-style shoes, creating a polished but slightly austere runway mood with contrasts of strict suiting, fragile transparency, and decorative florals.",
+  "key_elements": [
+    "charcoal structured blazer-dress or long jacket",
+    "deep V front with lapel-like tailoring",
+    "sheer grey striped tulle/organza overlay",
+    "short transparent flared mini-skirt volume",
+    "white and silver floral embroidery/appliqué",
+    "white ruffled high-neck underlayer",
+    "bare legs",
+    "black lace-up oxford shoes"
+  ],
+  "uncertainty_notes": [
+    "The exact construction of the base garment is partly obscured by the sheer overlay.",
+    "The transparent overlay material appears to be tulle or organza but cannot be confirmed from the image."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Full-length runway look built around a dark charcoal tailored mini silhouette layered with translucent grey tulle or organza. The base reads as a structured blazer-dress or long jacket with sharp shoulders, long sleeves, a deep V front with lapel-like edges, and a nipped waist that opens into a short hem above mid-thigh. Over it sits a sheer, pale grey overlay with visible vertical and diagonal striping that fans across the torso and sleeves, softening the tailoring and extending outward into a light, airy, uneven mini-skirt volume around the hips and upper thighs. White and silvery floral embroidery or appliqué clusters are scattered symmetrically across the chest, shoulders, sleeves, waist, and transparent hem, giving the dark tailoring an ornate eveningwear surface. A white high-neck blouse or collar layer is visible underneath, finished with small ruffled edges at the throat and cuffs/neck area, adding a Victorian contrast to the severe tailoring. The legs are bare, and the look is grounded with black lace-up oxford-style shoes, creating a polished but slightly austere runway mood with contrasts of strict suiting, fragile transparency, and decorative florals.\",\n  \"key_elements\": [\n    \"charcoal structured blazer-dress or long jacket\",\n    \"deep V front with lapel-like tailoring\",\n    \"sheer grey striped tulle/organza overlay\",\n    \"short transparent flared mini-skirt volume\",\n    \"white and silver floral embroidery/appliqué\",\n    \"white ruffled high-neck underlayer\",\n    \"bare legs\",\n    \"black lace-up oxford shoes\"\n  ],\n  \"uncertainty_notes\": [\n    \"The exact construction of the base garment is partly obscured by the sheer overlay.\",\n    \"The transparent overlay material appears to be tulle or organza but cannot be confirmed from the image.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

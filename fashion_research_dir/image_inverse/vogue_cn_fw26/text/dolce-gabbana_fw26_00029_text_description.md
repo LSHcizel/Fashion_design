@@ -1,0 +1,19 @@
+# dolce-gabbana_fw26_00029 text_description
+
+## text_description
+
+Full-length runway look in a dark, largely black palette with burgundy accessories: the model wears a cropped, open-front black jacket or cardigan with a plush, textured surface, rounded wide collar/lapel area, long narrow sleeves that stop around the wrist, and a boxy hem ending high at the waist. Beneath it is a sheer black lace camisole or lingerie-style top, visibly transparent through the torso, with scalloped lace edging at the bust, thin straps, and a small central tie/bow detail creating a delicate contrast against the heavier outer layer. The lower half is a high-waisted black knee-length skirt in an open textured knit or crochet-like surface, cut fairly close through the hips and thighs, with soft ruffled or scalloped edging and a slightly flounced, uneven hem around the knee. Styling emphasizes vertical proportions: cropped jacket over sheer fitted top, then a long dark textured skirt, paired with semi-sheer black mid-calf socks and glossy dark burgundy high-heeled shoes with a squared/almond toe appearance. In the model’s left hand is a large structured dark burgundy top-handle bag with a crocodile-embossed look, gold-tone hardware, and dangling charm/key details. The overall mood is gothic-romantic and tactile, mixing transparency, lace, textured black knit surfaces, and polished burgundy leather-like accessories.
+
+## key_elements
+
+- cropped textured black open jacket with rounded collar
+- sheer black lace camisole with central tie
+- high-waisted black textured knee-length skirt with ruffled hem
+- semi-sheer black mid-calf socks
+- glossy dark burgundy heeled shoes
+- large structured burgundy crocodile-embossed top-handle bag with gold hardware
+
+## uncertainty_notes
+
+- Exact fabric composition is not visible; knit, crochet, lace, plush, and leather-like descriptions are based on surface appearance.
+- Shoe closure details are partially obscured by motion and socks.

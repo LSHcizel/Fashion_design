@@ -1,0 +1,20 @@
+# jil-sander_fw26_00025 text_description
+
+## text_description
+
+Full-length runway look centered on a close-cut grey midi sheath dress in a fine suiting-like weave, cut with an off-the-shoulder neckline that exposes the collarbones and upper shoulders. A wide folded band wraps horizontally across the bust and upper arms, creating soft structured cap-sleeve shapes at the sides while the torso remains clean and narrow. The dress follows the body through the waist and hips with visible diagonal tension and draped creasing across the midsection, then narrows into a pencil-like skirt ending around mid-calf with a slightly uneven, movement-shaped front hem. Styling is minimal and elongated: opaque white tights continue under the dress, paired with glossy pale chartreuse-green pointed shoes. The model’s straight hair is center-parted and worn loose behind the shoulders, with no visible jewelry or bag, giving the look a restrained, architectural, understated runway mood.
+
+## key_elements
+
+- grey off-the-shoulder midi sheath dress
+- wide folded shoulder/bust band
+- soft structured cap sleeves
+- close pencil silhouette with diagonal draping
+- opaque white tights
+- pale chartreuse-green pointed shoes
+- minimal styling, center-parted loose hair
+
+## uncertainty_notes
+
+- Fabric appears to be a fine suiting-like weave but exact material is not visible.
+- Heel height and shoe construction are not fully clear from the image.

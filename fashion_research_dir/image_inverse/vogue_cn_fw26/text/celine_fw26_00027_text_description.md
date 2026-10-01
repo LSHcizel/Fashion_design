@@ -1,0 +1,23 @@
+# celine_fw26_00027 text_description
+
+## text_description
+
+Full-length runway look centered on a vivid fuchsia/magenta asymmetric dress or coordinated draped set, worn as a strong monochrome statement over black knee-high boots. The upper body has a clean high round neckline and sleeveless cut, with broad, structured cap-like shoulders that extend outward into a flat geometric panel. A large diagonal overlay sweeps across the front of the torso, creating angular folds and layered depth, with additional stacked drape visible at one side of the waist. The lower portion continues in the same saturated pink tone but becomes softer and more fluid, falling to an irregular below-knee/mid-calf asymmetric hem with a loose ruffled edge and a long narrow panel dropping vertically along one side toward the ankle. The arms are bare, emphasizing the sculptural shoulder line and the contrast between the rigid upper construction and the softer skirt movement. Footwear consists of close-fitting black tall boots with a sleek, minimal silhouette. The model carries a small structured handbag in a matching red-pink tone, held low at one side, with a contrasting bright blue curved handle or strap detail. Styling is minimal aside from long loose dark hair with bangs, keeping focus on the saturated color, diagonal construction, layered drape, and sculptural-but-fluid runway silhouette.
+
+## key_elements
+
+- vivid fuchsia/magenta asymmetric draped dress or set
+- high round neckline
+- broad structured cap-like shoulders
+- large diagonal front overlay
+- side-waist layered drape
+- irregular fluid below-knee hem
+- long hanging side panel
+- black knee-high boots
+- small matching pink handbag
+- contrasting bright blue bag handle detail
+
+## uncertainty_notes
+
+- Exact fabric composition and closures are not visible.
+- It is not fully clear whether the pink garment is a single dress or separate top and skirt.

@@ -1,0 +1,19 @@
+# acne-studios_fw26_00017 text_description
+
+## text_description
+
+Full-length runway look built from soft green and muted gray layers: a pale sage, long-sleeve knit cardigan is worn open over a cropped light green sweater vest with a dark crisscross diamond motif and a ribbed hem, with a white high-neck underlayer visible at the neck for a stacked, school-uniform effect. The cardigan has a relaxed straight fit, dropped-looking softness through the shoulders, ribbed cuffs and hem, and dark front buttons, ending around the natural waist above the skirt. The lower half is dominated by a light gray plaid wrap-style skirt with muted green and pinkish lines, constructed in an asymmetric, deconstructed shape with sheer or lightweight draping panels, long hanging strips, and uneven handkerchief-like points that fall from hip level to below the knee. Under the skirt, slim olive-green leg coverings or fitted boots create a narrow vertical line down the legs, finishing in pointed dark black toe caps. A structured dark charcoal leather-like satchel is carried on one shoulder, with a top handle, shoulder strap, front flap pockets, buckles, rivets, and silver-tone hardware, adding a polished utilitarian counterpoint to the soft knits and fluid plaid skirt. The styling reads layered, preppy, and slightly undone, with cropped knit proportions on top, wrapped volume through the hips, and close-cut legs below.
+
+## key_elements
+
+- pale sage open knit cardigan with dark buttons
+- cropped patterned sweater vest with crisscross diamond motif
+- white high-neck underlayer visible at collar
+- asymmetric light gray plaid wrap skirt with long draped panels
+- slim olive leg coverings or fitted boots with dark pointed toes
+- structured dark charcoal satchel with silver hardware
+
+## uncertainty_notes
+
+- The exact construction of the lower leg layer is unclear; it appears as fitted olive boots or boot-like leg coverings.
+- The skirt fabric appears lightweight and semi-sheer in places, but material cannot be confirmed.

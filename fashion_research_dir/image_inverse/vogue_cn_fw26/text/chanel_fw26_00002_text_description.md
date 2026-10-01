@@ -1,0 +1,20 @@
+# chanel_fw26_00002 text_description
+
+## text_description
+
+Full-length runway look centered on a long, cream-beige ribbed knit cardigan worn as the dominant outer layer over a black knee-length underlayer. The cardigan has a soft oversized silhouette with dropped, relaxed shoulders, long loose sleeves, and a deep open V neckline formed by a large folded spread collar; a visible front zipper runs down the center, with a pull visible near the neckline and another hanging below the hem, suggesting a two-way zip. The body is straight and elongated, ending at mid-thigh, with wide rib texture throughout and small gold-tone button or tab details placed symmetrically at the upper chest and lower front hip area. Beneath it, a simple black straight skirt or dress extends to around the knee, creating a dark narrow column under the pale knit. Styling includes black pointed high-heeled shoes with a contrasting light triangular detail at the vamp, bare legs, and a small taupe-beige soft shoulder bag carried at the side on a gold chain strap. The overall palette is warm cream, black, taupe, and gold, with the look reading as cozy, polished, and streamlined through the contrast of oversized knitwear over a slim dark base.
+
+## key_elements
+
+- cream-beige long ribbed knit cardigan
+- large folded spread collar and deep V opening
+- visible center front zipper with dangling lower pull
+- gold-tone front tab/button details
+- black knee-length underlayer
+- small taupe shoulder bag with gold chain strap
+- black pointed heels with light vamp accent
+
+## uncertainty_notes
+
+- The taupe bag surface appears soft or suede-like but material is not certain.
+- The exact construction of the shoe's light vamp detail is partially obscured.

@@ -1,0 +1,21 @@
+# chloe_fw26_00022 text_description
+
+## text_description
+
+Full-length runway look with a highly layered, eclectic silhouette: a short, open-front navy-blue jacket or capelet with allover small white dots sits over the shoulders, cut cropped above the waist with pronounced rounded/structured shoulders and abbreviated sleeves, revealing a fitted burgundy-purple patterned top underneath. The underlayer appears semi-sheer or glossy, close to the body, with a high neckline and long slim sleeves that show contrasting sections at the forearms, including pale/white panels and darker striped or plaid-looking cuffs. The waist is emphasized by a black high-waisted skirt with visible cream drawstring ties hanging at center front; the skirt falls to mid-calf in a voluminous black tulle or mesh-like construction, built with tiered ruffles and gathered horizontal bands that create a soft, flounced, slightly uneven hem. Styling includes layered necklaces over the top, small yellow-tinted round sunglasses, long dark braids, and a black shoulder bag carried on one side with a curved, soft body and small metallic hardware. The look is grounded with dark slouchy knee-high boots with a pointed toe and moderate heel, giving the romantic ruffled layers a tougher, fall-ready finish.
+
+## key_elements
+
+- cropped navy polka-dot shoulder jacket/capelet
+- fitted burgundy patterned high-neck underlayer
+- contrasting pale forearm panels and darker cuff details
+- black high-waisted tiered ruffle tulle skirt
+- cream drawstring ties at waist
+- black shoulder bag with metallic hardware
+- yellow-tinted round sunglasses
+- dark slouchy pointed-toe knee-high boots
+
+## uncertainty_notes
+
+- Exact fabric content is not visually confirmable; tulle or mesh-like qualities are inferred from transparency and volume.
+- The construction of the cropped dotted layer appears jacket- or capelet-like from the front view only.

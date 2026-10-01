@@ -1,0 +1,21 @@
+# 3-1-phillip-lim_fw26_00019 text_description
+
+## text_description
+
+Full-length runway look built in layered earth tones: a dark chocolate-brown cropped outer jacket sits over lighter shirting, with a boxy, slightly blouson upper shape, broad pointed open collar, dropped shoulders, long sleeves pushed up to expose pale cuffs, and a visible metal front zipper ending at a short waist-length hem. Under it, a cream or off-white collared layer is open at the neck and visible at the cuffs and hem, with a warm tan-brown inner collared layer also showing at the throat, creating a stacked neckline. One forearm shows a fitted cognac-brown sleeve or glove-like layer extending toward the hand beneath the pushed-up jacket sleeve. The bottom is a high-waisted olive-brown midi skirt in a structured A-line silhouette, falling below the knee to mid-calf, with crisp vertical pleats/panels, a prominent offset front zipper running down the skirt, and small metal-zip pocket details at the upper hips. The skirt’s tailored volume contrasts with the cropped, utilitarian jacket proportions. The model carries an oversized dark burgundy-brown plush, rounded bag or muff-like accessory tucked under one arm, with a thin dark strap hanging down. Styling is finished with ribbed taupe socks rising above taupe ankle boots with a close fit, pointed/almond toe, and slim heel. The overall mood is layered, utilitarian, and polished, using muted fall shades of chocolate, olive, cream, cognac, burgundy, and taupe with visible metal zipper accents.
+
+## key_elements
+
+- dark chocolate cropped zip jacket with broad open collar
+- cream and tan layered collared shirts visible at neck, cuffs, and hem
+- cognac forearm/glove-like layer under pushed sleeve
+- high-waisted olive-brown A-line midi skirt with pleats
+- offset front skirt zipper and zip hip pockets
+- oversized dark burgundy plush bag or muff with dangling strap
+- ribbed taupe socks with taupe heeled ankle boots
+- muted fall earth-tone palette
+
+## uncertainty_notes
+
+- Plush bag material appears fur-like but cannot be confirmed.
+- The cognac forearm piece appears glove-like or sleeve-like from the visible front view.

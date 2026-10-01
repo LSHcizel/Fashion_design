@@ -1,0 +1,21 @@
+# fendi_fw26_00050 text_description
+
+## text_description
+
+Full-length runway look centered on a long black outerwear silhouette: an oversized, below-knee double-breasted coat with a broad open collar and wide lapels, dropped/relaxed shoulders, long sleeves, and hands tucked into side pockets that emphasize its roomy volume. The coat appears to combine a matte black body with glossier black panels across the collar, shoulders, and upper chest, giving the top section a leather-like sheen; black buttons are visible down the overlapping front, and the hem falls straight with a slightly narrow column shape over the legs. Under the open neckline, a black top is visible with a low V-shaped opening and thin crisscross straps or lacing at the chest. Below the coat, dark indigo straight-leg denim or denim-like trousers show at the lower leg, slightly stacked/cuffed above glossy black pointed-toe ankle boots. Styling is minimal and dark, with oversized angular black sunglasses and center-parted hair pulled back, creating a sleek, severe fall runway mood built around black tonal layering and reflective surface contrast.
+
+## key_elements
+
+- oversized long black double-breasted coat
+- broad glossy black collar and upper panels
+- matte black coat body with visible black buttons
+- black low-neck underlayer with crisscross straps
+- dark indigo straight-leg jeans or denim-like trousers
+- glossy black pointed-toe ankle boots
+- large angular black sunglasses
+- center-parted slicked-back hair
+
+## uncertainty_notes
+
+- Glossy panels appear leather-like but material is not confirmed.
+- Lower garment appears to be dark denim, but exact fabric is not certain.

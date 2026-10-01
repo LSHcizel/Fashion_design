@@ -1,0 +1,21 @@
+{
+  "image_path": "e:\\fashion_agents_project\\fashion_research_dir\\image_inverse\\vogue_cn_fw26\\chloe_fw26_00050.jpg",
+  "text_description": "Full-length runway look in an all-black, romantic layered silhouette: a cropped, off-shoulder blouson top sits over a sheer high-neck/halter-like black panel, creating visible transparency across the upper chest and neck while the shoulders remain exposed through cutout openings. The main top has a straight gathered neckline across the bust, long voluminous balloon sleeves, narrow wrist cuffs, and a softly cinched, ruched hem ending around the waist with small areas of skin visible at the midriff. Below, a dark fluid skirt falls to mid-calf/ankle with a relaxed column shape and layered movement, detailed with gathered ruffle trims at the hip/waist area, dangling side ties or bow-like fabric strips, a horizontal ruffled tier around the lower skirt, and a semi-sheer, flounced lower hem. The palette is entirely black with tonal contrast between opaque gathered fabric and lighter sheer layers. Styling is minimal but includes visible gold earrings and rings, with black ankle boots peeking from beneath the skirt, giving the look a dark, Victorian-leaning, soft goth runway mood.",
+  "key_elements": [
+    "all-black layered runway look",
+    "sheer high-neck panel over exposed shoulders",
+    "cropped off-shoulder blouson top",
+    "long balloon sleeves with narrow cuffs",
+    "ruched waist with small midriff exposure",
+    "ruffled tiered skirt with sheer lower hem",
+    "dangling side ties at waist/hip",
+    "gold earrings and rings",
+    "black ankle boots"
+  ],
+  "uncertainty_notes": [
+    "Fabric reads as sheer or semi-sheer in some panels but exact material is not identifiable.",
+    "Boot construction is partly obscured by the skirt."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Full-length runway look in an all-black, romantic layered silhouette: a cropped, off-shoulder blouson top sits over a sheer high-neck/halter-like black panel, creating visible transparency across the upper chest and neck while the shoulders remain exposed through cutout openings. The main top has a straight gathered neckline across the bust, long voluminous balloon sleeves, narrow wrist cuffs, and a softly cinched, ruched hem ending around the waist with small areas of skin visible at the midriff. Below, a dark fluid skirt falls to mid-calf/ankle with a relaxed column shape and layered movement, detailed with gathered ruffle trims at the hip/waist area, dangling side ties or bow-like fabric strips, a horizontal ruffled tier around the lower skirt, and a semi-sheer, flounced lower hem. The palette is entirely black with tonal contrast between opaque gathered fabric and lighter sheer layers. Styling is minimal but includes visible gold earrings and rings, with black ankle boots peeking from beneath the skirt, giving the look a dark, Victorian-leaning, soft goth runway mood.\",\n  \"key_elements\": [\n    \"all-black layered runway look\",\n    \"sheer high-neck panel over exposed shoulders\",\n    \"cropped off-shoulder blouson top\",\n    \"long balloon sleeves with narrow cuffs\",\n    \"ruched waist with small midriff exposure\",\n    \"ruffled tiered skirt with sheer lower hem\",\n    \"dangling side ties at waist/hip\",\n    \"gold earrings and rings\",\n    \"black ankle boots\"\n  ],\n  \"uncertainty_notes\": [\n    \"Fabric reads as sheer or semi-sheer in some panels but exact material is not identifiable.\",\n    \"Boot construction is partly obscured by the skirt.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

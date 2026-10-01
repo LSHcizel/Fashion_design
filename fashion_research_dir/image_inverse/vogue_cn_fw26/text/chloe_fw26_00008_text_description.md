@@ -1,0 +1,21 @@
+# chloe_fw26_00008 text_description
+
+## text_description
+
+Full-length runway look centered on a voluminous, romantic plaid dress in warm muted reds, ochre, rust, and brown tones. The dress has a loose, smock-like silhouette that hangs away from the body, with a wide gathered neckline framed by a small ruffled edge and a visible front tie or drawstring detail; a pale pendant necklace sits over the upper chest. The shoulders are soft and dropped-looking, leading into long, full sleeves that blouse gently and gather into narrow ruffled cuffs at the wrists. The body is cut in tiered sections with horizontal ruffle bands across the lower torso and skirt, creating a wide, swinging shape; the hem falls around mid-calf and reveals a deeper crimson underskirt or lining with a frilled edge beneath the plaid outer layer. The fabric appears light and fluid with a slightly sheer, airy quality and dense allover check pattern. Styling is minimal, with long loose center-parted hair and dark slouchy heeled boots visible below the hem, giving the folkloric, layered dress a grounded autumn runway feel.
+
+## key_elements
+
+- warm red ochre plaid tiered dress
+- wide gathered ruffled neckline with front tie detail
+- long full sleeves with gathered ruffled cuffs
+- voluminous mid-calf skirt with ruffle tiers
+- deep crimson underskirt or lining visible at hem
+- pale pendant necklace over chest
+- dark slouchy heeled boots
+- long loose center-parted hair
+
+## uncertainty_notes
+
+- Exact fabric content is not visible; surface only suggests a lightweight, fluid textile.
+- The neckline tie/drawstring detail is partially obscured by gathers and hair.

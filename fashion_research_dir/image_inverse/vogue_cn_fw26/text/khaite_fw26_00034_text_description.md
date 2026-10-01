@@ -1,0 +1,20 @@
+# khaite_fw26_00034 text_description
+
+## text_description
+
+Full-length runway look in an almost entirely black palette, built around a sleeveless, high-neck trapeze top worn over a voluminous lower layer. The top has a clean mock-neck/rolled high collar, bare shoulders, deep arm openings, and a smooth, slightly lustrous surface; it flares outward from the upper chest into a structured A-line silhouette, ending around the upper hip with a gently curved, floating hem. A small metallic gold emblem or brooch sits high on the wearer’s left chest, providing the main decorative accent. Beneath it, the skirt is long, full, and sculptural, falling to around the lower calf/ankle with broad dark panels that create heavy volume and an asymmetrical, layered hem; a sheer black lace or net-like insert is visible along one side near the lower skirt, adding texture against the otherwise solid black mass. One visible arm is styled with a long black glossy glove or sleeve starting below the sleeveless shoulder line and extending down the arm. The footwear appears deliberately contrasting or mismatched: one foot shows a black pointed shoe/boot with a heel, while the other shows a metallic gold pointed toe peeking from under the skirt. The model’s long hair is swept to one side, reinforcing the sharp, dramatic, evening-leaning mood of the look.
+
+## key_elements
+
+- black sleeveless high-neck trapeze top
+- small gold chest emblem or brooch
+- voluminous long black skirt with layered panels
+- sheer black lace/net insert at lower side
+- long black glossy glove or sleeve on one arm
+- contrasting black and metallic gold pointed footwear
+
+## uncertainty_notes
+
+- Exact fabric content is not visible; surface only appears smooth and slightly lustrous.
+- The arm covering could be a glove or sleeve.
+- Footwear may be mismatched, but the skirt obscures full shoe construction.

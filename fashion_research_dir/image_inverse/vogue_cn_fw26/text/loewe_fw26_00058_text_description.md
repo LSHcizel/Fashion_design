@@ -1,0 +1,21 @@
+# loewe_fw26_00058 text_description
+
+## text_description
+
+Full-length runway look centered on a pale icy blue-gray slip-style mini dress worn over opaque black legwear. The dress has very thin spaghetti straps, a low V neckline edged with delicate scalloped lace, and a small lace/appliqué detail at the center front below the bust. The body is softly loose and straight but slightly bloused at the hips, with fine vertical ribbing or pleated striping running down the surface and a light, fluid drape. The hem falls high on the thigh and is finished with a narrow lace-trim border, creating lingerie-dress proportions against the dark lower layer. The legs are covered in matte black tights or close-fitting leggings, paired with flat black shoes that expose or incorporate a vivid orange-red panel across the top of the foot. In the right hand, the model carries a small glossy dark green structured handbag with a short top handle, a longer hanging strap, and dangling tie details; the shiny surface suggests an embossed or textured finish. Styling is minimal, with slicked-back hair, bare shoulders, no visible jewelry, and a restrained palette of pale blue-gray, black, orange-red, and deep green, balancing delicate slip-dress femininity with practical, graphic accessories.
+
+## key_elements
+
+- pale icy blue-gray spaghetti-strap slip mini dress
+- scalloped lace-trim V neckline
+- fine vertical ribbed or pleated texture
+- lace-trim high-thigh hem
+- opaque black tights or close-fitting leggings
+- flat black shoes with orange-red top-foot panel
+- glossy dark green structured handbag with top handle and long strap
+- slicked-back minimal styling
+
+## uncertainty_notes
+
+- Lower leg layer could be tights or very close-fitting leggings.
+- Orange-red footwear detail may be a sock panel or part of the shoe.

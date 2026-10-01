@@ -1,0 +1,21 @@
+# loewe_fw26_00042 text_description
+
+## text_description
+
+Full-length runway look built around a rounded, oversized checked outer layer in dark grey, black, and muted green tones, shaped like a cocoon blouson with a broad pointed collar, dropped volume through the shoulders and upper body, and cropped, open-looking sleeves or side openings that expose a vivid chartreuse-yellow underlayer at the collar and forearms. The checked top sits to the upper hip with a dark hem band and visible drawcord loops hanging at the front, creating a gathered, slightly puffed silhouette over slim black trousers. The trousers are close-cut and tapered through the leg, clean and dark with a narrow vertical line that lengthens the body, contrasting the volume of the top. Styling is sharp and futuristic: the model wears oversized black wraparound shield sunglasses and carries a glossy black structured handbag at one side, with a rectangular shape, shiny surface, visible handles/straps, and a dangling zipper pull or strap detail. Footwear is graphic and low-profile, in black and white with a flat sole and curved contrasting panels, reading as a loafer or sneaker-like runway shoe. The overall palette is controlled and dark, punctuated by the bright yellow underlayer, with a polished, technical, urban mood.
+
+## key_elements
+
+- oversized dark checked cocoon jacket/top
+- broad pointed collar
+- chartreuse-yellow underlayer visible at collar and sleeves
+- dark hem band with front drawcord loops
+- slim tapered black trousers
+- glossy black structured handbag
+- oversized black wraparound sunglasses
+- black-and-white flat shoes
+
+## uncertainty_notes
+
+- Sleeve construction appears open or cropped but exact cut is not fully visible.
+- Footwear reads as a loafer or sneaker-like shoe from the visible front view.

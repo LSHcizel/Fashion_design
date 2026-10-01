@@ -1,0 +1,22 @@
+# gucci_fw26_00052 text_description
+
+## text_description
+
+Full-length runway look built around a cropped, boxy fur-like shoulder piece worn over a dark navy collared shirt: the outer layer has a wide horizontal warm brown plush band spanning straight across the shoulders and upper chest with squared, extended shoulder edges, and a darker mottled black-brown plush lower section that stops around the natural waist, leaving the shirt sleeves exposed. Underneath, the navy shirt shows a pointed collar at the neck and long sleeves with a fine vertical ribbed or pleated texture, fitted through the arms and cuffed at the wrists. The lower half is a clean pair of high-waisted black trousers with a slim, straight leg, pressed minimalist appearance, side pockets, and a black belt with a small rectangular silver buckle centered at the waist; one hand is tucked into a trouser pocket, emphasizing the tailored waist. Styling is polished and dark-toned, with pointed black high-heel pumps visible below the trouser hems and a small structured glossy black top-handle bag carried low in one hand, featuring a compact trapezoid-like shape and a contrasting pale or metallic lower panel. The overall silhouette contrasts a broad, plush cropped upper volume against a narrow tailored trouser line, creating a refined, evening-leaning fall runway mood in deep navy, black, and rich brown.
+
+## key_elements
+
+- cropped boxy fur-like shoulder piece
+- wide warm brown plush band across shoulders
+- dark mottled black-brown lower plush panel
+- dark navy collared long-sleeve shirt underneath
+- ribbed or pleated sleeve texture
+- high-waisted slim black trousers
+- black belt with rectangular silver buckle
+- pointed black high-heel pumps
+- small glossy black structured top-handle bag
+
+## uncertainty_notes
+
+- Fur-like surface is visible, but real versus faux material is not determinable from the image.
+- Exact shoe construction and heel shape are partly obscured by the trouser hems.

@@ -1,0 +1,18 @@
+{
+  "image_path": "e:\\fashion_agents_project\\fashion_research_dir\\image_inverse\\vogue_cn_fw26\\3-1-phillip-lim_fw26_00026.jpg",
+  "text_description": "Full-length runway look built in warm autumnal layers: a cropped peach-pink chunky ribbed knit top sits over a darker long-sleeve layer, with a rounded high crew neckline, dropped/rounded shoulder line, short rolled sleeves, and a compact boxy body ending at the waist. Beneath it, a dark brown to bronze textured, semi-sheer-looking knit or mesh layer is visible at the neck, arms, and below the crop, forming a close high collar, long slightly blouson sleeves, fitted cuffs, and a hip-length hem with a nubby speckled surface. A narrow dark horizontal belt or waistband cinches the waist between the upper layers and the skirt, with a small peach ribbed band or peplum-like edge visible just below it. The bottom is a deep plum/aubergine midi skirt with a smooth, softly structured A-line silhouette, falling from the waist to mid-calf with gentle flare, panel-like shaping, and subtle surface sheen. Styling is completed with dark brown tall boots with a squared toe, slim heel, and softly ruched shafts rising under the skirt, plus sculptural gold earrings; the overall mood is layered, textured, and fall-toned, mixing cozy knit volume with a fluid dark midi proportion.",
+  "key_elements": [
+    "cropped peach ribbed knit short-sleeve top",
+    "dark textured high-neck long-sleeve underlayer",
+    "dark waist belt or waistband",
+    "deep plum A-line midi skirt",
+    "dark square-toe ruched boots",
+    "gold sculptural earrings"
+  ],
+  "uncertainty_notes": [
+    "The dark waist element appears to be a belt or waistband but its construction is not fully visible.",
+    "The underlayer appears semi-sheer or open-textured from the image, but the exact material is unclear."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Full-length runway look built in warm autumnal layers: a cropped peach-pink chunky ribbed knit top sits over a darker long-sleeve layer, with a rounded high crew neckline, dropped/rounded shoulder line, short rolled sleeves, and a compact boxy body ending at the waist. Beneath it, a dark brown to bronze textured, semi-sheer-looking knit or mesh layer is visible at the neck, arms, and below the crop, forming a close high collar, long slightly blouson sleeves, fitted cuffs, and a hip-length hem with a nubby speckled surface. A narrow dark horizontal belt or waistband cinches the waist between the upper layers and the skirt, with a small peach ribbed band or peplum-like edge visible just below it. The bottom is a deep plum/aubergine midi skirt with a smooth, softly structured A-line silhouette, falling from the waist to mid-calf with gentle flare, panel-like shaping, and subtle surface sheen. Styling is completed with dark brown tall boots with a squared toe, slim heel, and softly ruched shafts rising under the skirt, plus sculptural gold earrings; the overall mood is layered, textured, and fall-toned, mixing cozy knit volume with a fluid dark midi proportion.\",\n  \"key_elements\": [\n    \"cropped peach ribbed knit short-sleeve top\",\n    \"dark textured high-neck long-sleeve underlayer\",\n    \"dark waist belt or waistband\",\n    \"deep plum A-line midi skirt\",\n    \"dark square-toe ruched boots\",\n    \"gold sculptural earrings\"\n  ],\n  \"uncertainty_notes\": [\n    \"The dark waist element appears to be a belt or waistband but its construction is not fully visible.\",\n    \"The underlayer appears semi-sheer or open-textured from the image, but the exact material is unclear.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

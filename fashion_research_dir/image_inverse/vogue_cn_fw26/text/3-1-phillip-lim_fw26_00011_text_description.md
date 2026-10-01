@@ -1,0 +1,21 @@
+# 3-1-phillip-lim_fw26_00011 text_description
+
+## text_description
+
+Full-length runway look built around dark, compact layering: a translucent smoky-brown hooded pullover with a soft dropped hood, center drawstrings, long slightly blouson sleeves, and fitted cuffs is worn under a structured black glossy over-bodice/corset top. The black piece sits tightly through the torso from upper chest to low hip, with a curved strapless-looking neckline over the hoodie, visible vertical paneling, a front fastening line, small metal hardware near the chest, and crocodile-embossed or high-shine textured surface cues; its rigid shape contrasts with the soft, sheer hoodie sleeves and hood. Below, a very short dark brown to black fuzzy-textured mini skirt creates a straight, plush block at the upper thigh. The legs are covered in deep burgundy-black opaque tights, finished with dark rounded-toe ankle shoes with a low, sturdy heel. Styling is minimal and sharp, with narrow black sunglasses and short dark hair, giving the outfit a moody fall palette of tobacco brown, lacquered black, and oxblood tones with a mix of sheer, glossy structured, and fuzzy textures.
+
+## key_elements
+
+- translucent smoky-brown hooded pullover with drawstrings
+- structured glossy black corset-like over-bodice
+- visible vertical paneling and metal hardware on bodice
+- very short dark fuzzy mini skirt
+- deep burgundy-black opaque tights
+- dark rounded-toe ankle shoes
+- narrow black sunglasses
+- moody brown, black, and oxblood palette
+
+## uncertainty_notes
+
+- The black over-bodice surface appears crocodile-embossed or similarly textured, but the exact material is not identifiable.
+- The front fastening details are visible as hardware/lines but the exact closure type is not certain.

@@ -1,0 +1,22 @@
+{
+  "image_path": "e:\\fashion_agents_project\\fashion_research_dir\\image_inverse\\vogue_cn_fw26\\hermes_fw26_00024.jpg",
+  "text_description": "Full-length runway look centered on a long, narrow, structured dark coat in a black/deep forest palette, cut with squared shoulders, a high stand collar, long straight sleeves, and a below-knee hem that creates a lean vertical silhouette. The coat is worn zipped through the front with a visible silver-toned center zipper, opening slightly at the neck to reveal a pale ivory high-neck knit or turtleneck layer underneath. Its surface mixes a subtle dark checked or grid-textured body with smooth black leather-like panels: rectangular panels across the upper chest with horizontal zip-pocket details, additional smooth vertical panels and flap-like pocket sections around the hips, and larger black panels integrated toward the lower front. Under the coat, slim glossy black leather-like trousers are visible through the front opening, tapering close to the leg and stacking slightly above dark rounded-toe shoes; a burgundy-toned sock or ankle insert shows between trouser hem and shoe. The model carries a small black structured handbag in one hand, with a short handle and a dangling chain strap, reinforcing the polished dark utilitarian-luxury styling. Hair is sleek and side-parted, keeping the focus on the sharp outerwear, monochrome texture play, and controlled elongated proportions.",
+  "key_elements": [
+    "long dark structured zip-front coat",
+    "high stand collar over pale ivory turtleneck",
+    "subtle black/deep green checked texture",
+    "smooth black leather-like chest and lower panels",
+    "horizontal zip-pocket details on chest",
+    "hip flap-pocket sections",
+    "slim glossy black leather-like trousers",
+    "dark rounded-toe shoes with burgundy ankle detail",
+    "small black handbag with chain strap",
+    "sleek side-parted styling"
+  ],
+  "uncertainty_notes": [
+    "Body textile appears check-textured but exact weave is not certain.",
+    "Smooth panels and trousers read as leather-like from shine, but material cannot be confirmed."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Full-length runway look centered on a long, narrow, structured dark coat in a black/deep forest palette, cut with squared shoulders, a high stand collar, long straight sleeves, and a below-knee hem that creates a lean vertical silhouette. The coat is worn zipped through the front with a visible silver-toned center zipper, opening slightly at the neck to reveal a pale ivory high-neck knit or turtleneck layer underneath. Its surface mixes a subtle dark checked or grid-textured body with smooth black leather-like panels: rectangular panels across the upper chest with horizontal zip-pocket details, additional smooth vertical panels and flap-like pocket sections around the hips, and larger black panels integrated toward the lower front. Under the coat, slim glossy black leather-like trousers are visible through the front opening, tapering close to the leg and stacking slightly above dark rounded-toe shoes; a burgundy-toned sock or ankle insert shows between trouser hem and shoe. The model carries a small black structured handbag in one hand, with a short handle and a dangling chain strap, reinforcing the polished dark utilitarian-luxury styling. Hair is sleek and side-parted, keeping the focus on the sharp outerwear, monochrome texture play, and controlled elongated proportions.\",\n  \"key_elements\": [\n    \"long dark structured zip-front coat\",\n    \"high stand collar over pale ivory turtleneck\",\n    \"subtle black/deep green checked texture\",\n    \"smooth black leather-like chest and lower panels\",\n    \"horizontal zip-pocket details on chest\",\n    \"hip flap-pocket sections\",\n    \"slim glossy black leather-like trousers\",\n    \"dark rounded-toe shoes with burgundy ankle detail\",\n    \"small black handbag with chain strap\",\n    \"sleek side-parted styling\"\n  ],\n  \"uncertainty_notes\": [\n    \"Body textile appears check-textured but exact weave is not certain.\",\n    \"Smooth panels and trousers read as leather-like from shine, but material cannot be confirmed.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

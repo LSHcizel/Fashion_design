@@ -1,0 +1,21 @@
+{
+  "image_path": "e:\\fashion_agents_project\\fashion_research_dir\\image_inverse\\vogue_cn_fw26\\dolce-gabbana_fw26_00067.jpg",
+  "text_description": "Foreground look is a black lace mini dress styled as a sheer, close-cut runway piece, with a low square-to-scoop neckline edged in irregular scalloped lace and an opaque black bust panel or underlayer visible beneath the lace. The dress fits tightly through the torso and hips, with long sheer lace sleeves that extend to the wrists and a very short upper-thigh hem finished with uneven lace edges, exposing skin through the floral/scroll lace pattern across the bodice, waist, sleeves, and skirt. The proportions are leg-focused: the mini length is paired with tall black ribbed thigh-high hosiery rising well above the knees, leaving a narrow band of bare thigh between dress hem and stocking tops. Footwear appears black and pointed at the toe, with slim high-heel styling and visible strap/buckle details near the foot. The model carries a small structured black handheld evening bag with metallic gold-toned hardware/handle in one hand. Styling is minimal and darkly romantic, with loose center-parted hair and a bold red lip reinforcing the lingerie-lace, evening-runway mood.",
+  "key_elements": [
+    "black sheer floral lace mini dress",
+    "low scalloped square-scoop neckline",
+    "long sheer lace sleeves",
+    "very short uneven lace hem",
+    "opaque black bust underlayer",
+    "black ribbed thigh-high hosiery",
+    "black pointed high-heel footwear with strap/buckle details",
+    "small structured black-and-gold handheld bag",
+    "dark romantic lingerie-inspired styling"
+  ],
+  "uncertainty_notes": [
+    "Exact shoe construction is partly obscured by the dark hosiery and runway angle.",
+    "The visible opaque bust area may be an integrated panel or a separate underlayer."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Foreground look is a black lace mini dress styled as a sheer, close-cut runway piece, with a low square-to-scoop neckline edged in irregular scalloped lace and an opaque black bust panel or underlayer visible beneath the lace. The dress fits tightly through the torso and hips, with long sheer lace sleeves that extend to the wrists and a very short upper-thigh hem finished with uneven lace edges, exposing skin through the floral/scroll lace pattern across the bodice, waist, sleeves, and skirt. The proportions are leg-focused: the mini length is paired with tall black ribbed thigh-high hosiery rising well above the knees, leaving a narrow band of bare thigh between dress hem and stocking tops. Footwear appears black and pointed at the toe, with slim high-heel styling and visible strap/buckle details near the foot. The model carries a small structured black handheld evening bag with metallic gold-toned hardware/handle in one hand. Styling is minimal and darkly romantic, with loose center-parted hair and a bold red lip reinforcing the lingerie-lace, evening-runway mood.\",\n  \"key_elements\": [\n    \"black sheer floral lace mini dress\",\n    \"low scalloped square-scoop neckline\",\n    \"long sheer lace sleeves\",\n    \"very short uneven lace hem\",\n    \"opaque black bust underlayer\",\n    \"black ribbed thigh-high hosiery\",\n    \"black pointed high-heel footwear with strap/buckle details\",\n    \"small structured black-and-gold handheld bag\",\n    \"dark romantic lingerie-inspired styling\"\n  ],\n  \"uncertainty_notes\": [\n    \"Exact shoe construction is partly obscured by the dark hosiery and runway angle.\",\n    \"The visible opaque bust area may be an integrated panel or a separate underlayer.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

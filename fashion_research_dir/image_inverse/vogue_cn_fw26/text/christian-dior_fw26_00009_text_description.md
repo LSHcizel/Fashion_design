@@ -1,0 +1,19 @@
+# christian-dior_fw26_00009 text_description
+
+## text_description
+
+Full-length runway look built around a fluid, sleeveless black draped dress with a high, narrow neckline partially covered by a long white polka-dot scarf wrapped once around the neck. The dress falls in an asymmetric, softly gathered column with ample fabric through the body, tiny light dotting across the black surface, and a handkerchief-like front drape that crosses the torso and opens at the lower front to reveal one leg; the hem sits around the knee to mid-calf in uneven points, with the lowest black folds dropping below the knee. A contrasting white scarf panel, also dotted, hangs vertically down the front-left side from the neck to below the hem, adding a long pale stripe over the black dress, while another white scarf end trails near the lower left side. The shoulders and arms are bare, emphasizing the narrow sleeveless cut and the relaxed, scarf-led styling. Accessories include a medium structured grey patterned shoulder bag carried high under the right arm with a dark shoulder strap, and pointed white pumps with black spotted or contrast detailing and black edging at the toe/topline. The palette is graphic black, white, and grey, with a soft, slightly undone elegant mood driven by the draped dress, elongated scarf, exposed leg, and polished pointed footwear.
+
+## key_elements
+
+- sleeveless black dotted draped dress
+- long white dotted scarf wrapped at neck
+- asymmetric front drape and uneven midi hem
+- front opening revealing one leg
+- grey patterned shoulder bag
+- white pointed pumps with black contrast detailing
+
+## uncertainty_notes
+
+- The scarf may be a separate accessory or integrated with the dress; only the visible wrapped and hanging panels are described.
+- Exact fabric composition is not visually identifiable.

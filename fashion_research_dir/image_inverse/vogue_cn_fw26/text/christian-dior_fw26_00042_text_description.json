@@ -1,0 +1,20 @@
+{
+  "image_path": "e:\\fashion_agents_project\\fashion_research_dir\\image_inverse\\vogue_cn_fw26\\christian-dior_fw26_00042.jpg",
+  "text_description": "Full-length runway look combining a pale icy blue button-front shirt with a sculptural black mini skirt and brown boots. The shirt is tucked in and cut with a neat pointed collar, long slightly loose sleeves, buttoned cuffs, and a straight central placket; the front chest area is decorated with vertical ruffled or lace-like strips and small light-catching embellishments running from the collar down toward the waist. Over it sits a high-waisted black wrap-style skirt with a pronounced asymmetric silhouette: the waist is close to the body, while the skirt flares outward in stiff, folded panels, with a longer diagonal front panel dropping on the wearer’s left side and a much shorter cutaway on the right exposing the thigh. The skirt surface appears textured with quilted or embroidered diagonal patterning and a subtly scalloped or lace-edged trim along parts of the hem. Styling includes tan-brown ankle boots with a substantial sole and visible gold chain/hardware across the front, plus a small grey textured handbag carried low in one hand, with a short handle/strap and dark edging. The overall mood is polished but off-kilter, pairing a crisp embellished shirt with a voluminous asymmetric black bottom and equestrian-toned hardware boots.",
+  "key_elements": [
+    "pale blue embellished button-front shirt",
+    "pointed collar and loose long sleeves",
+    "high-waisted black asymmetric wrap mini skirt",
+    "quilted or embroidered textured skirt surface",
+    "diagonal high-low hem exposing one thigh",
+    "tan ankle boots with gold chain hardware",
+    "small grey textured handbag carried by hand"
+  ],
+  "uncertainty_notes": [
+    "Exact fabric content is not visually determinable",
+    "Front decoration on the shirt appears ruffled or lace-like with embellishment",
+    "Skirt texture appears quilted or embroidered from the image"
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Full-length runway look combining a pale icy blue button-front shirt with a sculptural black mini skirt and brown boots. The shirt is tucked in and cut with a neat pointed collar, long slightly loose sleeves, buttoned cuffs, and a straight central placket; the front chest area is decorated with vertical ruffled or lace-like strips and small light-catching embellishments running from the collar down toward the waist. Over it sits a high-waisted black wrap-style skirt with a pronounced asymmetric silhouette: the waist is close to the body, while the skirt flares outward in stiff, folded panels, with a longer diagonal front panel dropping on the wearer’s left side and a much shorter cutaway on the right exposing the thigh. The skirt surface appears textured with quilted or embroidered diagonal patterning and a subtly scalloped or lace-edged trim along parts of the hem. Styling includes tan-brown ankle boots with a substantial sole and visible gold chain/hardware across the front, plus a small grey textured handbag carried low in one hand, with a short handle/strap and dark edging. The overall mood is polished but off-kilter, pairing a crisp embellished shirt with a voluminous asymmetric black bottom and equestrian-toned hardware boots.\",\n  \"key_elements\": [\n    \"pale blue embellished button-front shirt\",\n    \"pointed collar and loose long sleeves\",\n    \"high-waisted black asymmetric wrap mini skirt\",\n    \"quilted or embroidered textured skirt surface\",\n    \"diagonal high-low hem exposing one thigh\",\n    \"tan ankle boots with gold chain hardware\",\n    \"small grey textured handbag carried by hand\"\n  ],\n  \"uncertainty_notes\": [\n    \"Exact fabric content is not visually determinable\",\n    \"Front decoration on the shirt appears ruffled or lace-like with embellishment\",\n    \"Skirt texture appears quilted or embroidered from the image\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

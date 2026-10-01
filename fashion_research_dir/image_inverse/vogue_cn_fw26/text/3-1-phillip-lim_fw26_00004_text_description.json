@@ -1,0 +1,20 @@
+{
+  "image_path": "e:\\fashion_agents_project\\fashion_research_dir\\image_inverse\\vogue_cn_fw26\\3-1-phillip-lim_fw26_00004.jpg",
+  "text_description": "Fall ready-to-wear runway look on a model wearing an open, oversized dark forest-green glossy coated jacket with a structured collar, dropped straight shoulders, long loose sleeves, silver snap-like fastenings down the front, and visible tab/strap details near the shoulders and sleeve area; the jacket hangs over a cream, fuzzy-textured cropped bralette with a deep V neckline and soft triangular cups, exposing the midriff. Around the waist sits a deep plum-purple sculptural wrap or corset-like panel, fitted high and wide over the torso with curved folded shaping, an off-center front overlap, and small metallic snap details, with a sliver of the cream knit layer visible beneath it. The lower half is a matching plum-purple long narrow skirt with a smooth, slightly lustrous surface, sitting high at the waist and falling in a straight column beyond the frame, decorated along one side with a vertical line of small pale studs or beads; a soft purple pouch-like accessory or fabric appendage hangs at the left hip on a beaded/chain strap. Styling is completed with a short pearl necklace, bare upper chest, minimal visible makeup, and no visible footwear due to the crop, creating a layered contrast of glossy outerwear, fuzzy lingerie-like knit, and polished dark purple tailoring.",
+  "key_elements": [
+    "oversized dark green glossy coated jacket worn open",
+    "cream fuzzy deep-V cropped bralette",
+    "deep plum sculptural corset-like waist wrap",
+    "matching long narrow plum skirt",
+    "side line of pale studs or beads on skirt",
+    "purple pouch-like hanging accessory at left hip",
+    "short pearl necklace",
+    "exposed midriff and layered proportions"
+  ],
+  "uncertainty_notes": [
+    "Exact fabric contents are not visible; glossy surfaces only suggest coated or leather-like material.",
+    "Skirt hem length and footwear are not visible in the cropped image."
+  ],
+  "raw_model_output": "{\n  \"text_description\": \"Fall ready-to-wear runway look on a model wearing an open, oversized dark forest-green glossy coated jacket with a structured collar, dropped straight shoulders, long loose sleeves, silver snap-like fastenings down the front, and visible tab/strap details near the shoulders and sleeve area; the jacket hangs over a cream, fuzzy-textured cropped bralette with a deep V neckline and soft triangular cups, exposing the midriff. Around the waist sits a deep plum-purple sculptural wrap or corset-like panel, fitted high and wide over the torso with curved folded shaping, an off-center front overlap, and small metallic snap details, with a sliver of the cream knit layer visible beneath it. The lower half is a matching plum-purple long narrow skirt with a smooth, slightly lustrous surface, sitting high at the waist and falling in a straight column beyond the frame, decorated along one side with a vertical line of small pale studs or beads; a soft purple pouch-like accessory or fabric appendage hangs at the left hip on a beaded/chain strap. Styling is completed with a short pearl necklace, bare upper chest, minimal visible makeup, and no visible footwear due to the crop, creating a layered contrast of glossy outerwear, fuzzy lingerie-like knit, and polished dark purple tailoring.\",\n  \"key_elements\": [\n    \"oversized dark green glossy coated jacket worn open\",\n    \"cream fuzzy deep-V cropped bralette\",\n    \"deep plum sculptural corset-like waist wrap\",\n    \"matching long narrow plum skirt\",\n    \"side line of pale studs or beads on skirt\",\n    \"purple pouch-like hanging accessory at left hip\",\n    \"short pearl necklace\",\n    \"exposed midriff and layered proportions\"\n  ],\n  \"uncertainty_notes\": [\n    \"Exact fabric contents are not visible; glossy surfaces only suggest coated or leather-like material.\",\n    \"Skirt hem length and footwear are not visible in the cropped image.\"\n  ]\n}",
+  "model": "gpt-5.5"
+}

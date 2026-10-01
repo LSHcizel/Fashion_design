@@ -3,11 +3,13 @@
   "instruction": "plugins/parallel_k_rewrite/k_candidate_generator.py build_rewrite_user_prompt",
   "system_prompt": "plugins/text_description_evaluator/fashion_sys_prompt.txt",
   "n_inverse_before": 79,
-  "n_inverse": 100,
+  "n_inverse": 200,
   "n_inverse_dropped": 0,
+  "n_生成型": 200,
+  "sample_kind_policy": "生成描述、负例、轻缺陷都是生成型。sample_kind 统一为生成型，采集和对比不再按这三档拆开。",
   "n_生成描述": 50,
   "inverse_selection": "sorted *_text_description.md, 50 indices evenly spaced across 79",
-  "n_total": 200,
+  "n_total": 400,
   "theme_rule": "13 looks used for gpt-image-2, plus the highest-S_fp look from each remaining scored sub-theme in theme_runs",
   "dropped_inverse": [],
   "theme_runs": [
@@ -497,7 +499,7 @@
     }
   ],
   "n_mild_consistency": 50,
-  "mild_consistency_note": "50 条轻缺陷描述。每条只用语料中已有品牌的市场历年主题，并只放一处问题：同一要素的第二个绑定、单侧左右不一致、or 并列两个品类，或一侧有袖一侧无袖。不使用加冕、新娘、丧服、假面、洛可可这类偏题。",
+  "mild_consistency_note": "这 50 条轻缺陷也算生成型，不单独成档。每条只用语料中已有品牌的市场历年主题，并只放一处问题：同一要素的第二个绑定、单侧左右不一致、or 并列两个品类，或一侧有袖一侧无袖。不使用加冕、新娘、丧服、假面、洛可可这类偏题。",
   "mild_cases": [
     {
       "source_id": "mild_01_chanel_classic_tweed_suit",
@@ -899,5 +901,428 @@
       "defect_zh": "同一件夹克的刺绣绑了两次：满铺金银绣，又写成素羊毛",
       "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/50_chanel_métiers_dart_embroidery.txt"
     }
-  ]
+  ],
+  "vogue_cn_fw26": {
+    "images": "fashion_research_dir/image_inverse/vogue_cn_fw26",
+    "added": 100,
+    "failed": [],
+    "season": "2026-aw-RTW",
+    "source": "https://www.vogue.com.cn/shows/"
+  },
+  "generated_api_20261001": {
+    "kept": 50,
+    "dropped": [
+      "fashion_research_dir/season_themes_2026-09/generated_api_20261001/hermes_fw26/2026-10-01/chapter_04/look_02.txt",
+      "fashion_research_dir/season_themes_2026-09/generated_api_20261001/hermes_fw26/2026-10-01/chapter_04/look_03.txt"
+    ],
+    "model": "gpt-5.4-mini",
+    "local_model": false,
+    "out": "fashion_research_dir/season_themes_2026-09/generated_api_20261001"
+  },
+  "partial_consistency_20261001": {
+    "added": 50,
+    "note": "50 条基于本次 API 章节主题的着装描述。每条只放一处轻一致性问题。",
+    "cases": [
+      {
+        "source_id": "partial_20261001_01_gucci_boutique_exit",
+        "brand": "Gucci",
+        "theme": "boutique exit",
+        "defect": "binding",
+        "defect_zh": "同一件大衣的面料绑了两次：干黑羊毛，又写成黑缎",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/01_gucci_boutique_exit_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_02_gucci_boutique_exit",
+        "brand": "Gucci",
+        "theme": "boutique exit",
+        "defect": "lr_shoe",
+        "defect_zh": "左右鞋不一致：左脚是抛光乐福鞋，右脚是凉鞋",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/02_gucci_boutique_exit_lr_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_03_gucci_boutique_exit",
+        "brand": "Gucci",
+        "theme": "boutique exit",
+        "defect": "length",
+        "defect_zh": "同一件大衣两个长度：及臀，又及腰",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/03_gucci_boutique_exit_length.txt"
+      },
+      {
+        "source_id": "partial_20261001_04_gucci_bourgeois_shell",
+        "brand": "Gucci",
+        "theme": "bourgeois shell",
+        "defect": "or_bottom",
+        "defect_zh": "下装绑了两个品类：黑羊毛裙或灰羊毛西裤",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/04_gucci_bourgeois_shell_or_bottom.txt"
+      },
+      {
+        "source_id": "partial_20261001_05_gucci_bourgeois_shell",
+        "brand": "Gucci",
+        "theme": "bourgeois shell",
+        "defect": "sleeve_state",
+        "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/05_gucci_bourgeois_shell_sleeve_state.txt"
+      },
+      {
+        "source_id": "partial_20261001_06_gucci_socialite_armor",
+        "brand": "Gucci",
+        "theme": "socialite armor",
+        "defect": "lr_sleeve",
+        "defect_zh": "左右袖面料不一致：左袖是羊毛，右袖是丝绸",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/06_gucci_socialite_armor_lr_sleeve.txt"
+      },
+      {
+        "source_id": "partial_20261001_07_gucci_socialite_armor",
+        "brand": "Gucci",
+        "theme": "socialite armor",
+        "defect": "binding",
+        "defect_zh": "同一件夹克的面料绑了两次：黑羊毛，又写成黑缎",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/07_gucci_socialite_armor_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_08_gucci_jersey_memory",
+        "brand": "Gucci",
+        "theme": "jersey memory",
+        "defect": "lr_leg",
+        "defect_zh": "左右腿下装不一致：左腿是针织西裤，右腿是丝绸裙",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/08_gucci_jersey_memory_lr_leg.txt"
+      },
+      {
+        "source_id": "partial_20261001_09_gucci_jersey_memory",
+        "brand": "Gucci",
+        "theme": "jersey memory",
+        "defect": "or_shoe",
+        "defect_zh": "鞋绑了两个品类：黑缎高跟鞋或米白皮平底",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/09_gucci_jersey_memory_or_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_10_gucci_remade_luxury",
+        "brand": "Gucci",
+        "theme": "remade luxury",
+        "defect": "length",
+        "defect_zh": "同一件大衣两个长度：及臀，又及腰",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/10_gucci_remade_luxury_length.txt"
+      },
+      {
+        "source_id": "partial_20261001_11_gucci_remade_luxury",
+        "brand": "Gucci",
+        "theme": "remade luxury",
+        "defect": "binding",
+        "defect_zh": "同一件礼服的面料绑了两次：香槟缎，又写成黑羊毛",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/11_gucci_remade_luxury_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_12_prada_rectangle_in_motion",
+        "brand": "Prada",
+        "theme": "rectangle in motion",
+        "defect": "lr_leg",
+        "defect_zh": "左右腿下装不一致：左腿是羊毛裙，右腿是西裤",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/12_prada_rectangle_in_motion_lr_leg.txt"
+      },
+      {
+        "source_id": "partial_20261001_13_prada_rectangle_in_motion",
+        "brand": "Prada",
+        "theme": "rectangle in motion",
+        "defect": "binding",
+        "defect_zh": "同一件裙子的下摆绑了两次：及膝矩形，又写成拖地",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/13_prada_rectangle_in_motion_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_14_prada_rectangle_in_motion",
+        "brand": "Prada",
+        "theme": "rectangle in motion",
+        "defect": "or_shoe",
+        "defect_zh": "鞋绑了两个品类：黑乐福鞋或米色凉鞋",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/14_prada_rectangle_in_motion_or_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_15_prada_closure_as_jewel",
+        "brand": "Prada",
+        "theme": "closure as jewel",
+        "defect": "sleeve_state",
+        "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/15_prada_closure_as_jewel_sleeve_state.txt"
+      },
+      {
+        "source_id": "partial_20261001_16_prada_closure_as_jewel",
+        "brand": "Prada",
+        "theme": "closure as jewel",
+        "defect": "lr_sleeve",
+        "defect_zh": "左右袖面料不一致：左袖是羊毛，右袖是缎面",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/16_prada_closure_as_jewel_lr_sleeve.txt"
+      },
+      {
+        "source_id": "partial_20261001_17_prada_inside_escapes",
+        "brand": "Prada",
+        "theme": "inside escapes",
+        "defect": "or_bottom",
+        "defect_zh": "下装绑了两个品类：奶油衬裙或灰羊毛西裤",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/17_prada_inside_escapes_or_bottom.txt"
+      },
+      {
+        "source_id": "partial_20261001_18_prada_inside_escapes",
+        "brand": "Prada",
+        "theme": "inside escapes",
+        "defect": "binding",
+        "defect_zh": "同一件裙子的面料绑了两次：外层黑羊毛，又写成全是衬裙网纱",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/18_prada_inside_escapes_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_19_prada_workwear_ruined_by_desire",
+        "brand": "Prada",
+        "theme": "workwear ruined by desire",
+        "defect": "lr_shoe",
+        "defect_zh": "左右鞋不一致：左脚是工作靴，右脚是缎面高跟鞋",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/19_prada_workwear_ruined_by_desire_lr_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_20_prada_workwear_ruined_by_desire",
+        "brand": "Prada",
+        "theme": "workwear ruined by desire",
+        "defect": "length",
+        "defect_zh": "同一件衬衫外套两个长度：及臀，又及腰",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/20_prada_workwear_ruined_by_desire_length.txt"
+      },
+      {
+        "source_id": "partial_20261001_21_prada_softness_that_pretends_to_be_hard",
+        "brand": "Prada",
+        "theme": "softness that pretends to be hard",
+        "defect": "lr_sleeve",
+        "defect_zh": "左右袖面料不一致：左袖是硬羊毛，右袖是丝绸",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/21_prada_softness_that_pretends_to_be_hard_lr_sleeve.txt"
+      },
+      {
+        "source_id": "partial_20261001_22_prada_softness_that_pretends_to_be_hard",
+        "brand": "Prada",
+        "theme": "softness that pretends to be hard",
+        "defect": "or_bottom",
+        "defect_zh": "下装绑了两个品类：硬挺羊毛裙或丝绸西裤",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/22_prada_softness_that_pretends_to_be_hard_or_bottom.txt"
+      },
+      {
+        "source_id": "partial_20261001_23_bottega_veneta_the_weave_unfastened",
+        "brand": "Bottega Veneta",
+        "theme": "the weave unfastened",
+        "defect": "binding",
+        "defect_zh": "同一件外套的编织绑了两次：满铺编织，又写成光面皮革",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/23_bottega_veneta_the_weave_unfastened_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_24_bottega_veneta_the_weave_unfastened",
+        "brand": "Bottega Veneta",
+        "theme": "the weave unfastened",
+        "defect": "lr_leg",
+        "defect_zh": "左右腿下装不一致：左腿是编织皮革西裤，右腿是丝绸裙",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/24_bottega_veneta_the_weave_unfastened_lr_leg.txt"
+      },
+      {
+        "source_id": "partial_20261001_25_bottega_veneta_spring_shedding_into_summer",
+        "brand": "Bottega Veneta",
+        "theme": "spring shedding into summer",
+        "defect": "sleeve_state",
+        "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/25_bottega_veneta_spring_shedding_into_summer_sleeve_state.txt"
+      },
+      {
+        "source_id": "partial_20261001_26_bottega_veneta_spring_shedding_into_summer",
+        "brand": "Bottega Veneta",
+        "theme": "spring shedding into summer",
+        "defect": "or_shoe",
+        "defect_zh": "鞋绑了两个品类：编织穆勒鞋或皮革凉鞋",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/26_bottega_veneta_spring_shedding_into_summer_or_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_27_bottega_veneta_porous_tailoring",
+        "brand": "Bottega Veneta",
+        "theme": "porous tailoring",
+        "defect": "lr_sleeve",
+        "defect_zh": "左右袖面料不一致：左袖是羊毛，右袖是编织皮革",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/27_bottega_veneta_porous_tailoring_lr_sleeve.txt"
+      },
+      {
+        "source_id": "partial_20261001_28_bottega_veneta_porous_tailoring",
+        "brand": "Bottega Veneta",
+        "theme": "porous tailoring",
+        "defect": "binding",
+        "defect_zh": "同一件夹克的门襟绑了两次：编织开孔，又写成密实羊毛",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/28_bottega_veneta_porous_tailoring_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_29_bottega_veneta_floating_rigging",
+        "brand": "Bottega Veneta",
+        "theme": "floating rigging",
+        "defect": "length",
+        "defect_zh": "同一件大衣两个长度：及臀，又及腰",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/29_bottega_veneta_floating_rigging_length.txt"
+      },
+      {
+        "source_id": "partial_20261001_30_bottega_veneta_floating_rigging",
+        "brand": "Bottega Veneta",
+        "theme": "floating rigging",
+        "defect": "lr_shoe",
+        "defect_zh": "左右鞋不一致：左脚是编织穆勒鞋，右脚是短靴",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/30_bottega_veneta_floating_rigging_lr_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_31_bottega_veneta_weather_instruments",
+        "brand": "Bottega Veneta",
+        "theme": "weather instruments",
+        "defect": "or_bottom",
+        "defect_zh": "下装绑了两个品类：流苏羊毛裙或棉质西裤",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/31_bottega_veneta_weather_instruments_or_bottom.txt"
+      },
+      {
+        "source_id": "partial_20261001_32_bottega_veneta_weather_instruments",
+        "brand": "Bottega Veneta",
+        "theme": "weather instruments",
+        "defect": "binding",
+        "defect_zh": "同一条披肩裙的面料绑了两次：拉菲亚流苏，又写成光面皮革",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/32_bottega_veneta_weather_instruments_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_33_fendi_the_body_before_the_outfit",
+        "brand": "Fendi",
+        "theme": "the body before the outfit",
+        "defect": "lr_leg",
+        "defect_zh": "左右腿下装不一致：左腿是真丝衬裤，右腿是蕾丝裙",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/33_fendi_the_body_before_the_outfit_lr_leg.txt"
+      },
+      {
+        "source_id": "partial_20261001_34_fendi_the_body_before_the_outfit",
+        "brand": "Fendi",
+        "theme": "the body before the outfit",
+        "defect": "sleeve_state",
+        "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/34_fendi_the_body_before_the_outfit_sleeve_state.txt"
+      },
+      {
+        "source_id": "partial_20261001_35_fendi_covered_but_not_closed",
+        "brand": "Fendi",
+        "theme": "covered but not closed",
+        "defect": "binding",
+        "defect_zh": "同一件西装外套的门襟绑了两次：敞开呼吸缝，又写成完全扣死",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/35_fendi_covered_but_not_closed_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_36_fendi_covered_but_not_closed",
+        "brand": "Fendi",
+        "theme": "covered but not closed",
+        "defect": "lr_sleeve",
+        "defect_zh": "左右袖面料不一致：左袖是羊毛，右袖是真丝",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/36_fendi_covered_but_not_closed_lr_sleeve.txt"
+      },
+      {
+        "source_id": "partial_20261001_37_fendi_exposure_with_a_brake_pedal",
+        "brand": "Fendi",
+        "theme": "exposure with a brake pedal",
+        "defect": "or_shoe",
+        "defect_zh": "鞋绑了两个品类：黑皮革高跟鞋或裸色凉鞋",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/37_fendi_exposure_with_a_brake_pedal_or_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_38_fendi_exposure_with_a_brake_pedal",
+        "brand": "Fendi",
+        "theme": "exposure with a brake pedal",
+        "defect": "length",
+        "defect_zh": "同一件夹克两个长度：及臀，又及腰",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/38_fendi_exposure_with_a_brake_pedal_length.txt"
+      },
+      {
+        "source_id": "partial_20261001_39_fendi_mirror_glamour",
+        "brand": "Fendi",
+        "theme": "mirror glamour",
+        "defect": "lr_shoe",
+        "defect_zh": "左右鞋不一致：左脚是镜面高跟鞋，右脚是穆勒鞋",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/39_fendi_mirror_glamour_lr_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_40_fendi_mirror_glamour",
+        "brand": "Fendi",
+        "theme": "mirror glamour",
+        "defect": "binding",
+        "defect_zh": "同一件连衣裙的闪光绑了两次：局部镜片，又写成满铺亮片",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/40_fendi_mirror_glamour_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_41_fendi_shared_wardrobe",
+        "brand": "Fendi",
+        "theme": "shared wardrobe",
+        "defect": "or_bottom",
+        "defect_zh": "下装绑了两个品类：羊毛裙或丝绸西裤",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/41_fendi_shared_wardrobe_or_bottom.txt"
+      },
+      {
+        "source_id": "partial_20261001_42_fendi_shared_wardrobe",
+        "brand": "Fendi",
+        "theme": "shared wardrobe",
+        "defect": "lr_leg",
+        "defect_zh": "左右腿下装不一致：左腿是羊毛西裤，右腿是真丝裙",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/42_fendi_shared_wardrobe_lr_leg.txt"
+      },
+      {
+        "source_id": "partial_20261001_43_hermes_dusk_harness",
+        "brand": "Hermes",
+        "theme": "dusk harness",
+        "defect": "sleeve_state",
+        "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/43_hermes_dusk_harness_sleeve_state.txt"
+      },
+      {
+        "source_id": "partial_20261001_44_hermes_dusk_harness",
+        "brand": "Hermes",
+        "theme": "dusk harness",
+        "defect": "binding",
+        "defect_zh": "同一件皮衣的结构绑了两次：束带架构，又写成光面无结构",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/44_hermes_dusk_harness_binding.txt"
+      },
+      {
+        "source_id": "partial_20261001_45_hermes_the_zipped_threshold",
+        "brand": "Hermes",
+        "theme": "the zipped threshold",
+        "defect": "lr_sleeve",
+        "defect_zh": "左右袖面料不一致：左袖是皮革，右袖是丝绸",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/45_hermes_the_zipped_threshold_lr_sleeve.txt"
+      },
+      {
+        "source_id": "partial_20261001_46_hermes_the_zipped_threshold",
+        "brand": "Hermes",
+        "theme": "the zipped threshold",
+        "defect": "or_shoe",
+        "defect_zh": "鞋绑了两个品类：皮革短靴或缎面高跟鞋",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/46_hermes_the_zipped_threshold_or_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_47_hermes_the_working_corral",
+        "brand": "Hermes",
+        "theme": "the working corral",
+        "defect": "length",
+        "defect_zh": "同一件皮大衣两个长度：及臀，又及腰",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/47_hermes_the_working_corral_length.txt"
+      },
+      {
+        "source_id": "partial_20261001_48_hermes_the_working_corral",
+        "brand": "Hermes",
+        "theme": "the working corral",
+        "defect": "lr_shoe",
+        "defect_zh": "左右鞋不一致：左脚是骑马靴，右脚是穆勒鞋",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/48_hermes_the_working_corral_lr_shoe.txt"
+      },
+      {
+        "source_id": "partial_20261001_49_hermes_the_carre_as_a_body-map",
+        "brand": "Hermes",
+        "theme": "the carre as a body-map",
+        "defect": "or_bottom",
+        "defect_zh": "下装绑了两个品类：真丝方巾裙或羊毛西裤",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/49_hermes_the_carre_as_a_body-map_or_bottom.txt"
+      },
+      {
+        "source_id": "partial_20261001_50_hermes_the_carre_as_a_body-map",
+        "brand": "Hermes",
+        "theme": "the carre as a body-map",
+        "defect": "binding",
+        "defect_zh": "同一件方巾连衣裙的图案绑了两次：印花丝巾，又写成素羊毛",
+        "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/partial_consistency_20261001/50_hermes_the_carre_as_a_body-map_binding.txt"
+      }
+    ]
+  }
 }

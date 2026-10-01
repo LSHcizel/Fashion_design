@@ -1,0 +1,23 @@
+# dries-van-noten_fw26_00023 text_description
+
+## text_description
+
+Full-length runway look built as a close, elongated floral column: the model wears a strapless, straight-across neckline top that exposes the shoulders, collarbones, and arms, fitted through the torso and extending to the high hip. The top has a dark ground densely covered in small botanical motifs, with warmer golden-brown florals across the upper bust area and a contrasting turquoise-blue floral section through the mid-to-lower torso, creating a layered tapestry-like effect. It sits over or meets a narrow ankle-length skirt in a darker black-based floral print with larger rose and leaf motifs in muted pink, green, and brown tones; the skirt falls straight from the waist/hip area with a slim, pencil-like silhouette and minimal flare. The proportions are long and streamlined, with the ornate floral surfaces carrying the visual weight and no visible jacket or bag. Styling includes slicked-back hair, long dangling earrings, and dark brown leather-looking boots visible below the skirt hem, with a sturdy rounded toe and low block heel, adding a grounded fall runway feel.
+
+## key_elements
+
+- strapless straight-across floral top
+- fitted high-hip torso silhouette
+- contrasting golden and turquoise botanical patterning
+- dark ankle-length floral pencil skirt
+- large muted rose-and-leaf print on skirt
+- bare shoulders and arms
+- long dangling earrings
+- dark brown block-heel boots
+- slicked-back hair
+- no visible bag or outer layer
+
+## uncertainty_notes
+
+- Exact textile is not identifiable; surface reads as richly patterned or tapestry-like.
+- The top and skirt overlap/meet at the waist-hip area, but the closure and construction are not visible.

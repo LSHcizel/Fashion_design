@@ -1,0 +1,19 @@
+# 7-for-all-mankind_fw26_00046 text_description
+
+## text_description
+
+Full-length runway look built around layered winter textures: a long, open-front cream outer layer with very thick shaggy/looped pile hangs from the shoulders like a sleeveless coat or oversized vest, falling to around mid-calf with soft, uneven textured edges and framing the body in a bulky vertical silhouette. Under it is a medium-grey knitted-looking top with a high wrapped cowl or scarf-like neck, relaxed long sleeves, and a slightly slouchy body that tucks or blouses into the waist. The lower half is blue denim in a high-waisted, full-length silhouette, appearing as a long skirt or very wide overlapping denim trouser with a wrap-like front panel, visible seams, and a loose column shape that narrows visually as the model walks. A brown leather belt sits at the waist, coordinated with reddish-brown leather gloves, one gloved hand placed at the front waist. Footwear is visible beneath the denim as glossy reddish-brown platform heeled shoes with an open-toe or cutout front appearance. The palette combines oatmeal cream, heather grey, faded indigo denim, and polished chestnut leather, giving the styling a rugged-luxe, fall layered mood.
+
+## key_elements
+
+- cream shaggy long sleeveless outer layer
+- grey cowl-neck knit top with long sleeves
+- high-waisted faded blue denim full-length bottom
+- brown leather belt
+- reddish-brown leather gloves
+- glossy reddish-brown platform heeled shoes
+
+## uncertainty_notes
+
+- The denim bottom reads as either a long skirt or very wide wrap-like trouser from the visible front view.
+- The exact construction and material of the cream outer layer are not fully determinable beyond its shaggy long-pile surface.
