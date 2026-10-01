@@ -276,14 +276,17 @@ def _write_round_accept(
     log_path = out_dir.parent / ACCEPT_LOG_NAME
     with log_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(blob, ensure_ascii=False) + "\n")
-    versus_original = score_lift.get("lift_vs_original") or {}
+    versus_best = score_lift.get("best_rewrite_lift_vs_original") or {}
     versus_previous = score_lift.get("lift_vs_previous_round") or {}
     logger.info(
-        "验收摘要 round=%s → %s ；相对原文 质量轴 %s 总分 %s ；相对上一轮 质量轴 %s 总分 %s",
+        "验收摘要 round=%s → %s ；最好改写相对原文 质量轴 %s 总分 %s"
+        "（更高 %s 组 / 更低 %s 组）；相对上一轮 质量轴 %s 总分 %s",
         round_idx,
         out_dir / "accept.json",
-        versus_original.get("quality"),
-        versus_original.get("S_fp"),
+        versus_best.get("quality"),
+        versus_best.get("S_fp"),
+        versus_best.get("groups_best_higher"),
+        versus_best.get("groups_best_lower"),
         versus_previous.get("quality") if versus_previous else None,
         versus_previous.get("S_fp") if versus_previous else None,
     )

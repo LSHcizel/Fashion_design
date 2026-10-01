@@ -8,6 +8,8 @@ import unittest
 from pathlib import Path
 
 from training.accept_report import build_round_accept, summarize_rows, summarize_score_lift
+from training.compare_best_rewrite import _groups_missing_original
+from training.record_builder import build_training_record
 from training.run_next_grpo_round import build_collect_cmd, build_grpo_cmd, import_latest_weights
 from argparse import Namespace
 
@@ -142,9 +144,43 @@ class AcceptReportTests(unittest.TestCase):
         self.assertEqual(lift["lift_vs_original"]["modules"]["DesignMerit"], 0.3)
         self.assertEqual(lift["lift_vs_original"]["modules"]["InformationDensity"], 0.3)
         self.assertEqual(lift["best_rewrite_lift_vs_original"]["S_fp"], 0.4)
+        self.assertEqual(lift["best_rewrite_lift_vs_original"]["groups_best_higher"], 1)
+        self.assertEqual(lift["best_rewrite_lift_vs_original"]["groups_best_lower"], 0)
         self.assertEqual(lift["lift_vs_previous_round"]["S_fp"], 0.2)
         self.assertEqual(lift["lift_vs_previous_round"]["quality"], 0.2)
         self.assertEqual(lift["lift_vs_previous_round"]["modules"]["LanguageClarity"], None)
+
+    def test_baseline_reference_is_kept_out_of_training(self) -> None:
+        rec = build_training_record(
+            group_id="g",
+            group_round=0,
+            candidate_index=-1,
+            context={"shared_source_text": "原文"},
+            completion_text="原文",
+            evaluation={"total_score": 0.5, "scores": {}, "gates": {}},
+            r_content_block=None,
+            parallel_meta={"injected_original": True, "reference_only": True, "dedupe_kept": True},
+        )
+        self.assertFalse(rec["training_filter"]["include_in_training"])
+        self.assertIn("baseline_reference", rec["training_filter"]["exclude_reasons"])
+
+    def test_missing_original_is_the_source_text(self) -> None:
+        rows = [
+            {
+                "group_id": "g1",
+                "candidate_index": 0,
+                "S_fp": 0.8,
+                "context": {"shared_source_text": "原文甲"},
+            },
+            {
+                "group_id": "g2",
+                "candidate_index": -1,
+                "S_fp": 0.4,
+                "context": {"shared_source_text": "原文乙"},
+            },
+        ]
+        missing = _groups_missing_original(rows)
+        self.assertEqual(missing, {"g1": "原文甲"})
 
 
 class GrpoRoundPlanTests(unittest.TestCase):

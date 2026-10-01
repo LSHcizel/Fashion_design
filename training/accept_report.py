@@ -292,6 +292,9 @@ def _paired_lift(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
         deltas[name] = []
     best_deltas: Dict[str, List[float]] = {k: [] for k in deltas}
     paired = 0
+    best_higher = 0
+    best_lower = 0
+    best_tied = 0
     for slot in buckets.values():
         if not slot["original"] or not slot["rewrite"]:
             continue
@@ -308,10 +311,19 @@ def _paired_lift(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
             d = _delta(best_axes.get(key), orig.get(key))
             if d is not None:
                 bucket.append(d)
+        sfp_delta = _delta(best_axes.get("S_fp"), orig.get("S_fp"))
+        if sfp_delta is None:
+            continue
+        if sfp_delta > 0:
+            best_higher += 1
+        elif sfp_delta < 0:
+            best_lower += 1
+        else:
+            best_tied += 1
 
     def pack(src: Dict[str, List[float]]) -> Dict[str, Any]:
         modules = {name: _mean(src[name]) for name, _zh in QUALITY_MODULES}
-        return {
+        blob = {
             "groups": paired,
             "S_fp": _mean(src["S_fp"]),
             "quality": _mean(src["quality"]),
@@ -319,6 +331,11 @@ def _paired_lift(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
             "total_penalty": _mean(src["total_penalty"]),
             "modules": modules,
         }
+        if src is best_deltas:
+            blob["groups_best_higher"] = best_higher
+            blob["groups_best_lower"] = best_lower
+            blob["groups_best_tied"] = best_tied
+        return blob
 
     return {"mean_rewrite": pack(deltas), "best_rewrite": pack(best_deltas)}
 
@@ -341,7 +358,8 @@ def summarize_score_lift(
     return {
         "note": (
             "rewrites / originals 是本轮采样时裁判打的分，不是本轮梯度更新之后重新生成的。"
-            "lift_vs_original 只统计同时有原文和改写的组：组内改写均值减原文。"
+            "展示用的提升是 best_rewrite_lift_vs_original：每组只取总分最高的一条改写，减去该原文，再对组取平均。"
+            "lift_vs_original 仍是组内全部改写的均值减原文。"
             "lift_vs_previous_round 是本轮改写均值减上一轮改写均值；两边原文集合不同时，这是总体水平差。"
             "质量轴是 quality_base_score。模块分缺省时对应提升为 null，新采样会写入 module_scores。"
         ),

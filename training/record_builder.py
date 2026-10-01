@@ -150,6 +150,9 @@ def build_training_record(
     if training_filter["rewrite_error"]:
         training_filter["include_in_training"] = False
         training_filter["exclude_reasons"].append("rewrite_exception")
+    if (parallel_meta or {}).get("reference_only"):
+        training_filter["include_in_training"] = False
+        training_filter["exclude_reasons"].append("baseline_reference")
 
     if evaluation is not None:
         gates_block = evaluation.get("gates") or {}
@@ -223,6 +226,7 @@ def iter_records_from_parallel_result(
             "rewrite_error": c.get("error"),
             "evaluation_skipped": c.get("evaluation_skipped"),
             "injected_original": bool(c.get("injected_original")),
+            "reference_only": bool(c.get("reference_only")),
         }
         yield build_training_record(
             group_id=gid,

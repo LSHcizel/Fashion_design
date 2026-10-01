@@ -104,6 +104,32 @@ def _inject_original_as_candidate(
     parallel_result["candidates"] = cands
 
 
+def _attach_baseline_reference(
+    parallel_result: Dict[str, Any],
+    source_text: str,
+    evaluation: Optional[Dict[str, Any]],
+) -> None:
+    """把原文评判留在组里，只供和最好改写对比，不进入训练。"""
+    if evaluation is None:
+        return
+    cands = list(parallel_result.get("candidates") or [])
+    if any(c.get("injected_original") or c.get("reference_only") for c in cands):
+        return
+    cands.append(
+        {
+            "candidate_index": -1,
+            "text": source_text,
+            "temperature": 0.0,
+            "dedupe_kept": True,
+            "evaluation": evaluation,
+            "error": None,
+            "injected_original": True,
+            "reference_only": True,
+        }
+    )
+    parallel_result["candidates"] = cands
+
+
 def _pid_alive(pid: int) -> bool:
     if pid <= 0:
         return False
@@ -551,6 +577,8 @@ def main() -> None:
                     source_name=f"{sid}.original",
                     evaluation=payload["baseline_eval"],
                 )
+            else:
+                _attach_baseline_reference(result, text, payload["baseline_eval"])
             conn_err = _first_connection_error_from_result(result)
             if conn_err:
                 raise JudgeConnectionError(conn_err)
