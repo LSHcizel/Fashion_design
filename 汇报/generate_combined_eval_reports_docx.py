@@ -18,7 +18,7 @@ REPORT_ASSETS = [
     {
         "report_md": REPORT_DIR / "010_ps27_031_完整评分报告.md",
         "source_text": ROOT
-        / "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/"
+        / "fashion_research_dir/image_inverse/20260524T044337Z/"
         "10_01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装__010_media_cha_biarritz_ps27_031_text_description.md",
         "source_image": ROOT
         / "downloads/wgsn_latest_batch/01_图片库＆设计资源_中文_女士_Chanel_Pre-Summer_2027_服装/"

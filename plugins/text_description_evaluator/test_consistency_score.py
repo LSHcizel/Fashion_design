@@ -15,7 +15,7 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
 
 REPO = Path(__file__).resolve().parents[2]
 DEFECTS = REPO / "fashion_research_dir" / "consistency_defect_cases"
-INVERSE = REPO / "fashion_research_dir" / "wgsn_batch_image_inverse" / "20260524T044337Z"
+INVERSE = REPO / "fashion_research_dir" / "image_inverse" / "20260524T044337Z"
 
 
 def _prose(path: Path) -> str:

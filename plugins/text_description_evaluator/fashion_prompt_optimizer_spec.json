@@ -1,6 +1,6 @@
 {
   "name": "fashion_text_prompt_optimizer",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "input_type": "text_description",
   "output_type": [
     "optimized_prompt",
@@ -72,15 +72,16 @@
   },
   "quality_module_weights": {
     "DesignMerit": 10.0,
-    "ConcisenessAndDensity": 3.0,
-    "GenerationReadiness": 3.0,
+    "ConcisenessAndDensity": 5.0,
+    "InformationDensity": 5.0,
+    "GenerationReadiness": 5.0,
     "BindingAccuracy": 1.0,
     "LanguageClarity": 1.0,
     "StructuralClarity": 1.0
   },
   "score_composition": {
     "default_module_weight": 1.0,
-    "notes": "S_fp = s_fp_base（0.2×覆盖 + 0.8×质量，长度不进总分）。冲突还在时，进入总分的质量加成封顶 0.25。惩罚不扣减 S_fp，只用于 penalty_gate（五项平均 ≤ 0.25）。选取：相对原文同时提高 S_fp 并降低惩罚的候选里，取 S_fp 最高的一条；做不到则留原文。冲突下限只抬一致性和协调性，不进总分。设计是换掉颜色和面料之后仍认得出的那一处：整片面料上的花纹或肌理、沿着领口门襟下摆走的装饰、或同一主题里单独也能看懂的内层。左右两套、同件互斥、另一主题的服装是冲突。用 or 并列两个品类、把左右袖改写成单肩、把改写说明写进正文，也是冲突。"
+    "notes": "S_fp = s_fp_base（0.2×覆盖 + 0.8×质量，长度不进总分）。质量含信息密度（InformationDensity，权重 5）：只给「识别锚点还在、每句新增可成像事实」加分，不奖短、不把删事实当成高密度。冲突还在时，进入总分的质量加成封顶 0.25，信息密度另封 0.5。惩罚不扣减 S_fp，只用于 penalty_gate（五项平均 ≤ 0.25）。选取：相对原文同时提高 S_fp 并降低惩罚的候选里，取 S_fp 最高的一条；做不到则留原文。冲突下限只抬一致性和协调性，不进总分。设计是换掉颜色和面料之后仍认得出的那一处：整片面料上的花纹或肌理、沿着领口门襟下摆走的装饰、或同一主题里单独也能看懂的内层。左右两套、同件互斥、另一主题的服装是冲突。用 or 并列两个品类、把左右袖改写成单肩、把改写说明写进正文，也是冲突。"
   },
   "coverage_modules": [
     {
@@ -170,6 +171,12 @@
       ]
     },
     {
+      "name": "InformationDensity",
+      "metrics": [
+        "information_density"
+      ]
+    },
+    {
       "name": "DesignMerit",
       "metrics": [
         "design_distinctiveness",
@@ -235,6 +242,25 @@
         "0.5": "可见事实与说明/评论/姿态各占相当比重，生图导向不足。",
         "0.25": "抽象评论或姿态指令为主，可见服装事实偏少。",
         "0.0": "无法从文本稳定生成可见造型。"
+      }
+    },
+    "InformationDensity": {
+      "zh_name": "信息密度",
+      "description": "看每句是否新增一条可成像事实。高分是把同一批识别锚点写紧，不是把正文写短，也不是删掉事实。",
+      "soft_rules": [
+        "不按字数打分。短本身不加分，长本身不扣分。后面的句子仍在增加新的可成像事实时，长文可以高分。",
+        "高信息密度 = 工艺路径、主识别表面、内外层次这些识别锚点还在，而且几乎每句都是新事实。",
+        "删掉识别锚点换短句：最高 0.5。覆盖度另计有没有；本项不把遗漏当成密度。",
+        "同一事实换一种说法再写一遍，算复述，不算新事实。近复制原文按复述打低分。",
+        "段末 1 句 palette/mood 不降档。",
+        "两套身份或同件互斥还在时，堆进去的是冲突不是新事实，最高 0.5。"
+      ],
+      "scoring_rubric": {
+        "1.0": "识别锚点还在。几乎每句都新增一条可成像事实（品类、廓形、材质、颜色、工艺的类型与位置、层次、配件位置），没有把同一事实换说法再写，也没有用氛围或过渡句撑篇幅。",
+        "0.75": "可成像事实为主，最多一句重复或段末 mood。识别锚点还在。",
+        "0.5": "新事实与复述、近复制各占一半；或句子变短是因为删掉了识别锚点，短但不密。",
+        "0.25": "大段换写原文，或同一事实多处重复，长度主要来自复述和氛围过渡。",
+        "0.0": "几乎没有新的可成像事实。"
       }
     },
     "ConcisenessAndDensity": {
@@ -314,7 +340,13 @@
     "generation_content_penalty": {
       "zh_name": "非生成导向内容综合惩罚",
       "description": "综合衡量冗余重复、无关稀释、分析/概念阐释与评论性表达等降低生图提示词效率、削弱可直接生成成像的信息密度与导向性的内容。另：长串风格标签或符号清单（军装、东方领、大翻领、护臂、腿带等）若未先交代主干廓形与层次，导致读者无法还原可见造型，亦视为削弱生成导向。",
-      "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
+      "allowed_scores": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
       "judge_guidance": "按**生图内容价值**分档。**0~0.25**：可见服装事实占主导；允许段末 1 句 palette/mood。**官方单帧开场白**（One photograph of one woman… / No collage, no flat lay）和旧开场白（Please generate female models and the matching clothing for them. / 请生成女模…）**不计罚、不升档**，评测管线通常会预先剥离。**硬下限**：正文仍有 Look 编号或标题、拼贴、平铺、产品图、第二机位，或离身货品句（if removed、its own garment、complete the look、finish the look）时，本惩罚 ≥ 0.75，禁止打 0、0.25、0.5；两类同时在，或明确要求 collage/flat lay/product shot，打 1.0。**≥0.5** 非成像内容占相当比重：(1) 模特姿态/走位/心理（stance should / forward step / poised / 模特应…）；(2) 同一可见事实多处重复无新增像素；(3) 抽象场域/身份/奢华评论明显多于可见锚点。**≥0.75**：上述叠加且可见事实稀疏。",
       "optimizer_target": "改成一个时刻、一个身体、一个机位上看得到的穿着。删掉 Look 编号和标题、拼贴、平铺、产品图、第二视角，以及 if removed、its own garment、complete the look、finish the look。内层只写在这一眼的开口里，配件留在身上。压缩重复表达，删除主题阐释与抽象评论。",
       "round_strategy_target": "进一步合并重复、去除解释性措辞并删除弱可见与无关稀释，提高主体可视化信息占比。",
@@ -325,7 +357,13 @@
     "consistency_penalty": {
       "zh_name": "一致性惩罚",
       "description": "【不对称/一致性统一规定】本惩罚仅针对「主干造型层」的结构与身份一致性：主干=全部衣裤鞋，含外穿与内搭——外套/夹克、内搭上装（衬衫、T 恤、背心、连衣裙式一体上装等）、裤装/裙裤、鞋履凡被描述为穿着主体的层级均算主干，内外层分别作为单品描述时各自也算主干。文本若明确写出外套/大衣里布、裤装内衬或开衩内露衬里等，该里衬/内衬与外壳、裤面同属主干造型语义的一部分，左右或壳-衬互斥、双套里衬叙事对撞等从严，与衣裤鞋同等处理。若任一件主干单品存在左右或同件内部互斥品类、互斥材质/结构语义，视为强缺陷——裁判从严；优化须「向一侧对齐」或「删除互斥分支」。配饰（腰带、手套、戒指、耳环、包袋、领巾、袜、单侧重小配件等）仅小幅度左右或细节不一致、且未把任一件主干衣裤鞋写成两套互斥体系时，不因该项单独提高本惩罚。——典型主干互斥：单件上装左右两套品类/材质；同一外套上立领裹身、大翻领风衣、肩章、单侧金属护臂等与主体呢料无统一语法硬拼等。——**多部位并列左右主干分裂**：同一造型内同时保留上装左右袖态/有无袖对撞、裤装左右腿异料或异裤型、左右脚异鞋族，且再叠加单手手套与对侧裸手等，视为多条互斥「主体身份」并列，对文生图极不友好；不得以仅一句「解构一体」「刻意 split system」即大幅降档至 0.25，除非文本已明显收束为单一可读主干语法或已删去次要支路。",
-      "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
+      "allowed_scores": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
       "judge_guidance": "袖、裤、鞋或同件绑定还在对打，就按硬下限打分。中文改写、声称左右对称、解构、两只鞋同色，都不得因行文通顺打 0。1）还有一类是两套身份（两种袖、两种下装、或两种鞋），一致性惩罚 ≥ 0.75，禁止打 0、0.25、0.5；两类及以上同时还在，打 1.0。2）同一件对领型、有无袖、长度、门襟或壳面给出两个不能同时穿着的值，≥ 0.75；两个及以上绑定同时矛盾，打 1.0。只有一套身份、一种绑定留下时才可打 0。用 or 并列两种下装、两种鞋、两种领或两种袖，仍是两套身份，≥ 0.75。一侧有袖、另一侧无袖或改写成单肩，仍是两种袖，≥ 0.75。正文出现 conflicting、replace、delete、do not 这类改写说明，≥ 0.75。胸针、偏侧结、一侧开衩、交叠、垂坠、不规则下摆是落点，不加罚。单排扣门襟不是左右缺陷。配饰小不一致且主干已是一套身份时不加罚。",
       "optimizer_target": "改写先删掉另一支，再润色。左右若是两套身份（不同袖、不同裤或裙、不同鞋），正文只保留一套袖、一种下装、一族鞋，被删的那支名称不得再出现，即使用 no 或 without 点名也算还在。不要用 or 并列两个品类，不要把左右袖改写成单肩，不要把 conflicting、replace、delete、do not 写进正文。同件两个领型、长度、门襟或壳面只留一个。胸针、偏侧结、开衩、交叠、垂坠、不规则下摆可以留在这一套衣服上。",
       "round_strategy_target": "第一次改写就删掉左右对打和同件互斥的另一支。正文不得再写出被删的那一支。",
@@ -336,7 +374,13 @@
     "coordination_penalty": {
       "zh_name": "协调性惩罚",
       "description": "【与一致性惩罚对齐的协调统一规定】本惩罚对主干（外穿与内搭上装、裤装、鞋，含内外层；以及明确写出的外套里布、裤装内衬/开衩内衬与外壳一体的造型叙事）之间的造型气质/场域互斥从严：任一件主干半精裁半舞台化、鞋与上装严重气质冲突、内外层完全无衔接的场域对撞等，应从严。腿带/harness 与阔腿未交代固定、腰胯多层束系打架、内里与外壳完全无锚点的高对比、里衬材质/光泽与壳面写成两套无关场域等仍从严。**左右脚鞋类气质严重分裂**（如正装牛津 vs 绑带凉鞋）与上装/裤装分裂**同时**出现时，整体协调从严，不得仅因「解构造型」降至低档位。仅当违和仅来自小配饰（左右手套不同色、单侧耳环、腰带略偏置等）且轻微、所有主干衣裤鞋已统一语气时，不因纯配饰小不一致提高本惩罚。",
-      "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
+      "allowed_scores": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
       "judge_guidance": "左右身份对打和主题冲突还在正文里，就按硬下限打分，不得因行文通顺打 0。1）袖、裤、鞋里还有一类是两套身份，协调性惩罚 ≥ 0.75，禁止打 0、0.25、0.5；两类及以上同时还在，打 1.0。2）另一套主题或概念的服装还在（新娘纱、加冕礼、弗拉明戈、丧服、假面舞会、晨礼服、洛可可撑裙，或同等语域；写成内层、第二主体或协调对比仍算还在），≥ 0.75，禁止打 0 或 0.5。冲突服装从正文消失后才可打 0。用 or 并列两个品类、把左右袖改写成单肩、或用 no/without 点名已删服装，仍 ≥ 0.75。正文里的改写说明（conflicting、replace、delete、do not）≥ 0.75。配饰小不一致且主干已是一套身份时不加罚。",
       "optimizer_target": "左右鞋族对打、主干场域对撞、以及不服务已声明主题的另一套服装，第一次改写就删掉。不要写成内层或第二主体。配饰可轻微不一致。",
       "round_strategy_target": "第一次改写就删掉另一支和另一套主题的服装。不要用配饰掩盖主干冲突。",
@@ -347,7 +391,13 @@
     "rationality_penalty": {
       "zh_name": "合理性惩罚",
       "description": "文本出现违反客观规律、现实材质条件或基本穿着常识的装束表达。含：将腿带、harness、腰下吊带等写成同时强约束阔腿或极宽松裤管，却未说明穿入路径、固定点或与裤型的结构关系，使穿着关系在常识上难以成立者，按不合理程度计罚。",
-      "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
+      "allowed_scores": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
       "judge_guidance": "当文本把不合理材质、物理属性或现实中难以成立的服装构成当作主体事实表达时提高该惩罚，例如以不锈钢、水银直接制作衣物主体，或其他明显违反现实条件的着装设定。若腿带/吊带与裤型、层次描述在物理上难以同时成立且文本坚持为常规穿着事实，应提高档位。按不合理程度在 0、0.25、0.5、0.75、1.0 中选档。",
       "optimizer_target": "删除或收束违反客观规律、现实材质条件或基本穿着常识的表述，保留可成立的视觉信息；腿带与裤管关系须可解释或改为相容裤型。",
       "round_strategy_target": "逐项核查材质、结构、功能和穿着关系，消除不符合现实条件或物理逻辑的设定。",
@@ -358,7 +408,13 @@
     "formula_template_penalty": {
       "zh_name": "公式模板惩罚",
       "description": "衡量内容是否落入可互换的巡航/度假公式组合、品牌符号堆叠而无工艺识别点、以及抽象场域/身份评论稀释可见设计事实——只看语义内容，不按段落标题或子弹点格式计数。",
-      "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
+      "allowed_scores": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
       "judge_guidance": "总领性分档，**禁止**因编号分节/列表排版 alone 升档。**内容信号**：(1) 可互换的系列共用主干衣组公式且无 craft/trim/比例/图案锚点；(2) 仅品牌符号/泛五金；(3) salon/promenade/seaworthy/as if/suggesting/identity 等抽象评论显著多于可见设计事实；(4) 换材质词即可套用。有具体工艺/结构锚点的可见事实 prose → 0~0.25，即使 (1) 轻度成立。命中 2 项内容信号 → 0.5~0.75；全面公式化 → 0.75~1.0。",
       "optimizer_target": "删除套路化散文与氛围堆砌，保留具体可见设计事实；打破公式组合，突出 1–2 个非套路工艺/结构/比例锚点。",
       "round_strategy_target": "压缩为紧凑、可见事实锚定的 prose，删品牌散文，强化独特工艺或组合识别点。",
@@ -631,6 +687,35 @@
       "applicability": "when_multiple_garments_exist",
       "quality_dimension": "StructuralClarity"
     },
+    "information_density": {
+      "axis": "quality_score",
+      "source_keypoints": [
+        40
+      ],
+      "rule": "信息密度看每句是否新增可成像事实，不看字数。高分：识别锚点（工艺路径、主识别表面、内外层次）还在，句子不复述、不用氛围撑篇幅。低分：近复制原文、同一事实换写多遍。删掉识别锚点换短句最高 0.5，不把遗漏当成高密度。两套身份或同件互斥还在时最高 0.5。段末一句 mood 不降档。长文若仍在增加新事实，不因长而降分。",
+      "applicability": "always",
+      "quality_dimension": "InformationDensity",
+      "few_shot": [
+        {
+          "text": "An outer layer worn open has trim along the neckline, front edges, and cuffs. An inner layer shows below the hem, with a close lower garment.",
+          "applicable": true,
+          "score": 1.0,
+          "because": "边饰路径和内外层次各写一次，都是新事实。"
+        },
+        {
+          "text": "An outer layer is worn open over a lower garment. The result feels polished.",
+          "applicable": true,
+          "score": 0.5,
+          "because": "变短是因为删掉了边饰和层次。"
+        },
+        {
+          "text": "An outer layer is boxy, loose-sleeved, and hip-cropped. The same layer is again boxy, loose-sleeved, and hip-cropped.",
+          "applicable": true,
+          "score": 0.25,
+          "because": "第二句只是复述第一句。"
+        }
+      ]
+    },
     "visibility_priority": {
       "axis": "quality_score",
       "source_keypoints": [
@@ -639,7 +724,27 @@
       ],
       "rule": "可见且决定成像的主体信息须优先于隐藏细节、模特姿态/走位、抽象场域评论，并且只写一个机位上看得到的穿着。**硬封顶（内容）**：模特姿态/心理描写占显著篇幅 → ≤0.5；非成像抽象评论明显多于可见事实 → ≤0.25；正文还有 Look 编号、拼贴、平铺、产品图或离身货品句 → ≤0.25。官方单帧开场白和旧 T2I 开场白不触发封顶。",
       "applicability": "always",
-      "quality_dimension": "ConcisenessAndDensity"
+      "quality_dimension": "ConcisenessAndDensity",
+      "few_shot": [
+        {
+          "text": "An outer layer worn open shows edge trim, an inner layer at the hem, and a close lower garment.",
+          "applicable": true,
+          "score": 1.0,
+          "because": "可见服装占全文。"
+        },
+        {
+          "text": "An outer layer with edge trim is worn open over a lower garment. The figure should walk forward through a salon.",
+          "applicable": true,
+          "score": 0.5,
+          "because": "可见服装还在，走位和场域占了明显篇幅。"
+        },
+        {
+          "text": "Look 12. Also show the outer layer flat and off the body.",
+          "applicable": true,
+          "score": 0.25,
+          "because": "有编号和离身平铺。"
+        }
+      ]
     },
     "generation_readiness": {
       "axis": "quality_score",
@@ -648,7 +753,27 @@
       ],
       "rule": "文本内容应可直接支撑一张穿着照：可见廓形/品类/层次/材质/颜色/工艺位置/配件位置须是一个时刻、一个身体、一个机位上看得到的。硬封顶：模特姿态/走位占显著篇幅 → ≤0.5；可见事实稀疏且抽象评论为主 → ≤0.25。同件矛盾还在（同一件对领型、有无袖、长度、门襟或壳面给出两个不能同时穿着的值）→ 本项 ≤ 0.25。另一套主题或概念的服装还在（新娘纱、加冕礼、弗拉明戈、丧服、假面舞会、晨礼服、洛可可撑裙，或同等语域；写成内层、第二主体或协调对比仍算还在）→ 本项 ≤ 0.25。正文还有 Look 编号或标题、拼贴、平铺、产品图、第二机位，或离身货品句（if removed、its own garment、complete the look、finish the look）→ 本项 ≤ 0.25。这些情况禁止用可见事实充分抬到 0.75 以上。官方单帧开场白不计。没有上述冲突且可见事实充分 → ≥0.75。",
       "applicability": "always",
-      "quality_dimension": "GenerationReadiness"
+      "quality_dimension": "GenerationReadiness",
+      "few_shot": [
+        {
+          "text": "An outer layer worn open shows edge trim, an inner layer at the hem, and a close lower garment.",
+          "applicable": true,
+          "score": 1.0,
+          "because": "一个身体、一个机位，可直接画。"
+        },
+        {
+          "text": "Mood and a forward step fill half the text. An outer layer and a lower garment are only named.",
+          "applicable": true,
+          "score": 0.5,
+          "because": "氛围、姿态与服装事实各半。"
+        },
+        {
+          "text": "Either of two lower garments, and the two sleeves differ.",
+          "applicable": true,
+          "score": 0.25,
+          "because": "两种下装、两种袖还在。"
+        }
+      ]
     },
     "bilateral_coherence": {
       "axis": "quality_score",
@@ -656,9 +781,35 @@
         29,
         40
       ],
-      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：先判断是两套身份，还是同一种衣服上的落点。两套身份（两种袖态、两种裤或裙、两种鞋）须低分，直到只剩一套袖、一种下装、一族鞋。主干左右仍是两种袖态、两种裤或两种鞋时，本项 ≤ 0.5；两类及以上同时还在则 ≤ 0.25。句子通顺或声称一体，不能把本项打到 0.75 以上。只有袖、裤、鞋各自只剩一种时才可 ≥ 0.75。同一种衣服上的个性化落点不扣分，可多处并存：单侧胸针或贴花、偏侧蝴蝶结或系带、一侧开衩、交叠门襟、斜向垂坠、不规则下摆、同一块面料上的图形色块。单排扣门襟不是左右缺陷。配饰小差异且主干已统一时从宽。",
+      "rule": "当文本显式区分左右脚、左右腿、左右袖、左右肩或左右手配件时：先判断是两套身份，还是同一种衣服上的落点。两套身份（两种袖态、两种裤或裙、两种鞋）须低分，直到只剩一套袖、一种下装、一族鞋。主干左右仍是两种袖态、两种裤或两种鞋时，本项 ≤ 0.5；两类及以上同时还在则 ≤ 0.25。句子通顺或声称一体，不能把本项打到 0.75 以上。只有袖、裤、鞋各自只剩一种时才可 ≥ 0.75。同一种衣服上的单侧落点不扣分，不是第二套身份。配饰差异且主干已统一时从宽。",
       "applicability": "when_bilateral_difference_exists",
-      "quality_dimension": "GenerationReadiness"
+      "quality_dimension": "GenerationReadiness",
+      "few_shot": [
+        {
+          "text": "An outer layer is worn open over a lower garment and one footwear family.",
+          "applicable": false,
+          "score": null,
+          "because": "没有左右差异，本项不适用。"
+        },
+        {
+          "text": "One side of the outer layer has a small placed detail. Sleeves, the lower garment, and the footwear are each one kind.",
+          "applicable": true,
+          "score": 1.0,
+          "because": "袖、下装、鞋各一种。单侧落点不是第二套身份。"
+        },
+        {
+          "text": "The lower garment and the footwear are each one kind, but the two sleeves differ.",
+          "applicable": true,
+          "score": 0.5,
+          "because": "只有袖还是两种。"
+        },
+        {
+          "text": "The two sleeves differ, and the two feet are different footwear.",
+          "applicable": true,
+          "score": 0.25,
+          "because": "袖和鞋同时是两种。"
+        }
+      ]
     },
     "spatial_coherence": {
       "axis": "quality_score",
@@ -669,7 +820,33 @@
       ],
       "rule": "层次、前后、内外、上下、附着位置等空间关系必须清晰且视觉上合理；大衣与腰带、腰下吊带、腿带/harness 与裤管之间的遮盖、穿入与固定点须可还原，禁止腰胯多层束系含糊不可成像",
       "applicability": "when_spatial_relation_exists",
-      "quality_dimension": "GenerationReadiness"
+      "quality_dimension": "GenerationReadiness",
+      "few_shot": [
+        {
+          "text": "An outer layer with trim along the edges.",
+          "applicable": false,
+          "score": null,
+          "because": "没有层次或附着，本项不适用。"
+        },
+        {
+          "text": "The outer layer is worn open over an inner layer. The inner hem shows below, and a carried piece sits at one side.",
+          "applicable": true,
+          "score": 1.0,
+          "because": "叠穿、下摆和侧向位置都可还原。"
+        },
+        {
+          "text": "The outer layer sits above the lower garment, and a carried piece is somewhere nearby.",
+          "applicable": true,
+          "score": 0.5,
+          "because": "有上下和侧向，但画不稳。"
+        },
+        {
+          "text": "A binding closes over a wide lower garment, with no fixed point.",
+          "applicable": true,
+          "score": 0.25,
+          "because": "束系和宽松下装同时出现，固定点缺失。"
+        }
+      ]
     },
     "design_distinctiveness": {
       "axis": "quality_score",

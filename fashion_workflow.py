@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import time
 import pickle
 import argparse
@@ -25,6 +26,14 @@ from fashion import (
 )
 from utils import extract_prompt
 from elimination_handler import EliminationHandler
+from workflow_subtheme_gate import (
+    MAX_SUBTHEME_REPLACEMENTS,
+    SUB_THEMES_MARKER,
+    look_kept_for_reflect,
+    look_rewrite_not_adopted,
+    replace_sub_theme_heading,
+    subtheme_discarded,
+)
 from plugins.text_description_evaluator.design_text_evaluator_api import DesignTextEvaluator
 from plugins.local_llm import (
     build_workflow_text_evaluator,
@@ -56,9 +65,6 @@ def create_dated_run_dir(base_dir: str):
             os.makedirs(candidate, exist_ok=True)
             return candidate
         suffix += 1
-
-SUB_THEMES_MARKER = "**Sub-themes for chapter development:**"
-
 
 def parse_sub_themes_from_theme_analysis(theme_analysis_text: str) -> list[str]:
     """
@@ -198,6 +204,8 @@ class FashionWorkflow:
         # 每个 look 的评估/优化结果追踪
         # 结构: {(chapter_idx, look_number): {"passed": bool, "total_score": float, ...}}
         self.look_evaluation_results: dict = {}
+        # 仅内存：已废弃子主题名，用来避免补位时重复。不写入运行目录。
+        self._discarded_sub_themes: list[str] = []
 
         # 初始化各个 Agent
         model = self.phase_models.get("theme analysis", agent_model_backbone if isinstance(agent_model_backbone, str) else DEFAULT_LLM_BACKBONE)
@@ -287,6 +295,8 @@ class FashionWorkflow:
         # 向后兼容：旧的 pkl 可能没有新增字段/Agent，这里补齐，避免后续调用报错
         if not hasattr(workflow, "text_only_mode"):
             workflow.text_only_mode = False
+        if not hasattr(workflow, "_discarded_sub_themes"):
+            workflow._discarded_sub_themes = []
         if not hasattr(workflow, "brand"):
             workflow.brand = None
         if not hasattr(workflow, "description"):
@@ -716,55 +726,12 @@ class FashionWorkflow:
                 sub_theme_name = f"Sub-Theme {chapter_idx}"
 
             print(f"[Collection] 正在重新生成 {chapter_name} (Sub-theme: {sub_theme_name})...")
-
-            # 清除 agent 状态
-            self.reset_agents()
-            self.elements_specialist.design_concepts = []
-            self.elements_specialist.candidate_elements = []
-            self.look_stylist.candidate_elements = []
-            self.look_stylist.look_descriptions = []
-
-            # 创建新的 chapter 目录
-            chapter_dir = os.path.join(self.workflow_dir, chapter_name)
-            os.makedirs(chapter_dir, exist_ok=True)
-
-            # 重新生成 chapter
-            chapter = self.concept_brainstorming_for_single_chapter(chapter_idx, sub_theme_name)
-            if not chapter:
-                print(f"[Collection] 重新生成 {chapter_name} 失败")
-                continue
-
-            # 保存 chapter 概念
-            chapter_concept_path = os.path.join(chapter_dir, "design_chapter.txt")
-            with open(chapter_concept_path, "w", encoding="utf-8") as f:
-                f.write(f"**Chapter {chapter_idx} (Sub-Theme): {chapter['name']}**\n\n")
-                f.write(chapter["content"])
-
-            # 执行 design elements proposal
-            self.design_elements_proposal_for_chapter(chapter, chapter_dir, chapter_idx)
-
-            # 执行 look description generation
-            self.look_stylist.sub_theme = chapter["name"]
-            self.look_stylist.design_target_prompt = self.design_target_prompt
-            self.look_stylist.theme = self.theme
-
-            condensed_theme_analysis = self._condense_theme_analysis_for_looks(
-                self.theme_analyzer.theme_analysis,
-                sub_theme_name=chapter["name"],
-                max_chars=1800,
+            self._settle_sub_theme_chapter(
+                chapter_idx,
+                sub_theme_name,
+                chapter_names=sub_themes,
+                skip_image_eval=False,
             )
-            self.look_stylist.theme_analysis = condensed_theme_analysis
-
-            try:
-                save_path = os.path.join(chapter_dir, "theme_analysis_condensed.txt")
-                with open(save_path, "w", encoding="utf-8") as f:
-                    f.write(condensed_theme_analysis + "\n")
-            except Exception as e:
-                print(f"[Collection] 警告：无法写入 theme_analysis_condensed.txt：{e}")
-
-            self.look_description_generation_for_group(chapter_dir)
-            print(f"[Collection] {chapter_name} 重新生成完成，请重新导入对应的生成图。")
-            self.reset_agents()
 
     @staticmethod
     def _condense_theme_analysis_for_looks(theme_analysis: str, sub_theme_name: str, max_chars: int = 1800) -> str:
@@ -849,7 +816,12 @@ class FashionWorkflow:
             condensed = condensed[:max_chars].rstrip() + "..."
         return condensed
 
-    def _confirm_chapter_images_ready(self, chapter_idx: int, chapter_dir: str) -> list:
+    def _confirm_chapter_images_ready(
+        self,
+        chapter_idx: int,
+        chapter_dir: str,
+        look_numbers: list | None = None,
+    ) -> list:
         """
         交互确认：是否已根据 chapter 的 look_xx 正确导入生成图
         返回：图片路径列表（按 look 编号排序）
@@ -868,21 +840,42 @@ class FashionWorkflow:
                 continue
 
             images = self._collect_look_images(chapter_dir)
+            expected = int(self.num_looks or 0)
+            if look_numbers is not None:
+                wanted = {int(n) for n in look_numbers}
+                images = [
+                    path for path in images
+                    if self._look_number_from_filename(path) in wanted
+                ]
+                expected = len(wanted)
             if not images:
                 print(f"[Chapter {chapter_idx:02d}] 未在目录中发现 look_xx 图片：{chapter_dir}")
                 continue
 
-            # 如果 num_looks 有要求，做一个下限校验，避免误触发
-            if self.num_looks and len(images) < int(self.num_looks):
+            # 下限校验只数纳入考量的 look，避免把已剔除的 look 算进去
+            if expected and len(images) < expected:
                 print(
-                    f"[Chapter {chapter_idx:02d}] 当前发现 {len(images)} 张图片，但配置期望至少 {self.num_looks} 张。"
+                    f"[Chapter {chapter_idx:02d}] 当前发现 {len(images)} 张图片，但需要至少 {expected} 张。"
                 )
                 print("请确认图片是否已全部导入，完成后再输入 y。")
                 continue
 
             return images
 
-    def run_chapter_image_reduction(self, chapter_idx: int, sub_theme_name: str, chapter_dir: str):
+    @staticmethod
+    def _look_number_from_filename(path: str) -> int | None:
+        match = re.search(r"look_(\d+)", os.path.basename(path), flags=re.IGNORECASE)
+        if not match:
+            return None
+        return int(match.group(1))
+
+    def run_chapter_image_reduction(
+        self,
+        chapter_idx: int,
+        sub_theme_name: str,
+        chapter_dir: str,
+        look_numbers: list | None = None,
+    ):
         """
         在单个 chapter 完整生成后执行：
         - 先询问是否需要进行 Chapter 生成评估（y/n）
@@ -913,7 +906,11 @@ class FashionWorkflow:
         elimination_round = 0
         
         while elimination_round < max_elimination_rounds:
-            image_paths = self._confirm_chapter_images_ready(chapter_idx, chapter_dir)
+            image_paths = self._confirm_chapter_images_ready(
+                chapter_idx,
+                chapter_dir,
+                look_numbers=look_numbers,
+            )
 
             print(f"[Chapter {chapter_idx:02d}] 正在分析中（Chapter 评估/淘汰）...")
             result = self.chapter_image_reducer.reduce_images(
@@ -1226,6 +1223,16 @@ class FashionWorkflow:
             f"Chapter Number: {chapter_number}\n"
             f"Sub-Theme (this chapter): {sub_theme_name}"
         )
+        avoided = [
+            name
+            for name in getattr(self, "_discarded_sub_themes", [])
+            if name and name != sub_theme_name
+        ]
+        if avoided:
+            research_topic += (
+                "\nDiscarded sub-themes (do not repeat their names or chapter ideas):\n"
+                + "\n".join(f"- {name}" for name in avoided)
+            )
 
         for _i in range(max_tries):
             if self.verbose:
@@ -1274,6 +1281,319 @@ class FashionWorkflow:
             "content": design_concept.strip(),
         }
 
+    def _chapter_dir_for(self, chapter_idx: int) -> str | None:
+        if not self.workflow_dir:
+            return None
+        return os.path.join(self.workflow_dir, f"chapter_{chapter_idx:02d}")
+
+    def _exclude_unadopted_look(
+        self,
+        chapter_dir: str | None,
+        chapter_idx: int,
+        look_number: int,
+        reason: str,
+    ) -> None:
+        """删掉这一条 look 的文本和评分，章节里其他 look 继续。"""
+        print(
+            f"[Chapter {chapter_idx:02d} | Look {look_number:02d}] "
+            f"改写未被采纳（{reason}），不纳入本章考量。"
+        )
+        self.look_evaluation_results.pop((chapter_idx, look_number), None)
+        if not chapter_dir:
+            return
+        stem = f"look_{look_number:02d}"
+        self._remove_look_named_files(chapter_dir, stem)
+        scores_dir = os.path.join(chapter_dir, "text_eval_scores")
+        if os.path.isdir(scores_dir):
+            self._remove_look_named_files(scores_dir, stem)
+
+    @staticmethod
+    def _remove_look_named_files(directory: str, stem: str) -> None:
+        pattern = re.compile(rf"(?i)^{re.escape(stem)}(?:\.|_).+")
+        for name in os.listdir(directory):
+            if not pattern.match(name):
+                continue
+            path = os.path.join(directory, name)
+            if os.path.isfile(path):
+                try:
+                    os.remove(path)
+                except OSError as exc:
+                    print(f"警告：无法删除 {path}：{exc}")
+
+    def _discard_sub_theme_records(
+        self,
+        chapter_idx: int,
+        sub_theme_name: str,
+        rejection: dict | None,
+    ) -> None:
+        """删掉该子主题的章节目录和本章评分记录。废弃名只留在内存里，避免补位重复。"""
+        excluded = (rejection or {}).get("excluded_looks") or []
+        excluded_text = ""
+        if excluded:
+            excluded_text = " 未采纳 look：" + ", ".join(str(n) for n in excluded) + "。"
+        print(
+            f"[Chapter {chapter_idx:02d}] 子主题「{sub_theme_name}」"
+            "下的 look 都没有改写被采纳。"
+            f"{excluded_text}"
+            "废弃该子主题，不保留相关记录。"
+        )
+        if sub_theme_name and sub_theme_name not in self._discarded_sub_themes:
+            self._discarded_sub_themes.append(sub_theme_name)
+        for key in list(self.look_evaluation_results):
+            if isinstance(key, tuple) and key and key[0] == chapter_idx:
+                self.look_evaluation_results.pop(key, None)
+        self.look_stylist.look_descriptions = []
+        self.elements_specialist.candidate_elements = []
+        self.elements_specialist.design_concepts = []
+        chapter_dir = self._chapter_dir_for(chapter_idx)
+        if chapter_dir and os.path.isdir(chapter_dir):
+            shutil.rmtree(chapter_dir, ignore_errors=True)
+
+    def _install_sub_theme_name(
+        self,
+        chapter_idx: int,
+        old_name: str,
+        new_name: str,
+        chapter_names: list | None = None,
+    ) -> None:
+        names = list(chapter_names if chapter_names is not None else (self.theme_analyzer.sub_themes or []))
+        while len(names) < chapter_idx:
+            names.append(f"Sub-Theme {len(names) + 1}")
+        if chapter_idx >= 1:
+            names[chapter_idx - 1] = new_name
+        if chapter_names is not None:
+            chapter_names[:] = names
+        self.theme_analyzer.sub_themes = names
+        updated = replace_sub_theme_heading(
+            getattr(self.theme_analyzer, "theme_analysis", "") or "",
+            old_name,
+            new_name,
+            chapter_index=chapter_idx,
+        )
+        self.theme_analyzer.theme_analysis = updated
+        if not self.workflow_dir:
+            return
+        path = os.path.join(self.workflow_dir, "theme_analysis.txt")
+        if not os.path.isfile(path):
+            return
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(updated)
+        except Exception as exc:
+            print(f"[Chapter {chapter_idx:02d}] 警告：无法更新 theme_analysis.txt：{exc}")
+
+    def _propose_replacement_sub_theme(self, *, discarded: str, taken: list[str]) -> str:
+        excluded = []
+        seen = set()
+        for name in list(taken) + list(self._discarded_sub_themes) + [discarded]:
+            clean = (name or "").strip()
+            key = clean.lower()
+            if not clean or key in seen:
+                continue
+            seen.add(key)
+            excluded.append(clean)
+        analysis = (getattr(self.theme_analyzer, "theme_analysis", "") or "")[:4000]
+        query = (
+            "Propose one new chapter sub-theme for this fashion collection.\n"
+            f"Theme: {self.theme}\n"
+            f"Design target: {self.design_target_prompt}\n"
+            f"Theme analysis:\n{analysis}\n\n"
+            "Excluded sub-themes. Do not reuse a name or the same chapter idea:\n"
+            + "\n".join(f"- {name}" for name in excluded)
+            + "\n\nWrite English only. Output exactly one command:\n"
+            "```REPLACEMENT_SUB_THEME\n"
+            "Short Title\n"
+            "```\n"
+        )
+        self.theme_analyzer.reset()
+        for _ in range(3):
+            resp = self.theme_analyzer.override_inference(query, temp=0.7) or ""
+            title = ""
+            if "```REPLACEMENT_SUB_THEME" in resp:
+                body = extract_prompt(resp, "REPLACEMENT_SUB_THEME").strip()
+                title = body.splitlines()[0].strip() if body else ""
+                title = re.sub(r"^\*+|\*+$", "", title).strip(" :")
+                title = re.sub(r"^\d+\.\s*", "", title).strip()
+            if title and title.lower() not in seen:
+                return title
+        n = 1
+        while True:
+            candidate = f"Replacement {n}"
+            if candidate.lower() not in seen:
+                return candidate
+            n += 1
+
+    def _generate_chapter_once(self, chapter_idx: int, sub_theme_name: str) -> dict:
+        """生成一章的概念、元素和全部 look。改写未被采纳的 look 不纳入本章。"""
+        self._current_chapter_idx = chapter_idx
+        self._current_sub_theme_name = sub_theme_name
+        if self.verbose:
+            print(f"\n{'='*60}")
+            print(f"Generating and Processing Chapter {chapter_idx}: {sub_theme_name}")
+            print(f"{'='*60}\n")
+
+        self.reset_agents()
+        self.elements_specialist.design_concepts = []
+        self.elements_specialist.candidate_elements = []
+        self.look_stylist.candidate_elements = []
+        self.look_stylist.look_descriptions = []
+
+        chapter_dir = self._chapter_dir_for(chapter_idx)
+        if chapter_dir:
+            os.makedirs(chapter_dir, exist_ok=True)
+            if self.verbose:
+                print(f"Created directory: {chapter_dir}\n")
+
+        chapter = self.concept_brainstorming_for_single_chapter(chapter_idx, sub_theme_name)
+        if not chapter:
+            if chapter_dir and os.path.isdir(chapter_dir):
+                shutil.rmtree(chapter_dir, ignore_errors=True)
+            if self.verbose:
+                print(f"Failed to generate Chapter {chapter_idx}. Skipping.")
+            return {"status": "concept_failed", "chapter": None, "rejection": None}
+
+        if self.verbose:
+            print(f"\n{'='*60}")
+            print(f"Processing Chapter {chapter_idx}: {chapter['name']}")
+            print(f"{'='*60}\n")
+
+        if chapter_dir:
+            chapter_concept_path = os.path.join(chapter_dir, "design_chapter.txt")
+            with open(chapter_concept_path, "w", encoding="utf-8") as f:
+                f.write(f"**Chapter {chapter_idx} (Sub-Theme): {chapter['name']}**\n\n")
+                f.write(chapter["content"])
+
+        self.design_elements_proposal_for_chapter(chapter, chapter_dir, chapter_idx)
+
+        self.look_stylist.sub_theme = chapter["name"]
+        self.look_stylist.design_target_prompt = self.design_target_prompt
+        self.look_stylist.theme = self.theme
+        condensed_theme_analysis = self._condense_theme_analysis_for_looks(
+            self.theme_analyzer.theme_analysis,
+            sub_theme_name=chapter["name"],
+            max_chars=1800,
+        )
+        self.look_stylist.theme_analysis = condensed_theme_analysis
+        if chapter_dir:
+            try:
+                save_path = os.path.join(chapter_dir, "theme_analysis_condensed.txt")
+                with open(save_path, "w", encoding="utf-8") as f:
+                    f.write(condensed_theme_analysis + "\n")
+            except Exception as exc:
+                print(f"[Chapter {chapter_idx:02d}] 警告：无法写入 theme_analysis_condensed.txt：{exc}")
+
+        summary = self.look_description_generation_for_group(chapter_dir) or {}
+        evaluated = summary.get("evaluated") or []
+        if subtheme_discarded(
+            evaluated,
+            evaluator_enabled=bool(self.evaluator_config.enabled),
+        ):
+            return {
+                "status": "rejected",
+                "chapter": chapter,
+                "rejection": {
+                    "reason": "no look rewrite was adopted",
+                    "excluded_looks": summary.get("excluded_looks") or [],
+                },
+                "adopted_looks": [],
+            }
+        return {
+            "status": "kept",
+            "chapter": chapter,
+            "rejection": None,
+            "adopted_looks": summary.get("adopted_looks") or [],
+        }
+
+    def _reflect_kept_chapter(
+        self,
+        chapter_idx: int,
+        sub_theme_name: str,
+        adopted_looks: list | None = None,
+    ) -> None:
+        """对双门限通过或改写被采纳的 look 做单图 reflect，再对这些 look 做多图 reflect。"""
+        chapter_dir = self._chapter_dir_for(chapter_idx)
+        looks = [int(n) for n in (adopted_looks or [])]
+        if not chapter_dir or not looks:
+            if chapter_dir:
+                print(
+                    f"[Chapter {chapter_idx:02d}] 没有双门限通过或改写被采纳的 look，"
+                    "跳过单图 reflect 和多图 reflect。"
+                )
+            return
+        for look_number in looks:
+            self.run_single_look_reflection(
+                chapter_idx=chapter_idx,
+                look_number=look_number,
+                sub_theme_name=sub_theme_name,
+                chapter_dir=chapter_dir,
+            )
+        self.run_chapter_image_reduction(
+            chapter_idx,
+            sub_theme_name,
+            chapter_dir,
+            look_numbers=looks,
+        )
+
+    def _settle_sub_theme_chapter(
+        self,
+        chapter_idx: int,
+        sub_theme_name: str,
+        *,
+        chapter_names: list | None = None,
+        skip_image_eval: bool = False,
+    ) -> None:
+        """
+        生成一个章节位。
+
+        双门限通过或改写被采纳的 look 进入单图和多图 reflect。
+        改写未被采纳的 look 不纳入本章。全部 look 都未被采纳时，废弃该子主题并补位。
+        """
+        current_name = sub_theme_name
+        for attempt in range(MAX_SUBTHEME_REPLACEMENTS + 1):
+            outcome = self._generate_chapter_once(chapter_idx, current_name)
+            status = outcome["status"]
+            if status == "concept_failed":
+                self.reset_agents()
+                return
+            if status == "kept":
+                chapter = outcome["chapter"] or {}
+                kept_name = chapter.get("name") or current_name
+                if not skip_image_eval:
+                    self._reflect_kept_chapter(
+                        chapter_idx,
+                        kept_name,
+                        outcome.get("adopted_looks") or [],
+                    )
+                self.reset_agents()
+                if self.verbose:
+                    print(f"\nCompleted Chapter {chapter_idx}. Context cleared. Moving to next chapter.\n")
+                return
+
+            self._discard_sub_theme_records(chapter_idx, current_name, outcome.get("rejection"))
+            if attempt >= MAX_SUBTHEME_REPLACEMENTS:
+                print(
+                    f"[Chapter {chapter_idx:02d}] 已补位 {MAX_SUBTHEME_REPLACEMENTS} 次，"
+                    "仍没有被采纳的子主题。该章节位留空。"
+                )
+                self.reset_agents()
+                return
+
+            taken = list(chapter_names or self.theme_analyzer.sub_themes or [])
+            new_name = self._propose_replacement_sub_theme(discarded=current_name, taken=taken)
+            print(
+                f"[Chapter {chapter_idx:02d}] 新生成子主题补位："
+                f"「{current_name}」→「{new_name}」"
+                f"（{attempt + 1}/{MAX_SUBTHEME_REPLACEMENTS}）"
+            )
+            self._install_sub_theme_name(
+                chapter_idx,
+                current_name,
+                new_name,
+                chapter_names=chapter_names,
+            )
+            current_name = new_name
+            self._current_sub_theme_name = new_name
+
     def process_chapters_sequentially(
         self,
         chapter_from: int = 1,
@@ -1296,93 +1616,12 @@ class FashionWorkflow:
         for chapter_idx, sub_theme_name in enumerate(chapter_names, start=1):
             if chapter_idx < chapter_from or chapter_idx > chapter_to:
                 continue
-            # 用于 look 级 reflect 的上下文（避免在函数签名里到处传）
-            self._current_chapter_idx = chapter_idx
-            self._current_sub_theme_name = sub_theme_name
-            if self.verbose:
-                print(f"\n{'='*60}")
-                print(f"Generating and Processing Chapter {chapter_idx}")
-                print(f"{'='*60}\n")
-            
-            # 在生成新章节之前，清除所有agent的状态，确保章节之间的独立性
-            self.reset_agents()
-            # 清除DesignElementsAgent和LookDescriptionAgent的状态
-            self.elements_specialist.design_concepts = []
-            self.elements_specialist.candidate_elements = []
-            self.look_stylist.candidate_elements = []
-            self.look_stylist.look_descriptions = []
-            
-            # 为当前章节创建目录（使用循环索引确保编号连续）
-            chapter_dir = None
-            if self.workflow_dir:
-                chapter_dir = os.path.join(self.workflow_dir, f"chapter_{chapter_idx:02d}")
-                os.makedirs(chapter_dir, exist_ok=True)
-                if self.verbose:
-                    print(f"Created directory: {chapter_dir}\n")
-            
-            # 生成单个章节（=单个子主题）
-            chapter = self.concept_brainstorming_for_single_chapter(chapter_idx, sub_theme_name)
-            
-            if not chapter:
-                if self.verbose:
-                    print(f"Failed to generate Chapter {chapter_idx}. Skipping.")
-                continue
-            
-            if self.verbose:
-                print(f"\n{'='*60}")
-                print(f"Processing Chapter {chapter_idx}: {chapter['name']}")
-                print(f"{'='*60}\n")
-            
-            # 保存当前章节的概念
-            if chapter_dir:
-                chapter_concept_path = os.path.join(chapter_dir, "design_chapter.txt")
-                with open(chapter_concept_path, "w", encoding="utf-8") as f:
-                    f.write(f"**Chapter {chapter_idx} (Sub-Theme): {chapter['name']}**\n\n")
-                    f.write(chapter["content"])
-            
-            # 执行design elements proposal（针对当前章节）
-            self.design_elements_proposal_for_chapter(chapter, chapter_dir, chapter_idx)
-            
-            # 执行look description generation（针对当前章节）
-            # 注入 sub_theme，确保 LookDescriptionAgent 上下文包含章节信息
-            self.look_stylist.sub_theme = chapter["name"]
-            # 注入 design target，确保 LookDescriptionAgent 上下文包含设计目标
-            self.look_stylist.design_target_prompt = self.design_target_prompt
-            # 注入 theme / theme_analysis，确保同章 look 使用一致的章节级上下文
-            self.look_stylist.theme = self.theme
-            condensed_theme_analysis = self._condense_theme_analysis_for_looks(
-                self.theme_analyzer.theme_analysis,
-                sub_theme_name=chapter["name"],
-                max_chars=1800,
+            self._settle_sub_theme_chapter(
+                chapter_idx,
+                sub_theme_name,
+                chapter_names=chapter_names,
+                skip_image_eval=skip_image_eval,
             )
-            self.look_stylist.theme_analysis = condensed_theme_analysis
-            # 可选落盘，便于复现与调试
-            if chapter_dir:
-                try:
-                    save_path = os.path.join(chapter_dir, "theme_analysis_condensed.txt")
-                    with open(save_path, "w", encoding="utf-8") as f:
-                        f.write(condensed_theme_analysis + "\n")
-                except Exception as e:
-                    print(f"[Chapter {chapter_idx:02d}] 警告：无法写入 theme_analysis_condensed.txt：{e}")
-            if skip_image_eval:
-                _orig_reflect = self.run_single_look_reflection
-                self.run_single_look_reflection = lambda *a, **k: None
-                try:
-                    self.look_description_generation_for_group(chapter_dir)
-                finally:
-                    self.run_single_look_reflection = _orig_reflect
-            else:
-                self.look_description_generation_for_group(chapter_dir)
-
-            # 工作流要求：在 1 个 chapter 完整生成后，执行章节图片淘汰处理
-            # 处理前会询问是否已按 look_xx 导入对应生成图（y/n）
-            if not skip_image_eval:
-                self.run_chapter_image_reduction(chapter_idx, chapter["name"], chapter_dir)
-            
-            # 处理完当前章节的所有looks后，清除多余上下文，准备处理下一个章节
-            self.reset_agents()
-            if self.verbose:
-                print(f"\nCompleted Chapter {chapter_idx}. Context cleared. Moving to next chapter.\n")
 
         # 所有 chapter 完成后执行整套 collection 的反思（放在 group-reflection 之后）
         if not skip_collection_reflection:
@@ -1571,7 +1810,10 @@ class FashionWorkflow:
 
         if not use_local_for_parallel_k_rewrite():
             if self.verbose:
-                print(f"  [TextEval] Look {look_number} rewrite skipped (rewriter-llm 未启用)")
+                print(
+                    f"  [TextEval] Look {look_number} rewrite skipped (rewriter-llm 未启用); "
+                    "this look will be excluded"
+                )
             return
 
         if self.verbose:
@@ -1584,7 +1826,10 @@ class FashionWorkflow:
             )
         except JudgeConnectionError as exc:
             if self.verbose:
-                print(f"  [TextEval] Look {look_number} K-rewrite aborted (connection): {exc}")
+                print(
+                    f"  [TextEval] Look {look_number} K-rewrite aborted (connection): {exc}; "
+                    "this look will be excluded"
+                )
             result["rewrite_error"] = str(exc)
             return
 
@@ -1600,7 +1845,10 @@ class FashionWorkflow:
         result["k_rewrite_temperatures"] = temps
         if chosen is None:
             if self.verbose:
-                print(f"  [TextEval] Look {look_number} K-rewrite not better than original; keep source")
+                print(
+                    f"  [TextEval] Look {look_number} K-rewrite not better than original; "
+                    "this look will be excluded"
+                )
             result["mode"] = "evaluate_only"
             return
 
@@ -1666,7 +1914,7 @@ class FashionWorkflow:
         1. evaluator 未启用 → 透传
         2. 评原文；双门限均通过 → 保留原文本
         3. 未通过且 ``rewrite_on_gate_fail`` → 8001 K 路改写；同时提高总分并降低惩罚的候选里，取总分最高的一条并回写
-        4. 没有同时做到这两点，或改写器不可用 → 保留原稿
+        4. 没有同时做到这两点，或改写器不可用 → 不回写。该 look 不纳入本章；同章 look 都不被采纳时才废弃子主题
         """
         cfg = self.evaluator_config
         evaluator = self.text_evaluator
@@ -1750,7 +1998,7 @@ class FashionWorkflow:
             elif self.verbose:
                 print(
                     f"  [TextEval] Look {look_number} gates not passed; "
-                    f"rewrite-on-gate-fail=false, keep original"
+                    f"rewrite-on-gate-fail=false, this look will be excluded"
                 )
 
         finally:
@@ -1773,6 +2021,10 @@ class FashionWorkflow:
 
         look_descriptions = []
         num_looks = self.num_looks
+        adopted_looks: list[int] = []
+        excluded_looks: list[int] = []
+        evaluated: list[dict] = []
+        chapter_idx = getattr(self, "_current_chapter_idx", 0) or 0
 
         for look_idx in range(num_looks):
             look_number = look_idx + 1
@@ -1823,19 +2075,30 @@ class FashionWorkflow:
                         chapter_dir=group_dir,
                     )
                     self.look_evaluation_results[eval_key] = eval_result
-
-                    # 每生成一个 look 后进行一次单图 reflect（若该 look 图片已导入）
-                    # n：跳过该 look 的 reflect，继续生成下一个 look
-                    # y：执行 reflect 并展示淘汰信息
-                    self.run_single_look_reflection(
-                        chapter_idx=getattr(self, "_current_chapter_idx", 0) or 0,
-                        look_number=look_number,
-                        sub_theme_name=getattr(self, "_current_sub_theme_name", "") or "",
-                        chapter_dir=group_dir,
-                    )
-                    
+                    evaluated.append(eval_result)
                     self.reset_agents()
+                    evaluator_on = bool(self.evaluator_config.enabled)
+                    if look_rewrite_not_adopted(eval_result, evaluator_enabled=evaluator_on):
+                        if look_descriptions:
+                            look_descriptions.pop()
+                        if self.look_stylist.look_descriptions:
+                            self.look_stylist.look_descriptions.pop()
+                        self._exclude_unadopted_look(
+                            group_dir,
+                            chapter_idx,
+                            look_number,
+                            eval_result.get("rewrite_error")
+                            or "no candidate raised the score and lowered the penalty",
+                        )
+                        excluded_looks.append(look_number)
+                    elif look_kept_for_reflect(eval_result, evaluator_enabled=evaluator_on):
+                        adopted_looks.append(look_number)
                     break
+        return {
+            "adopted_looks": adopted_looks,
+            "excluded_looks": excluded_looks,
+            "evaluated": evaluated,
+        }
 
     def design_elements_proposal(self):
         """执行设计元素提案阶段（考虑整体主题和所有子主题，生成一份设计元素）"""

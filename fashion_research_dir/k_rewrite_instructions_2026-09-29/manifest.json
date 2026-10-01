@@ -7,7 +7,7 @@
   "n_inverse_dropped": 0,
   "n_生成描述": 50,
   "inverse_selection": "sorted *_text_description.md, 50 indices evenly spaced across 79",
-  "n_total": 150,
+  "n_total": 200,
   "theme_rule": "13 looks used for gpt-image-2, plus the highest-S_fp look from each remaining scored sub-theme in theme_runs",
   "dropped_inverse": [],
   "theme_runs": [
@@ -494,6 +494,410 @@
       "theme": "Layered Transitions",
       "path": "fashion_research_dir/season_themes_2026-09/generated/bottega_veneta_ss27/2026-09-28/chapter_02/look_02.txt",
       "total_score_S_fp": null
+    }
+  ],
+  "n_mild_consistency": 50,
+  "mild_consistency_note": "50 条轻缺陷描述。每条只用语料中已有品牌的市场历年主题，并只放一处问题：同一要素的第二个绑定、单侧左右不一致、or 并列两个品类，或一侧有袖一侧无袖。不使用加冕、新娘、丧服、假面、洛可可这类偏题。",
+  "mild_cases": [
+    {
+      "source_id": "mild_01_chanel_classic_tweed_suit",
+      "brand": "Chanel",
+      "theme": "Classic tweed suit",
+      "defect": "binding",
+      "defect_zh": "同一件外套的面料绑了两次：奶油粗花呢，又写成黑缎",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/01_chanel_classic_tweed_suit.txt"
+    },
+    {
+      "source_id": "mild_02_chanel_camellia",
+      "brand": "Chanel",
+      "theme": "Camellia",
+      "defect": "or_shoe",
+      "defect_zh": "鞋绑了两个品类：黑缎高跟鞋或米白皮平底",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/02_chanel_camellia.txt"
+    },
+    {
+      "source_id": "mild_03_chanel_deauville_stripe",
+      "brand": "Chanel",
+      "theme": "Deauville stripe",
+      "defect": "lr_sleeve",
+      "defect_zh": "左右袖面料不一致：左袖是羊毛条纹，右袖是丝绸",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/03_chanel_deauville_stripe.txt"
+    },
+    {
+      "source_id": "mild_04_chanel_quilted_chain_jacket",
+      "brand": "Chanel",
+      "theme": "Quilted chain jacket",
+      "defect": "length",
+      "defect_zh": "同一件外套两个长度：及臀，又及腰",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/04_chanel_quilted_chain_jacket.txt"
+    },
+    {
+      "source_id": "mild_05_chanel_little_black_dress",
+      "brand": "Chanel",
+      "theme": "Little black dress",
+      "defect": "binding",
+      "defect_zh": "同一领口绑了两次：圆领，又是深V",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/05_chanel_little_black_dress.txt"
+    },
+    {
+      "source_id": "mild_06_chanel_pearl_rope",
+      "brand": "Chanel",
+      "theme": "Pearl rope",
+      "defect": "sleeve_state",
+      "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/06_chanel_pearl_rope.txt"
+    },
+    {
+      "source_id": "mild_07_dior_bar_jacket",
+      "brand": "Dior",
+      "theme": "Bar jacket",
+      "defect": "binding",
+      "defect_zh": "同一件夹克的门襟绑了两次：单排金扣，又是双排扣",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/07_dior_bar_jacket.txt"
+    },
+    {
+      "source_id": "mild_08_dior_toile_de_jouy",
+      "brand": "Dior",
+      "theme": "Toile de Jouy",
+      "defect": "lr_shoe",
+      "defect_zh": "左右鞋不一致：左脚是印花缎高跟鞋，右脚是凉鞋",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/08_dior_toile_de_jouy.txt"
+    },
+    {
+      "source_id": "mild_09_dior_oblique_monogram",
+      "brand": "Dior",
+      "theme": "Oblique monogram",
+      "defect": "or_bottom",
+      "defect_zh": "下装绑了两个品类：斜纹短裙或羊毛西裤",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/09_dior_oblique_monogram.txt"
+    },
+    {
+      "source_id": "mild_10_dior_miss_dior_floral",
+      "brand": "Dior",
+      "theme": "Miss Dior floral",
+      "defect": "binding",
+      "defect_zh": "同一件裙子的面料绑了两次：真丝印花，又是羊毛",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/10_dior_miss_dior_floral.txt"
+    },
+    {
+      "source_id": "mild_11_dior_saddle_equestrian",
+      "brand": "Dior",
+      "theme": "Saddle equestrian",
+      "defect": "lr_leg",
+      "defect_zh": "左右腿下装不一致：左腿是骑马羊毛裤，右腿是丝绸裙",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/11_dior_saddle_equestrian.txt"
+    },
+    {
+      "source_id": "mild_12_louis_vuitton_monogram_canvas",
+      "brand": "Louis Vuitton",
+      "theme": "Monogram canvas",
+      "defect": "length",
+      "defect_zh": "同一件大衣两个长度：及臀，又及腰",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/12_louis_vuitton_monogram_canvas.txt"
+    },
+    {
+      "source_id": "mild_13_louis_vuitton_damier",
+      "brand": "Louis Vuitton",
+      "theme": "Damier",
+      "defect": "binding",
+      "defect_zh": "同一件夹克的五金绑了两次：金扣，又是银扣",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/13_louis_vuitton_damier.txt"
+    },
+    {
+      "source_id": "mild_14_louis_vuitton_trunk_travel_coat",
+      "brand": "Louis Vuitton",
+      "theme": "Trunk travel coat",
+      "defect": "sleeve_state",
+      "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/14_louis_vuitton_trunk_travel_coat.txt"
+    },
+    {
+      "source_id": "mild_15_louis_vuitton_flower_monogram",
+      "brand": "Louis Vuitton",
+      "theme": "Flower monogram",
+      "defect": "lr_sleeve",
+      "defect_zh": "左右袖面料不一致：左袖是帆布花卉，右袖是丝绸",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/15_louis_vuitton_flower_monogram.txt"
+    },
+    {
+      "source_id": "mild_16_gucci_flora",
+      "brand": "Gucci",
+      "theme": "Flora",
+      "defect": "or_shoe",
+      "defect_zh": "鞋绑了两个品类：印花缎高跟鞋或皮革凉鞋",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/16_gucci_flora.txt"
+    },
+    {
+      "source_id": "mild_17_gucci_horsebit",
+      "brand": "Gucci",
+      "theme": "Horsebit",
+      "defect": "binding",
+      "defect_zh": "同一领口绑了两次：圆领，又是深V",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/17_gucci_horsebit.txt"
+    },
+    {
+      "source_id": "mild_18_gucci_web_stripe",
+      "brand": "Gucci",
+      "theme": "Web stripe",
+      "defect": "lr_shoe",
+      "defect_zh": "左右鞋不一致：左脚是织带乐福，右脚是凉鞋",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/18_gucci_web_stripe.txt"
+    },
+    {
+      "source_id": "mild_19_gucci_gg_monogram",
+      "brand": "Gucci",
+      "theme": "GG monogram",
+      "defect": "length",
+      "defect_zh": "同一件夹克两个长度：及臀，又及腰",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/19_gucci_gg_monogram.txt"
+    },
+    {
+      "source_id": "mild_20_prada_nylon",
+      "brand": "Prada",
+      "theme": "Nylon",
+      "defect": "binding",
+      "defect_zh": "同一件大衣的面料绑了两次：尼龙，又是羊毛",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/20_prada_nylon.txt"
+    },
+    {
+      "source_id": "mild_21_prada_triangle",
+      "brand": "Prada",
+      "theme": "Triangle",
+      "defect": "or_bottom",
+      "defect_zh": "下装绑了两个品类：尼龙半裙或羊毛西裤",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/21_prada_triangle.txt"
+    },
+    {
+      "source_id": "mild_22_prada_uniform",
+      "brand": "Prada",
+      "theme": "Uniform",
+      "defect": "sleeve_state",
+      "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/22_prada_uniform.txt"
+    },
+    {
+      "source_id": "mild_23_prada_geometric_print",
+      "brand": "Prada",
+      "theme": "Geometric print",
+      "defect": "lr_leg",
+      "defect_zh": "左右腿下装不一致：左腿是几何半裙，右腿是西裤",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/23_prada_geometric_print.txt"
+    },
+    {
+      "source_id": "mild_24_hermès_riding_jacket",
+      "brand": "Hermès",
+      "theme": "Riding jacket",
+      "defect": "binding",
+      "defect_zh": "同一件夹克的扣子绑了两次：牛角扣，又是金属扣",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/24_hermès_riding_jacket.txt"
+    },
+    {
+      "source_id": "mild_25_hermès_silk_carré",
+      "brand": "Hermès",
+      "theme": "Silk carré",
+      "defect": "lr_sleeve",
+      "defect_zh": "左右袖面料不一致：左袖是斜纹绸印花，右袖是羊毛",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/25_hermès_silk_carré.txt"
+    },
+    {
+      "source_id": "mild_26_hermès_orange_leather",
+      "brand": "Hermès",
+      "theme": "Orange leather",
+      "defect": "or_shoe",
+      "defect_zh": "鞋绑了两个品类：橙色皮革高跟鞋或棕色乐福",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/26_hermès_orange_leather.txt"
+    },
+    {
+      "source_id": "mild_27_hermès_chaîne_dancre",
+      "brand": "Hermès",
+      "theme": "Chaîne d'ancre",
+      "defect": "length",
+      "defect_zh": "同一件外套两个长度：及臀，又及腰",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/27_hermès_chaîne_dancre.txt"
+    },
+    {
+      "source_id": "mild_28_bottega_veneta_intrecciato",
+      "brand": "Bottega Veneta",
+      "theme": "Intrecciato",
+      "defect": "binding",
+      "defect_zh": "同一件外套的面料绑了两次：编织皮革，又是丝绸",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/28_bottega_veneta_intrecciato.txt"
+    },
+    {
+      "source_id": "mild_29_bottega_veneta_the_knot",
+      "brand": "Bottega Veneta",
+      "theme": "The Knot",
+      "defect": "sleeve_state",
+      "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/29_bottega_veneta_the_knot.txt"
+    },
+    {
+      "source_id": "mild_30_bottega_veneta_quiet_leather",
+      "brand": "Bottega Veneta",
+      "theme": "Quiet leather",
+      "defect": "lr_shoe",
+      "defect_zh": "左右鞋不一致：左脚是皮革高跟鞋，右脚是凉鞋",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/30_bottega_veneta_quiet_leather.txt"
+    },
+    {
+      "source_id": "mild_31_bottega_veneta_woven_leather_column",
+      "brand": "Bottega Veneta",
+      "theme": "Woven leather column",
+      "defect": "or_bottom",
+      "defect_zh": "下装绑了两个品类：编织皮裙或羊毛西裤",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/31_bottega_veneta_woven_leather_column.txt"
+    },
+    {
+      "source_id": "mild_32_fendi_ff_monogram",
+      "brand": "Fendi",
+      "theme": "FF monogram",
+      "defect": "binding",
+      "defect_zh": "同一件夹克的门襟绑了两次：单排扣，又是双排扣",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/32_fendi_ff_monogram.txt"
+    },
+    {
+      "source_id": "mild_33_fendi_zucca",
+      "brand": "Fendi",
+      "theme": "Zucca",
+      "defect": "lr_sleeve",
+      "defect_zh": "左右袖面料不一致：左袖是祖卡提花，右袖是丝绸",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/33_fendi_zucca.txt"
+    },
+    {
+      "source_id": "mild_34_fendi_selleria",
+      "brand": "Fendi",
+      "theme": "Selleria",
+      "defect": "length",
+      "defect_zh": "同一件夹克两个长度：及臀，又及腰",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/34_fendi_selleria.txt"
+    },
+    {
+      "source_id": "mild_35_fendi_roma",
+      "brand": "Fendi",
+      "theme": "Roma",
+      "defect": "binding",
+      "defect_zh": "同一领口绑了两次：圆领，又是深V",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/35_fendi_roma.txt"
+    },
+    {
+      "source_id": "mild_36_saint_laurent_le_smoking",
+      "brand": "Saint Laurent",
+      "theme": "Le Smoking",
+      "defect": "sleeve_state",
+      "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/36_saint_laurent_le_smoking.txt"
+    },
+    {
+      "source_id": "mild_37_saint_laurent_saharienne",
+      "brand": "Saint Laurent",
+      "theme": "Saharienne",
+      "defect": "or_bottom",
+      "defect_zh": "下装绑了两个品类：卡其短裤或丝绸半裙",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/37_saint_laurent_saharienne.txt"
+    },
+    {
+      "source_id": "mild_38_saint_laurent_mondrian",
+      "brand": "Saint Laurent",
+      "theme": "Mondrian",
+      "defect": "lr_shoe",
+      "defect_zh": "左右鞋不一致：左脚是黑漆高跟鞋，右脚是穆勒",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/38_saint_laurent_mondrian.txt"
+    },
+    {
+      "source_id": "mild_39_saint_laurent_pussy-bow_blouse",
+      "brand": "Saint Laurent",
+      "theme": "Pussy-bow blouse",
+      "defect": "binding",
+      "defect_zh": "同一件衬衫的面料绑了两次：真丝，又是皮革",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/39_saint_laurent_pussy-bow_blouse.txt"
+    },
+    {
+      "source_id": "mild_40_loewe_anagram_leather",
+      "brand": "Loewe",
+      "theme": "Anagram leather",
+      "defect": "lr_leg",
+      "defect_zh": "左右腿下装不一致：左腿是皮革半裙，右腿是羊毛西裤",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/40_loewe_anagram_leather.txt"
+    },
+    {
+      "source_id": "mild_41_loewe_raffia_weave",
+      "brand": "Loewe",
+      "theme": "Raffia weave",
+      "defect": "binding",
+      "defect_zh": "同一下摆绑了两次：停在臀线，又落到小腿",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/41_loewe_raffia_weave.txt"
+    },
+    {
+      "source_id": "mild_42_loewe_suede_craft",
+      "brand": "Loewe",
+      "theme": "Suede craft",
+      "defect": "or_shoe",
+      "defect_zh": "鞋绑了两个品类：麂皮短靴或皮革凉鞋",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/42_loewe_suede_craft.txt"
+    },
+    {
+      "source_id": "mild_43_alaïa_bandage_knit",
+      "brand": "Alaïa",
+      "theme": "Bandage knit",
+      "defect": "sleeve_state",
+      "defect_zh": "袖型有两套：一侧长袖，另一侧无袖",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/43_alaia_bandage_knit.txt"
+    },
+    {
+      "source_id": "mild_44_alaïa_perforated_leather",
+      "brand": "Alaïa",
+      "theme": "Perforated leather",
+      "defect": "binding",
+      "defect_zh": "同一件皮裙的工艺绑了两次：穿孔皮革，又是完整羊毛",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/44_alaia_perforated_leather.txt"
+    },
+    {
+      "source_id": "mild_45_alaïa_hooded_knit",
+      "brand": "Alaïa",
+      "theme": "Hooded knit",
+      "defect": "lr_sleeve",
+      "defect_zh": "左右袖面料不一致：左袖是弹力针织，右袖是丝绸",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/45_alaia_hooded_knit.txt"
+    },
+    {
+      "source_id": "mild_46_the_row_cashmere_column",
+      "brand": "The Row",
+      "theme": "Cashmere column",
+      "defect": "or_bottom",
+      "defect_zh": "下装绑了两个品类：羊绒长裙或羊毛阔腿裤",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/46_the_row_cashmere_column.txt"
+    },
+    {
+      "source_id": "mild_47_the_row_oversized_coat",
+      "brand": "The Row",
+      "theme": "Oversized coat",
+      "defect": "length",
+      "defect_zh": "同一件大衣两个长度：及臀，又及腰",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/47_the_row_oversized_coat.txt"
+    },
+    {
+      "source_id": "mild_48_schiaparelli_shocking_pink",
+      "brand": "Schiaparelli",
+      "theme": "Shocking pink",
+      "defect": "binding",
+      "defect_zh": "同一领口绑了两次：圆领，又是深V",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/48_schiaparelli_shocking_pink.txt"
+    },
+    {
+      "source_id": "mild_49_schiaparelli_keyhole_evening",
+      "brand": "Schiaparelli",
+      "theme": "Keyhole evening",
+      "defect": "lr_shoe",
+      "defect_zh": "左右鞋不一致：左脚是金缎高跟鞋，右脚是凉鞋",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/49_schiaparelli_keyhole_evening.txt"
+    },
+    {
+      "source_id": "mild_50_chanel_métiers_dart_embroidery",
+      "brand": "Chanel",
+      "theme": "Métiers d'art embroidery",
+      "defect": "binding",
+      "defect_zh": "同一件夹克的刺绣绑了两次：满铺金银绣，又写成素羊毛",
+      "path": "fashion_research_dir/k_rewrite_instructions_2026-09-29/mild_consistency/50_chanel_métiers_dart_embroidery.txt"
     }
   ]
 }

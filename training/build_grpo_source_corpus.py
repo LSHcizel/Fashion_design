@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_POSITIVE_DIR = (
-    REPO / "fashion_research_dir" / "wgsn_batch_image_inverse" / "20260524T044337Z"
+    REPO / "fashion_research_dir" / "image_inverse" / "20260524T044337Z"
 )
 DEFAULT_NEGATIVE_DIRS = [
     REPO / "fashion_research_dir" / "workflow_0" / "2026-06-06",

@@ -14,7 +14,7 @@ CASES = [
         "defect_zh": "明显不对称：同一夹克左半套精裁羊毛，右半套亮片丝绸，左右裤和左右鞋同时分裂",
         "theme": "黑色手工对比",
         "concept": "结构化黑夹克作为暗底，让钩针花卉贴花成为识别点",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/01_..._ps27_003_text_description.md",
+        "source": "image_inverse/20260524T044337Z/01_..._ps27_003_text_description.md",
         "text": (
             "Theme: black handmade contrast. Concept: a structured black jacket is the dark field, and crochet "
             "floral appliqué is the identifying idea. Dense red, white, yellow, and black floral appliqué still runs "
@@ -31,7 +31,7 @@ CASES = [
         "defect_zh": "明显不对称：同一件奶油外套左半是粗花呢精裁，右半是亮片裹领，左右裤与左右鞋同时两套",
         "theme": "象牙粗花呢沙龙",
         "concept": "敞开的奶油粗花呢框住黑色皮质内层",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/09_..._ps27_028_text_description.md",
+        "source": "image_inverse/20260524T044337Z/09_..._ps27_028_text_description.md",
         "text": (
             "Theme: ivory tweed salon. Concept: an open cream tweed jacket frames a black leather-like inner. "
             "Gold-tone buttons and black trim remain. At the same time the left half of this one jacket is matte "
@@ -47,7 +47,7 @@ CASES = [
         "defect_zh": "明显不对称：同一件印花大衣左半长袖立领及膝，右半无袖深V曳地，左右鞋同时两族",
         "theme": "羽毛勾勒的印花立柱",
         "concept": "水色羽毛路径把蓝绿印花大衣从领口画到下摆",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/17_..._ps27_057_text_description.md",
+        "source": "image_inverse/20260524T044337Z/17_..._ps27_057_text_description.md",
         "text": (
             "Theme: feather-drawn floral column. Concept: a pale aqua feather path draws one blue-and-aqua floral coat "
             "from collar to hem. At the same time the left half of that coat is a knee-length wool column with a high "
@@ -63,7 +63,7 @@ CASES = [
         "defect_zh": "明显不对称：同一条裙左腿羊毛铅笔、右腿丝绸阔腿，左袖长、右袖无，左右鞋两族",
         "theme": "红色图形线",
         "concept": "一条红色门襟和高开衩把奶油裙组织起来",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/33_..._ps27_016_text_description.md",
+        "source": "image_inverse/20260524T044337Z/33_..._ps27_016_text_description.md",
         "text": (
             "Theme: red graphic line. Concept: one red placket and a high slit organize a cream skirt. A red waistband and "
             "three gold buttons stay on the placket. At the same time the left sleeve is a long cream sleeve with a bold "
@@ -110,7 +110,7 @@ CASES = [
         "defect_zh": "明显不对称：同一件针织左半长袖条纹迷你裙，右半无袖并接及地丝绸，左右鞋两族",
         "theme": "条纹袖口针织",
         "concept": "奶油、黑、红的层叠袖口条纹是这件短针织的识别点",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/73_..._ps27_069_text_description.md",
+        "source": "image_inverse/20260524T044337Z/73_..._ps27_069_text_description.md",
         "text": (
             "Theme: striped-cuff knit. Concept: stacked cream, black, and red cuff stripes identify a cropped black knit. "
             "A pale cream belt and cream-and-red neck trim remain. At the same time the left half is a long black knit sleeve "
@@ -125,7 +125,7 @@ CASES = [
         "defect_zh": "要素与主题严重不符：手工日装黑底贴花上接了白纱新娘头纱和教堂长曳",
         "theme": "夜花园刺绣",
         "concept": "黑底上的彩色钩针花卉应保持手工日装的密度",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/01_..._ps27_003_text_description.md",
+        "source": "image_inverse/20260524T044337Z/01_..._ps27_003_text_description.md",
         "text": (
             "Theme: night-garden embroidery. Concept: colored crochet florals on a black ground should stay a dense handmade "
             "day look. The boxy black jacket still has that appliqué, gold-tone buttons, white piping, black bike shorts, and "
@@ -140,7 +140,7 @@ CASES = [
         "defect_zh": "要素与主题严重不符：白天哑光粗花呢上接了加冕礼的金锦袍和王冠",
         "theme": "日间罗纹粗花呢",
         "concept": "箱型奶油粗花呢应保持白天沙龙的哑光",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/09_..._ps27_028_text_description.md",
+        "source": "image_inverse/20260524T044337Z/09_..._ps27_028_text_description.md",
         "text": (
             "Theme: daytime bouclé. Concept: a boxy cream tweed jacket should stay matte salon daywear, with a black-edged "
             "collar, black front trim, gold-tone pocket buttons, and a straight cream tweed skirt. Over that day set the body "
@@ -154,7 +154,7 @@ CASES = [
         "defect_zh": "要素与主题严重不符：安静奶油立柱上接了绯红弗拉明戈层叠裙",
         "theme": "奶油典礼",
         "concept": "金属花卉胸针扣住的短斗篷应保持安静的单色立柱",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/49_..._ps27_040_text_description.md",
+        "source": "image_inverse/20260524T044337Z/49_..._ps27_040_text_description.md",
         "text": (
             "Theme: butter-cream ceremony. Concept: a short capelet fastened by a metallic floral brooch should keep a quiet "
             "monochrome column, over a sleeveless bodice and a ribbed midi skirt in pale butter cream. The skirt and styling "
@@ -168,7 +168,7 @@ CASES = [
         "defect_zh": "要素与主题严重不符：轻快图形百褶上接了及地丧服黑纱",
         "theme": "图形百褶",
         "concept": "点线与圆形纹样应让黑色上衣和条纹百褶裙保持轻快",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/57_..._ps27_048_text_description.md",
+        "source": "image_inverse/20260524T044337Z/57_..._ps27_048_text_description.md",
         "text": (
             "Theme: graphic pleats. Concept: dotted lines and a circular motif should keep a black top and a striped accordion "
             "skirt playful, with a red-and-white circle at the chest and black, ivory, tan, and gold pleats. Over that playful "
@@ -212,7 +212,7 @@ CASES = [
         "defect_zh": "要素与主题严重不符：安静条纹及膝套装上接了洛可可撑裙和贴片",
         "theme": "条纹立柱",
         "concept": "米色地上的红绿竖条应保持一条安静的及膝套装",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/41_..._ps27_027_text_description.md",
+        "source": "image_inverse/20260524T044337Z/41_..._ps27_027_text_description.md",
         "text": (
             "Theme: striped column. Concept: red and green vertical stripes on beige should stay a quiet knee-length set, with "
             "a sleeveless high-neck top, a red-edged gold-button placket, and a gathered skirt to the knee. Over that set the "
@@ -227,7 +227,7 @@ CASES = [
         "defect_zh": "同要素矛盾：同一夹克既无领又翻领，既及臀又及地；下装既是骑行短裤又是阔腿羊毛裤",
         "theme": "无领黑箱型",
         "concept": "圆领、及臀的黑夹克配贴花，下装是贴身黑短裤",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/01_..._ps27_003_text_description.md",
+        "source": "image_inverse/20260524T044337Z/01_..._ps27_003_text_description.md",
         "text": (
             "Theme: collarless black box. Concept: a round-neck jacket cropped to the hip, with floral appliqué, over fitted "
             "black shorts. The same jacket is also given a wide notched lapel and a hem that brushes the floor. Its sleeves "
@@ -242,7 +242,7 @@ CASES = [
         "defect_zh": "同要素矛盾：同一印花大衣既无袖又长袖，既及膝又曳地，立领同时是深V",
         "theme": "立领及膝印花大衣",
         "concept": "高立领和及膝直筒决定这件蓝绿印花大衣",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/17_..._ps27_057_text_description.md",
+        "source": "image_inverse/20260524T044337Z/17_..._ps27_057_text_description.md",
         "text": (
             "Theme: stand-collar knee coat. Concept: a high stand collar and a straight hem just below the knee define the "
             "blue-and-aqua floral coat, with pale aqua feather trim and gold-tone buttons. The same coat is sleeveless with "
@@ -256,7 +256,7 @@ CASES = [
         "defect_zh": "同要素矛盾：同一条红黑吊带裙方领与立领并存，红底与全黑并存，中长与短上衣下摆并存",
         "theme": "悬垂丝带",
         "concept": "红黑米白的吊带丝带从肩部金饰垂下，构成裙子的线性",
-        "source": "wgsn_batch_image_inverse/20260524T044337Z/65_..._ps27_061_text_description.md",
+        "source": "image_inverse/20260524T044337Z/65_..._ps27_061_text_description.md",
         "text": (
             "Theme: suspended ribbons. Concept: red, black, white, and pale beige ribbon strips fall from gold-tone shoulder "
             "accents and make the linear identity of the dress. The neckline is square to scoop between narrow black straps, "
@@ -290,7 +290,7 @@ def _resolve_source(source: str) -> str:
         return source if (repo / "fashion_research_dir" / source).is_file() else source
     token = source.split("ps27_")[-1].split("_")[0]
     needle = f"ps27_{token}_text_description.md"
-    base = repo / "fashion_research_dir" / "wgsn_batch_image_inverse" / "20260524T044337Z"
+    base = repo / "fashion_research_dir" / "image_inverse" / "20260524T044337Z"
     hits = list(base.glob(f"*{needle}"))
     if len(hits) == 1:
         return hits[0].relative_to(repo / "fashion_research_dir").as_posix()

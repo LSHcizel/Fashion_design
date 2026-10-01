@@ -10,7 +10,7 @@
 
     # 逆解析 md 批量生图
     python scripts/generate_images_from_inverse_descriptions.py \\
-      --inverse-dir fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z \\
+      --inverse-dir fashion_research_dir/image_inverse/20260524T044337Z \\
       --index-from 8 --index-to 40 --model gpt-image-2
 
     # 工作流 chapter：每次只跑一张（默认 --look-to 等于 --look-from）
@@ -420,7 +420,7 @@ def main() -> None:
         source_kind = "chapter_look"
         logger.info("模式：chapter | 目录=%s", _rel_path(chapter_dir))
     else:
-        default_inverse = REPO_ROOT / "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z"
+        default_inverse = REPO_ROOT / "fashion_research_dir/image_inverse/20260524T044337Z"
         inverse_dir = _resolve_path(args.inverse_dir or default_inverse)
         if not inverse_dir.is_dir():
             raise SystemExit(f"找不到目录：{inverse_dir}")

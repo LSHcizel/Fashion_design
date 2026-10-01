@@ -19,8 +19,8 @@
 
     # 指定目录与输出
     python scripts/run_wgsn_inverse_batch_eval.py \\
-      --inverse-dir fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z \\
-      --out-dir fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z/eval_local_qwen3b_20260809
+      --inverse-dir fashion_research_dir/image_inverse/20260524T044337Z \\
+      --out-dir fashion_research_dir/image_inverse/20260524T044337Z/eval_local_qwen3b_20260809
 
     # 兼容旧参数：等价于 --sources inverse
     python scripts/run_wgsn_inverse_batch_eval.py --no-workflow-extra
@@ -49,7 +49,7 @@ from plugins.text_description_evaluator.evaluation_export import (  # noqa: E402
 )
 
 DEFAULT_INVERSE_DIR = (
-    REPO_ROOT / "fashion_research_dir/wgsn_batch_image_inverse/20260524T044337Z"
+    REPO_ROOT / "fashion_research_dir/image_inverse/20260524T044337Z"
 )
 DEFAULT_WORKFLOW_EXTRA_DIR = REPO_ROOT / "fashion_research_dir/workflow_0/2026-06-06"
 

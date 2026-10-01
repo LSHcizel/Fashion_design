@@ -31,7 +31,7 @@
 
 1. **预处理**：去掉 T2I 固定句、章节标题等，得到 eval_prose。
 2. **LLM 评判**：coverage（0/1）、quality（五档 0~1）、penalty（0~1）；不适用项跳过。
-3. **质量加权**：六个 quality 子模块按 spec 权重求 Q_w。
+3. **质量加权**：七个 quality 子模块按 spec 权重求 Q_w。信息密度、可见性优先级、生成适配的权重都是 5。信息密度只给「识别锚点还在、每句新增可成像事实」加分，不按字数加分，删掉识别锚点最高 0.5。这三项的裁判 prompt 带 few-shot 模板，按最近例打分。
 4. **质量有效分**：Q = min(Q_w, cap_q)；penalty **不参与** Q 与 S_fp。
 5. **内容主分**：s_fp_base = min(w_c·C + w_q·Q, cap_t)。
 6. **S_fp**：等于 s_fp_base。长度回归只作诊断，不扣总分。

@@ -9,7 +9,7 @@
 
     python scripts/test_wgsn_batch_image_inverse.py
     python scripts/test_wgsn_batch_image_inverse.py --limit 5 --batch-root downloads/wgsn_latest_batch
-    python scripts/test_wgsn_batch_image_inverse.py --subfolder \"01_...\" --min-filename-serial 6 --out-dir fashion_research_dir/wgsn_batch_image_inverse/<run> --append-manifest
+    python scripts/test_wgsn_batch_image_inverse.py --subfolder \"01_...\" --min-filename-serial 6 --out-dir fashion_research_dir/image_inverse/<run> --append-manifest
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from plugins.image_inverse_parser import ImageInverseParser  # noqa: E402
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif"}
 DEFAULT_BATCH_REL = Path("downloads") / "wgsn_latest_batch"
-DEFAULT_RESEARCH_REL = Path("fashion_research_dir") / "wgsn_batch_image_inverse"
+DEFAULT_RESEARCH_REL = Path("fashion_research_dir") / "image_inverse"
 
 
 def iter_images_recursive(root: Path) -> Iterable[Path]:
