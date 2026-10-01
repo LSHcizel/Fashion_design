@@ -1,6 +1,7 @@
 """每条原文只对比组内总分最高的改写。
 
-已有 samples.jsonl 里如果没有原文分，会用评分器补打原文，不重写、不重训。
+samples 里没有原文分时，在同目录维护 ``original_scores.jsonl``。
+已写入的原文不再打分；samples 里出现新组时再跑一次即可增量补上。
 
 用法::
 
@@ -12,10 +13,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Set
 
 REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
@@ -64,7 +67,54 @@ def _groups_missing_original(rows: List[Dict[str, Any]]) -> Dict[str, str]:
     return {gid: text for gid, text in seen.items() if gid not in have}
 
 
-def _score_originals(missing: Dict[str, str], *, workers: int) -> List[Dict[str, Any]]:
+def originals_already_scored(rows: List[Dict[str, Any]]) -> Set[str]:
+    return {
+        str(rec.get("group_id"))
+        for rec in rows
+        if rec.get("group_id") and _is_original_row(rec) and rec.get("S_fp") is not None
+    }
+
+
+def load_score_cache(path: Path) -> Dict[str, Dict[str, Any]]:
+    cached: Dict[str, Dict[str, Any]] = {}
+    if not path.is_file():
+        return cached
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            rec = json.loads(line)
+            gid = str(rec.get("group_id") or "")
+            if gid and rec.get("S_fp") is not None:
+                cached[gid] = rec
+    return cached
+
+
+def append_score_cache(path: Path, rec: Dict[str, Any], lock: threading.Lock) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    line = json.dumps(rec, ensure_ascii=False) + "\n"
+    with lock:
+        with path.open("a", encoding="utf-8") as f:
+            f.write(line)
+            f.flush()
+            os.fsync(f.fileno())
+
+
+def pending_originals(
+    rows: List[Dict[str, Any]],
+    cached_ids: Set[str],
+) -> Dict[str, str]:
+    missing = _groups_missing_original(rows)
+    return {gid: text for gid, text in missing.items() if gid not in cached_ids}
+
+
+def _score_originals(
+    missing: Dict[str, str],
+    *,
+    workers: int,
+    cache_path: Path,
+) -> List[Dict[str, Any]]:
     from plugins.text_description_evaluator.design_text_evaluator_api import (
         JudgeConnectionError,
         is_connection_failure,
@@ -74,6 +124,9 @@ def _score_originals(missing: Dict[str, str], *, workers: int) -> List[Dict[str,
     evaluator = load_default_evaluator()
     out: List[Dict[str, Any]] = []
     errors: List[BaseException] = []
+    lock = threading.Lock()
+    done = 0
+    total = len(missing)
 
     def one(item: tuple) -> Dict[str, Any]:
         gid, text = item
@@ -101,9 +154,17 @@ def _score_originals(missing: Dict[str, str], *, workers: int) -> List[Dict[str,
         futures = [pool.submit(one, item) for item in missing.items()]
         for fut in as_completed(futures):
             try:
-                out.append(fut.result())
+                rec = fut.result()
             except BaseException as exc:  # noqa: BLE001
                 errors.append(exc)
+                continue
+            append_score_cache(cache_path, rec, lock)
+            out.append(rec)
+            done += 1
+            print(
+                f"cached {done}/{total} {rec.get('group_id')} S_fp={rec.get('S_fp')}",
+                flush=True,
+            )
     if errors:
         raise errors[0]
     return out
@@ -120,13 +181,29 @@ def main() -> None:
     if not samples.is_file():
         raise SystemExit(f"找不到 samples: {samples}")
     rows = _load_rows(samples)
-    missing = _groups_missing_original(rows)
-    print(f"groups_in_file={len({r.get('group_id') for r in rows})} missing_original={len(missing)}", flush=True)
-    if missing and not args.no_score:
-        print(f"scoring {len(missing)} originals with {args.workers} workers", flush=True)
-        rows.extend(_score_originals(missing, workers=args.workers))
-    elif missing:
-        print(f"skip scoring; {len(missing)} groups have no original score", flush=True)
+    cache_path = samples.parent / "original_scores.jsonl"
+    in_samples = originals_already_scored(rows)
+    cache = load_score_cache(cache_path)
+    pending = pending_originals(rows, set(cache))
+    n_groups = len({r.get("group_id") for r in rows if r.get("group_id")})
+    print(
+        f"groups={n_groups} originals_in_samples={len(in_samples)} "
+        f"cached={len(cache)} pending={len(pending)} cache={cache_path}",
+        flush=True,
+    )
+    if in_samples and not pending and not cache:
+        print("samples 里已有原文分，不调用评分器", flush=True)
+    if pending and not args.no_score:
+        print(f"scoring {len(pending)} new originals with {args.workers} workers", flush=True)
+        fresh = _score_originals(pending, workers=args.workers, cache_path=cache_path)
+        for rec in fresh:
+            gid = str(rec.get("group_id") or "")
+            if gid:
+                cache[gid] = rec
+    elif pending:
+        print(f"skip scoring; {len(pending)} groups still have no original score", flush=True)
+    already = set(in_samples)
+    rows.extend(rec for gid, rec in cache.items() if gid not in already)
     lift = summarize_score_lift(rows)
     best = lift.get("best_rewrite_lift_vs_original") or {}
     out = args.out or (samples.parent / "best_vs_original.json")

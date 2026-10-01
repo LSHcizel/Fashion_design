@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from training.accept_report import build_round_accept, summarize_rows, summarize_score_lift
-from training.compare_best_rewrite import _groups_missing_original
+from training.compare_best_rewrite import _groups_missing_original, pending_originals
 from training.record_builder import build_training_record
 from training.run_next_grpo_round import build_collect_cmd, build_grpo_cmd, import_latest_weights
 from argparse import Namespace
@@ -181,6 +181,8 @@ class AcceptReportTests(unittest.TestCase):
         ]
         missing = _groups_missing_original(rows)
         self.assertEqual(missing, {"g1": "原文甲"})
+        self.assertEqual(pending_originals(rows, {"g1"}), {})
+        self.assertEqual(pending_originals(rows, set()), {"g1": "原文甲"})
 
 
 class GrpoRoundPlanTests(unittest.TestCase):
