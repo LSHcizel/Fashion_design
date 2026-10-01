@@ -26,16 +26,13 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Sequence
 
+from training.source_corpus import default_corpus_path
+
 logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REC_MODULE = "training.hf_grpo.run_recommended_training"
-DEFAULT_CORPUS = (
-    REPO_ROOT
-    / "fashion_research_dir"
-    / "k_rewrite_instructions_2026-09-29"
-    / "source_corpus.jsonl"
-)
+DEFAULT_CORPUS = default_corpus_path()
 
 
 def _run(cmd: Sequence[str], *, dry_run: bool) -> None:

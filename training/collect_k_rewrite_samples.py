@@ -32,13 +32,10 @@ from training.record_builder import rewrite_error_of
 from training.jsonl_logger import TrainingRunLogger
 from training.record_builder import sha256_text
 
-# Unified K-sample set: inverse descriptions and generated looks share one role.
-DEFAULT_CORPUS = (
-    REPO
-    / "fashion_research_dir"
-    / "k_rewrite_instructions_2026-09-29"
-    / "source_corpus.jsonl"
-)
+from training.source_corpus import default_corpus_path
+
+# 唯一语料，见 fashion_config.yaml → grpo.corpus。
+DEFAULT_CORPUS = default_corpus_path()
 
 SCRIPT_MARKER = "collect_k_rewrite_samples.py"
 COMPLETED_NAME = "completed_groups.txt"

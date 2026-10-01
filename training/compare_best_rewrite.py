@@ -26,6 +26,7 @@ if str(REPO) not in sys.path:
 
 from training.accept_report import summarize_score_lift
 from training.record_builder import build_training_record
+from training.source_corpus import corpus_texts, default_corpus_path, load_corpus_rows
 
 
 def _load_rows(path: Path) -> List[Dict[str, Any]]:
@@ -109,6 +110,34 @@ def pending_originals(
     return {gid: text for gid, text in missing.items() if gid not in cached_ids}
 
 
+def pending_from_corpus(
+    corpus_rows: List[Dict[str, Any]],
+    scored_ids: Set[str],
+) -> Dict[str, str]:
+    """语料里还没有原文分的 source_id。语料是名单，不看来自哪一次采样。"""
+    texts = corpus_texts(corpus_rows)
+    return {sid: text for sid, text in texts.items() if sid not in scored_ids}
+
+
+def absorb_cache(primary: Path, extra: Path) -> int:
+    """把另一次采样目录里已经打好的原文分并进语料旁的缓存，不重复打。"""
+    if not extra.is_file():
+        return 0
+    if extra.resolve() == primary.resolve():
+        return 0
+    have = load_score_cache(primary)
+    incoming = load_score_cache(extra)
+    lock = threading.Lock()
+    added = 0
+    for gid, rec in incoming.items():
+        if gid in have:
+            continue
+        append_score_cache(primary, rec, lock)
+        have[gid] = rec
+        added += 1
+    return added
+
+
 def _score_originals(
     missing: Dict[str, str],
     *,
@@ -172,8 +201,14 @@ def _score_originals(
 
 def main() -> None:
     p = argparse.ArgumentParser(description="每条原文对比组内总分最高的改写")
-    p.add_argument("--samples", type=Path, required=True)
-    p.add_argument("--out", type=Path, default=None, help="默认写到 samples 同目录 best_vs_original.json")
+    p.add_argument("--samples", type=Path, required=True, help="改写结果。原文名单不从这里取")
+    p.add_argument(
+        "--corpus",
+        type=Path,
+        default=None,
+        help="唯一语料，默认 fashion_config.yaml → grpo.corpus",
+    )
+    p.add_argument("--out", type=Path, default=None, help="默认写到语料同目录 best_vs_original.json")
     p.add_argument("--workers", type=int, default=4, help="补打原文时的并发")
     p.add_argument("--no-score", action="store_true", help="缺原文分时不调用评分器")
     args = p.parse_args()
@@ -181,14 +216,20 @@ def main() -> None:
     if not samples.is_file():
         raise SystemExit(f"找不到 samples: {samples}")
     rows = _load_rows(samples)
-    cache_path = samples.parent / "original_scores.jsonl"
+    corpus_path = (args.corpus or default_corpus_path()).resolve()
+    if not corpus_path.is_file():
+        raise SystemExit(f"找不到语料: {corpus_path}")
+    corpus_rows = load_corpus_rows(corpus_path)
+    cache_path = corpus_path.parent / "original_scores.jsonl"
+    absorbed = absorb_cache(cache_path, samples.parent / "original_scores.jsonl")
     in_samples = originals_already_scored(rows)
     cache = load_score_cache(cache_path)
-    pending = pending_originals(rows, set(cache))
-    n_groups = len({r.get("group_id") for r in rows if r.get("group_id")})
+    pending = pending_from_corpus(corpus_rows, set(in_samples) | set(cache))
+    rewrite_groups = len({r.get("group_id") for r in rows if r.get("group_id") and not _is_original_row(r)})
     print(
-        f"groups={n_groups} originals_in_samples={len(in_samples)} "
-        f"cached={len(cache)} pending={len(pending)} cache={cache_path}",
+        f"corpus={len(corpus_rows)} file={corpus_path} "
+        f"rewrite_groups={rewrite_groups} originals_in_samples={len(in_samples)} "
+        f"cached={len(cache)} absorbed={absorbed} pending={len(pending)} cache={cache_path}",
         flush=True,
     )
     if in_samples and not pending and not cache:
@@ -206,7 +247,7 @@ def main() -> None:
     rows.extend(rec for gid, rec in cache.items() if gid not in already)
     lift = summarize_score_lift(rows)
     best = lift.get("best_rewrite_lift_vs_original") or {}
-    out = args.out or (samples.parent / "best_vs_original.json")
+    out = args.out or (corpus_path.parent / "best_vs_original.json")
     out.write_text(json.dumps(lift, ensure_ascii=False, indent=2), encoding="utf-8")
     print(
         f"最好改写相对原文  组数 {best.get('groups')}  "

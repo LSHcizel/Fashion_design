@@ -8,7 +8,8 @@ import unittest
 from pathlib import Path
 
 from training.accept_report import build_round_accept, summarize_rows, summarize_score_lift
-from training.compare_best_rewrite import _groups_missing_original, pending_originals
+from training.compare_best_rewrite import _groups_missing_original, pending_from_corpus, pending_originals
+from training.source_corpus import default_corpus_path
 from training.record_builder import build_training_record
 from training.run_next_grpo_round import build_collect_cmd, build_grpo_cmd, import_latest_weights
 from argparse import Namespace
@@ -183,6 +184,12 @@ class AcceptReportTests(unittest.TestCase):
         self.assertEqual(missing, {"g1": "原文甲"})
         self.assertEqual(pending_originals(rows, {"g1"}), {})
         self.assertEqual(pending_originals(rows, set()), {"g1": "原文甲"})
+        corpus = [
+            {"source_id": "g1", "text": "原文甲"},
+            {"source_id": "g2", "text": "原文乙"},
+        ]
+        self.assertEqual(pending_from_corpus(corpus, {"g1"}), {"g2": "原文乙"})
+        self.assertTrue(default_corpus_path().name == "source_corpus.jsonl")
 
 
 class GrpoRoundPlanTests(unittest.TestCase):

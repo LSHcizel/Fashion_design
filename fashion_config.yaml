@@ -171,6 +171,8 @@ image-inverse-parser:
 # 优先级（高→低）：函数显式参数 > 环境变量 AI_* > 本段 design-text-evaluator > 根级 api-key / llm-backend > spec llm.default_model
 # R_content 定义仍见 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json（r_content_for_rl）
 grpo:
+  # 唯一语料。采集、在线轮、原文补分都读这一份，不按训练日期再拆一份。
+  corpus: fashion_research_dir/k_rewrite_instructions_2026-09-29/source_corpus.jsonl
   design-text-evaluator:
     # GPT teacher（本地 7B 评判时仅作对照 / 采数基准；workflow 实际 judge 见 text-evaluator.use-local）
     api-key: ""
