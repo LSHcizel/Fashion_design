@@ -1,0 +1,12 @@
+{
+  "n_total": 2000,
+  "n_inverse": 1000,
+  "n_generated": 1000,
+  "sample_kind_values": [
+    "inverse",
+    "生成型"
+  ],
+  "out": "training/runs/corpus/source_corpus_2000.jsonl",
+  "mirror": "fashion_research_dir/season_themes_2026-09/source_corpus_combined_2000.jsonl",
+  "note": "语料库只区分两类 sample_kind：inverse（逆解析）与 生成型。组成：batch2 逆解析 800 + k_rewrite 400 + season keep 608 + 同子主题轻缺陷 192。"
+}

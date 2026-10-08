@@ -90,8 +90,8 @@ def pack(
             rows.append(
                 {
                     "source_id": sid,
-                    "role": "negative",
-                    "sample_kind": "workflow_generated_gpt54mini_keep_gate_fail",
+                    "role": "source",
+                    "sample_kind": "生成型",
                     "path": rel,
                     "text": text,
                     "house": house,

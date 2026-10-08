@@ -56,6 +56,8 @@ training/runs/grpo_chanel_inverse_v2/*
 !training/runs/grpo_chanel_inverse_v2/samples.jsonl
 !training/runs/grpo_chanel_inverse_v2/completed_groups.txt
 !training/runs/grpo_chanel_inverse_v2/run_manifest.txt
+!training/runs/corpus/
+!training/runs/corpus/**
 
 # Local HF weights (large)
 models/
@@ -65,5 +67,10 @@ fashion_research_dir/season_themes_2026-09/generated*/
 fashion_research_dir/season_themes_2026-09/**/source_corpus*.jsonl
 fashion_research_dir/season_themes_2026-09/**/_run*.log
 !fashion_research_dir/season_themes_2026-09/
-!fashion_research_dir/season_themes_2026-09/**/
+!fashion_research_dir/season_themes_2026-09/**
+# Packed description corpora (inverse / 生成型 only)
+!fashion_research_dir/season_themes_2026-09/source_corpus_gpt54mini_keep.jsonl
+!fashion_research_dir/season_themes_2026-09/source_corpus_combined_2000.jsonl
+!fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/
+!fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/**
 

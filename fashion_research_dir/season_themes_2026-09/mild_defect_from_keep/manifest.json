@@ -1,0 +1,1749 @@
+{
+  "n_total": 192,
+  "n_eligible_pool": 504,
+  "parent_corpus": "fashion_research_dir/season_themes_2026-09/source_corpus_gpt54mini_keep.jsonl",
+  "corpus_jsonl": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/source_corpus_mild_defect_192.jsonl",
+  "mirror_jsonl": "training/runs/corpus/season_mild_defect_192.jsonl",
+  "note": "192 条同子主题（同 brand×chapter）轻缺陷描述，由 gpt54mini_keep look 注入：绑定矛盾、重复绑定、or 并列品类、左右袖分裂、双袖态等；每条仅一处，detector 非 severe。",
+  "defect_counts": {
+    "binding_shell": 22,
+    "binding_neckline": 22,
+    "binding_jacket": 22,
+    "binding_double": 21,
+    "or_shoe": 21,
+    "or_bottom": 21,
+    "lr_sleeve": 21,
+    "sleeve_state": 21,
+    "length_conflict": 21
+  },
+  "cases": [
+    {
+      "source_id": "mild_season_001_acne_studios_ss27_c01_l01",
+      "parent_source_id": "gen_acne_studios_ss27_c01_l01",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/001_acne_studios_ss27_c01_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_002_acne_studios_ss27_c02_l01",
+      "parent_source_id": "gen_acne_studios_ss27_c02_l01",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/002_acne_studios_ss27_c02_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_003_acne_studios_ss27_c03_l02",
+      "parent_source_id": "gen_acne_studios_ss27_c03_l02",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 3,
+      "look": 2,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/003_acne_studios_ss27_c03_l02_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_004_acne_studios_ss27_c04_l04",
+      "parent_source_id": "gen_acne_studios_ss27_c04_l04",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 4,
+      "look": 4,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/004_acne_studios_ss27_c04_l04_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_005_alberta_ferretti_ss27_c01_l01",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c01_l01",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/005_alberta_ferretti_ss27_c01_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_006_alberta_ferretti_ss27_c02_l01",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c02_l01",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/006_alberta_ferretti_ss27_c02_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_007_alberta_ferretti_ss27_c03_l01",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c03_l01",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/007_alberta_ferretti_ss27_c03_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_008_alberta_ferretti_ss27_c04_l01",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c04_l01",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/008_alberta_ferretti_ss27_c04_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_009_alexander_mcqueen_ss27_c01_l01",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c01_l01",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/009_alexander_mcqueen_ss27_c01_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_010_alexander_mcqueen_ss27_c02_l01",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c02_l01",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/010_alexander_mcqueen_ss27_c02_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_011_alexander_mcqueen_ss27_c03_l01",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c03_l01",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/011_alexander_mcqueen_ss27_c03_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_012_alexander_mcqueen_ss27_c04_l01",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c04_l01",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/012_alexander_mcqueen_ss27_c04_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_013_balenciaga_ss27_c01_l01",
+      "parent_source_id": "gen_balenciaga_ss27_c01_l01",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/013_balenciaga_ss27_c01_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_014_balenciaga_ss27_c02_l01",
+      "parent_source_id": "gen_balenciaga_ss27_c02_l01",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/014_balenciaga_ss27_c02_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_015_balenciaga_ss27_c03_l03",
+      "parent_source_id": "gen_balenciaga_ss27_c03_l03",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 3,
+      "look": 3,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/015_balenciaga_ss27_c03_l03_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_016_balenciaga_ss27_c04_l01",
+      "parent_source_id": "gen_balenciaga_ss27_c04_l01",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/016_balenciaga_ss27_c04_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_017_bottega_veneta_ss27_c01_l01",
+      "parent_source_id": "gen_bottega_veneta_ss27_c01_l01",
+      "brand_dir": "bottega_veneta_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/017_bottega_veneta_ss27_c01_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_018_bottega_veneta_ss27_c02_l01",
+      "parent_source_id": "gen_bottega_veneta_ss27_c02_l01",
+      "brand_dir": "bottega_veneta_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/018_bottega_veneta_ss27_c02_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_019_bottega_veneta_ss27_c03_l01",
+      "parent_source_id": "gen_bottega_veneta_ss27_c03_l01",
+      "brand_dir": "bottega_veneta_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/019_bottega_veneta_ss27_c03_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_020_bottega_veneta_ss27_c04_l01",
+      "parent_source_id": "gen_bottega_veneta_ss27_c04_l01",
+      "brand_dir": "bottega_veneta_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/020_bottega_veneta_ss27_c04_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_021_brunello_cucinelli_ss27_c01_l01",
+      "parent_source_id": "gen_brunello_cucinelli_ss27_c01_l01",
+      "brand_dir": "brunello_cucinelli_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/021_brunello_cucinelli_ss27_c01_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_022_brunello_cucinelli_ss27_c02_l01",
+      "parent_source_id": "gen_brunello_cucinelli_ss27_c02_l01",
+      "brand_dir": "brunello_cucinelli_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/022_brunello_cucinelli_ss27_c02_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_023_brunello_cucinelli_ss27_c03_l01",
+      "parent_source_id": "gen_brunello_cucinelli_ss27_c03_l01",
+      "brand_dir": "brunello_cucinelli_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/023_brunello_cucinelli_ss27_c03_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_024_brunello_cucinelli_ss27_c04_l01",
+      "parent_source_id": "gen_brunello_cucinelli_ss27_c04_l01",
+      "brand_dir": "brunello_cucinelli_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/024_brunello_cucinelli_ss27_c04_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_025_burberry_ss27_c01_l01",
+      "parent_source_id": "gen_burberry_ss27_c01_l01",
+      "brand_dir": "burberry_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/025_burberry_ss27_c01_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_026_burberry_ss27_c02_l01",
+      "parent_source_id": "gen_burberry_ss27_c02_l01",
+      "brand_dir": "burberry_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/026_burberry_ss27_c02_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_027_burberry_ss27_c03_l01",
+      "parent_source_id": "gen_burberry_ss27_c03_l01",
+      "brand_dir": "burberry_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/027_burberry_ss27_c03_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_028_burberry_ss27_c04_l01",
+      "parent_source_id": "gen_burberry_ss27_c04_l01",
+      "brand_dir": "burberry_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/028_burberry_ss27_c04_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_029_celine_ss27_c01_l01",
+      "parent_source_id": "gen_celine_ss27_c01_l01",
+      "brand_dir": "celine_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/029_celine_ss27_c01_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_030_celine_ss27_c02_l01",
+      "parent_source_id": "gen_celine_ss27_c02_l01",
+      "brand_dir": "celine_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/030_celine_ss27_c02_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_031_celine_ss27_c03_l02",
+      "parent_source_id": "gen_celine_ss27_c03_l02",
+      "brand_dir": "celine_ss27",
+      "chapter": 3,
+      "look": 2,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/031_celine_ss27_c03_l02_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_032_celine_ss27_c04_l01",
+      "parent_source_id": "gen_celine_ss27_c04_l01",
+      "brand_dir": "celine_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/032_celine_ss27_c04_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_033_chanel_cruise27_c01_l01",
+      "parent_source_id": "gen_chanel_cruise27_c01_l01",
+      "brand_dir": "chanel_cruise27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/033_chanel_cruise27_c01_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_034_chanel_cruise27_c02_l01",
+      "parent_source_id": "gen_chanel_cruise27_c02_l01",
+      "brand_dir": "chanel_cruise27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/034_chanel_cruise27_c02_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_035_chanel_cruise27_c03_l01",
+      "parent_source_id": "gen_chanel_cruise27_c03_l01",
+      "brand_dir": "chanel_cruise27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/035_chanel_cruise27_c03_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_036_chanel_cruise27_c04_l01",
+      "parent_source_id": "gen_chanel_cruise27_c04_l01",
+      "brand_dir": "chanel_cruise27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/036_chanel_cruise27_c04_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_037_chloe_ss27_c01_l01",
+      "parent_source_id": "gen_chloe_ss27_c01_l01",
+      "brand_dir": "chloe_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/037_chloe_ss27_c01_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_038_chloe_ss27_c02_l01",
+      "parent_source_id": "gen_chloe_ss27_c02_l01",
+      "brand_dir": "chloe_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/038_chloe_ss27_c02_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_039_chloe_ss27_c03_l01",
+      "parent_source_id": "gen_chloe_ss27_c03_l01",
+      "brand_dir": "chloe_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/039_chloe_ss27_c03_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_040_chloe_ss27_c04_l03",
+      "parent_source_id": "gen_chloe_ss27_c04_l03",
+      "brand_dir": "chloe_ss27",
+      "chapter": 4,
+      "look": 3,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/040_chloe_ss27_c04_l03_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_041_diesel_ss27_c01_l01",
+      "parent_source_id": "gen_diesel_ss27_c01_l01",
+      "brand_dir": "diesel_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/041_diesel_ss27_c01_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_042_diesel_ss27_c02_l01",
+      "parent_source_id": "gen_diesel_ss27_c02_l01",
+      "brand_dir": "diesel_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/042_diesel_ss27_c02_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_043_diesel_ss27_c03_l01",
+      "parent_source_id": "gen_diesel_ss27_c03_l01",
+      "brand_dir": "diesel_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/043_diesel_ss27_c03_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_044_diesel_ss27_c04_l02",
+      "parent_source_id": "gen_diesel_ss27_c04_l02",
+      "brand_dir": "diesel_ss27",
+      "chapter": 4,
+      "look": 2,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/044_diesel_ss27_c04_l02_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_045_dior_fw26_c01_l02",
+      "parent_source_id": "gen_dior_fw26_c01_l02",
+      "brand_dir": "dior_fw26",
+      "chapter": 1,
+      "look": 2,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/045_dior_fw26_c01_l02_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_046_dior_fw26_c02_l01",
+      "parent_source_id": "gen_dior_fw26_c02_l01",
+      "brand_dir": "dior_fw26",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/046_dior_fw26_c02_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_047_dior_fw26_c03_l01",
+      "parent_source_id": "gen_dior_fw26_c03_l01",
+      "brand_dir": "dior_fw26",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/047_dior_fw26_c03_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_048_dior_fw26_c04_l01",
+      "parent_source_id": "gen_dior_fw26_c04_l01",
+      "brand_dir": "dior_fw26",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/048_dior_fw26_c04_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_049_fendi_ss27_c01_l01",
+      "parent_source_id": "gen_fendi_ss27_c01_l01",
+      "brand_dir": "fendi_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/049_fendi_ss27_c01_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_050_fendi_ss27_c02_l01",
+      "parent_source_id": "gen_fendi_ss27_c02_l01",
+      "brand_dir": "fendi_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/050_fendi_ss27_c02_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_051_fendi_ss27_c03_l01",
+      "parent_source_id": "gen_fendi_ss27_c03_l01",
+      "brand_dir": "fendi_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/051_fendi_ss27_c03_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_052_fendi_ss27_c04_l01",
+      "parent_source_id": "gen_fendi_ss27_c04_l01",
+      "brand_dir": "fendi_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/052_fendi_ss27_c04_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_053_ferragamo_ss27_c01_l02",
+      "parent_source_id": "gen_ferragamo_ss27_c01_l02",
+      "brand_dir": "ferragamo_ss27",
+      "chapter": 1,
+      "look": 2,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/053_ferragamo_ss27_c01_l02_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_054_ferragamo_ss27_c02_l01",
+      "parent_source_id": "gen_ferragamo_ss27_c02_l01",
+      "brand_dir": "ferragamo_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/054_ferragamo_ss27_c02_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_055_ferragamo_ss27_c03_l02",
+      "parent_source_id": "gen_ferragamo_ss27_c03_l02",
+      "brand_dir": "ferragamo_ss27",
+      "chapter": 3,
+      "look": 2,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/055_ferragamo_ss27_c03_l02_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_056_ferragamo_ss27_c04_l01",
+      "parent_source_id": "gen_ferragamo_ss27_c04_l01",
+      "brand_dir": "ferragamo_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/056_ferragamo_ss27_c04_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_057_givenchy_ss27_c01_l01",
+      "parent_source_id": "gen_givenchy_ss27_c01_l01",
+      "brand_dir": "givenchy_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/057_givenchy_ss27_c01_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_058_givenchy_ss27_c02_l01",
+      "parent_source_id": "gen_givenchy_ss27_c02_l01",
+      "brand_dir": "givenchy_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/058_givenchy_ss27_c02_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_059_givenchy_ss27_c03_l01",
+      "parent_source_id": "gen_givenchy_ss27_c03_l01",
+      "brand_dir": "givenchy_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/059_givenchy_ss27_c03_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_060_givenchy_ss27_c04_l01",
+      "parent_source_id": "gen_givenchy_ss27_c04_l01",
+      "brand_dir": "givenchy_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/060_givenchy_ss27_c04_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_061_gucci_ss27_c01_l01",
+      "parent_source_id": "gen_gucci_ss27_c01_l01",
+      "brand_dir": "gucci_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/061_gucci_ss27_c01_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_062_gucci_ss27_c02_l01",
+      "parent_source_id": "gen_gucci_ss27_c02_l01",
+      "brand_dir": "gucci_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/062_gucci_ss27_c02_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_063_gucci_ss27_c03_l01",
+      "parent_source_id": "gen_gucci_ss27_c03_l01",
+      "brand_dir": "gucci_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/063_gucci_ss27_c03_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_064_gucci_ss27_c04_l01",
+      "parent_source_id": "gen_gucci_ss27_c04_l01",
+      "brand_dir": "gucci_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/064_gucci_ss27_c04_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_065_hermes_fw26_c01_l01",
+      "parent_source_id": "gen_hermes_fw26_c01_l01",
+      "brand_dir": "hermes_fw26",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/065_hermes_fw26_c01_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_066_hermes_fw26_c02_l01",
+      "parent_source_id": "gen_hermes_fw26_c02_l01",
+      "brand_dir": "hermes_fw26",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/066_hermes_fw26_c02_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_067_hermes_fw26_c03_l01",
+      "parent_source_id": "gen_hermes_fw26_c03_l01",
+      "brand_dir": "hermes_fw26",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/067_hermes_fw26_c03_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_068_hermes_fw26_c04_l01",
+      "parent_source_id": "gen_hermes_fw26_c04_l01",
+      "brand_dir": "hermes_fw26",
+      "chapter": 4,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/068_hermes_fw26_c04_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_069_jacquemus_ss27_c01_l01",
+      "parent_source_id": "gen_jacquemus_ss27_c01_l01",
+      "brand_dir": "jacquemus_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/069_jacquemus_ss27_c01_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_070_jacquemus_ss27_c02_l01",
+      "parent_source_id": "gen_jacquemus_ss27_c02_l01",
+      "brand_dir": "jacquemus_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/070_jacquemus_ss27_c02_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_071_jacquemus_ss27_c03_l01",
+      "parent_source_id": "gen_jacquemus_ss27_c03_l01",
+      "brand_dir": "jacquemus_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/071_jacquemus_ss27_c03_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_072_jacquemus_ss27_c04_l01",
+      "parent_source_id": "gen_jacquemus_ss27_c04_l01",
+      "brand_dir": "jacquemus_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/072_jacquemus_ss27_c04_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_073_jil_sander_ss27_c01_l01",
+      "parent_source_id": "gen_jil_sander_ss27_c01_l01",
+      "brand_dir": "jil_sander_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/073_jil_sander_ss27_c01_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_074_jil_sander_ss27_c02_l01",
+      "parent_source_id": "gen_jil_sander_ss27_c02_l01",
+      "brand_dir": "jil_sander_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/074_jil_sander_ss27_c02_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_075_jil_sander_ss27_c03_l02",
+      "parent_source_id": "gen_jil_sander_ss27_c03_l02",
+      "brand_dir": "jil_sander_ss27",
+      "chapter": 3,
+      "look": 2,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/075_jil_sander_ss27_c03_l02_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_076_jil_sander_ss27_c04_l01",
+      "parent_source_id": "gen_jil_sander_ss27_c04_l01",
+      "brand_dir": "jil_sander_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/076_jil_sander_ss27_c04_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_077_khaite_ss27_c01_l04",
+      "parent_source_id": "gen_khaite_ss27_c01_l04",
+      "brand_dir": "khaite_ss27",
+      "chapter": 1,
+      "look": 4,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/077_khaite_ss27_c01_l04_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_078_khaite_ss27_c02_l01",
+      "parent_source_id": "gen_khaite_ss27_c02_l01",
+      "brand_dir": "khaite_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/078_khaite_ss27_c02_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_079_khaite_ss27_c03_l01",
+      "parent_source_id": "gen_khaite_ss27_c03_l01",
+      "brand_dir": "khaite_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/079_khaite_ss27_c03_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_080_khaite_ss27_c04_l01",
+      "parent_source_id": "gen_khaite_ss27_c04_l01",
+      "brand_dir": "khaite_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/080_khaite_ss27_c04_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_081_loewe_ss27_c01_l01",
+      "parent_source_id": "gen_loewe_ss27_c01_l01",
+      "brand_dir": "loewe_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/081_loewe_ss27_c01_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_082_loewe_ss27_c02_l01",
+      "parent_source_id": "gen_loewe_ss27_c02_l01",
+      "brand_dir": "loewe_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/082_loewe_ss27_c02_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_083_loewe_ss27_c03_l02",
+      "parent_source_id": "gen_loewe_ss27_c03_l02",
+      "brand_dir": "loewe_ss27",
+      "chapter": 3,
+      "look": 2,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/083_loewe_ss27_c03_l02_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_084_loewe_ss27_c04_l01",
+      "parent_source_id": "gen_loewe_ss27_c04_l01",
+      "brand_dir": "loewe_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/084_loewe_ss27_c04_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_085_louis_vuitton_fw26_c01_l01",
+      "parent_source_id": "gen_louis_vuitton_fw26_c01_l01",
+      "brand_dir": "louis_vuitton_fw26",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/085_louis_vuitton_fw26_c01_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_086_louis_vuitton_fw26_c02_l01",
+      "parent_source_id": "gen_louis_vuitton_fw26_c02_l01",
+      "brand_dir": "louis_vuitton_fw26",
+      "chapter": 2,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/086_louis_vuitton_fw26_c02_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_087_louis_vuitton_fw26_c03_l01",
+      "parent_source_id": "gen_louis_vuitton_fw26_c03_l01",
+      "brand_dir": "louis_vuitton_fw26",
+      "chapter": 3,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/087_louis_vuitton_fw26_c03_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_088_louis_vuitton_fw26_c04_l01",
+      "parent_source_id": "gen_louis_vuitton_fw26_c04_l01",
+      "brand_dir": "louis_vuitton_fw26",
+      "chapter": 4,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/088_louis_vuitton_fw26_c04_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_089_max_mara_ss27_c01_l01",
+      "parent_source_id": "gen_max_mara_ss27_c01_l01",
+      "brand_dir": "max_mara_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/089_max_mara_ss27_c01_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_090_max_mara_ss27_c02_l01",
+      "parent_source_id": "gen_max_mara_ss27_c02_l01",
+      "brand_dir": "max_mara_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/090_max_mara_ss27_c02_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_091_max_mara_ss27_c03_l01",
+      "parent_source_id": "gen_max_mara_ss27_c03_l01",
+      "brand_dir": "max_mara_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/091_max_mara_ss27_c03_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_092_max_mara_ss27_c04_l01",
+      "parent_source_id": "gen_max_mara_ss27_c04_l01",
+      "brand_dir": "max_mara_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/092_max_mara_ss27_c04_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_093_missoni_ss27_c01_l01",
+      "parent_source_id": "gen_missoni_ss27_c01_l01",
+      "brand_dir": "missoni_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/093_missoni_ss27_c01_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_094_missoni_ss27_c02_l02",
+      "parent_source_id": "gen_missoni_ss27_c02_l02",
+      "brand_dir": "missoni_ss27",
+      "chapter": 2,
+      "look": 2,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/094_missoni_ss27_c02_l02_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_095_missoni_ss27_c03_l01",
+      "parent_source_id": "gen_missoni_ss27_c03_l01",
+      "brand_dir": "missoni_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/095_missoni_ss27_c03_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_096_missoni_ss27_c04_l01",
+      "parent_source_id": "gen_missoni_ss27_c04_l01",
+      "brand_dir": "missoni_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/096_missoni_ss27_c04_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_097_miu_miu_ss27_c01_l02",
+      "parent_source_id": "gen_miu_miu_ss27_c01_l02",
+      "brand_dir": "miu_miu_ss27",
+      "chapter": 1,
+      "look": 2,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/097_miu_miu_ss27_c01_l02_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_098_miu_miu_ss27_c02_l01",
+      "parent_source_id": "gen_miu_miu_ss27_c02_l01",
+      "brand_dir": "miu_miu_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/098_miu_miu_ss27_c02_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_099_miu_miu_ss27_c03_l02",
+      "parent_source_id": "gen_miu_miu_ss27_c03_l02",
+      "brand_dir": "miu_miu_ss27",
+      "chapter": 3,
+      "look": 2,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/099_miu_miu_ss27_c03_l02_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_100_miu_miu_ss27_c04_l01",
+      "parent_source_id": "gen_miu_miu_ss27_c04_l01",
+      "brand_dir": "miu_miu_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/100_miu_miu_ss27_c04_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_101_moschino_ss27_c01_l01",
+      "parent_source_id": "gen_moschino_ss27_c01_l01",
+      "brand_dir": "moschino_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/101_moschino_ss27_c01_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_102_moschino_ss27_c02_l01",
+      "parent_source_id": "gen_moschino_ss27_c02_l01",
+      "brand_dir": "moschino_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/102_moschino_ss27_c02_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_103_moschino_ss27_c03_l01",
+      "parent_source_id": "gen_moschino_ss27_c03_l01",
+      "brand_dir": "moschino_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/103_moschino_ss27_c03_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_104_moschino_ss27_c04_l01",
+      "parent_source_id": "gen_moschino_ss27_c04_l01",
+      "brand_dir": "moschino_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/104_moschino_ss27_c04_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_105_prada_ss27_c01_l01",
+      "parent_source_id": "gen_prada_ss27_c01_l01",
+      "brand_dir": "prada_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/105_prada_ss27_c01_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_106_prada_ss27_c02_l01",
+      "parent_source_id": "gen_prada_ss27_c02_l01",
+      "brand_dir": "prada_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/106_prada_ss27_c02_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_107_prada_ss27_c03_l01",
+      "parent_source_id": "gen_prada_ss27_c03_l01",
+      "brand_dir": "prada_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/107_prada_ss27_c03_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_108_prada_ss27_c04_l01",
+      "parent_source_id": "gen_prada_ss27_c04_l01",
+      "brand_dir": "prada_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/108_prada_ss27_c04_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_109_proenza_schouler_ss27_c01_l01",
+      "parent_source_id": "gen_proenza_schouler_ss27_c01_l01",
+      "brand_dir": "proenza_schouler_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/109_proenza_schouler_ss27_c01_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_110_proenza_schouler_ss27_c02_l01",
+      "parent_source_id": "gen_proenza_schouler_ss27_c02_l01",
+      "brand_dir": "proenza_schouler_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/110_proenza_schouler_ss27_c02_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_111_proenza_schouler_ss27_c03_l01",
+      "parent_source_id": "gen_proenza_schouler_ss27_c03_l01",
+      "brand_dir": "proenza_schouler_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/111_proenza_schouler_ss27_c03_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_112_proenza_schouler_ss27_c04_l01",
+      "parent_source_id": "gen_proenza_schouler_ss27_c04_l01",
+      "brand_dir": "proenza_schouler_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/112_proenza_schouler_ss27_c04_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_113_ralph_lauren_ss27_c01_l01",
+      "parent_source_id": "gen_ralph_lauren_ss27_c01_l01",
+      "brand_dir": "ralph_lauren_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/113_ralph_lauren_ss27_c01_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_114_ralph_lauren_ss27_c02_l01",
+      "parent_source_id": "gen_ralph_lauren_ss27_c02_l01",
+      "brand_dir": "ralph_lauren_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/114_ralph_lauren_ss27_c02_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_115_ralph_lauren_ss27_c03_l01",
+      "parent_source_id": "gen_ralph_lauren_ss27_c03_l01",
+      "brand_dir": "ralph_lauren_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/115_ralph_lauren_ss27_c03_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_116_ralph_lauren_ss27_c04_l01",
+      "parent_source_id": "gen_ralph_lauren_ss27_c04_l01",
+      "brand_dir": "ralph_lauren_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/116_ralph_lauren_ss27_c04_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_117_rick_owens_ss27_c01_l01",
+      "parent_source_id": "gen_rick_owens_ss27_c01_l01",
+      "brand_dir": "rick_owens_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/117_rick_owens_ss27_c01_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_118_rick_owens_ss27_c02_l01",
+      "parent_source_id": "gen_rick_owens_ss27_c02_l01",
+      "brand_dir": "rick_owens_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/118_rick_owens_ss27_c02_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_119_rick_owens_ss27_c03_l01",
+      "parent_source_id": "gen_rick_owens_ss27_c03_l01",
+      "brand_dir": "rick_owens_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/119_rick_owens_ss27_c03_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_120_rick_owens_ss27_c04_l01",
+      "parent_source_id": "gen_rick_owens_ss27_c04_l01",
+      "brand_dir": "rick_owens_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/120_rick_owens_ss27_c04_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_121_saint_laurent_fw26_c01_l01",
+      "parent_source_id": "gen_saint_laurent_fw26_c01_l01",
+      "brand_dir": "saint_laurent_fw26",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/121_saint_laurent_fw26_c01_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_122_saint_laurent_fw26_c02_l01",
+      "parent_source_id": "gen_saint_laurent_fw26_c02_l01",
+      "brand_dir": "saint_laurent_fw26",
+      "chapter": 2,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/122_saint_laurent_fw26_c02_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_123_saint_laurent_fw26_c03_l01",
+      "parent_source_id": "gen_saint_laurent_fw26_c03_l01",
+      "brand_dir": "saint_laurent_fw26",
+      "chapter": 3,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/123_saint_laurent_fw26_c03_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_124_saint_laurent_fw26_c04_l01",
+      "parent_source_id": "gen_saint_laurent_fw26_c04_l01",
+      "brand_dir": "saint_laurent_fw26",
+      "chapter": 4,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/124_saint_laurent_fw26_c04_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_125_schiaparelli_ss27_c01_l01",
+      "parent_source_id": "gen_schiaparelli_ss27_c01_l01",
+      "brand_dir": "schiaparelli_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/125_schiaparelli_ss27_c01_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_126_schiaparelli_ss27_c02_l02",
+      "parent_source_id": "gen_schiaparelli_ss27_c02_l02",
+      "brand_dir": "schiaparelli_ss27",
+      "chapter": 2,
+      "look": 2,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/126_schiaparelli_ss27_c02_l02_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_127_schiaparelli_ss27_c03_l01",
+      "parent_source_id": "gen_schiaparelli_ss27_c03_l01",
+      "brand_dir": "schiaparelli_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/127_schiaparelli_ss27_c03_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_128_schiaparelli_ss27_c04_l01",
+      "parent_source_id": "gen_schiaparelli_ss27_c04_l01",
+      "brand_dir": "schiaparelli_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/128_schiaparelli_ss27_c04_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_129_stella_mccartney_ss27_c01_l01",
+      "parent_source_id": "gen_stella_mccartney_ss27_c01_l01",
+      "brand_dir": "stella_mccartney_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/129_stella_mccartney_ss27_c01_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_130_stella_mccartney_ss27_c02_l01",
+      "parent_source_id": "gen_stella_mccartney_ss27_c02_l01",
+      "brand_dir": "stella_mccartney_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/130_stella_mccartney_ss27_c02_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_131_stella_mccartney_ss27_c03_l01",
+      "parent_source_id": "gen_stella_mccartney_ss27_c03_l01",
+      "brand_dir": "stella_mccartney_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/131_stella_mccartney_ss27_c03_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_132_stella_mccartney_ss27_c04_l01",
+      "parent_source_id": "gen_stella_mccartney_ss27_c04_l01",
+      "brand_dir": "stella_mccartney_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/132_stella_mccartney_ss27_c04_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_133_the_row_fw26_c01_l01",
+      "parent_source_id": "gen_the_row_fw26_c01_l01",
+      "brand_dir": "the_row_fw26",
+      "chapter": 1,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/133_the_row_fw26_c01_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_134_the_row_fw26_c02_l01",
+      "parent_source_id": "gen_the_row_fw26_c02_l01",
+      "brand_dir": "the_row_fw26",
+      "chapter": 2,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/134_the_row_fw26_c02_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_135_the_row_fw26_c03_l01",
+      "parent_source_id": "gen_the_row_fw26_c03_l01",
+      "brand_dir": "the_row_fw26",
+      "chapter": 3,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/135_the_row_fw26_c03_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_136_the_row_fw26_c04_l01",
+      "parent_source_id": "gen_the_row_fw26_c04_l01",
+      "brand_dir": "the_row_fw26",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/136_the_row_fw26_c04_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_137_tods_ss27_c01_l01",
+      "parent_source_id": "gen_tods_ss27_c01_l01",
+      "brand_dir": "tods_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/137_tods_ss27_c01_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_138_tods_ss27_c02_l01",
+      "parent_source_id": "gen_tods_ss27_c02_l01",
+      "brand_dir": "tods_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/138_tods_ss27_c02_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_139_tods_ss27_c03_l01",
+      "parent_source_id": "gen_tods_ss27_c03_l01",
+      "brand_dir": "tods_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/139_tods_ss27_c03_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_140_tods_ss27_c04_l01",
+      "parent_source_id": "gen_tods_ss27_c04_l01",
+      "brand_dir": "tods_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/140_tods_ss27_c04_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_141_tom_ford_ss27_c01_l04",
+      "parent_source_id": "gen_tom_ford_ss27_c01_l04",
+      "brand_dir": "tom_ford_ss27",
+      "chapter": 1,
+      "look": 4,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/141_tom_ford_ss27_c01_l04_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_142_tom_ford_ss27_c02_l02",
+      "parent_source_id": "gen_tom_ford_ss27_c02_l02",
+      "brand_dir": "tom_ford_ss27",
+      "chapter": 2,
+      "look": 2,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/142_tom_ford_ss27_c02_l02_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_143_tom_ford_ss27_c03_l01",
+      "parent_source_id": "gen_tom_ford_ss27_c03_l01",
+      "brand_dir": "tom_ford_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/143_tom_ford_ss27_c03_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_144_tom_ford_ss27_c04_l01",
+      "parent_source_id": "gen_tom_ford_ss27_c04_l01",
+      "brand_dir": "tom_ford_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/144_tom_ford_ss27_c04_l01_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_145_valentino_ss27_c01_l01",
+      "parent_source_id": "gen_valentino_ss27_c01_l01",
+      "brand_dir": "valentino_ss27",
+      "chapter": 1,
+      "look": 1,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/145_valentino_ss27_c01_l01_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_146_valentino_ss27_c02_l01",
+      "parent_source_id": "gen_valentino_ss27_c02_l01",
+      "brand_dir": "valentino_ss27",
+      "chapter": 2,
+      "look": 1,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/146_valentino_ss27_c02_l01_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_147_valentino_ss27_c03_l01",
+      "parent_source_id": "gen_valentino_ss27_c03_l01",
+      "brand_dir": "valentino_ss27",
+      "chapter": 3,
+      "look": 1,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/147_valentino_ss27_c03_l01_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_148_valentino_ss27_c04_l01",
+      "parent_source_id": "gen_valentino_ss27_c04_l01",
+      "brand_dir": "valentino_ss27",
+      "chapter": 4,
+      "look": 1,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/148_valentino_ss27_c04_l01_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_149_versace_ss26_c01_l01",
+      "parent_source_id": "gen_versace_ss26_c01_l01",
+      "brand_dir": "versace_ss26",
+      "chapter": 1,
+      "look": 1,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/149_versace_ss26_c01_l01_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_150_versace_ss26_c02_l01",
+      "parent_source_id": "gen_versace_ss26_c02_l01",
+      "brand_dir": "versace_ss26",
+      "chapter": 2,
+      "look": 1,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/150_versace_ss26_c02_l01_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_151_versace_ss26_c03_l01",
+      "parent_source_id": "gen_versace_ss26_c03_l01",
+      "brand_dir": "versace_ss26",
+      "chapter": 3,
+      "look": 1,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/151_versace_ss26_c03_l01_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_152_versace_ss26_c04_l01",
+      "parent_source_id": "gen_versace_ss26_c04_l01",
+      "brand_dir": "versace_ss26",
+      "chapter": 4,
+      "look": 1,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/152_versace_ss26_c04_l01_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_153_acne_studios_ss27_c01_l02",
+      "parent_source_id": "gen_acne_studios_ss27_c01_l02",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 1,
+      "look": 2,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/153_acne_studios_ss27_c01_l02_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_154_acne_studios_ss27_c01_l03",
+      "parent_source_id": "gen_acne_studios_ss27_c01_l03",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 1,
+      "look": 3,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/154_acne_studios_ss27_c01_l03_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_155_acne_studios_ss27_c01_l04",
+      "parent_source_id": "gen_acne_studios_ss27_c01_l04",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 1,
+      "look": 4,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/155_acne_studios_ss27_c01_l04_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_156_acne_studios_ss27_c02_l02",
+      "parent_source_id": "gen_acne_studios_ss27_c02_l02",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 2,
+      "look": 2,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/156_acne_studios_ss27_c02_l02_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_157_acne_studios_ss27_c02_l03",
+      "parent_source_id": "gen_acne_studios_ss27_c02_l03",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 2,
+      "look": 3,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/157_acne_studios_ss27_c02_l03_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_158_acne_studios_ss27_c03_l03",
+      "parent_source_id": "gen_acne_studios_ss27_c03_l03",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 3,
+      "look": 3,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/158_acne_studios_ss27_c03_l03_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_159_acne_studios_ss27_c03_l04",
+      "parent_source_id": "gen_acne_studios_ss27_c03_l04",
+      "brand_dir": "acne_studios_ss27",
+      "chapter": 3,
+      "look": 4,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/159_acne_studios_ss27_c03_l04_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_160_alberta_ferretti_ss27_c01_l02",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c01_l02",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 1,
+      "look": 2,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/160_alberta_ferretti_ss27_c01_l02_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_161_alberta_ferretti_ss27_c01_l03",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c01_l03",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 1,
+      "look": 3,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/161_alberta_ferretti_ss27_c01_l03_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_162_alberta_ferretti_ss27_c01_l04",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c01_l04",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 1,
+      "look": 4,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/162_alberta_ferretti_ss27_c01_l04_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_163_alberta_ferretti_ss27_c02_l02",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c02_l02",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 2,
+      "look": 2,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/163_alberta_ferretti_ss27_c02_l02_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_164_alberta_ferretti_ss27_c02_l03",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c02_l03",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 2,
+      "look": 3,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/164_alberta_ferretti_ss27_c02_l03_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_165_alberta_ferretti_ss27_c02_l04",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c02_l04",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 2,
+      "look": 4,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/165_alberta_ferretti_ss27_c02_l04_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_166_alberta_ferretti_ss27_c03_l02",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c03_l02",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 3,
+      "look": 2,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/166_alberta_ferretti_ss27_c03_l02_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_167_alberta_ferretti_ss27_c03_l03",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c03_l03",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 3,
+      "look": 3,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/167_alberta_ferretti_ss27_c03_l03_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_168_alberta_ferretti_ss27_c03_l04",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c03_l04",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 3,
+      "look": 4,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/168_alberta_ferretti_ss27_c03_l04_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_169_alberta_ferretti_ss27_c04_l02",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c04_l02",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 4,
+      "look": 2,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/169_alberta_ferretti_ss27_c04_l02_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_170_alberta_ferretti_ss27_c04_l03",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c04_l03",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 4,
+      "look": 3,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/170_alberta_ferretti_ss27_c04_l03_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_171_alberta_ferretti_ss27_c04_l04",
+      "parent_source_id": "gen_alberta_ferretti_ss27_c04_l04",
+      "brand_dir": "alberta_ferretti_ss27",
+      "chapter": 4,
+      "look": 4,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/171_alberta_ferretti_ss27_c04_l04_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_172_alexander_mcqueen_ss27_c01_l02",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c01_l02",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 1,
+      "look": 2,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/172_alexander_mcqueen_ss27_c01_l02_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_173_alexander_mcqueen_ss27_c01_l04",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c01_l04",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 1,
+      "look": 4,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/173_alexander_mcqueen_ss27_c01_l04_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_174_alexander_mcqueen_ss27_c02_l02",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c02_l02",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 2,
+      "look": 2,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/174_alexander_mcqueen_ss27_c02_l02_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_175_alexander_mcqueen_ss27_c03_l02",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c03_l02",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 3,
+      "look": 2,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/175_alexander_mcqueen_ss27_c03_l02_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_176_alexander_mcqueen_ss27_c03_l03",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c03_l03",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 3,
+      "look": 3,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/176_alexander_mcqueen_ss27_c03_l03_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_177_alexander_mcqueen_ss27_c03_l04",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c03_l04",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 3,
+      "look": 4,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/177_alexander_mcqueen_ss27_c03_l04_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_178_alexander_mcqueen_ss27_c04_l02",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c04_l02",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 4,
+      "look": 2,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/178_alexander_mcqueen_ss27_c04_l02_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_179_alexander_mcqueen_ss27_c04_l03",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c04_l03",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 4,
+      "look": 3,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/179_alexander_mcqueen_ss27_c04_l03_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_180_alexander_mcqueen_ss27_c04_l04",
+      "parent_source_id": "gen_alexander_mcqueen_ss27_c04_l04",
+      "brand_dir": "alexander_mcqueen_ss27",
+      "chapter": 4,
+      "look": 4,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/180_alexander_mcqueen_ss27_c04_l04_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_181_balenciaga_ss27_c01_l02",
+      "parent_source_id": "gen_balenciaga_ss27_c01_l02",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 1,
+      "look": 2,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/181_balenciaga_ss27_c01_l02_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_182_balenciaga_ss27_c01_l03",
+      "parent_source_id": "gen_balenciaga_ss27_c01_l03",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 1,
+      "look": 3,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/182_balenciaga_ss27_c01_l03_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_183_balenciaga_ss27_c01_l04",
+      "parent_source_id": "gen_balenciaga_ss27_c01_l04",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 1,
+      "look": 4,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/183_balenciaga_ss27_c01_l04_binding_jacket.txt"
+    },
+    {
+      "source_id": "mild_season_184_balenciaga_ss27_c02_l02",
+      "parent_source_id": "gen_balenciaga_ss27_c02_l02",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 2,
+      "look": 2,
+      "defect": "binding_double",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/184_balenciaga_ss27_c02_l02_binding_double.txt"
+    },
+    {
+      "source_id": "mild_season_185_balenciaga_ss27_c02_l03",
+      "parent_source_id": "gen_balenciaga_ss27_c02_l03",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 2,
+      "look": 3,
+      "defect": "or_shoe",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/185_balenciaga_ss27_c02_l03_or_shoe.txt"
+    },
+    {
+      "source_id": "mild_season_186_balenciaga_ss27_c02_l04",
+      "parent_source_id": "gen_balenciaga_ss27_c02_l04",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 2,
+      "look": 4,
+      "defect": "or_bottom",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/186_balenciaga_ss27_c02_l04_or_bottom.txt"
+    },
+    {
+      "source_id": "mild_season_187_balenciaga_ss27_c04_l02",
+      "parent_source_id": "gen_balenciaga_ss27_c04_l02",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 4,
+      "look": 2,
+      "defect": "lr_sleeve",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/187_balenciaga_ss27_c04_l02_lr_sleeve.txt"
+    },
+    {
+      "source_id": "mild_season_188_balenciaga_ss27_c04_l03",
+      "parent_source_id": "gen_balenciaga_ss27_c04_l03",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 4,
+      "look": 3,
+      "defect": "sleeve_state",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/188_balenciaga_ss27_c04_l03_sleeve_state.txt"
+    },
+    {
+      "source_id": "mild_season_189_balenciaga_ss27_c04_l04",
+      "parent_source_id": "gen_balenciaga_ss27_c04_l04",
+      "brand_dir": "balenciaga_ss27",
+      "chapter": 4,
+      "look": 4,
+      "defect": "length_conflict",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/189_balenciaga_ss27_c04_l04_length_conflict.txt"
+    },
+    {
+      "source_id": "mild_season_190_bottega_veneta_ss27_c01_l02",
+      "parent_source_id": "gen_bottega_veneta_ss27_c01_l02",
+      "brand_dir": "bottega_veneta_ss27",
+      "chapter": 1,
+      "look": 2,
+      "defect": "binding_shell",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/190_bottega_veneta_ss27_c01_l02_binding_shell.txt"
+    },
+    {
+      "source_id": "mild_season_191_bottega_veneta_ss27_c01_l03",
+      "parent_source_id": "gen_bottega_veneta_ss27_c01_l03",
+      "brand_dir": "bottega_veneta_ss27",
+      "chapter": 1,
+      "look": 3,
+      "defect": "binding_neckline",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/191_bottega_veneta_ss27_c01_l03_binding_neckline.txt"
+    },
+    {
+      "source_id": "mild_season_192_bottega_veneta_ss27_c01_l04",
+      "parent_source_id": "gen_bottega_veneta_ss27_c01_l04",
+      "brand_dir": "bottega_veneta_ss27",
+      "chapter": 1,
+      "look": 4,
+      "defect": "binding_jacket",
+      "path": "fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/texts/192_bottega_veneta_ss27_c01_l04_binding_jacket.txt"
+    }
+  ]
+}
