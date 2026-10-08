@@ -20,6 +20,7 @@ class WorkflowGateRewriteConfigTests(unittest.TestCase):
         cfg = yaml.safe_load(Path("fashion_config.yaml").read_text(encoding="utf-8")) or {}
         ev = cfg.get("text-evaluator") or {}
         self.assertTrue(ev.get("rewrite-on-gate-fail"))
+        self.assertFalse(ev.get("keep-on-gate-fail"))
         self.assertEqual(ev.get("score-gate-min"), 0.8)
 
     def test_gate_pass_and_adopted_rewrite_keep_the_chapter(self) -> None:
@@ -46,9 +47,14 @@ class WorkflowGateRewriteConfigTests(unittest.TestCase):
         adopted = {"mode": "k_rewrite", "passed": False, "both_gates_passed": False}
         gate_pass = {"mode": "evaluate_only", "passed": True, "both_gates_passed": True}
         failed = {"mode": "evaluate_only", "passed": False, "both_gates_passed": False}
+        kept = {"mode": "keep_gate_fail", "passed": False, "both_gates_passed": False}
         self.assertTrue(look_kept_for_reflect(adopted, evaluator_enabled=True))
         self.assertTrue(look_kept_for_reflect(gate_pass, evaluator_enabled=True))
+        self.assertTrue(look_kept_for_reflect(kept, evaluator_enabled=True))
         self.assertFalse(look_kept_for_reflect(failed, evaluator_enabled=True))
+        self.assertFalse(
+            look_rewrite_not_adopted(kept, evaluator_enabled=True)
+        )
 
     def test_subtheme_discarded_only_when_every_look_fails(self) -> None:
         failed = {"mode": "evaluate_only", "passed": False, "both_gates_passed": False}

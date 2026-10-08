@@ -1913,8 +1913,9 @@ class FashionWorkflow:
 
         1. evaluator 未启用 → 透传
         2. 评原文；双门限均通过 → 保留原文本
-        3. 未通过且 ``rewrite_on_gate_fail`` → 8001 K 路改写；同时提高总分并降低惩罚的候选里，取总分最高的一条并回写
-        4. 没有同时做到这两点，或改写器不可用 → 不回写。该 look 不纳入本章；同章 look 都不被采纳时才废弃子主题
+        3. 未通过且 ``keep_on_gate_fail`` → 保留原文，不改写，仍纳入本章
+        4. 未通过且 ``rewrite_on_gate_fail`` → 8001 K 路改写；同时提高总分并降低惩罚的候选里，取总分最高的一条并回写
+        5. 没有同时做到这两点，或改写器不可用 → 不回写。该 look 不纳入本章；同章 look 都不被采纳时才废弃子主题
         """
         cfg = self.evaluator_config
         evaluator = self.text_evaluator
@@ -1948,7 +1949,22 @@ class FashionWorkflow:
         try:
             if self.verbose:
                 print(f"  [TextEval] Evaluating look {look_number} ...")
-            eval_result = evaluator.evaluate_txt_file(Path(eval_path))
+            try:
+                eval_result = evaluator.evaluate_txt_file(Path(eval_path))
+            except Exception as exc:
+                # keep-on-gate-fail：评判断连/失败时仍保留原文，避免整条生成流中断
+                if getattr(cfg, "keep_on_gate_fail", False):
+                    result["best_text"] = look_desc_raw
+                    result["mode"] = "keep_gate_fail"
+                    result["rewrite_error"] = f"eval_failed_keep: {exc}"
+                    if self.verbose:
+                        print(
+                            f"  [TextEval] Look {look_number} eval error; "
+                            f"keep-on-gate-fail=true, keep original: {exc}"
+                        )
+                    return result
+                raise
+
             self._fill_result_from_eval(result, eval_result)
             both_passed = bool(result["both_gates_passed"])
 
@@ -1982,6 +1998,15 @@ class FashionWorkflow:
             result["best_text"] = look_desc_raw
             if both_passed:
                 result["mode"] = "evaluate_only"
+                return result
+
+            if getattr(cfg, "keep_on_gate_fail", False):
+                result["mode"] = "keep_gate_fail"
+                if self.verbose:
+                    print(
+                        f"  [TextEval] Look {look_number} gates not passed; "
+                        f"keep-on-gate-fail=true, keep original (no rewrite)"
+                    )
                 return result
 
             result["mode"] = "evaluate_only"
@@ -2246,6 +2271,7 @@ class TextEvaluatorConfig:
     evaluator_temperature: float = 0.0       # 裁判评分用
     rewriter_temperature: float = 0.1        # spec rewriter.temperature 默认
     rewrite_on_gate_fail: bool = True        # 门限失败则 K 路改写（8001）
+    keep_on_gate_fail: bool = False          # 门限失败仍保留原文，且不触发改写
 
 
 def parse_yaml(yaml_file_loc):
@@ -2360,6 +2386,7 @@ def parse_yaml(yaml_file_loc):
     parser.evaluator_temperature = float(ev.get("temperature", 0.0))
     parser.evaluator_rewriter_temperature = float(ev.get("rewriter-temperature", 0.1))
     parser.evaluator_rewrite_on_gate_fail = bool(ev.get("rewrite-on-gate-fail", True))
+    parser.evaluator_keep_on_gate_fail = bool(ev.get("keep-on-gate-fail", False))
 
     grpo_ev = (config_data.get("grpo") or {}).get("design-text-evaluator") or {}
     # use-local 为 true 时，text-evaluator 里留空的地址/模型必须保持为空，
@@ -2494,6 +2521,7 @@ if __name__ == "__main__":
             evaluator_temperature=args.evaluator_temperature,
             rewriter_temperature=args.evaluator_rewriter_temperature,
             rewrite_on_gate_fail=getattr(args, "evaluator_rewrite_on_gate_fail", True),
+            keep_on_gate_fail=getattr(args, "evaluator_keep_on_gate_fail", False),
         )
 
         workflow = FashionWorkflow(

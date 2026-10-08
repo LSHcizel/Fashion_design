@@ -14,16 +14,16 @@ def look_rewrite_not_adopted(eval_result: dict | None, *, evaluator_enabled: boo
     """门限失败且改写没有被写回。评估器关闭时不据此剔除 look。"""
     if not evaluator_enabled or not isinstance(eval_result, dict):
         return False
-    if eval_result.get("mode") in ("k_rewrite", "passthrough"):
+    if eval_result.get("mode") in ("k_rewrite", "passthrough", "keep_gate_fail"):
         return False
     return not bool(eval_result.get("both_gates_passed") or eval_result.get("passed"))
 
 
 def look_kept_for_reflect(eval_result: dict | None, *, evaluator_enabled: bool) -> bool:
-    """原文双门限通过，或改写被写回的 look，进入单图和多图 reflect。"""
+    """原文双门限通过、改写被写回、或 keep_on_gate_fail 保留的 look，进入 reflect。"""
     if not evaluator_enabled or not isinstance(eval_result, dict):
         return False
-    if eval_result.get("mode") == "k_rewrite":
+    if eval_result.get("mode") in ("k_rewrite", "keep_gate_fail"):
         return True
     return bool(eval_result.get("both_gates_passed") or eval_result.get("passed"))
 

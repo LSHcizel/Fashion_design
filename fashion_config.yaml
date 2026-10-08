@@ -31,7 +31,8 @@ description: |
 # API key（通过 ohmygpt 网关访问 OpenAI 兼容接口）
 # 说明：此处使用 ohmygpt 提供的密钥和网关，不再使用 SiliconFlow。
 api-key: "sk-cOJZgGTTA6212993cF6bT3BlBkFJA9687097Fd4b4B0db988"
-api-base: "https://api.ohmygpt.com/v1"
+# 大陆网络优先用 OhMyGPT 亚洲优化端点；api.ohmygpt.com / apic1 常超时或 403
+api-base: "https://c-z0-api-01.hash070.com/v1"
 
 # （可选）保留字段以兼容旧代码，但不再实际使用 SiliconFlow
 siliconflow-api-key: ""
@@ -143,6 +144,9 @@ text-evaluator:
   # 双门限通过，或改写被采纳的 look，进入单图 / 多图 reflect。改写未被采纳的 look 不纳入该子主题。
   # 同章 look 都不被采纳时，删除该子主题记录，并新生成子主题补位，最多 3 次。
   rewrite-on-gate-fail: true
+  # true：门限不过时仍保留原文 look，且不触发改写（优先于 rewrite-on-gate-fail）。
+  # 默认 false：门限失败走改写；改写未采纳则剔除该 look。
+  keep-on-gate-fail: false
 
   # 若需临时切回 GPT 评判：use-local: false，并留空下面三项（继承 grpo.design-text-evaluator）
   # api-key:

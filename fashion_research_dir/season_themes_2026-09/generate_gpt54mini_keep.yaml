@@ -1,0 +1,215 @@
+copilot-mode: false
+design-target-prompt: Analyze the theme of Chanel Cruise 2027 collection Sous le Salon
+  la Plage for fashion design development
+theme: Sous le Salon la Plage
+brand: Chanel
+description: 'Away from the Paris salon, Chanel found in Biarritz a new way of being,
+  a new vantage point, bodily rhythm, and forms of freedom. With this line as a prologue,
+  creative director Matthieu Blazy formally brings Chanel back to where it all began.
+  In 1915, Gabrielle Chanel took the bold step that would rewrite fashion history:
+  encouraged by her lover, polo player Boy Capel, she expanded beyond her Deauville
+  boutique and founded her first couture house in the nineteenth-century Villa Larralde.
+  Set beside the beach, grand hotels, and casinos, the location drew an international
+  elite and delivered Chanel''s decisive victory—financial independence achieved as
+  a powerful woman entrepreneur. More than a century later, Chanel returns to the
+  birthplace of its enduring aesthetic.
+
+
+  More than a hundred years on, Chanel staged its first runway show in the beautiful
+  Basque coastal city at Le Casino Municipal, with the Cruise 2027 collection capturing
+  the house''s lasting spirit of liberation. Though Biarritz is a historic turning
+  point for the brand—it is where Gabrielle Chanel first met perfumer Ernest Beaux,
+  leading to the legendary Chanel N°5—this was nevertheless the maison''s first-ever
+  runway presentation in Biarritz.
+
+
+  For Blazy, the location is deeply meaningful on both personal and creative levels.
+  Having often visited the Basque Country since childhood, he understands this seaside
+  town as a symbol of "absolute freedom" for himself and for the brand alike. To prove
+  that classics often spring from rebellion, Blazy opened with a tribute to Gabrielle
+  Chanel''s 1926 black dress. He noted: "People often speak of a so-called ''revenge
+  dress''; this may be the original version," and returned to the earliest archival
+  sketches. That austere, unadorned long dress was hailed by Vogue as Chanel''s "Ford";
+  Blazy focused on a detail overlooked in early published drawings—the large bow at
+  the back—and translated it ingeniously into the clutch of the first look.
+
+
+  Chanel once made society women covet the dress of the contemporary working woman,
+  breaking class barriers. Blazy continues that tradition throughout Cruise, elevating
+  French workwear classics—the sailor''s marinière stripe shirt, the traditional bleu
+  de travail worker''s jacket, and washed cotton-canvas tailoring—to unparalleled
+  luxury. Under the theme of "aligning the eternal natural world with the modern world,"
+  he loosens rigid dress codes so salon elegance flows naturally onto the beach. Basque
+  stripes thread through the entire high-craft collection. The runway rhythm keeps
+  shifting, celebrating the pure pleasure of dressing and undressing—with swimwear
+  in a pivotal role. Models wear flowing silk scarf sets, rustling raffia skirts,
+  supple tweed, soft beaded knitwear, and sequins that shimmer like fish scales in
+  a "mermaid fantasy." Even the classic Double C logo is reinterpreted: no longer
+  mere branding, it becomes a structural, architectural element of the garments.
+
+
+  Accessories reinforce the collection''s play across terrains. Bags range from compact
+  luggage and waterproof flap styles to oversized striped beach paniers and traditional
+  Basque pala carry bags. Footwear lets the wearer move freely between ballroom and
+  sand—from elegant Art Deco heels to inventive barefoot "heel plates." Jewelry echoes
+  the city''s architecture and marine life, closing with shell earrings and a "spiritual
+  return" of iconic Chanel pearls.
+
+
+  In this spirit, Blazy''s Cruise 2027 elegantly reframes Chanel''s early Atlantic-coast
+  advocacy of sporty elegance through a contemporary lens. The runway is filled with
+  modern interpretations of her revolutionary clean lines, fluid dresses, and unbound
+  silhouettes—directly echoing Chanel''s original mission to liberate women from early-twentieth-century
+  sartorial constraints so they could dance, swim, love, and bask in the sun without
+  heed for others'' gaze.
+
+
+  Inside Le Casino Municipal, the atmosphere blends the relaxed grandeur of the French
+  coast with the historical weight of a major fashion milestone. A star-studded front
+  row—including A$AP Rocky, Nicole Kidman, Sofia Coppola, and Tilda Swinton—witnessed
+  Blazy''s luminous homage to the house''s roots.
+
+
+  By seamlessly interweaving the heritage of 1915 with its present-day expression,
+  Matthieu Blazy again proves that Biarritz''s spirit of liberation remains vividly
+  alive within Chanel. Cruise 2027 is not only a salute to the past but a celebration
+  of freedom and ease—and an enduring tribute to the designer who dared to change
+  the world.
+
+  '
+api-key: ''
+api-base: https://c-z0-api-01.hash070.com/v1
+siliconflow-api-key: ''
+openai-api-key: ''
+llm-backend: gpt-5.4-mini
+local-llm:
+  enabled: false
+  api-base: http://127.0.0.1:8000/v1
+  api-key: local
+  model: Qwen2.5-7B-Instruct
+  model-path: models/Qwen2.5-7B-Instruct
+  max-model-len: 16384
+  timeout: 300
+  max-tokens: 4096
+  verify-ssl: false
+  use-for-workflow: false
+  use-for-parallel-k-rewrite: false
+  use-for-candidate-evaluation: false
+  use-for-text-evaluator: false
+  judge-max-tokens: 2048
+  workflow-vision-model: gpt-5.5
+language: English
+max-steps: 80
+num-chapters: 4
+num-looks: 4
+workflow-index: 0
+load-previous: false
+except-if-fail: false
+text-only-mode: true
+task-notes:
+  theme-analysis:
+  - When description is provided, extract description-derived key elements in English
+    before the final THEME_ANALYSIS
+  - Key aspects are holistic analysis only; produce exactly num-chapters sub-themes
+    that synthesize across key aspects (not 1:1)
+  - 'Write the style the DesignMerit judge can score: one identifying idea per later
+    look, newer than this house''s interchangeable wardrobe, and still this theme'
+  - A mood word, a theme duality, or another theme's garment is not a stronger style
+  concept-brainstorming:
+  - 'Each chapter names 2-4 look ideas the judge scores as design: a surface field,
+    an edge path, or a same-theme inner worn open'
+  - Each next idea updates the style and the combination, not only the color, material,
+    or brand
+  - Do not invent novelty with two sleeve states, two bottoms, two shoes, or a garment
+    from another theme
+  design-elements-proposal:
+  - Weight the elements that remain after color, material, and brand words are swapped
+  - Craft that counts is a surface or an edge on one garment. Factory finishing is
+    not an identifying element
+  - Keep each chapter's elements stylistically distinct inside the same theme
+  look-description-generation:
+  - Open with one identifying idea and ground it on a part or layer, then write outer
+    to inner
+  - The paragraph should read as this collection's style. A closing mood clause does
+    not create that style
+  - Do not stack a second binding, a second bottom, or a second shoe to look more
+    designed
+text-evaluator:
+  enabled: true
+  use-local: false
+  temperature: 0.0
+  top-p: 1.0
+  max-tokens: 2048
+  timeout: 120
+  design-merit-temperature: 0.0
+  design-merit-top-p: 1.0
+  design-merit-seed: 7
+  score-gate-min: 0.8
+  penalty-gate-max: 0.25
+  rewrite-on-gate-fail: false
+  keep-on-gate-fail: true
+  model: gpt-5.4-mini
+image-inverse-parser:
+  enabled: true
+  api-key: ''
+  api-base: ''
+  model: gpt-5.5
+  temperature: 1.0
+  top-p: 1.0
+  max-tokens: 2200
+  timeout: 120
+  verify-ssl: true
+  language: English
+  output-dir: outputs/image_inverse_parser
+grpo:
+  corpus: fashion_research_dir/k_rewrite_instructions_2026-09-29/source_corpus.jsonl
+  design-text-evaluator:
+    api-key: ''
+    api-base: ''
+    model: gpt-5.4-mini
+    vision-model: gpt-5.5
+    max-tokens: 2048
+    timeout: 120
+    temperature: 0.0
+    verify-ssl: true
+  rewriter-llm:
+    enabled: true
+    api-base: http://127.0.0.1:8001/v1
+    api-key: local
+    model: Qwen2.5-7B-Rewriter
+    model-path: models/Qwen2.5-7B-Rewriter
+    max-model-len: 16384
+    timeout: 300
+    max-tokens: 2048
+    verify-ssl: false
+  hf-local-training:
+    model: models/Qwen2.5-7B-Rewriter
+    ref-model: models/Qwen2.5-7B-Rewriter
+    grpo-rounds: 1
+    grpo-epochs-per-round: 1.0
+  odin-rm:
+    model: models/Qwen2.5-7B-Instruct
+    freeze-backbone: true
+    lambda-corr: 1.0
+    lambda-orth: 1.0
+    max-length: 2048
+    epochs: 3.0
+    lr: 0.001
+    batch-pairs: 8
+  parallel-k-rewrite:
+    k: 8
+    max-workers: 32
+    eval-max-workers: 32
+    temperature-floor: 0.35
+    temperature-step: 0.07
+    temperature-cap: 0.9
+    evaluate-candidates: true
+    eval-source-prefix: parallel_k
+    use-local-rewrite: true
+    use-local-evaluation: true
+    rewrite-temperature: 0.55
+    rewrite-max-tokens: 2048
+    rewrite-timeout: 300
+  training-data:
+    runs-dir: training/runs
+    export-subdir: export

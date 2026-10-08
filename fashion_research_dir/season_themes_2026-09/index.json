@@ -1,0 +1,318 @@
+{
+  "cutoff": "2026-09-28",
+  "num_chapters": 4,
+  "num_looks": 4,
+  "inputs": [
+    "design_target.txt",
+    "theme.txt",
+    "description.txt"
+  ],
+  "analysis": "theme_analysis.txt",
+  "note": "Batch1+Batch2 luxury themes for workflow generation. Each collection: 4 chapters × 4 looks. gpt-5.4-mini keep-on-gate-fail runs write under generated_gpt54mini_keep/.",
+  "collections": [
+    {
+      "house": "Gucci",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "gucci_ss27",
+      "theme": "The desire to belong to a more glamorous world, and the audacity to remake that world in one's own image",
+      "description": "Heritage & provenance:\n- Gucci read as a house that began in respectability and moved toward eccentricity, danger, and sex appeal.\n- Late-1980s and early-1990s Gucci man: inherited privilege worn as nonchalance.\n- Tom Ford-era body-conscious jersey as the evening memory.\n\nShow / location context:\n- Spring/Summer 2027, Milan. Demna's first show presented as his complete personal vision after one year at the house.\n- Staged inside The Store, a built replica of a Gucci boutique. Shopping is the spectacle.\n\nCreative director intent:\n- Gucci stands for the desire to belong to a more glamorous world, and the audacity to remake that world in one's own image.\n- The collection is a cast, not one muse: horse-riding princess, Milanese sciura, prep-school brat, nightclub siren, old-money gentleman, socialite.\n\nSilhouette & garment vocabulary:\n- Men's opening: slick slim suits, cropped trousers, bare ankles, 1970s open shirting, then prep peacoat and trench, then extra-large suiting and enlarged shoulders.\n- Trench with miniature horseshoes on the collar ends. Extra-oversize black overcoat.\n- Evening: slinky jersey dresses, sharply cut black dresses, champagne draping, a one-shoulder gown held by a teardrop metal weight, a thigh-high slit, a side cutout from breast to hip.\n\nMaterials, craft & surface:\n- Tailoring cloth beside fluid jersey. Metal used as a working weight, not as a logo plaque. Glamour should look slightly precarious.\n\nColor, stripe & graphic codes:\n- Black, champagne, baby-blue enlarged shirting. Color serves the character. It is not the identity by itself.\n\nAccessories & finishing:\n- Handbags are part of the character, carried as if just chosen in the boutique. Loafers with cropped trousers. Horseshoe charms limited to the trench collar.\n\nMood, liberation & wearer fantasy:\n- Belonging is something you put on. Bourgeois ease and overt seduction share one house. The wearer remakes the glamorous world rather than visiting it."
+    },
+    {
+      "house": "Prada",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "prada_ss27",
+      "theme": "The Skirt: one familiar garment held as a frame, then contradicted",
+      "description": "Heritage & provenance:\n- Miuccia Prada has long treated the skirt as her equivalent of the T-shirt: simple, primary, able to carry many ideas.\n- She calls it a rectangle, a frame, a painting, and a contradiction.\n- Crystal skirts recall the house's jeweled skirts of 2008 and 2010.\n\nShow / location context:\n- Spring/Summer 2027 womenswear, 22 September 2026, Fondazione Prada. The set reuses the men's lightbox floor.\n- Every look includes a skirt. The lineup is a study of about sixty variations on one garment. The house title is The Skirt.\n\nCreative director intent:\n- Use the skirt as a raw material and a framework, not as a trend item.\n- Narrow the parameter so material, function, embellishment, distance from the body, and the piece worn above it become visible.\n- Raf Simons: the same skirt can be sexy, luxurious, for work, or at ease. The combinations are illogical on purpose.\n\nSilhouette & garment vocabulary:\n- One graphic, linear skirt silhouette, from mini to midi, pencil to pleat. Some skirts are large enough to be held in the hand like a ballgown. One floral skirt is slit to the hip.\n- Above the skirt: a corporate shirt, a satin bra top, a sweater, a nylon raincoat.\n- Visible crinoline can cage a pleated skirt or sit outside it. Overlapping pleats can expose enlarged snaps.\n\nMaterials, craft & surface:\n- Contrasting Velcro is both fastening and a ground for crystal embroidery, and it can be opened to change the shape.\n- Enlarged metal snaps become jeweled.\n- Crinoline leaves the inside and becomes a shell.\n- Re-Nylon and ciré are pleated. Treated cotton resembles leather or suede. Crystal rebuilds lace. One skirt can be almost pure chandelier crystal. Drab menswear wool and pale peach crepe de chine with a scalloped hem both appear.\n\nColor, stripe & graphic codes:\n- Neon fastening panels, vivid floral prints, Sixties \"stupid little flowers,\" and drab wool. Color is one of the contradictions, not a separate story.\n\nAccessories & finishing:\n- The jewels are the snaps and the crystal on the closure. Do not add a separate jewelry story that leaves the skirt.\n\nMood, liberation & wearer fantasy:\n- Freedom is being able to wear one known garment in incompatible ways. The wearer questions whether newness requires a shape nobody has seen."
+    },
+    {
+      "house": "Bottega Veneta",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "bottega_veneta_ss27",
+      "theme": "Craft kept as the logo, lightened into a wearable in-between",
+      "description": "Heritage & provenance:\n- Intrecciato is the house mark, as distinctive as a monogram. Louise Trotter calls Bottega a house of craft, and says craft is the logo.\n- This is her third collection, and the first in which her own handwriting is fully visible.\n\nShow / location context:\n- Spring/Summer 2027, Milan. The season is treated as a passage: spring opening into summer, layers beginning to fall away.\n\nCreative director intent:\n- Find techniques that keep extraordinary handwork while adding lightness and wearability.\n- Name the condition in-betweenness: suspended between one state and another, between seasons and between identities.\n- A language of polished things beside a language of more organic things. Leave evidence of the hand.\n\nSilhouette & garment vocabulary:\n- Clothes flutter and barely touch the body while still drawing its contour. Tailoring loosens.\n- A longline coat knotted at one side over a light cotton dress. A fringed scarf-belt on a relaxed suit. A basket-weave T-shirt. A scoop-neck leather midi. A macramé tank with a gauzy, lightly pleated maxi skirt.\n- Fringe bubble skirts whose hems lift into ellipses while walking. A dress on which fringe draws a trompe-l'oeil floral.\n\nMaterials, craft & surface:\n- Lighter, crisper cloth; airy lace and crochet from Venetian knitting and stitching; straw, ribbon, leather that has become featherlight.\n- An enlarged intrecciato tote that reads as raffia. Crochet overshirts. Fringe on a straw bag long enough to near the floor.\n\nColor, stripe & graphic codes:\n- Mostly neutral, with butter yellow, lilac, tangerine, a lavender fringe skirt, and one earthy mixed fringe skirt. Color is a choice inside the craft, not a print story.\n\nAccessories & finishing:\n- The hip scarf, the floor-reaching straw fringe, and the raffia-like tote are part of the garment's movement. They are not add-on charms.\n\nMood, liberation & wearer fantasy:\n- Lightness without relying only on sheer fabric. Imperfection is the proof of making. The clothes are for a life past the show, still poetic."
+    },
+    {
+      "house": "Fendi",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "fendi_ss27",
+      "theme": "A second skin, with visibility decided by the wearer",
+      "description": "Heritage & provenance:\n- Maria Grazia Chiuri's second ready-to-wear show for Fendi.\n- The line she has been using at the house: Less I. More Us.\n- Clothing described by the house as a second skin, porous to emotion.\n\nShow / location context:\n- Spring/Summer 2027, Milan, in a hall of mirrors. The audience is separated from the runway and still watching.\n- Invitations carry an e. e. cummings line: when I like my body, it is with your body.\n- Soundtrack spirit from Raffaella Carrà, with Rumore and Adriano Celentano. Italian sensuality that is theatrical and knowingly camp.\n\nCreative director intent:\n- Start one layer closer to the skin. Bras, slips, lace rompers, and bloomers are the architecture worn before an outfit decides what it is.\n- Sensuality does not have to mean exposure. The wearer sets the terms.\n- A body can be strong and fragile, masculine and feminine, sometimes at once.\n\nSilhouette & garment vocabulary:\n- Plunge-front sheer midi. A going-out dress whose straps come undone. Salmon-pink lace-trimmed bloomers with a matching bralette. Black polished suiting.\n- A slender Napoleonic cape coat over slouchy distressed denim. Plush opera coats.\n- Headscarves. Layers stay light on the foot.\n\nMaterials, craft & surface:\n- Lace, sheer silk, bead, sequin, fringe. The Baguette appears covered in sequins, fringe, and pattern.\n\nColor, stripe & graphic codes:\n- Salmon pink against black suiting. Embellishment glints. It should not become a nightclub costume.\n\nAccessories & finishing:\n- The Baguette carries the theater. Headscarves frame the face. Straps that can be loosened are part of the garment's control, not damage.\n\nMood, liberation & wearer fantasy:\n- Getting dressed begins with the body, and the body has the final say. Glamour never costs ease. The shared wardrobe is intimate rather than a slogan."
+    },
+    {
+      "house": "Hermès",
+      "season": "Fall/Winter 2026",
+      "status": "latest_completed",
+      "dir": "hermes_fw26",
+      "theme": "Entre chien et loup: twilight, where romance and utility share one garment",
+      "description": "Heritage & provenance:\n- Nadège Vanhée has led Hermès womenswear since 2014. Leather and equestrian codes are the house language.\n- The collection title is Entre chien et loup, the French name for dusk, when a dog cannot be told from a wolf.\n- Show notes invoke Hecate. The clothes stay muscular rather than mythological.\n\nShow / location context:\n- Fall/Winter 2026, Paris, built as twilight. Guests met the set by scent before they saw the clothes.\n- A later Los Angeles chapter of the same season shifts from outdoor and equestrian exploration toward dance: a dancer leaving rehearsal.\n\nCreative director intent:\n- Twilight is a state of mind, not a black palette. Romance and utility are not opposites.\n- Zippers and openings let the wearer reconfigure a garment through the day.\n- In Los Angeles, the Carré becomes a dress: draped, then constructed. Ballet is grace of gesture and skill, crossed with the craftsman's skill.\n\nSilhouette & garment vocabulary:\n- Narrow, aerodynamic lines. Fluid overcoats with enormous Tuscan sheepskin collars. Zip-front mini dresses in inky blue that open onto a contrasting shirt. An orange ostrich-leather jumpsuit, belted.\n- Jodhpurs, flat-heeled riding boots, glossy lambskin cycling shorts with aviator jackets, long riding coats, leather trenches, double-breasted blazers, cigarette trousers.\n- Quilted silk printed with a cloud-strewn sky.\n- Los Angeles: Carré dresses, wrap dresses, bustiers drawn from ballet slippers, leather parkas thrown over a performance body, a leather look touched by the American West.\n\nMaterials, craft & surface:\n- Leather as muscle: ostrich engineered into second-skin jumpsuits and long dresses. Sheepskin collars. Quilted silk as the soft exception. Zips run diagonally or the full length of a dress.\n\nColor, stripe & graphic codes:\n- Not simply black. Sulfur yellow, oxblood, forest green, iridescent burgundy, deep blue, moss, charcoal. Surfaces change in the light. A cloud-and-tower print from an Art Deco perspective study.\n\nAccessories & finishing:\n- The zip is the finishing. Pockets and openings are functional and visible. Do not add a charm story that leaves the leather.\n\nMood, liberation & wearer fantasy:\n- Agency: the same coat can open into another hour. Elegance is calibration. The Los Angeles fantasy is a dancer who has just put a jacket on and left the studio."
+    },
+    {
+      "house": "Louis Vuitton",
+      "season": "Fall/Winter 2026",
+      "status": "latest_completed",
+      "dir": "louis_vuitton_fw26",
+      "theme": "Super Nature: nature as the first designer, clothing as anthropology",
+      "description": "Heritage & provenance:\n- Nicolas Ghesquière at Louis Vuitton. The house's subject is travel, the monogram, and the trunk.\n- He calls nature the greatest designer, and folklore an attempt to explain the forces of nature.\n\nShow / location context:\n- Fall/Winter 2026, titled Super Nature. The Cour Carrée of the Louvre was turned into an abstract mountain landscape by Jeremy Hindle, production designer of Severance: verdant prisms and pyramidal peaks, a pastoral scene inside a science-fiction dish.\n\nCreative director intent:\n- An anthropology of fashion: what mountain people from the Alps, Central Asia, and the Andes share. Endurance, protection, freedom of movement.\n- Architectural clothing that can express different cultures and still bring them together.\n- Show a known landscape as if it had never been seen. Wearable pieces stay inside the big scheme.\n\nSilhouette & garment vocabulary:\n- Shaggy capes, exaggerated and monumental shoulders, fur epaulettes that swallow the arm, cone-shaped hats, shearling caps, walking sticks draped with handbags.\n- Cropped leather bombers, rounded cocoon coats, and smaller rounded coats that can actually be worn. Headgear reaches upward.\n\nMaterials, craft & surface:\n- Fuzzy capes, cowbells, muddy-looking felt, shearling.\n- Buttons like minerals. Heels like antlers. Vegetal furs. Leather grained and grooved to mirror wood. Invented leather flowers that decorate and protect.\n- Animalier woven into canvas and denim. Craft melded with technology.\n\nColor, stripe & graphic codes:\n- Moss, earth, and the green of the set. Pattern is animal and mineral, not a resort stripe. Flora and fauna leave an imprint rather than a cute print.\n\nAccessories & finishing:\n- Cowbells, walking sticks, shearling caps.\n- Jewels reinterpret Man Ray. Parures studded with the nail-heads of a Louis Vuitton trunk.\n- The Noé and other bags shift through time and invite a crossing.\n\nMood, liberation & wearer fantasy:\n- The wearer is equipped for weather and for moving on. Protection becomes fantastic without ceasing to be clothing. Nomadism is the house, not a backdrop."
+    },
+    {
+      "house": "Dior",
+      "season": "Fall/Winter 2026",
+      "status": "latest_completed",
+      "dir": "dior_fw26",
+      "theme": "A walk in the Tuileries becomes a performance of Dior's archive",
+      "description": "Heritage & provenance:\n- Jonathan Anderson at Christian Dior. He treats the giant past as the necessary start.\n- Codes in play: the Bar jacket, the New Look waist and hip, Monsieur Dior's gray, Marc Bohan's monogram, Maria Grazia Chiuri's Book Tote, the framed Dior logo returned toward its original form.\n\nShow / location context:\n- Fall/Winter 2026 in the Jardin des Tuileries, spectators behind greenhouse glass. A walk in the park becomes a performance.\n- Florals are asked to melt the set and the cloth together, as if water were reflecting off a printed silk.\n\nCreative director intent:\n- Redefine Dior's visual language with his own signatures while preserving the codes.\n- Hold the real and the unreal in the same hand: garden tactility, then a Paris night and an office blazer.\n- Levity matters. The heritage should not become solemn.\n\nSilhouette & garment vocabulary:\n- Opening: layered tutu skirts with frilled trains, under a textured gray peplum jacket, an ecru organza jacket with floral appliqué and tiny buttons, and a silk feather-printed brocade jacket with a mandarin collar.\n- Bar jacket recut with a mandarin collar and rows of miniature buttons, or cropped and double-breasted over masses of hem ruffles.\n- Cinched waists. Hips exaggerated with bolts of lace or loose pleats of wool and silk.\n- Belle Époque ruffles turned into mini dresses with bouncing trains. Bourgeois tweed, gold-button blazers, shearling with a wave-like hem.\n- Heavy evening coats worn slouchy. A blazer with a worn-in jean. Lace panels in eveningwear.\n\nMaterials, craft & surface:\n- Organza, feather-printed brocade, lace, wool, silk, tweed, shearling, crystallized denim. Printed silk that looks wet.\n\nColor, stripe & graphic codes:\n- Emblematic gray. Forest green on a scaled Book Tote. Polka dots. Water-lily and garden florals. Ecru.\n\nAccessories & finishing:\n- Water-lily shoes and jewelry. Lily-pad footwear. A green suede turtle bag with button eyes. Marc Bohan monogram as a simple crossbody. Book Tote scaled down and reprinted with the framed logo.\n\nMood, liberation & wearer fantasy:\n- A Parisian woman who can be in the garden, then at night, without dropping the house line. Play sits on a correct Dior shoulder."
+    },
+    {
+      "house": "Saint Laurent",
+      "season": "Fall/Winter 2026",
+      "status": "latest_completed",
+      "dir": "saint_laurent_fw26",
+      "theme": "Le Smoking repeated until the shrug becomes the collection",
+      "description": "Heritage & provenance:\n- Yves Saint Laurent's Le Smoking, remembered through Helmut Newton's 1975 Paris Vogue photograph on Rue Aubriot.\n- Anthony Vaccarello treats repetition of the house signatures as the definition.\n\nShow / location context:\n- Fall/Winter 2026, Paris, at night, inside a simulacrum of a sleek modernist home.\n- At the center, an enlarged bust that lived in Yves Saint Laurent's own apartment.\n- The woman has a heavy smoked eye and slick, side-parted hair.\n\nCreative director intent:\n- Open with eight black trouser suits and close on another. The power suit is an insouciant shrug, not a swagger.\n- The protagonist is Romy Schneider in Max et les Ferrailleurs, with the troubled heroines of Gore Vidal and Tennessee Williams beside her.\n- Elegance tinged with ennui. The beauty of intimacy and vulnerability.\n\nSilhouette & garment vocabulary:\n- Black trouser suits with a sloped shoulder, a waist that narrows without constriction, and a plunging neckline.\n- Vaccarello's own riff on the tuxedo.\n- Sheer lace slips and dresses. Enormous fur coats as the louder counterweight.\n\nMaterials, craft & surface:\n- Lace coated in silicone, so the slip gains solidity and a curious sheen. It is still transparent and no longer fragile nightwear.\n- Fur for volume and confidence against the strict suit.\n\nColor, stripe & graphic codes:\n- Black is the code. The silicone adds sheen rather than a second color story. Do not rescue the collection with a bright palette.\n\nAccessories & finishing:\n- The bust and the apartment are the scene, not garments to copy onto the body.\n- Hair and the smoked eye are the styling that locks the Newton memory. Keep jewelry quieter than the suit and the coated lace.\n\nMood, liberation & wearer fantasy:\n- A woman who is looked at and slightly tired of it. Glamour includes vulnerability. The suit is both armor and a shrug."
+    },
+    {
+      "house": "Chanel",
+      "season": "Cruise 2027",
+      "status": "latest_completed",
+      "dir": "chanel_cruise27",
+      "theme": "Sous le Salon la Plage: the salon released toward the Biarritz shore",
+      "description": "Heritage & provenance:\n- Gabrielle Chanel opened her first couture house at Villa Larralde in Biarritz in 1915. The city is where a new female independence, seaside leisure, and social mobility entered the house.\n- The meeting with Ernest Beaux and the N°5 lineage. The 1926 black dress as a radical modern classic, here reconsidered through a bow.\n- Working-woman dress turned into luxury: marinière stripes, bleu de travail, washed canvas.\n\nShow / location context:\n- Cruise 2027, Matthieu Blazy's first Cruise show for Chanel, at Le Casino Municipal in Biarritz. The runway returns to the coastal city rather than treating it as a backdrop.\n\nCreative director intent:\n- Liberation as movement between couture and workwear, black dress and swim, structure and ease.\n- Heritage is a living laboratory. Classics were once disruptive, then polished until the rebellion looked inevitable.\n- The Atlantic is a design source: rhythm, repetition, and touch, not a holiday postcard.\n\nSilhouette & garment vocabulary:\n- Structured jackets and black dresses that can leave a salon. Swim and elevated workwear in the same passage.\n- Striped seaside graphics, worker-jacket cuts, and architectural detail. A garment should be credible indoors, on a casino terrace, and nearer the water without a costume change.\n\nMaterials, craft & surface:\n- Tweed, raffia, silk, beaded knit, sequin, canvas. Softness beside precision. Marine shimmer. The Double C reworked as a structural element, not only a plaque.\n\nColor, stripe & graphic codes:\n- Black, Basque stripes, marine and shell tones. Stripes operate as architecture and rhythm.\n\nAccessories & finishing:\n- Tools for crossing settings: a striped beach panier, bags with waterproof flaps, Art Deco heels, barefoot heel plates, shell earrings, pearls.\n- The accessory should make the change of place look elegant.\n\nMood, liberation & wearer fantasy:\n- A woman who owns her pace and does not change costume when the room opens onto the sea. Freedom is wearable. Rebellion has been refined into a classic and should still feel slightly improper."
+    },
+    {
+      "house": "Balenciaga",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "balenciaga_ss27",
+      "theme": "Unsized featherweight couture that still reads as everyday wardrobe",
+      "description": "Heritage & provenance:\n- Cristóbal Balenciaga's balloon, drape, and cocoon as house memory.\n- Pierpaolo Piccioli treats engineered materiality as invention, not decoration.\n\nShow / location context:\n- Spring/Summer 2027. Lookbook tension between the couture salon and the street at 10 avenue George V.\n\nCreative director intent:\n- Couture can be relevant to everyday life. Unsized garments are pure expressions of cloth.\n- Entire ensembles can weigh less than a kilogram. Silhouette comes from cloth against the body.\n- Jeans under evening, techwear beside tailoring. Typologies blur without costume.\n\nSilhouette & garment vocabulary:\n- Subtle, reduced layers. Shirts given evening trains; gowns taking the attitude of a T-shirt.\n- Balloon, drape, cocoon re-engineered for modern life. Poplin, double cashmere, kid mohair, washed denim.\n\nMaterials, craft & surface:\n- Featherweight techno taffeta. Soft washed leathers for Le City and ultralight nappa for Rodeo.\n- Jewelry holds volume against form. Shoes deconstructed toward essential malleability.\n\nColor, stripe & graphic codes:\n- Cloth and movement lead. Color serves the archetype rather than a logo story.\n\nAccessories & finishing:\n- Soft, pliable bags and shoes that reconsider house icons without hardening into plaques.\n\nMood, liberation & wearer fantasy:\n- Liberation as lightness and kinetic ease. The wearer crosses salon and street in one wardrobe."
+    },
+    {
+      "house": "Loewe",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "loewe_ss27",
+      "theme": "Ease and presence: color-block pragmatism meeting Spanish Baroque",
+      "description": "Heritage & provenance:\n- Loewe as Spanish leather house. The 1960 suede blazer as an early garment memory.\n- Jack McCollough and Lazaro Hernandez bring American youth codes into the maison.\n\nShow / location context:\n- Spring/Summer 2027, titled around ease and presence. Clothes shaped by how the wearer lives and breathes.\n\nCreative director intent:\n- Color block meets Spanish Baroque. Pragmatism nods to drama.\n- Feminine and masculine wardrobe grounded in sensation and real-life rhythm.\n- Autobiography is the anchor for audacity.\n\nSilhouette & garment vocabulary:\n- Polos cut and worn backwards. Basketball jersey shaping a chiffon bead-fringed slip.\n- Silk anoraks against skin. Taleguilla pants with satin scarves. Ample shirt dresses. Abbreviated nappa trapeze dresses.\n- Striped jackets, glass-bead woven skirts and dresses.\n\nMaterials, craft & surface:\n- Celebrated nappa, suede, silk, glass beads. Sunglass-resin collars. Soft leather icons: Pasito, Puzzle Charm.\n\nColor, stripe & graphic codes:\n- Vivid to faded patina and bleached hues. Spanish influence in color, not a tourist print.\n\nAccessories & finishing:\n- Pasito and Puzzle Charm join leatherwork icons. Silk ties as souvenirs of the house past.\n\nMood, liberation & wearer fantasy:\n- Presence without stiffness. The wearer keeps stylistic audacity inside a lived wardrobe."
+    },
+    {
+      "house": "Burberry",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "burberry_ss27",
+      "theme": "Rumpled British polish: gabardine loosened by Birtwell florals and touched texture",
+      "description": "Heritage & provenance:\n- Burberry gabardine, trench, and check as national polish.\n- Celia Birtwell florals enter as a youthful subversion, echoing Bailey-era Hockney color memory.\n\nShow / location context:\n- Spring/Summer 2027, London/Paris circuit. A white blank-canvas space lets texture and color carry the story.\n\nCreative director intent:\n- Loosen self-possession without abandoning the house. Rumple is confidence, not carelessness.\n- Expand beyond trench-only focus into a broader British wardrobe with climbing and seaside energy.\n\nSilhouette & garment vocabulary:\n- Taffeta shirts and shorts embroidered with Birtwell florals. Taffeta trenches with puffed hems.\n- Washed pink, taupe, and black denim. Technical parkas beside chiffon gowns.\n- Strapped clogs and climbing moccasins under both tech and evening.\n\nMaterials, craft & surface:\n- Rumpled taffeta, touched denim, gabardine that can crease. Check reimagined as a trellis for florals.\n- 3D badges and beaded embellishments grown from doodled faces and florals.\n\nColor, stripe & graphic codes:\n- Swimming-pool blue, sunset orange, richly colored floral arrangements on the check trellis.\n\nAccessories & finishing:\n- Smudged vulcanized sneaker soles, clogs, climbing moccasins. Embellishment belongs to the cloth story.\n\nMood, liberation & wearer fantasy:\n- British polish that has been lived in. Youthful without costume."
+    },
+    {
+      "house": "Miu Miu",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "miu_miu_ss27",
+      "theme": "In the moment: sportswear lifted into a different elegance",
+      "description": "Heritage & provenance:\n- Miuccia Prada's Miu Miu as the house of wrongness made charming: sport, school, crystal, thrift.\n- Collaboration codes with New Balance and upcycled Wrangler jeans enter as wardrobe facts.\n\nShow / location context:\n- Spring/Summer 2027, Paris. Fast, propulsive energy. Clothes for people dressing now.\n\nCreative director intent:\n- Work for people in this time. See everyone in sportswear, then bring elegance to the sport.\n- Normal elements: jeans, tiny running shorts, drawstring bows, checked knee-length skirts.\n\nSilhouette & garment vocabulary:\n- Box-pleated knee-length checked skirts with hunting blazers or sporty cropped tops.\n- Jeans and running shorts with '60s-print blouses. Babydoll minis with crystal-encrusted panels.\n- White drawstrings tied at the waist as if from retro shorts.\n\nMaterials, craft & surface:\n- Crystal panels, A-line skirts, upcycled denim, sneaker-lace belts and cross-lacing over jean flies.\n\nColor, stripe & graphic codes:\n- Retro prints, checks, sport neutrals broken by crystal glint. Color is play, not a solemn code.\n\nAccessories & finishing:\n- New Balance trainers, lace used as belt or fly lacing. Crystal is the jewelry story on the garment.\n\nMood, liberation & wearer fantasy:\n- Casual everyday with a lifted elegance. Fun is a design decision."
+    },
+    {
+      "house": "Celine",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "celine_ss27",
+      "theme": "Quiet minimal satin: black, white, and almond tailoring worn as presence",
+      "description": "Heritage & provenance:\n- Celine as a house of precise Parisian minimalism and long-line ease.\n- Quiet luxury read as cut and cloth, not as a slogan.\n\nShow / location context:\n- Spring/Summer 2027, Paris. A controlled ready-to-wear lineup of about sixty looks.\n\nCreative director intent:\n- Minimalist presence through satin and tailored pants. Monochrome is a discipline.\n- Reduce noise so proportion, drape, and the fall of cloth become the identity.\n\nSilhouette & garment vocabulary:\n- Tailored pants, side-pocket pants, barrel pants. Satin separates and long clean lines.\n- Soft shoulders, controlled waists, trousers that carry the look without ornament.\n\nMaterials, craft & surface:\n- Satin as the main surface. Tailoring cloth beside fluid sheen. No distressed costume.\n\nColor, stripe & graphic codes:\n- Black, white, almond. Monochrome and near-monochrome blocks.\n\nAccessories & finishing:\n- Quiet finishing. Bags and shoes should not overpower the satin/tailoring sentence.\n\nMood, liberation & wearer fantasy:\n- Confidence without display. The wearer is present because the cut is exact."
+    },
+    {
+      "house": "Valentino",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "valentino_ss27",
+      "theme": "Antibiblioteca: unread clothes as a catalogue of still-possible lives",
+      "description": "Heritage & provenance:\n- Valentino Garavani's glamour, elegance, and perfectionism.\n- Alessandro Michele's eclectic language seeking the house essence with more with less.\n\nShow / location context:\n- Spring/Summer 2027, Antibiblioteca, at Bibliothèque Sainte-Geneviève, Paris. Guests brought books to donate.\n\nCreative director intent:\n- Unread books / unworn clothes as presence of what we still do not know.\n- Translate beautiful things with freedom to make the look. Evening can be ornate or a minimal column with a train.\n\nSilhouette & garment vocabulary:\n- Jewel-toned satin bustiers with knee-length skirts, feathers, pleats, or embroidery.\n- Lace biker shorts under longline blazer dresses. Checked shirts into sheer party skirts.\n- Minimal satin columns, black velvet plunges, Villain Teen caps, romantic trains.\n\nMaterials, craft & surface:\n- Satin, lace, brocade, ruched taffeta, rhinestone, feather, fringe, mohair, sequined boots.\n\nColor, stripe & graphic codes:\n- Tutti-frutti and jewel tones beside black. Mismatch is intentional storytelling.\n\nAccessories & finishing:\n- Stacked gold and pearl necklaces, boater hats, magenta gloves, character caps.\n\nMood, liberation & wearer fantasy:\n- Expand the imaginable. Clothes can inhabit a life even before they are worn daily."
+    },
+    {
+      "house": "Givenchy",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "givenchy_ss27",
+      "theme": "Balance of Power: precise simplicity when the world is off-kilter",
+      "description": "Heritage & provenance:\n- Hubert de Givenchy's fierce black tailoring and graphic prints; Hitchcock women who are not classical beauties.\n- Sarah Burton seeks clarity and today's vernacular for that severity.\n\nShow / location context:\n- Spring/Summer 2027, Paris. A response to collapse of order through structure rather than surrender.\n\nCreative director intent:\n- In a world off-kilter, find balance in precise simplicity.\n- Power-shoulder coats, leather dresses with peel-away necklines, tank tops and leather pants as agency.\n\nSilhouette & garment vocabulary:\n- Suit jackets sliced open at the sides, fronts tilting forward; sleeves chopped and reattached as protective embrace.\n- Streamlined coats, romantic leather dresses, no-nonsense separates.\n\nMaterials, craft & surface:\n- Tailoring cloth, leather, clean knits. Colorful leather goods including the Cut zippered hobo.\n\nColor, stripe & graphic codes:\n- Black as the thinking spine; graphic print used with Hitchcock restraint, not carnival.\n\nAccessories & finishing:\n- The Cut bag and leather goods as functional color. Keep jewelry secondary to cut.\n\nMood, liberation & wearer fantasy:\n- Agency through clarity. The wearer can move from boardroom to night without losing structure."
+    },
+    {
+      "house": "Alexander McQueen",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "alexander_mcqueen_ss27",
+      "theme": "Past Present: sacred serenity fused with London rave subversion",
+      "description": "Heritage & provenance:\n- A London-born house of uncompromising attitude and subversive spirit.\n- Shaun Leane metal body adornment returns; Huntsman collaboration for elongated bespoke menswear silhouettes.\n\nShow / location context:\n- Spring/Summer 2027 under Lincoln's Inn Chapel vaults. Score by A. G. Cook with Shards Voices.\n\nCreative director intent:\n- Divine euphoria between the sacred and the subcultural. Ethereal and urban.\n- Precisely engineered Savile Row traditions shifted between formality and counterculture.\n\nSilhouette & garment vocabulary:\n- Sculptural angel-wing tailoring against tall strict suiting.\n- Smoked tulle, acid floral glass organza, lacquered satin, leather harnesses.\n- Curve-hugging diaphanous dresses with metallic leaves; belts anchoring soft volumes.\n\nMaterials, craft & surface:\n- Heritage British wools, reflective organza, leather, precious metal adornment, recycled silver belts.\n\nColor, stripe & graphic codes:\n- Religious portraiture palette and washed rave neons. Acid florals as light, not decoration dump.\n\nAccessories & finishing:\n- Shaun Leane metalwork as body architecture. Harness and belt as structure.\n\nMood, liberation & wearer fantasy:\n- Angels in the dark. Commanding, transportive beauty with London attitude."
+    },
+    {
+      "house": "Versace",
+      "season": "Spring/Summer 2026",
+      "status": "latest_completed",
+      "dir": "versace_ss26",
+      "theme": "Reality over fantasy: '80s street sensuality in everyday Versace product",
+      "description": "Heritage & provenance:\n- Versace color, audaciousness, and sex appeal; Warhol-era print memory without celebrity faces.\n- Dario Vitale's debut leans East Village disco and product reality over pure fantasy.\n\nShow / location context:\n- Spring/Summer 2026, Milan, intimate museum setting with deliberate disorder—an undone bed as scene.\n\nCreative director intent:\n- Start closer to people: T-shirts, sweaters, blousons, vests, jeans with unabashed retro brio.\n- Sensuality in everyday garments. Bigger, bolder, brighter as attitude, not only as eveningwear.\n\nSilhouette & garment vocabulary:\n- High-waisted tight jeans, unbuckled belts, slashed muscle tees, draped low-back dresses with tubular shoulders.\n- Glitzy bralette dresses, gold-laden leather vests, blazer-and-jeans as a house statement.\n\nMaterials, craft & surface:\n- Denim, jersey, leather, bright cloth. Hand-painted faces that are not famous icons.\n- Underwear peeking as design, not accident.\n\nColor, stripe & graphic codes:\n- Purple, green, yellow, blue, red, stripes. '80s flash as the graphic code.\n\nAccessories & finishing:\n- Gold Medusa-scale hardware used with street ease. Belts and undone finishing are part of the cut.\n\nMood, liberation & wearer fantasy:\n- Hot, relevant, wearable sensuality. The wearer does not need a red carpet to be Versace."
+    },
+    {
+      "house": "Jil Sander",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "jil_sander_ss27",
+      "theme": "Vulnerability becomes the uniform: severe tailoring deliberately loosened",
+      "description": "Heritage & provenance:\n- Jil Sander pristine minimalism and twisted classicism.\n- Simone Bellotti asks what happens when the uniform stops behaving perfectly.\n\nShow / location context:\n- Spring/Summer 2027, Milan. A wave structure: recognizable severity, unruly apex, then release.\n\nCreative director intent:\n- The uniform becomes vulnerable; vulnerability becomes the uniform.\n- Classic feeling with a little twist: approachable tenderness inside discipline.\n\nSilhouette & garment vocabulary:\n- Collarless leather coat-dress. Jackets with buttons raised near the Adam's apple.\n- Double-breasted fronts that swing free; waist-suppressed coats; pencil skirts; cape-like dresses.\n- Deep-V shirts, slim trousers, intentionally rumpled blazers.\n\nMaterials, craft & surface:\n- Sleek leather, light silks that crinkle, precise wool. Mismatched leopard. Abstract Japanese landscape print pressed flat.\n\nColor, stripe & graphic codes:\n- Office neutrals and faded pastels with Yves Klein blue, red, and deep orange as controlled breaks.\n\nAccessories & finishing:\n- Strange shoes with asymmetrical vamps and adjustable flaps. Steel-ball buttons. Keep bags quiet.\n\nMood, liberation & wearer fantasy:\n- Controlled clothes that have been lived in. Softness is a form of strength."
+    },
+    {
+      "house": "Tom Ford",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "tom_ford_ss27",
+      "theme": "Sensual clarity: undress as sophistication, rose as a sharp accent",
+      "description": "Heritage & provenance:\n- Tom Ford house codes of sensual tailoring, leather, and night glamour.\n- Haider Ackermann's unbuttoned choreography and self-regard on the runway.\n\nShow / location context:\n- Spring/Summer 2027, Paris, near-dark room with glass panes; models cruise their reflections.\n\nCreative director intent:\n- Sensual, sharp, no prudery. Less is more taken literally: trousers stripped away, underwear with sweaters.\n- Red roses pinned to welt pockets as romantic danger, not soft decoration.\n\nSilhouette & garment vocabulary:\n- Satin bralettes with sheer midi or fluid maxi skirts. Black leather cocktail, logo-cut muscle tee.\n- Military-green trenches and flysuits, distressed jeans and cargos, short shorts, red cutout gowns, tuxedos, barely-there swim.\n\nMaterials, craft & surface:\n- Leather, sheer cloth, rhinestone, patent shoes. Exposure is engineered, not accidental.\n\nColor, stripe & graphic codes:\n- Black, red, white; cobalt, sky, army and kelly green as working neutrals.\n\nAccessories & finishing:\n- Minimal bags, oversize totes, embellished clutches. Rose brooches on blazers. Strappy heels and loafers.\n\nMood, liberation & wearer fantasy:\n- Self-regard as power. The wearer is looked at and looks back."
+    },
+    {
+      "house": "Chloé",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "chloe_ss27",
+      "theme": "The Obsession Collection: instinctive Chloé archetypes returned through feeling",
+      "description": "Heritage & provenance:\n- Chloé robes de jeunes filles, broderie anglaise, prêt-à-porter with couture faire.\n- Chemena Kamali works from instinct and emotional resonance with the maison.\n\nShow / location context:\n- Summer 2027, Paris Fashion Week. The Obsession Collection as a personal return to loved Chloé codes.\n\nCreative director intent:\n- Liberate design by listening to obsessions. Explore archetypes with new nuance.\n- Contradiction: soft embroidery against sharp vinyl rain layers.\n\nSilhouette & garment vocabulary:\n- Broderie anglaise from organza to heavy cotton. 3D floral embroidery. Fishermen coats and capes, sou'westers.\n- Smoky transparent vinyl over 1970s outerwear. Sliced Noel jacket from 1972 memory.\n\nMaterials, craft & surface:\n- Threadwork, embroidery, crisp cotton, organza, vinyl. Craft is the feeling, not a logo story.\n\nColor, stripe & graphic codes:\n- Soft Chloé tones broken by smoky vinyl graphics. Embroidery carries the print story.\n\nAccessories & finishing:\n- Hats and outerwear finish the silhouette. Keep bags secondary to the obsession of cloth and cut.\n\nMood, liberation & wearer fantasy:\n- Forever Chloé through personal desire rather than trend."
+    },
+    {
+      "house": "Alberta Ferretti",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "alberta_ferretti_ss27",
+      "theme": "Échappée belle: a beautiful escape through movement, color, and fluid freedom",
+      "description": "Heritage & provenance:\n- Alberta Ferretti femininity rewritten by Lorenzo Serafini through movement and escape.\n- Echoes of Léon Bakst, Erté, Balanchine: clothes conceived around release, not restriction.\n\nShow / location context:\n- Spring/Summer 2027, Milan. A Beautiful Escape / échappée belle as dance and life rhythm.\n\nCreative director intent:\n- Imagination as a way to inhabit reality more instinctively. Private lingerie codes step outside.\n- Mix prints turbulently, like Matisse compositions brought into daylight.\n\nSilhouette & garment vocabulary:\n- Slip dresses, lingerie details, kimono jackets, balloon trousers, fluid layers.\n- Fringe and feather at hems that move. Layers stay light.\n\nMaterials, craft & surface:\n- Mercurial satins, sheer textiles, featherweight surfaces, ikat and dissolving florals.\n\nColor, stripe & graphic codes:\n- Blue, teal, rust, mustard; ivory and black ground; lilac, pistachio, powder pink. Sun-faded intensity.\n\nAccessories & finishing:\n- Soft finishing that does not pin the body. Movement is the accessory.\n\nMood, liberation & wearer fantasy:\n- Freedom to move between the world as it is and as she imagines it."
+    },
+    {
+      "house": "Max Mara",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "max_mara_ss27",
+      "theme": "Far Horizon: 1930s explorer utility rewritten as everyday utility luxe",
+      "description": "Heritage & provenance:\n- Max Mara as engineered Italian outerwear and daywear. Ian Griffiths names the approach utility luxe.\n- 1930s globe-trotting women (Osa Johnson, Earhart, Freya Stark) as spirit, not costume.\n\nShow / location context:\n- Spring/Summer 2027, Milan. Far Horizon turns travel paraphernalia into a modern wardrobe.\n\nCreative director intent:\n- Every piece engineered for chaotic contemporary life. Discover the extraordinary in the everyday.\n- Utility through pockets, straps, convertible carry—not through costume khaki alone.\n\nSilhouette & garment vocabulary:\n- Safari jacket in textured linen and lustrous gabardine. Cargo vest over jacket.\n- Organza overalls, voluminous low-belted trenches, high-waisted trousers and belted skirts, fine-gauge knit evening.\n\nMaterials, craft & surface:\n- Linen, gabardine, organza, knit. Transparency softens workwear. Bags transform crossbody/clutch/rucksack.\n\nColor, stripe & graphic codes:\n- Travel neutrals and practical contrast. Color serves function and horizon light.\n\nAccessories & finishing:\n- Convertible bags and broad belts as structure. Keep jewelry quieter than pockets and straps.\n\nMood, liberation & wearer fantasy:\n- A woman who carries explorer resolve into ordinary days."
+    },
+    {
+      "house": "Ferragamo",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "ferragamo_ss27",
+      "theme": "1940s utility archive made transparent, fetish-edged, and elegant",
+      "description": "Heritage & provenance:\n- Salvatore Ferragamo archive and shoe invention. Maximilian Davis uses history as construction, not pastiche.\n- Timeline moves from earlier speakeasy eras into 1940s uniform discipline.\n\nShow / location context:\n- Spring/Summer 2027, Triennale Milano. Opens held at the waist, then loosens.\n\nCreative director intent:\n- Archive sits deeper inside construction. Experiment around the skeleton: disappearance, sheerness, fetish polish.\n- Good taste taken into hotter territory without losing elegance.\n\nSilhouette & garment vocabulary:\n- Bellows pockets on jackets and skirts. Safari vests framing the torso. Workwear leather proportions.\n- Glossy translucent trenches and bodycon, evening via paillettes, wedges and architectural footwear.\n\nMaterials, craft & surface:\n- Transparent silk-wool showing internal tailoring, chiffon utility, translucent rubber, cracked leather, python.\n\nColor, stripe & graphic codes:\n- Controlled flashes against disciplined utility grounds. Light and reflection for evening.\n\nAccessories & finishing:\n- Footwear carries invention. Belts and pocket architecture finish the uniform idea.\n\nMood, liberation & wearer fantasy:\n- Held, then released. Utility becomes desire without costume."
+    },
+    {
+      "house": "Schiaparelli",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "schiaparelli_ss27",
+      "theme": "Going Clear: unsubscribe from noise; couture distilled into mixable separates",
+      "description": "Heritage & provenance:\n- Elsa Schiaparelli's playfulness and Place Vendôme atelier memory (curtain ruffles).\n- Daniel Roseberry after a digital detox: going clear as singular voice.\n\nShow / location context:\n- Spring/Summer 2027, Carrousel du Louvre basement as 1960s jazz-club mood (Barbra at the Bon Soir).\n\nCreative director intent:\n- Less noise, more singular intimacy. Ready-to-wear that reaches shops as a wardrobe the woman builds.\n- Eight Schiap jackets; archival kingfisher, moss, salmon against black, bone, butter yellow.\n\nSilhouette & garment vocabulary:\n- Mix-and-match tops and bottoms. Leather and linen ruffles. Lettuce hems, asymmetric openings.\n- Little black cocktail as revenge dressing. Softened graphic lines.\n\nMaterials, craft & surface:\n- Vegetable embroidery, tree-bark texture revisiting Elsa techniques, transparency, playful jewelry animals.\n\nColor, stripe & graphic codes:\n- Neutrals as the combinatory system; archival color pops on jackets.\n\nAccessories & finishing:\n- Brass-handled bags, knitted-ball babouches, spirit-animal jewelry. Play without cluttering the clear voice.\n\nMood, liberation & wearer fantasy:\n- Sidewalk as runway. Clarity as glamour."
+    },
+    {
+      "house": "Stella McCartney",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "stella_mccartney_ss27",
+      "theme": "Ocean polemic meets archival Stella cool: coral knits, fish-wire sculpture, denim ease",
+      "description": "Heritage & provenance:\n- Stella McCartney's vegetarian luxury, cool London girl origins, and recurring ocean activism.\n- Archival silhouettes and castings return as house memory.\n\nShow / location context:\n- Spring/Summer 2027 with David Attenborough ocean commentary as ethical pressure, not backdrop only.\n\nCreative director intent:\n- Polemic and wardrobe together. Technical tailoring stays loose and cool; evening can be Grecian and Splash-like.\n- Denim trucker over basketball shorts as origin story, not irony alone.\n\nSilhouette & garment vocabulary:\n- Drawstring-waist tailoring. Knit skirts, dresses, bustiers of furled panels. Fish-wire crinoline hems and oyster forms.\n- Airbrushed dolphins on jersey and denim. Sculpted peplums and architectural bodices in washed pastels.\n\nMaterials, craft & surface:\n- Technical cloth, sculptural knit, fish wire, denim, jersey. Surface carries ocean without becoming costume only.\n\nColor, stripe & graphic codes:\n- Washed pastels, denim mixes, dolphin graphics. Color serves water and archive, not neon activism kitsch.\n\nAccessories & finishing:\n- Skater trainers and house footwear that keep the look grounded. Avoid plastic slogan overload.\n\nMood, liberation & wearer fantasy:\n- Cool-girl ease with a moral horizon."
+    },
+    {
+      "house": "Tod's",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "tods_ss27",
+      "theme": "Italian Attitude: lightweight leather, color-block play, Candy Bag return",
+      "description": "Heritage & provenance:\n- Tod's Italian leather craft and driving-shoe ease. Ready-to-wear as attitude, not only accessory house.\n\nShow / location context:\n- Spring/Summer 2027. Italian Attitude through new proportions and the Candy Bag's return.\n\nCreative director intent:\n- Effortless elegance with more play. Color blocking as Italian code. Outerwear as the statement.\n\nSilhouette & garment vocabulary:\n- Capris and bermuda shorts. Perforated leather, Nappa, Windsilk trenches. Safari jackets, belted pieces, shirt jackets.\n- Structured coats and laid-back bottoms in one wardrobe.\n\nMaterials, craft & surface:\n- Lightweight leathers, perforated skins, precise outerwear cloth. Candy Bag as soft structure.\n\nColor, stripe & graphic codes:\n- Mustard, orange, red against navy, white, brown. Contrast gives energy without noise.\n\nAccessories & finishing:\n- Candy Bag and leather shoes as house anchors. Belts finish the Italian silhouette.\n\nMood, liberation & wearer fantasy:\n- Italian ease you can actually wear in heat and motion."
+    },
+    {
+      "house": "Khaite",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "khaite_ss27",
+      "theme": "Romance under the skin: tenth-anniversary corsetry, lace creatures, historical bounce",
+      "description": "Heritage & provenance:\n- Catherine Holstein's decade of New York commercial power dressing. Spring 2027 widens into poetry and mess.\n- Venice atmosphere: brass, cream, celadon; Gibson Girl and punk-undone hair blur.\n\nShow / location context:\n- Spring/Summer 2027, Brooklyn Storehouse, near-dark opening with hard spotlight and PJ Harvey.\n\nCreative director intent:\n- Romance through color, texture, proportion, movement. Volume relocated closer to the body.\n- Leather remains the New York anchor while lace and lingerie tones soften the decade.\n\nSilhouette & garment vocabulary:\n- Sculptural bra with high-waisted leather skirt; open corsetry on the back.\n- Horsehair-trimmed evening pieces, mousseline blur, floral embroidery, historical volume that bounces.\n\nMaterials, craft & surface:\n- Black leather, lace, sheer pale cloth, horsehair, dense hand embroidery.\n\nColor, stripe & graphic codes:\n- Black, ecru, white; brass, cream, celadon lingerie tones.\n\nAccessories & finishing:\n- Corsetry and embroidery are the jewelry. Keep bags secondary to body architecture.\n\nMood, liberation & wearer fantasy:\n- Poetic, whimsical, messy—still Khaite power."
+    },
+    {
+      "house": "Ralph Lauren",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "ralph_lauren_ss27",
+      "theme": "Irreverent romance: navy-and-white American sportswear remixed with character",
+      "description": "Heritage & provenance:\n- Ralph Lauren American sportswear, the necktie origin myth, Italian-facility women's suits.\n- Archival codes remixed for 2027 character rather than museum polish.\n\nShow / location context:\n- Spring/Summer 2027, Jack Shainman Gallery, New York. Glamour with sportswear ease.\n\nCreative director intent:\n- Celebrate ingenuity and originality. Romance without solemnity. Personality over perfection.\n\nSilhouette & garment vocabulary:\n- White corset with trousers. Brocade vest, full-sleeved shirt, jeans, wide necktie.\n- Sharp and fluid suits, smocked leather jacket, seersucker, feather-accent denim, low-cut evening backs.\n\nMaterials, craft & surface:\n- Brocade, seersucker, leather, denim, floral and brocade pops on navy/white ground.\n\nColor, stripe & graphic codes:\n- Predominantly navy and white with floral/brocade interruptions.\n\nAccessories & finishing:\n- The wide necktie as house memory. Keep jewelry quieter than the American silhouette story.\n\nMood, liberation & wearer fantasy:\n- Freedom and fun of a style that is truly personal."
+    },
+    {
+      "house": "Jacquemus",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "jacquemus_ss27",
+      "theme": "Le Bonheur: seaside bonheur in turquoise, rust, sheer organza, and bare ease",
+      "description": "Heritage & provenance:\n- Simon Porte Jacquemus's South-of-France sensuality, sun architecture, and playful proportion.\n- Happiness as a design brief rather than a slogan print.\n\nShow / location context:\n- Spring/Summer 2027 seaside fantasy translated into ready-to-wear heat and light.\n\nCreative director intent:\n- Bonheur through cut and color: bare ease without costume vacation kitsch.\n- Sheer and structured sun shapes share one wardrobe.\n\nSilhouette & garment vocabulary:\n- Bra-top and skirt sets, sheer organza layers, sculpted shoulders and hips for sun architecture.\n- Easy trousers and dresses that move with heat.\n\nMaterials, craft & surface:\n- Organza, light cottons, sun-struck surfaces. Minimal hardware.\n\nColor, stripe & graphic codes:\n- Turquoise, rust, sun neutrals. Color is the landscape.\n\nAccessories & finishing:\n- Ballet flats and house bags kept secondary to the body-and-sun sentence.\n\nMood, liberation & wearer fantasy:\n- Happiness as lightness you can wear."
+    },
+    {
+      "house": "Proenza Schouler",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "proenza_schouler_ss27",
+      "theme": "Softer New York: craft, color, and the PS1 returned to a redefined city wardrobe",
+      "description": "Heritage & provenance:\n- Proenza Schouler as New York intellectual sportswear and the PS1 bag icon.\n- Softening of the city's hard edge without losing craft intelligence.\n\nShow / location context:\n- Spring/Summer 2027 New York. Softer silhouettes and bright color rewrite the house's urban code.\n\nCreative director intent:\n- Visible craft and motif work as identity. Softness is a redesign of New York, not surrender.\n\nSilhouette & garment vocabulary:\n- Cowling, softer tailoring, dresses and separates that drape rather than armor.\n- Animal and rose motifs worked into cloth rather than stuck on.\n\nMaterials, craft & surface:\n- Hand-touched surfaces, color-blocked cloth, craft joins that remain visible.\n\nColor, stripe & graphic codes:\n- Bold color against New York black/neutral memory. Motifs are graphic, not cute.\n\nAccessories & finishing:\n- PS1 return as house punctuation. Keep other hardware quiet.\n\nMood, liberation & wearer fantasy:\n- A New York wardrobe that can breathe."
+    },
+    {
+      "house": "The Row",
+      "season": "Fall/Winter 2026",
+      "status": "latest_completed",
+      "dir": "the_row_fw26",
+      "theme": "Quiet architecture: oversized coats, wide-leg pants, black/white/chocolate calm",
+      "description": "Heritage & provenance:\n- The Row as Mary-Kate and Ashley Olsen's discipline of proportion, cloth, and silence.\n- Luxury as reduction and fit, not announcement.\n\nShow / location context:\n- Fall/Winter 2026. A controlled wardrobe of coats and trousers as the season's grammar.\n\nCreative director intent:\n- Architecture through volume and fall of cloth. Distinction by cut, not by print story.\n\nSilhouette & garment vocabulary:\n- Oversized coats, tailored pants, wide-leg pants, long clean lines, minimal fastening drama.\n\nMaterials, craft & surface:\n- Dense wools, fluid trousers cloth, matte surfaces. No distressed costume.\n\nColor, stripe & graphic codes:\n- Black, white, chocolate. Near-monochrome blocks.\n\nAccessories & finishing:\n- Quiet bags and shoes. Nothing louder than the coat's shoulder.\n\nMood, liberation & wearer fantasy:\n- Calm authority. The wearer disappears into exactness."
+    },
+    {
+      "house": "Brunello Cucinelli",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "brunello_cucinelli_ss27",
+      "theme": "Humanist leisure luxury: sun-washed knits, soft tailoring, Solomeo ease",
+      "description": "Heritage & provenance:\n- Brunello Cucinelli's Solomeo humanist luxury: craft dignity, soft power, cashmere culture.\n\nShow / location context:\n- Spring/Summer 2027 leisure wardrobe as elevated everyday rather than resort costume.\n\nCreative director intent:\n- Comfort as ethics of beauty. Soft structure, never loud branding.\n\nSilhouette & garment vocabulary:\n- Soft blazers, knit polos and trousers, long cardigans, easy dresses, light outer layers.\n\nMaterials, craft & surface:\n- Cashmere, cotton knits, suede accents, hand-finished edges.\n\nColor, stripe & graphic codes:\n- Sun-washed sand, cream, soft olive, sky. Quiet contrasts only.\n\nAccessories & finishing:\n- Soft leather shoes and bags. Metal kept matte and minimal.\n\nMood, liberation & wearer fantasy:\n- Wealth as ease and attention, not display."
+    },
+    {
+      "house": "Missoni",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "missoni_ss27",
+      "theme": "Zigzag living: knit geometry loosened into resort movement and color heat",
+      "description": "Heritage & provenance:\n- Missoni family knit modernism: zigzag, space-dye, colorful intellectual leisure.\n\nShow / location context:\n- Spring/Summer 2027. Knit house codes for heat, travel, and evening without abandoning geometry.\n\nCreative director intent:\n- Pattern as structure. Loosen without losing the Missoni wave.\n\nSilhouette & garment vocabulary:\n- Knit dresses and trousers, open cardigan coats, swim pieces that share yarn language with evening.\n- Soft flares and columns built from knit panels.\n\nMaterials, craft & surface:\n- Knit, crochet, light woven companions. Surface is the identity.\n\nColor, stripe & graphic codes:\n- Multicolor zigzag and space-dye. Color is architecture.\n\nAccessories & finishing:\n- Soft bags; avoid hard logo hardware competing with yarn.\n\nMood, liberation & wearer fantasy:\n- Holiday intelligence—playful, never silly."
+    },
+    {
+      "house": "Rick Owens",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "rick_owens_ss27",
+      "theme": "Brutal glamour: elongated darkness, body armor, and ceremonial ease in heat",
+      "description": "Heritage & provenance:\n- Rick Owens's American-in-Paris brutalism: glamour through severity, drop-crotch memory, architectural drapery.\n\nShow / location context:\n- Spring/Summer 2027. Heat forces lighter armor without losing ceremonial gravity.\n\nCreative director intent:\n- Darkness as elegance. Body as sculptural site. Ease is still confrontational.\n\nSilhouette & garment vocabulary:\n- Long coats and capes, wrapped dresses, leather panels, elongated trousers, exposed structure.\n- Platforms and geometric footwear extending the line.\n\nMaterials, craft & surface:\n- Leather, washed cottons, technical sheers, matte metals.\n\nColor, stripe & graphic codes:\n- Black, dust, bone, occasional acid flare. Graphic is silhouette, not print.\n\nAccessories & finishing:\n- Geometric bags and jewelry as armor fragments.\n\nMood, liberation & wearer fantasy:\n- Ceremony for everyday outsiders."
+    },
+    {
+      "house": "Acne Studios",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "acne_studios_ss27",
+      "theme": "Stockholm irony softened: denim, twisted tailoring, and art-school romance",
+      "description": "Heritage & provenance:\n- Acne Studios as Scandinavian fashion with art-world adjacency and denim authority.\n\nShow / location context:\n- Spring/Summer 2027. Irony and romance share one wardrobe without meme styling.\n\nCreative director intent:\n- Twist familiar garments. Denim and suiting speak the same dry language.\n\nSilhouette & garment vocabulary:\n- Twisted blazers, elongated denim, soft dresses with awkward elegance, layered shirting.\n- Proportions slightly wrong on purpose.\n\nMaterials, craft & surface:\n- Denim, wool, washed silk, matte leather. Surface stays honest.\n\nColor, stripe & graphic codes:\n- Indigo, black, dusty pink, pale yellow. Graphics rare and dry.\n\nAccessories & finishing:\n- House boots and bags with understatement. Avoid loud logo comedy.\n\nMood, liberation & wearer fantasy:\n- Cool without trying; romance without sugar."
+    },
+    {
+      "house": "Diesel",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "diesel_ss27",
+      "theme": "Denim provocation: destroyed luxury, body exposure, and club-workwear clash",
+      "description": "Heritage & provenance:\n- Diesel as denim laboratory and youth provocation under Glenn Martens's reconstruction logic.\n\nShow / location context:\n- Spring/Summer 2027. Denim still the grammar; luxury is in destruction and rebuild.\n\nCreative director intent:\n- Clash elegance and grit. Exposure is design. Logo can be texture, not billboard alone.\n\nSilhouette & garment vocabulary:\n- Reconstructed jeans, cutaway tops, industrial outerwear, body-baring evening denim hybrids.\n- Layers that look unfinished on purpose.\n\nMaterials, craft & surface:\n- Destroyed denim, metal hardware, washed leather, sheer inserts.\n\nColor, stripe & graphic codes:\n- Indigo spectrum, black, acid wash, sudden brights. Graphics feel stamped and worn.\n\nAccessories & finishing:\n- Heavy hardware, belts, boots. Finish should look used.\n\nMood, liberation & wearer fantasy:\n- Club after work, work after club—same clothes survive both."
+    },
+    {
+      "house": "Moschino",
+      "season": "Spring/Summer 2027",
+      "status": "shown",
+      "dir": "moschino_ss27",
+      "theme": "Wit as wardrobe: trompe-l'œil, cartoon glamour, and sharp Italian irony",
+      "description": "Heritage & provenance:\n- Franco Moschino's irony and Adrian Appiolaza-era wit: fashion that winks without abandoning cut.\n\nShow / location context:\n- Spring/Summer 2027. Humor as method for Italian glamour, not only gag props.\n\nCreative director intent:\n- Trompe-l'œil and graphic play that still reads as clothes. Irony with sharp tailoring underneath.\n\nSilhouette & garment vocabulary:\n- Tailored jackets with illusion details, dress-as-joke that remains a dress, heart motifs as structure.\n- Clean skirts and trousers carrying the punchline in cloth, not only props.\n\nMaterials, craft & surface:\n- Tailoring cloth, printed trompe-l'œil, playful embroidery, patent accents.\n\nColor, stripe & graphic codes:\n- Black, white, red hearts, cartoon brights used surgically.\n\nAccessories & finishing:\n- Statement but finishable bags and shoes. Wit should not prevent walking.\n\nMood, liberation & wearer fantasy:\n- Glamour that laughs and still looks expensive."
+    }
+  ]
+}

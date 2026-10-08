@@ -4,6 +4,7 @@ API-based LLM-as-a-judge DesignTextEvaluator for fashion text descriptions.
 
 from __future__ import annotations
 
+import http.client
 import json
 import logging
 import math
@@ -1856,6 +1857,8 @@ Return format:
                     errors.append(f"{url} -> HTTP {exc.code}: {error_body}")
                 except urllib.error.URLError as exc:
                     errors.append(f"{url} -> URLError: {exc}")
+                except (TimeoutError, ConnectionError, http.client.RemoteDisconnected, OSError) as exc:
+                    errors.append(f"{url} -> connection: {type(exc).__name__}: {exc}")
                 except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
                     errors.append(f"{url} -> unexpected response format: {exc}")
 

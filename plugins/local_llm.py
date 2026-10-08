@@ -79,6 +79,10 @@ def resolve_local_rewriter_endpoint() -> Optional[Dict[str, Any]]:
 
 
 def local_llm_enabled() -> bool:
+    # 语料 API 跑等场景可强制远程：FASHION_FORCE_REMOTE_LLM=1
+    flag = (os.environ.get("FASHION_FORCE_REMOTE_LLM") or "").strip().lower()
+    if flag in {"1", "true", "yes", "on"}:
+        return False
     return bool(local_llm_config().get("enabled"))
 
 

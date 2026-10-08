@@ -22,6 +22,14 @@ import os
 import sys
 from pathlib import Path
 
+# Windows 控制台默认 GBK，模型输出含特殊字符时避免 print 崩掉整条生成流
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -81,6 +89,7 @@ def _evaluator(args) -> TextEvaluatorConfig:
         evaluator_temperature=args.evaluator_temperature,
         rewriter_temperature=args.evaluator_rewriter_temperature,
         rewrite_on_gate_fail=getattr(args, "evaluator_rewrite_on_gate_fail", True),
+        keep_on_gate_fail=getattr(args, "evaluator_keep_on_gate_fail", False),
     )
 
 
@@ -235,6 +244,12 @@ def main() -> None:
         action="store_true",
         help="已有完整章节和 look 的品牌也重新生成",
     )
+    parser.add_argument(
+        "--out-root",
+        type=Path,
+        default=None,
+        help="生成输出根目录；默认 <index 目录>/generated",
+    )
     cli = parser.parse_args()
 
     os.chdir(ROOT)
@@ -244,11 +259,32 @@ def main() -> None:
         raise SystemExit("需要 fashion_config.yaml 的 api-key，或环境变量 OHMYGPT_API_KEY / OPENAI_API_KEY")
     args.api_key = api_key
 
+    # 把 yaml 里的 api-base 注入推理网关（覆盖 inference 默认 ohmygpt）
+    import yaml as _yaml
+    import inference as _inference
+
+    _cfg = _yaml.safe_load(Path(cli.yaml).read_text(encoding="utf-8")) or {}
+    api_base = str(_cfg.get("api-base") or "").strip() or "https://api.ohmygpt.com/v1"
+    os.environ["OPENAI_API_KEY"] = api_key
+    os.environ["OHMYGPT_API_KEY"] = api_key
+    os.environ["OPENAI_BASE_URL"] = api_base
+    _inference.OPENAI_COMPAT_BASE_URL = api_base
+
+    # CLI yaml 关闭 local-llm 时，强制远程，避免仍读主 fashion_config 的本地 7B
+    local_cfg = _cfg.get("local-llm") or {}
+    if not bool(local_cfg.get("enabled", True)):
+        os.environ["FASHION_FORCE_REMOTE_LLM"] = "1"
+        backend = str(_cfg.get("llm-backend") or "").strip() or "gpt-5.4-mini"
+        args.llm_backend = backend
+    print(f"[API] model={getattr(args, 'llm_backend', '?')} base={api_base}")
+
     payload = _load_index(cli.index)
     rows = _select(payload["collections"], cli.only)
     num_chapters = int(payload["num_chapters"])
     num_looks = int(payload["num_looks"])
-    out_root = cli.index.parent / "generated"
+    out_root = cli.out_root if cli.out_root is not None else cli.index.parent / "generated"
+    if not out_root.is_absolute():
+        out_root = ROOT / out_root
     pending = []
     for row in rows:
         done = _completed_run(out_root, str(row.get("dir") or ""), num_chapters, num_looks)

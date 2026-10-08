@@ -40,7 +40,7 @@ def curr_cost_est():
     }
     return sum([costmap_in[_]*TOKENS_IN[_] for _ in TOKENS_IN]) + sum([costmap_out[_]*TOKENS_OUT[_] for _ in TOKENS_OUT])
 
-def query_model(model_str, prompt, system_prompt, openai_api_key=None, gemini_api_key=None,  anthropic_api_key=None, siliconflow_api_key=None, tries=5, timeout=5.0, temp=None, print_cost=True, version="1.5"):
+def query_model(model_str, prompt, system_prompt, openai_api_key=None, gemini_api_key=None,  anthropic_api_key=None, siliconflow_api_key=None, tries=10, timeout=15.0, temp=None, print_cost=True, version="1.5"):
     """
     统一的模型调用入口。
     说明：
@@ -150,7 +150,12 @@ def query_model(model_str, prompt, system_prompt, openai_api_key=None, gemini_ap
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt}
                 ]
-                client = OpenAI(base_url=OPENAI_COMPAT_BASE_URL, api_key=openai_api_key)
+                client = OpenAI(
+                    base_url=OPENAI_COMPAT_BASE_URL,
+                    api_key=openai_api_key,
+                    timeout=180.0,
+                    max_retries=3,
+                )
                 if temp is None:
                     completion = client.chat.completions.create(
                         model="gpt-5.4-mini", messages=messages

@@ -227,6 +227,11 @@ def generate_one_image(
             raise RuntimeError(f"Images API 服务端拒绝 ({url}):\n{last_err}") from exc
         except (urllib.error.URLError, ConnectionError, TimeoutError, ssl.SSLError, OSError) as exc:
             last_err = f"{type(exc).__name__} ({mode}): {exc}"
+            if isinstance(exc, TimeoutError):
+                raise RuntimeError(
+                    f"Images API 等待超时 ({url}):\n{last_err}\n"
+                    "提示：网关可能仍在出图；请加大 --timeout 后用 --skip-existing 重跑。"
+                ) from exc
             if not use_b64_json:
                 logging.warning("%s — 将尝试 b64_json 返回格式", last_err[:220])
                 continue
