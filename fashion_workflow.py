@@ -1755,7 +1755,8 @@ class FashionWorkflow:
         result["coverage_axis_score"] = (eval_result.get("scores") or {}).get("coverage_score", {}).get("score")
         result["quality_axis_score"] = (eval_result.get("scores") or {}).get("quality_score", {}).get("penalized_score")
 
-    def _rewrite_extra_context(self, baseline_eval: dict | None = None) -> str:
+    def _rewrite_extra_context(self, baseline_eval: dict | None = None, source_text: str = "") -> str:
+        from plugins.parallel_k_rewrite.brand_style import brand_style_block
         from plugins.parallel_k_rewrite.k_candidate_generator import (
             REWRITE_BRAND_LOGO_LOCK,
             REWRITE_ELEMENT_RECONSTRUCTION,
@@ -1770,10 +1771,18 @@ class FashionWorkflow:
         sub = getattr(self, "_current_sub_theme_name", None)
         if sub:
             bits.append(f"Chapter: {sub}")
+        style = brand_style_block(
+            explicit=getattr(self, "brand", None),
+            texts=[str(getattr(self, "design_target_prompt", None) or ""), source_text or ""],
+        )
+        if style:
+            bits.append(style)
         bits.append(
             "Extract theme and design concept from the look description, keep them consistent, "
             "then you may change overall clothing (color, pairing, detail design) to raise "
-            "DesignMerit. Visible ideas are not limited to a fixed count; each idea must serve "
+            "DesignMerit. If a BRAND STYLE CARD is present, use it only for proportion, craft, "
+            "palette, and construction of that same theme. When the card conflicts with the theme, "
+            "keep the theme. Visible ideas are not limited to a fixed count; each idea must serve "
             "that extracted theme and concept. Resolve exposed consistency problems and lower "
             "exposed penalty deductions. Do not treat a collection-shared interchangeable "
             "garment formula as the identity."
@@ -1782,7 +1791,7 @@ class FashionWorkflow:
         bits.append(REWRITE_WHOLE_LOOK_SCOPE)
         bits.append(REWRITE_ELEMENT_RECONSTRUCTION)
         bits.append(REWRITE_BRAND_LOGO_LOCK)
-        repair = format_exposed_repair_brief(baseline_eval)
+        repair = format_exposed_repair_brief(baseline_eval, source_text=source_text)
         if repair:
             bits.append(repair)
         return "\n".join(bits)
@@ -1822,7 +1831,7 @@ class FashionWorkflow:
             parallel = generate_k_parallel_rewrites(
                 look_desc_raw,
                 evaluator=build_parallel_k_evaluator(),
-                extra_context=self._rewrite_extra_context(baseline_eval),
+                extra_context=self._rewrite_extra_context(baseline_eval, source_text=look_desc_raw),
             )
         except JudgeConnectionError as exc:
             if self.verbose:

@@ -20,6 +20,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from plugins.parallel_k_rewrite import generate_k_parallel_rewrites
+from plugins.parallel_k_rewrite.brand_style import brand_style_block
 from plugins.parallel_k_rewrite.k_candidate_generator import format_exposed_repair_brief
 from plugins.text_description_evaluator.design_text_evaluator_api import (
     DesignTextEvaluator,
@@ -502,7 +503,7 @@ def main() -> None:
     n_pending = len(pending)
     pk = grpo_parallel_k_rewrite_config()
     k_each = int(args.k or pk.get("k") or 8)
-    rewrite_slots = int(pk.get("max-workers") or 32)
+    rewrite_slots = int(pk.get("max-workers") or 64)
     source_workers = max(1, rewrite_slots // max(k_each, 1))
     baseline_workers = source_workers
     print(
@@ -537,7 +538,13 @@ def main() -> None:
                 failed.setdefault(sid, exc)
             return None
         repair = format_exposed_repair_brief(baseline_eval, source_text=text)
-        extra = f"{biz}\n\n{repair}".strip() if repair else biz
+        style = ""
+        if "BRAND STYLE CARD" not in biz:
+            style = brand_style_block(
+                explicit=src.get("brand") or src.get("house") or src.get("brand_dir"),
+                texts=[text],
+            )
+        extra = "\n\n".join(part for part in (style, biz, repair) if str(part or "").strip())
         if repair:
             print(f"  repair brief attached ({len(repair)} chars)", flush=True)
         return {

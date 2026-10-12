@@ -36,7 +36,9 @@ REWRITE_STYLE_CONCEPT_LOCK = (
     "If SOURCE names a theme and concept and then also describes garments from a different "
     "theme or concept, keep only the stated theme and concept. Delete or replace those "
     "conflicting garments. Do not treat that second register as part of the concept you must "
-    "preserve. Do not switch to a different theme or a different concept."
+    "preserve. Do not switch to a different theme or a different concept. "
+    "A BRAND STYLE CARD, when attached, does not change this theme. It only supplies "
+    "proportion, craft, palette, and construction for the theme you keep."
 )
 
 REWRITE_WHOLE_LOOK_SCOPE = (
@@ -475,6 +477,16 @@ REWRITE_BRAND_LOGO_LOCK = (
     "If SOURCE has no logo/monogram, do not invent another house's logo."
 )
 
+REWRITE_BRAND_STYLE = (
+    "BRAND STYLE CARD (only when one is attached above): The card is how this house "
+    "builds a garment: proportion, craft, palette, and construction. Use it to materialize "
+    "the theme and concept extracted from SOURCE. It does not replace that theme. "
+    "If a habit on the card would add clothes from another theme, keep the SOURCE theme and drop the habit. "
+    "Write the habit as something the camera sees on the clothes. "
+    "Do not copy the card, a brand history, or a runway note into the paragraph. "
+    "Do not add a logo or monogram that SOURCE does not already have."
+)
+
 REWRITE_SINGLE_FRAME = (
     "SINGLE FRAME (hard): The paragraph is one moment, one body, one camera, and only what that "
     "camera sees on the worn clothes. No collage, no flat lay, no product shot, no second view, "
@@ -510,6 +522,8 @@ REWRITE_SHARED_STRATEGY = (
         "Visible ideas have no fixed count; each one "
     "must serve that extracted theme and concept. Idea kinds are a menu, not a quota and not a "
     "per-candidate assignment. "
+    "If a BRAND STYLE CARD is attached, apply its proportion, craft, palette, and construction "
+    "inside that theme. If the card conflicts with the theme, keep the theme. "
     "3) Keep any original house logo/monogram as the same brand mark (placement/scale may change). "
     "4) Output one coherent English paragraph. "
     "5) If a repair brief is attached, follow its KEEP and DELETE lines and lower its exposed penalty deductions. "
@@ -550,6 +564,7 @@ def build_rewrite_user_prompt(
         f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
         f"{REWRITE_WHOLE_LOOK_SCOPE}\n"
         f"{REWRITE_BRAND_LOGO_LOCK}\n"
+        f"{REWRITE_BRAND_STYLE}\n"
         f"{REWRITE_ELEMENT_RECONSTRUCTION}\n"
         f"{REWRITE_DESIGN_MERIT}\n\n"
         "OUTPUT RULES:\n"
@@ -818,7 +833,7 @@ def generate_k_parallel_rewrites(
     extra_context :
         各候选共享的额外业务说明（与同组字段对齐）。
     max_workers :
-        改写线程池大小；默认 ``min(k, 32)``。
+        改写线程池大小；默认 ``min(k, 64)``。
     temperature_floor / temperature_step / temperature_cap :
         按 candidate_index 递进温度；各路独立选择识别性想法，不预分配种类。
     evaluate_candidates :
@@ -830,7 +845,7 @@ def generate_k_parallel_rewrites(
     eval_source_prefix :
         评判 `source_name` 前缀，单条为 ``{prefix}.c{index}``。
     eval_max_workers :
-        评判并发数；默认 ``min(k, 32)``。一条改写完成就送评分器，与其余改写重叠。
+        评判并发数；默认 ``min(k, 64)``。一条改写完成就送评分器，与其余改写重叠。
 
     Returns
     -------
@@ -858,8 +873,8 @@ def generate_k_parallel_rewrites(
         eval_source_prefix = str(_pk["eval-source-prefix"])
     ev = evaluator or _default_evaluator()
     gid = group_id or str(uuid.uuid4())
-    workers = min(k, max_workers) if max_workers is not None else min(k, 32)
-    eval_workers = eval_max_workers if eval_max_workers is not None else min(k, 32)
+    workers = min(k, max_workers) if max_workers is not None else min(k, 64)
+    eval_workers = eval_max_workers if eval_max_workers is not None else min(k, 64)
     prefix = f"{eval_source_prefix}.{gid[:8]}"
 
     rows: List[Dict[str, Any]] = []
