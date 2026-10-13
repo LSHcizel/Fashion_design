@@ -20,7 +20,6 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from plugins.parallel_k_rewrite import generate_k_parallel_rewrites
-from plugins.parallel_k_rewrite.brand_style import brand_style_block
 from plugins.parallel_k_rewrite.k_candidate_generator import format_exposed_repair_brief
 from plugins.text_description_evaluator.design_text_evaluator_api import (
     DesignTextEvaluator,
@@ -539,13 +538,7 @@ def main() -> None:
                 failed.setdefault(sid, exc)
             return None
         repair = format_exposed_repair_brief(baseline_eval, source_text=text)
-        style = ""
-        if "BRAND STYLE CARD" not in biz:
-            style = brand_style_block(
-                explicit=src.get("brand") or src.get("house") or src.get("brand_dir"),
-                texts=[text],
-            )
-        extra = "\n\n".join(part for part in (style, biz, repair) if str(part or "").strip())
+        extra = "\n\n".join(part for part in (biz, repair) if str(part or "").strip())
         if repair:
             print(f"  repair brief attached ({len(repair)} chars)", flush=True)
         return {

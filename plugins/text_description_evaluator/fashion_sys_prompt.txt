@@ -33,7 +33,7 @@ When rewriting, use this information order
 4. StylingAndAccessories: layering, belt, footwear, bag, jewelry, other accessories
 
 Hard constraints
-Theme and concept stay locked. If a BRAND STYLE CARD is attached, it only changes how that theme is cut, made, colored, and constructed. Visible garment facts from the card may enter the paragraph. Do not add brand history, runway narrative, or cultural references unless they are in the source. Do not invent a house logo or monogram. Do not introduce contradictions. If a whole accessory category is absent and not needed for the idea, leave it out.
+Theme and concept stay locked. Do not add brand history, runway narrative, or cultural references unless they are in the source. Do not introduce contradictions. If a whole accessory category is absent and not needed for the idea, leave it out.
 
 Prefer precise terms (e.g. trench coat, column dress, pleated skirt, patent leather, matte wool, metallic chainmail, pointed pumps, wide belt). Avoid generic wording (clothes, outfit, top, bottoms, accessories) when a more specific term exists in the input.
 
@@ -53,7 +53,6 @@ Brand logo lock. If SOURCE or business context describes a house logo, monogram,
 
 Rewrite strategy
 Read the full SOURCE in the user message, then reorganize that text into the information order above.
-Brand-style pass. When a BRAND STYLE CARD is attached, use its proportion, craft, palette, and construction to materialize the theme extracted from SOURCE. The card does not replace that theme. If a habit would add garments from another theme, keep the SOURCE theme and drop the habit. Do not copy the card, a brand history, or a runway note. Do not add a logo or monogram that SOURCE does not already have.
 Element reconstruction pass. Recompose color, pairing, silhouette, layering, surface, edge, volume, local construction, and detail design so DesignMerit can rise. Keep theme and concept consistent. Do not treat a collection-shared interchangeable formula as the identity.
 Design-merit pass. Lead with the visible ideas that serve the extracted theme and concept. Their count is not fixed. Reconstructed elements must serve those ideas and that concept. Demote finishing, tucked-shirt dressing, and promenade/salon/stance. Do not let a collection-shared, interchangeable trunk-garment formula read as the identity. Keep any original house logo/monogram as the same brand mark (placement and scale may change).
 Repair pass. When KEEP and DELETE lines, a LEFT-RIGHT EXAMPLE, or a SAME-ELEMENT EXAMPLE are attached, copy that edit. Keep one side of each contradiction, and keep every other garment that is not a DELETE line. Do not copy the example's clothes. A DELETE line is forbidden on another garment. Do not copy repair words into the paragraph.

@@ -36,9 +36,7 @@ REWRITE_STYLE_CONCEPT_LOCK = (
     "If SOURCE names a theme and concept and then also describes garments from a different "
     "theme or concept, keep only the stated theme and concept. Delete or replace those "
     "conflicting garments. Do not treat that second register as part of the concept you must "
-    "preserve. Do not switch to a different theme or a different concept. "
-    "A BRAND STYLE CARD, when attached, does not change this theme. It only supplies "
-    "proportion, craft, palette, and construction for the theme you keep."
+    "preserve. Do not switch to a different theme or a different concept."
 )
 
 REWRITE_WHOLE_LOOK_SCOPE = (
@@ -477,16 +475,6 @@ REWRITE_BRAND_LOGO_LOCK = (
     "If SOURCE has no logo/monogram, do not invent another house's logo."
 )
 
-REWRITE_BRAND_STYLE = (
-    "BRAND STYLE CARD (only when one is attached above): The card is how this house "
-    "builds a garment: proportion, craft, palette, and construction. Use it to materialize "
-    "the theme and concept extracted from SOURCE. It does not replace that theme. "
-    "If a habit on the card would add clothes from another theme, keep the SOURCE theme and drop the habit. "
-    "Write the habit as something the camera sees on the clothes. "
-    "Do not copy the card, a brand history, or a runway note into the paragraph. "
-    "Do not add a logo or monogram that SOURCE does not already have."
-)
-
 REWRITE_SINGLE_FRAME = (
     "SINGLE FRAME (hard): The paragraph is one moment, one body, one camera, and only what that "
     "camera sees on the worn clothes. No collage, no flat lay, no product shot, no second view, "
@@ -522,8 +510,6 @@ REWRITE_SHARED_STRATEGY = (
         "Visible ideas have no fixed count; each one "
     "must serve that extracted theme and concept. Idea kinds are a menu, not a quota and not a "
     "per-candidate assignment. "
-    "If a BRAND STYLE CARD is attached, apply its proportion, craft, palette, and construction "
-    "inside that theme. If the card conflicts with the theme, keep the theme. "
     "3) Keep any original house logo/monogram as the same brand mark (placement/scale may change). "
     "4) Output one coherent English paragraph. "
     "5) If a repair brief is attached, follow its KEEP and DELETE lines and lower its exposed penalty deductions. "
@@ -564,7 +550,6 @@ def build_rewrite_user_prompt(
         f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
         f"{REWRITE_WHOLE_LOOK_SCOPE}\n"
         f"{REWRITE_BRAND_LOGO_LOCK}\n"
-        f"{REWRITE_BRAND_STYLE}\n"
         f"{REWRITE_ELEMENT_RECONSTRUCTION}\n"
         f"{REWRITE_DESIGN_MERIT}\n\n"
         "OUTPUT RULES:\n"
