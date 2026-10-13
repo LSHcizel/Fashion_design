@@ -61,13 +61,17 @@ training/runs/grpo_chanel_inverse_v2/*
 # 2000 语料冷启动 / 在线轮：只跟踪分析用产物，不跟踪权重（*.safetensors / adapter 等仍忽略）
 !training/runs/grpo_corpus2000_20261011/
 training/runs/grpo_corpus2000_20261011/*
-!training/runs/grpo_corpus2000_20261011/samples.jsonl
+# samples / phase_b 超过 GitHub 100MB，不入库；大文件用 rsync/scp 另传
+training/runs/grpo_corpus2000_20261011/samples.jsonl
+training/runs/grpo_corpus2000_20261011/odin_rm/export/phase_b_grpo.jsonl
 !training/runs/grpo_corpus2000_20261011/completed_groups.txt
 !training/runs/grpo_corpus2000_20261011/run_manifest.txt
 !training/runs/grpo_corpus2000_20261011/odin_rm/
 training/runs/grpo_corpus2000_20261011/odin_rm/*
 !training/runs/grpo_corpus2000_20261011/odin_rm/export/
-!training/runs/grpo_corpus2000_20261011/odin_rm/export/**
+training/runs/grpo_corpus2000_20261011/odin_rm/export/*
+!training/runs/grpo_corpus2000_20261011/odin_rm/export/phase_a_sft.jsonl
+!training/runs/grpo_corpus2000_20261011/odin_rm/export/two_phase_summary.txt
 !training/runs/grpo_corpus2000_20261011/hf_checkpoints/
 training/runs/grpo_corpus2000_20261011/hf_checkpoints/*
 !training/runs/grpo_corpus2000_20261011/hf_checkpoints/sft/
