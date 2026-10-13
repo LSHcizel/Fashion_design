@@ -210,7 +210,8 @@ grpo:
     model: "models/Qwen2.5-7B-Rewriter"
     # KL 锚点 = 训练前改写器快照（勿指向基座 judge 目录）；多轮短 GRPO 仍锚在此，不随轮次更新
     ref-model: "models/Qwen2.5-7B-Rewriter"
-    # 冷启动只 SFT 一次。GRPO 对齐 PromptEnhancer 表 2：恒定学习率 1e-6、KL 系数 0.001、每轮 1 个 epoch。
+    # 冷启动只 SFT 一次。学习率 1e-6，每轮 1 个 epoch。
+    # KL 系数 10 乘逐 token 的 k3。每个 token 偏离约 0.1 nat 时，KL 梯度与策略项同一量级。
     # 同一份标签不连跑多轮。下一轮由 run_next_grpo_round 导入权重、重新采样、冻结 RM 打分后再 GRPO。
     grpo-rounds: 1
     grpo-epochs-per-round: 1.0

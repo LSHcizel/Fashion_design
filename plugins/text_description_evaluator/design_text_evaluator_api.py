@@ -2517,12 +2517,12 @@ class DesignTextEvaluator:
             )
             return original_text
 
-        # Check for garbled/machine characters (very low-ratio of meaningful characters).
-        meaningful_chars = sum(1 for c in text if c.isalnum() or c in " .,;:!?-'\"（）《》「」‘’“”–—…")
-        if meaningful_chars / len(text) < 0.6:
+        from .completion_vocab import is_low_meaningful_completion, meaningful_char_ratio
+
+        if is_low_meaningful_completion(text):
             self.logger.warning(
                 "Rewriter output looks garbled (%.0f%% meaningful chars); falling back to original.",
-                meaningful_chars / len(text) * 100,
+                meaningful_char_ratio(text) * 100,
             )
             return original_text
 

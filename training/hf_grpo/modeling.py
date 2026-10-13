@@ -52,7 +52,7 @@ def sequence_completion_logprob_parts(
     返回 ``(sum_logp, token_count, mean_logp)``。
 
     ``sum_logp`` 是 completion 上 ``log p`` 之和，策略项用它，避免长句被自身长度除掉。
-    ``mean_logp`` 仍是长度归一化均值，KL 继续用它，这样 ``beta_kl`` 的尺度不变。
+    ``mean_logp`` 是长度归一化均值，只留给调用方查看。KL 用逐 token 的 k3，不用这个均值。
     """
     logp_all = F.log_softmax(logits[:, :-1], dim=-1)
     targets = input_ids[:, 1:]
@@ -92,6 +92,46 @@ def sequence_completion_log_probs(
     return mean_logp
 
 
+_KL_LOG_RATIO_CLAMP = 10.0
+
+
+def sampled_token_logprobs(
+    logits: torch.Tensor,
+    input_ids: torch.Tensor,
+    completion_start: torch.Tensor,
+    attention_mask: Optional[torch.Tensor] = None,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """采样 token 的 ``log π``，以及 completion 段掩码。掩码外的对数概率为 0。"""
+    logp_all = F.log_softmax(logits[:, :-1].float(), dim=-1)
+    targets = input_ids[:, 1:]
+    gathered = logp_all.gather(-1, targets.unsqueeze(-1)).squeeze(-1)
+    mask = _completion_logprob_mask(input_ids, completion_start, attention_mask)
+    if mask.shape[1] != gathered.shape[1]:
+        width = min(mask.shape[1], gathered.shape[1])
+        mask = mask[:, :width]
+        gathered = gathered[:, :width]
+    return gathered.masked_fill(~mask, 0.0), mask
+
+
+def token_kl_k3_sum(
+    logp_policy: torch.Tensor,
+    logp_ref: torch.Tensor,
+    mask: torch.Tensor,
+) -> torch.Tensor:
+    """
+    Schulman k3 在 completion token 上的和。
+
+    ``k3 = exp(log π_ref - log π) - (log π_ref - log π) - 1``。
+    对数比限制在 ±10，避免参考概率远高于策略时指数溢出。
+    """
+    delta = (logp_ref.detach().float() - logp_policy.float()).clamp(
+        -_KL_LOG_RATIO_CLAMP,
+        _KL_LOG_RATIO_CLAMP,
+    )
+    k3 = torch.exp(delta) - delta - 1.0
+    return k3.masked_fill(~mask, 0.0).sum()
+
+
 def grpo_loss(
     logp_policy: torch.Tensor,
     logp_ref: torch.Tensor,
@@ -101,23 +141,26 @@ def grpo_loss(
     kl_squared: bool = True,
     sum_logp_policy: Optional[torch.Tensor] = None,
     token_count: Optional[torch.Tensor] = None,
+    token_kl_sum: Optional[torch.Tensor] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     策略项默认是 token 上的 ``-sum(A * log p) / sum(T)``：每条句子不再先除以自己的长度。
     未提供 ``sum_logp_policy`` 时退回 ``-mean(A * mean_logp)``。
 
-    KL 仍是 completion 平均对数概率差的平方均值，``beta_kl`` 尺度与原来一致。
+    KL 是 completion token 上 k3 的平均。``token_kl_sum`` 由 :func:`token_kl_k3_sum` 给出。
+    ``logp_ref`` 与 ``kl_squared`` 保留给旧调用，不再参与计算。
     """
+    del logp_ref, kl_squared
     if sum_logp_policy is not None:
         counts = token_count if token_count is not None else torch.ones_like(sum_logp_policy)
         denom = counts.to(dtype=sum_logp_policy.dtype).sum().clamp(min=1)
         pol = -(advantage.detach() * sum_logp_policy).sum() / denom
     else:
         pol = -(advantage.detach() * logp_policy).mean()
-    diff = logp_policy - logp_ref.detach()
-    if kl_squared:
-        kl = (diff ** 2).mean()
+        denom = torch.ones((), device=pol.device, dtype=pol.dtype)
+    if token_kl_sum is None:
+        kl = torch.zeros((), device=pol.device, dtype=pol.dtype)
     else:
-        kl = diff.mean().abs()
-    total = pol + beta_kl * kl
+        kl = token_kl_sum.to(dtype=pol.dtype) / denom.to(dtype=pol.dtype)
+    total = pol + float(beta_kl) * kl
     return total, pol, kl

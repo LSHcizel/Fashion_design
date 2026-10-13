@@ -94,9 +94,9 @@ class BrandStyleCardTests(unittest.TestCase):
         wf.design_target_prompt = "Design a Moschino collection"
         wf._current_sub_theme_name = "Smile"
         ctx = wf._rewrite_extra_context(None, source_text="A smile-line clutch.")
-        self.assertNotIn("BRAND STYLE CARD", ctx)
-        self.assertNotIn("House: Moschino", ctx)
-        self.assertIn("Extract theme and design concept", ctx)
+        self.assertLess(ctx.index("House: Moschino"), ctx.index("Extract theme and design concept"))
+        self.assertLess(ctx.index("BRAND STYLE CARD"), ctx.index("THEME AND CONCEPT LOCK"))
+        self.assertIn("When the card conflicts with the theme, keep the theme.", ctx)
 
         wf.brand = None
         wf.design_target_prompt = "A quiet tailored story with no house name."

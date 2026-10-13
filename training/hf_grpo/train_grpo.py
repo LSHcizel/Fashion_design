@@ -47,7 +47,9 @@ from .model_load import (
     should_use_lora,
 )
 from .metrics_callback import JsonlMetricsCallback
-from .modeling import completion_token_counts, grpo_loss, sequence_completion_logprob_parts
+from training.grpo_defaults import DEFAULT_BETA_KL
+
+from .modeling import completion_token_counts, grpo_loss, sampled_token_logprobs, token_kl_k3_sum
 from .trainer_compat import (
     merge_signature_columns,
     trainer_processing_kwargs,
@@ -177,7 +179,7 @@ class GRPOTrainer(Trainer):
     def __init__(
         self,
         ref_model: Optional[nn.Module] = None,
-        beta_kl: float = 0.001,
+        beta_kl: float = DEFAULT_BETA_KL,
         kl_squared: bool = True,
         share_ref_via_disable_adapter: bool = False,
         group_batch_sampler: Optional[GroupBatchSampler] = None,
@@ -241,13 +243,17 @@ class GRPOTrainer(Trainer):
                     attention_mask=attn.to(ref_dev),
                 )
                 ref_logits = ref_out.logits.to(device=logits.device, dtype=logits.dtype)
-        sum_p, _count_p, mean_p = sequence_completion_logprob_parts(
-            logits, input_ids, comp_start, attn
-        )
-        _sum_r, _count_r, mean_r = sequence_completion_logprob_parts(
-            ref_logits, input_ids, comp_start, attn
-        )
-        return sum_p, mean_p, mean_r
+        logp_p, mask = sampled_token_logprobs(logits, input_ids, comp_start, attn)
+        logp_r, _mask_r = sampled_token_logprobs(ref_logits, input_ids, comp_start, attn)
+        if mask.shape != logp_r.shape:
+            width = min(mask.shape[1], logp_r.shape[1], logp_p.shape[1])
+            mask = mask[:, :width]
+            logp_p = logp_p[:, :width]
+            logp_r = logp_r[:, :width]
+        token_count = mask.sum(dim=-1).clamp(min=1).to(dtype=logp_p.dtype)
+        sum_p = logp_p.sum(dim=-1)
+        sum_k3 = token_kl_k3_sum(logp_p, logp_r, mask)
+        return sum_p, token_count, sum_k3
 
     def training_step(self, model: nn.Module, inputs: Dict[str, torch.Tensor], *args: Any, **kwargs: Any):
         """一组候选分条前向，梯度累加后再更新。整组一次优化步，显存仍按单条。"""
@@ -264,11 +270,10 @@ class GRPOTrainer(Trainer):
         loss_acc = torch.zeros((), device=adv_all.device)
         for start in range(n):
             part = {key: value[start : start + 1] for key, value in inputs.items()}
-            sum_p, mean_p, mean_r = self._pair_logprobs(model, part)
+            sum_p, _count, sum_k3 = self._pair_logprobs(model, part)
             adv = part["advantage"]
             pol = -(adv.detach() * sum_p).sum() / total_tokens.to(dtype=sum_p.dtype)
-            diff = mean_p - mean_r.detach()
-            kl = (diff ** 2).sum() / float(n)
+            kl = sum_k3.to(dtype=sum_p.dtype) / total_tokens.to(dtype=sum_p.dtype)
             loss = pol + float(self.beta_kl) * kl
             self.accelerator.backward(loss)
             pol_acc = pol_acc + pol.detach()
@@ -290,18 +295,15 @@ class GRPOTrainer(Trainer):
         **_: Any,
     ):
         adv = inputs["advantage"].to(model.device)
-        counts = completion_token_counts(
-            inputs["input_ids"], inputs["completion_start"], inputs["attention_mask"]
-        )
-        sum_p, mean_p, mean_r = self._pair_logprobs(model, inputs)
+        sum_p, token_count, sum_k3 = self._pair_logprobs(model, inputs)
         loss, pol, kl = grpo_loss(
-            mean_p,
-            mean_r,
+            sum_p,
+            sum_p,
             adv,
             beta_kl=self.beta_kl,
-            kl_squared=self.kl_squared,
             sum_logp_policy=sum_p,
-            token_count=counts.to(dtype=sum_p.dtype),
+            token_count=token_count,
+            token_kl_sum=sum_k3,
         )
         self._step_metrics.add(
             policy_term=float(pol.detach()),
@@ -356,7 +358,7 @@ def main() -> None:
         default=0.05,
         help="组内 R_content 标准差低于此值则整组不训（避免把噪声标准化成 ±1）",
     )
-    p.add_argument("--beta-kl", type=float, default=0.001)
+    p.add_argument("--beta-kl", type=float, default=DEFAULT_BETA_KL)
     p.add_argument(
         "--dtype",
         choices=["bf16", "fp16", "fp32"],

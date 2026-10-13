@@ -16,6 +16,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, cast
 
+from plugins.text_description_evaluator.completion_vocab import row_excluded_for_low_meaningful
+
 from .grpo_compute import (
     build_group_training_rows,
     pick_reward_scalar,
@@ -128,6 +130,8 @@ def load_samples_by_group(
 
 
 def default_include_for_training(rec: Dict[str, Any]) -> bool:
+    if row_excluded_for_low_meaningful(rec):
+        return False
     return record_include_in_training(rec)
 
 

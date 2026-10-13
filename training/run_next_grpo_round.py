@@ -26,6 +26,7 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Sequence
 
+from training.grpo_defaults import DEFAULT_BETA_KL
 from training.source_corpus import default_corpus_path
 
 logger = logging.getLogger(__name__)
@@ -417,7 +418,12 @@ def main() -> None:
     p.add_argument("--grpo-policy", default="", help="起始 policy；空则读 grpo/latest.json")
     p.add_argument("--grpo-epochs", type=float, default=None, help="本轮 epoch；空则 yaml，缺省 1")
     p.add_argument("--grpo-lr", type=float, default=1e-6)
-    p.add_argument("--beta-kl", type=float, default=0.001)
+    p.add_argument(
+        "--beta-kl",
+        type=float,
+        default=DEFAULT_BETA_KL,
+        help="逐 token k3 的系数。每个 token 偏离约 0.1 nat 时与策略项同一量级",
+    )
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--max-length", type=int, default=2048)
     p.add_argument("--batch", type=int, default=1)

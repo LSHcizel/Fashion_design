@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Iterator, List, Optional
 
 
+from plugins.text_description_evaluator.completion_vocab import is_low_meaningful_completion
+
 SCHEMA_VERSION = "grpo_training_v2"
 
 
@@ -153,6 +155,9 @@ def build_training_record(
     if (parallel_meta or {}).get("reference_only"):
         training_filter["include_in_training"] = False
         training_filter["exclude_reasons"].append("baseline_reference")
+    if (parallel_meta or {}).get("low_meaningful") or is_low_meaningful_completion(completion_text):
+        training_filter["include_in_training"] = False
+        training_filter["exclude_reasons"].append("low_meaningful_chars")
 
     if evaluation is not None:
         gates_block = evaluation.get("gates") or {}
@@ -227,6 +232,7 @@ def iter_records_from_parallel_result(
             "evaluation_skipped": c.get("evaluation_skipped"),
             "injected_original": bool(c.get("injected_original")),
             "reference_only": bool(c.get("reference_only")),
+            "low_meaningful": bool(c.get("low_meaningful")),
         }
         yield build_training_record(
             group_id=gid,

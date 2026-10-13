@@ -7,7 +7,7 @@ import unittest
 import torch
 
 from training.hf_grpo.data import select_grpo_rows
-from training.hf_grpo.modeling import grpo_loss
+from training.hf_grpo.modeling import grpo_loss, token_kl_k3_sum
 from training.hf_grpo.train_grpo import GroupBatchSampler
 
 
@@ -35,6 +35,33 @@ class SelectGrpoRowsTests(unittest.TestCase):
         self.assertEqual(kept, [])
         self.assertEqual(summary["groups_dropped_too_small"], 1)
         self.assertEqual(summary["groups_dropped_flat_advantage"], 1)
+
+    def test_low_meaningful_completion_does_not_stay_in_the_group(self) -> None:
+        english = "a navy wool coat with a belted waist and black boots"
+        rows = [
+            {"group_id": "g", "advantage": 1.0, "R_content": 1.0, "completion": english},
+            {"group_id": "g", "advantage": 0.0, "R_content": 0.2, "completion": english + " lined"},
+            {
+                "group_id": "g",
+                "advantage": -1.0,
+                "R_content": 0.0,
+                "completion": "@@@@####$$$$%%%%&&&&",
+            },
+        ]
+        kept, summary = select_grpo_rows(rows, min_reward_std=0.05)
+        self.assertEqual(len(kept), 2)
+        self.assertEqual(summary["rows_dropped_low_meaningful"], 1)
+        self.assertEqual(summary["groups_kept"], 1)
+        self.assertTrue(all("@" not in str(row["completion"]) for row in kept))
+
+    def test_symbol_only_group_is_dropped(self) -> None:
+        rows = [
+            {"group_id": "g", "advantage": 1.0, "R_content": 1.0, "completion": "@@@@####$$$$%%%%&&&&"},
+            {"group_id": "g", "advantage": -1.0, "R_content": 0.0, "completion": "~~~~^^^^****====!!!!"},
+        ]
+        kept, summary = select_grpo_rows(rows, min_reward_std=0.05)
+        self.assertEqual(kept, [])
+        self.assertEqual(summary["groups_dropped_low_meaningful"], 1)
 
 
 class GroupBatchSamplerTests(unittest.TestCase):
@@ -71,7 +98,27 @@ class GrpoLossScaleTests(unittest.TestCase):
         long_share = float((advantage[1] * sum_logp[1]).abs() / token_count.sum())
         short_share = float((advantage[0] * sum_logp[0]).abs() / token_count.sum())
         self.assertGreater(long_share, short_share)
-        self.assertAlmostEqual(float(kl), float((mean_logp ** 2).mean()), places=5)
+        self.assertAlmostEqual(float(kl), 0.0, places=5)
+
+    def test_token_kl_matches_schulman_k3(self) -> None:
+        import math
+
+        logp_policy = torch.tensor([-1.0, -1.0])
+        logp_ref = torch.tensor([-1.1, -1.1])
+        mask = torch.tensor([True, True])
+        total = token_kl_k3_sum(logp_policy, logp_ref, mask)
+        one = math.exp(-0.1) + 0.1 - 1.0
+        self.assertAlmostEqual(float(total), 2.0 * one, places=5)
+        _loss, _pol, kl = grpo_loss(
+            torch.tensor([-2.0]),
+            torch.tensor([-2.2]),
+            torch.tensor([1.0]),
+            beta_kl=10.0,
+            sum_logp_policy=torch.tensor([-2.0]),
+            token_count=torch.tensor([2.0]),
+            token_kl_sum=total,
+        )
+        self.assertAlmostEqual(float(kl), one, places=5)
 
 
 if __name__ == "__main__":

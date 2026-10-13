@@ -28,6 +28,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
+from training.grpo_defaults import DEFAULT_BETA_KL
 from .model_load import DEFAULT_LORA_ALPHA, DEFAULT_LORA_R, lora_cli_args
 
 logger = logging.getLogger(__name__)
@@ -343,7 +344,12 @@ def main() -> None:
         help="每一轮的 epoch；空则读 yaml grpo-epochs-per-round（缺省 1）",
     )
     p.add_argument("--grpo-lr", type=float, default=1e-6)
-    p.add_argument("--beta-kl", type=float, default=0.001)
+    p.add_argument(
+        "--beta-kl",
+        type=float,
+        default=DEFAULT_BETA_KL,
+        help="逐 token k3 的系数。每个 token 偏离约 0.1 nat 时与策略项同一量级",
+    )
     p.add_argument(
         "--grpo-policy",
         type=str,

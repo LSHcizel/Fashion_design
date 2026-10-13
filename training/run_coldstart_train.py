@@ -18,6 +18,8 @@ import sys
 from pathlib import Path
 from typing import List, Sequence
 
+from training.grpo_defaults import DEFAULT_BETA_KL
+
 logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -70,7 +72,12 @@ def main() -> None:
     p.add_argument("--grpo-rounds", type=int, default=None)
     p.add_argument("--grpo-epochs", type=float, default=None)
     p.add_argument("--grpo-lr", type=float, default=1e-6)
-    p.add_argument("--beta-kl", type=float, default=0.001)
+    p.add_argument(
+        "--beta-kl",
+        type=float,
+        default=DEFAULT_BETA_KL,
+        help="逐 token k3 的系数。每个 token 偏离约 0.1 nat 时与策略项同一量级",
+    )
     p.add_argument("--sft-epochs", type=float, default=1.0)
     p.add_argument("--sft-no-early-stop", action="store_true")
     p.add_argument("--system-prompt-file", type=Path, default=None)

@@ -165,6 +165,20 @@ class AcceptReportTests(unittest.TestCase):
         self.assertFalse(rec["training_filter"]["include_in_training"])
         self.assertIn("baseline_reference", rec["training_filter"]["exclude_reasons"])
 
+    def test_low_meaningful_rewrite_is_kept_out_of_training(self) -> None:
+        rec = build_training_record(
+            group_id="g",
+            group_round=0,
+            candidate_index=0,
+            context={"shared_source_text": "a navy wool coat"},
+            completion_text="a navy wool coat with a belted waist",
+            evaluation={"total_score": 0.5, "scores": {}, "gates": {}},
+            r_content_block={"enabled": True, "R_content": 0.5},
+            parallel_meta={"low_meaningful": True, "dedupe_kept": True},
+        )
+        self.assertFalse(rec["training_filter"]["include_in_training"])
+        self.assertIn("low_meaningful_chars", rec["training_filter"]["exclude_reasons"])
+
     def test_missing_original_is_the_source_text(self) -> None:
         rows = [
             {

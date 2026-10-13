@@ -11,6 +11,8 @@ from pathlib import Path
 from collections import defaultdict
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
+from plugins.text_description_evaluator.completion_vocab import row_excluded_for_low_meaningful
+
 JsonPath = Union[str, Path]
 
 
@@ -180,8 +182,16 @@ def select_grpo_rows(
     dropped_small = 0
     dropped_flat_adv = 0
     dropped_short = 0
+    dropped_vocab = 0
+    rows_dropped_vocab = 0
     for gid in order:
         members = buckets[gid]
+        vocab_ok = [row for row in members if not row_excluded_for_low_meaningful(row)]
+        rows_dropped_vocab += len(members) - len(vocab_ok)
+        if len(vocab_ok) < len(members) and len(vocab_ok) < 2:
+            dropped_vocab += 1
+            continue
+        members = vocab_ok
         if len(members) < 2:
             dropped_short += 1
             continue
@@ -195,11 +205,13 @@ def select_grpo_rows(
         kept.extend(members)
     summary = {
         "groups_in": len(order),
-        "groups_kept": len(order) - dropped_small - dropped_flat_adv - dropped_short,
+        "groups_kept": len(order) - dropped_small - dropped_flat_adv - dropped_short - dropped_vocab,
         "groups_dropped_small_gap": dropped_small,
         "groups_dropped_flat_advantage": dropped_flat_adv,
         "groups_dropped_too_small": dropped_short,
+        "groups_dropped_low_meaningful": dropped_vocab,
         "rows_in": len(rows),
+        "rows_dropped_low_meaningful": rows_dropped_vocab,
         "rows_kept": len(kept),
     }
     return kept, summary
