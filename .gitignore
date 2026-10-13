@@ -56,6 +56,36 @@ training/runs/grpo_chanel_inverse_v2/*
 !training/runs/grpo_chanel_inverse_v2/samples.jsonl
 !training/runs/grpo_chanel_inverse_v2/completed_groups.txt
 !training/runs/grpo_chanel_inverse_v2/run_manifest.txt
+# 2000 语料冷启动 / 在线轮：只跟踪分析用产物，不跟踪权重（*.safetensors / adapter 等仍忽略）
+!training/runs/grpo_corpus2000_20261011/
+training/runs/grpo_corpus2000_20261011/*
+!training/runs/grpo_corpus2000_20261011/samples.jsonl
+!training/runs/grpo_corpus2000_20261011/completed_groups.txt
+!training/runs/grpo_corpus2000_20261011/run_manifest.txt
+!training/runs/grpo_corpus2000_20261011/odin_rm/
+training/runs/grpo_corpus2000_20261011/odin_rm/*
+!training/runs/grpo_corpus2000_20261011/odin_rm/export/
+!training/runs/grpo_corpus2000_20261011/odin_rm/export/**
+!training/runs/grpo_corpus2000_20261011/hf_checkpoints/
+training/runs/grpo_corpus2000_20261011/hf_checkpoints/*
+!training/runs/grpo_corpus2000_20261011/hf_checkpoints/sft/
+training/runs/grpo_corpus2000_20261011/hf_checkpoints/sft/*
+!training/runs/grpo_corpus2000_20261011/hf_checkpoints/sft/metrics.jsonl
+!training/runs/grpo_corpus2000_20261011/hf_checkpoints/grpo/
+training/runs/grpo_corpus2000_20261011/hf_checkpoints/grpo/*
+!training/runs/grpo_corpus2000_20261011/hf_checkpoints/grpo/latest.json
+!training/runs/grpo_corpus2000_20261011/hf_checkpoints/grpo/accept_rounds.jsonl
+!training/runs/grpo_corpus2000_20261011/hf_checkpoints/grpo/round_*/
+training/runs/grpo_corpus2000_20261011/hf_checkpoints/grpo/round_*/*
+!training/runs/grpo_corpus2000_20261011/hf_checkpoints/grpo/round_*/metrics.jsonl
+!training/runs/grpo_corpus2000_20261011/hf_checkpoints/grpo/round_*/accept.json
+!training/runs/grpo_corpus2000_20261011/online/
+training/runs/grpo_corpus2000_20261011/online/*
+!training/runs/grpo_corpus2000_20261011/online/round_*/
+training/runs/grpo_corpus2000_20261011/online/round_*/*
+!training/runs/grpo_corpus2000_20261011/online/round_*/samples.jsonl
+!training/runs/grpo_corpus2000_20261011/online/round_*/completed_groups.txt
+!training/runs/grpo_corpus2000_20261011/online/round_*/run_manifest.txt
 !training/runs/corpus/
 !training/runs/corpus/**
 
