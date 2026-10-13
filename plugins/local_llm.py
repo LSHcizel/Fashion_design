@@ -481,13 +481,17 @@ def build_local_api_judge(**overrides: Any) -> Any:
 
 def build_local_rewriter_api_judge(**overrides: Any) -> Any:
     """构造指向**改写器** grpo.rewriter-llm vLLM 的 ``ApiLLMJudge``。"""
-    from .text_description_evaluator.design_text_evaluator_api import ApiLLMJudge
+    from .text_description_evaluator.design_text_evaluator_api import (
+        ApiLLMJudge,
+        shared_rewriter_inflight_gate,
+    )
 
     ep = resolve_local_rewriter_endpoint()
     if not ep:
         raise RuntimeError("grpo.rewriter-llm 未启用或未配置 api-base / model")
 
     pk = (_load_fashion_config().get("grpo") or {}).get("parallel-k-rewrite") or {}
+    active_slots = max(1, int(pk.get("rewrite-active-slots") or 8))
     defaults: Dict[str, Any] = {
         "api_key": ep["api_key"],
         "api_base": ep["api_base"],
@@ -496,6 +500,7 @@ def build_local_rewriter_api_judge(**overrides: Any) -> Any:
         "max_tokens": int(pk.get("rewrite-max-tokens", ep["max_tokens"])),
         "timeout": int(pk.get("rewrite-timeout", ep["timeout"])),
         "verify_ssl": ep["verify_ssl"],
+        "inflight_gate": shared_rewriter_inflight_gate(active_slots),
     }
     defaults.update(overrides)
     return ApiLLMJudge(**defaults)

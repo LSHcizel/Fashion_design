@@ -11,6 +11,7 @@ import math
 import os
 import re
 import ssl
+import threading
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -25,6 +26,44 @@ from .score_formula import build_score_formula_breakdown
 
 class JudgeConnectionError(RuntimeError):
     """Judge / rewriter API unreachable (connection refused, reset, DNS, etc.)."""
+
+
+class InflightGate:
+    """FIFO slots. Callers wait here before a timed HTTP request, so queue time is not part of that timeout."""
+
+    def __init__(self, slots: int) -> None:
+        self._free = max(1, int(slots))
+        self._cv = threading.Condition()
+
+    def acquire(self) -> None:
+        with self._cv:
+            while self._free <= 0:
+                self._cv.wait()
+            self._free -= 1
+
+    def release(self) -> None:
+        with self._cv:
+            self._free += 1
+            self._cv.notify()
+
+
+_rewriter_gate: Optional[InflightGate] = None
+_rewriter_gate_slots: Optional[int] = None
+_rewriter_gate_lock = threading.Lock()
+
+
+def shared_rewriter_inflight_gate(slots: int) -> InflightGate:
+    """One gate per process so every rewriter client shares the same in-flight limit."""
+    global _rewriter_gate, _rewriter_gate_slots
+    slots = max(1, int(slots))
+    with _rewriter_gate_lock:
+        if _rewriter_gate is None or _rewriter_gate_slots != slots:
+            _rewriter_gate = InflightGate(slots)
+            _rewriter_gate_slots = slots
+        return _rewriter_gate
+
+
+_TIMEOUT_UNSET = object()
 
 
 JUDGE_JSON_PARSE_ATTEMPTS = 3
@@ -1434,8 +1473,9 @@ Return format:
         temperature: float = 0.0,
         top_p: float = 1.0,
         max_tokens: int = 1600,
-        timeout: int = 120,
+        timeout: Any = _TIMEOUT_UNSET,
         verify_ssl: Optional[bool] = None,
+        inflight_gate: Optional[InflightGate] = None,
     ) -> None:
         if not logging.getLogger(__name__).handlers:
             logging.basicConfig(level=logging.INFO)
@@ -1469,8 +1509,10 @@ Return format:
         )
         if _grpo_ev.get("max-tokens") is not None:
             max_tokens = int(_grpo_ev["max-tokens"])
-        if _grpo_ev.get("timeout") is not None:
-            timeout = int(_grpo_ev["timeout"])
+        if timeout is _TIMEOUT_UNSET:
+            timeout = int(_grpo_ev["timeout"]) if _grpo_ev.get("timeout") is not None else 120
+        else:
+            timeout = int(timeout)
         if "temperature" in _grpo_ev:
             temperature = float(_grpo_ev["temperature"])
         self.temperature = temperature
@@ -1482,6 +1524,7 @@ Return format:
         self.design_merit_seed = int(merit_seed) if merit_seed is not None else None
         self.max_tokens = max_tokens
         self.timeout = timeout
+        self.inflight_gate = inflight_gate
         self.penalty_registry: Dict[str, Dict[str, Any]] = {}
         if verify_ssl is None and "verify-ssl" in _grpo_ev:
             verify_ssl = bool(_grpo_ev["verify-ssl"])
@@ -1800,67 +1843,18 @@ Return format:
 
         max_retries = 3
         last_error: str = ""
+        gate = self.inflight_gate
         for attempt in range(max_retries + 1):
             errors = []
-            for url in self._candidate_chat_urls():
-                request = urllib.request.Request(
-                    url,
-                    data=json.dumps(payload).encode("utf-8"),
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {self.api_key}",
-                        "User-Agent": "Mozilla/5.0",
-                        "Accept": "application/json",
-                    },
-                    method="POST",
-                )
-                try:
-                    ssl_context = None
-                    if not self.verify_ssl:
-                        ssl_context = ssl._create_unverified_context()
-                    with urllib.request.urlopen(request, timeout=self.timeout, context=ssl_context) as response:
-                        body = response.read().decode("utf-8")
-                    parsed = json.loads(body)
-                    return parsed["choices"][0]["message"]["content"]
-                except urllib.error.HTTPError as exc:
-                    retry_after = exc.headers.get("Retry-After")
-                    delay: Optional[float] = None
-                    if retry_after:
-                        try:
-                            delay = float(retry_after)
-                        except ValueError:
-                            pass
-                    if exc.code == 401 or exc.code == 403:
-                        error_body = exc.read().decode("utf-8", errors="replace")
-                        self.logger.error("API auth error %s — aborting retries: %s", exc.code, error_body)
-                        raise RuntimeError(f"API authentication error ({exc.code}), aborting: {error_body}") from exc
-                    if exc.code == 429:
-                        if delay is None:
-                            delay = (2 ** attempt) * 1.5
-                        self.logger.warning("Rate-limited (429) on %s, waiting %.1fs before retry %d/%d",
-                                            url, delay, attempt + 1, max_retries + 1)
-                        if attempt < max_retries:
-                            import time
-                            time.sleep(delay)
-                            continue
-                        else:
-                            errors.append(f"{url} -> 429 after all retries")
-                            continue
-                    if 500 <= exc.code < 600:
-                        error_body = exc.read().decode("utf-8", errors="replace")
-                        errors.append(f"{url} -> HTTP {exc.code}: {error_body}")
-                        if attempt < max_retries:
-                            continue
-                        else:
-                            continue
-                    error_body = exc.read().decode("utf-8", errors="replace")
-                    errors.append(f"{url} -> HTTP {exc.code}: {error_body}")
-                except urllib.error.URLError as exc:
-                    errors.append(f"{url} -> URLError: {exc}")
-                except (TimeoutError, ConnectionError, http.client.RemoteDisconnected, OSError) as exc:
-                    errors.append(f"{url} -> connection: {type(exc).__name__}: {exc}")
-                except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-                    errors.append(f"{url} -> unexpected response format: {exc}")
+            if gate is not None:
+                gate.acquire()
+            try:
+                outcome = self._request_completion_once(payload, errors, attempt, max_retries)
+            finally:
+                if gate is not None:
+                    gate.release()
+            if outcome is not None:
+                return outcome
 
             last_error = "\n".join(errors)
             if errors and all(is_connection_failure(item) for item in errors):
@@ -1883,6 +1877,71 @@ Return format:
         raise RuntimeError(
             f"Judge API request failed after {max_retries + 1} attempt(s):\n{last_error}"
         )
+
+    def _request_completion_once(
+        self,
+        payload: Dict[str, Any],
+        errors: List[str],
+        attempt: int,
+        max_retries: int,
+    ) -> Optional[str]:
+        import time
+
+        for url in self._candidate_chat_urls():
+            request = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}",
+                    "User-Agent": "Mozilla/5.0",
+                    "Accept": "application/json",
+                },
+                method="POST",
+            )
+            try:
+                ssl_context = None
+                if not self.verify_ssl:
+                    ssl_context = ssl._create_unverified_context()
+                with urllib.request.urlopen(request, timeout=self.timeout, context=ssl_context) as response:
+                    body = response.read().decode("utf-8")
+                parsed = json.loads(body)
+                return parsed["choices"][0]["message"]["content"]
+            except urllib.error.HTTPError as exc:
+                retry_after = exc.headers.get("Retry-After")
+                delay: Optional[float] = None
+                if retry_after:
+                    try:
+                        delay = float(retry_after)
+                    except ValueError:
+                        pass
+                if exc.code == 401 or exc.code == 403:
+                    error_body = exc.read().decode("utf-8", errors="replace")
+                    self.logger.error("API auth error %s — aborting retries: %s", exc.code, error_body)
+                    raise RuntimeError(f"API authentication error ({exc.code}), aborting: {error_body}") from exc
+                if exc.code == 429:
+                    if delay is None:
+                        delay = (2 ** attempt) * 1.5
+                    self.logger.warning(
+                        "Rate-limited (429) on %s, waiting %.1fs before retry %d/%d",
+                        url, delay, attempt + 1, max_retries + 1,
+                    )
+                    if attempt < max_retries:
+                        time.sleep(delay)
+                        continue
+                    errors.append(f"{url} -> 429 after all retries")
+                    continue
+                error_body = exc.read().decode("utf-8", errors="replace")
+                errors.append(f"{url} -> HTTP {exc.code}: {error_body}")
+                if 500 <= exc.code < 600:
+                    continue
+            except urllib.error.URLError as exc:
+                errors.append(f"{url} -> URLError: {exc}")
+            except (TimeoutError, ConnectionError, http.client.RemoteDisconnected, OSError) as exc:
+                errors.append(f"{url} -> connection: {type(exc).__name__}: {exc}")
+            except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+                errors.append(f"{url} -> unexpected response format: {exc}")
+        return None
 
     def _candidate_chat_urls(self) -> List[str]:
         base = self.api_base.rstrip("/")

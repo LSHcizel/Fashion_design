@@ -504,11 +504,12 @@ def main() -> None:
     pk = grpo_parallel_k_rewrite_config()
     k_each = int(args.k or pk.get("k") or 8)
     rewrite_slots = int(pk.get("max-workers") or 64)
+    active_slots = max(1, int(pk.get("rewrite-active-slots") or 8))
     source_workers = max(1, rewrite_slots // max(k_each, 1))
     baseline_workers = source_workers
     print(
         f"parallel sources={source_workers} baseline_workers={baseline_workers} "
-        f"k={k_each} rewrite_slots={rewrite_slots}",
+        f"k={k_each} rewrite_slots={rewrite_slots} active_slots={active_slots}",
         flush=True,
     )
     write_lock = threading.Lock()

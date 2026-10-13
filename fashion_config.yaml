@@ -231,10 +231,10 @@ grpo:
   parallel-k-rewrite:
     # 每条提示的改写条数，与论文 rollout 的 8 对齐。
     k: 8
-    # 改写器同时在飞的请求数。K=8 时采集会并行八条原文，凑满 64 路。
-    max-workers: 64
-    # 评分与改写重叠：一条改写完成就送评分器，最多 64 路同时打分。
-    eval-max-workers: 64
+    # 改写器同时在飞的请求数。K=8 时采集会并行约四条原文，凑满 32 路。
+    max-workers: 32
+    # 评分与改写重叠：一条改写完成就送评分器，最多 32 路同时打分。
+    eval-max-workers: 32
     temperature-floor: 0.35
     temperature-step: 0.07
     temperature-cap: 0.90
@@ -245,7 +245,10 @@ grpo:
     use-local-evaluation: true
     rewrite-temperature: 0.55
     rewrite-max-tokens: 2048
+    # 从拿到改写名额、向 8001 发出请求起算。本地队列里的等待不算进这 300 秒。
     rewrite-timeout: 300
+    # 同时打到改写器的请求数。K 路里多出来的在本进程排队。
+    rewrite-active-slots: 8
 
   training-data:
     # 相对本仓库根目录；TrainingRunLogger 默认 base 目录
