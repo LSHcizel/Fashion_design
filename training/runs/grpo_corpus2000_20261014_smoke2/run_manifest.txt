@@ -1,0 +1,3 @@
+run_id=grpo_corpus2000_20261014_smoke2
+schema_version=grpo_training_v2
+created_utc=2026-10-14T01:04:57.958937+00:00

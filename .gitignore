@@ -111,6 +111,8 @@ training/runs/grpo_corpus2000_20261014_smoke2/**/*.pt
 training/runs/grpo_corpus2000_20261014_smoke2/**/*.pth
 training/runs/grpo_corpus2000_20261014/samples.jsonl
 training/runs/grpo_corpus2000_20261014/**/phase_b_grpo.jsonl
+training/runs/grpo_corpus2000_20261014/odin_rm/pairs.jsonl
+training/runs/grpo_corpus2000_20261014/odin_rm/samples_rq.jsonl
 
 # Local HF weights (large)
 models/
