@@ -108,6 +108,13 @@ training/runs/grpo_corpus2000_20261014_smoke2/**/*.safetensors
 training/runs/grpo_corpus2000_20261014_smoke2/**/*.bin
 training/runs/grpo_corpus2000_20261014_smoke2/**/*.pt
 training/runs/grpo_corpus2000_20261014_smoke2/**/*.pth
+# 20261014 lenfix 冷启动：指标与导出可跟踪，权重不入库。
+!training/runs/grpo_corpus2000_20261014_lenfix/
+!training/runs/grpo_corpus2000_20261014_lenfix/**
+training/runs/grpo_corpus2000_20261014_lenfix/**/*.safetensors
+training/runs/grpo_corpus2000_20261014_lenfix/**/*.bin
+training/runs/grpo_corpus2000_20261014_lenfix/**/*.pt
+training/runs/grpo_corpus2000_20261014_lenfix/**/*.pth
 
 # Local HF weights (large)
 models/
