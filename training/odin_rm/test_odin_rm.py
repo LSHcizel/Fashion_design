@@ -174,6 +174,20 @@ class OdinLossTests(unittest.TestCase):
         loss.backward()
         self.assertIsNotNone(next(rm.head_q.parameters()).grad)
 
+    def test_anti_length_content_head_costs_more_than_uncorrelated(self) -> None:
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch not installed")
+        from training.odin_rm.modeling import length_disentangle_term
+
+        rho_l = torch.tensor(0.94)
+        flat = length_disentangle_term(torch.tensor(0.0), rho_l)
+        anti = length_disentangle_term(torch.tensor(-0.94), rho_l)
+        same_dir = length_disentangle_term(torch.tensor(0.94), rho_l)
+        self.assertLess(float(flat), float(anti))
+        self.assertLess(float(flat), float(same_dir))
+
 
 if __name__ == "__main__":
     unittest.main()

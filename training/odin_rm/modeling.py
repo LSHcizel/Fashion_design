@@ -43,6 +43,15 @@ def linear_weight_vec(head: nn.Module) -> torch.Tensor:
     return w.reshape(-1)
 
 
+def length_disentangle_term(rho_q: torch.Tensor, rho_l: torch.Tensor) -> torch.Tensor:
+    """内容头与句长的相关停在 0；长度头继续吸收句长。
+
+    ρ(r_Q, ℓ) 本身没有下界，直接最小化会把内容头推到越短越高。
+    平方在 0 处梯度消失，正负相关都加损失，避免用删信息换短句。
+    """
+    return rho_q.square() - rho_l
+
+
 def odin_rm_loss(
     r_q_win: torch.Tensor,
     r_l_win: torch.Tensor,
@@ -57,7 +66,7 @@ def odin_rm_loss(
     lambda_orth: float = 1.0,
 ) -> Tuple[torch.Tensor, Dict[str, float]]:
     """
-    L = L_rank + λ_L [ρ(r_Q, ℓ) − ρ(r_L, ℓ)] + λ_O |W_Q · W_L|
+    L = L_rank + λ_L [ρ(r_Q, ℓ)² − ρ(r_L, ℓ)] + λ_O |W_Q · W_L|
 
     L_rank = mean( −log σ( (r_Q+r_L)_win − (r_Q+r_L)_lose ) )
     """
@@ -71,7 +80,7 @@ def odin_rm_loss(
     ell = torch.cat([log_len_win, log_len_lose], dim=0).to(dtype=r_q_all.dtype)
     rho_q = batch_pearson(r_q_all, ell)
     rho_l = batch_pearson(r_l_all, ell)
-    l_corr = rho_q - rho_l
+    l_corr = length_disentangle_term(rho_q, rho_l)
 
     wq = linear_weight_vec(head_q)
     wl = linear_weight_vec(head_l)

@@ -88,9 +88,11 @@ GRPO 同组调用 `apply_group_z_len_r_content` 后，结果里带 `odin_diagnos
 ```
 r_Q = W_Q · h(x,y)     # 无界
 r_L = W_L · h(x,y)
-L_RM = −log σ((r_Q+r_L)⁺ − (r_Q+r_L)⁻) + ρ(r_Q,ℓ) − ρ(r_L,ℓ) + |W_Q·W_L|
+L_RM = −log σ((r_Q+r_L)⁺ − (r_Q+r_L)⁻) + ρ(r_Q,ℓ)² − ρ(r_L,ℓ) + |W_Q·W_L|
 R_content := r_Q       # GRPO 只用这个；不减 β·z_len
 ```
+
+`ρ(r_Q,ℓ)²` 把内容头停在与句长不相关。直接减 `ρ(r_Q,ℓ)` 会把它推到 −1，导出的 `r_Q` 变成越短越高，SFT / GRPO 就会删掉原文里已经写明的信息。长度只进 `r_L`。偏好对的老师仍是裁判 `S_fp`（含覆盖与信息密度），删掉仍被裁判认为有用的信息不会因为变短而加分。
 
 入口：`python -m training.odin_rm.run_pipeline --samples <samples.jsonl> --work-dir <dir>`  
 然后再跑 `training/hf_grpo/run_recommended_training.py`（phase_a/b 已按 r_Q 算 advantage）。
