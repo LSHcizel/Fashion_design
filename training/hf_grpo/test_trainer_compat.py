@@ -6,6 +6,7 @@ import unittest
 
 from training.hf_grpo.trainer_compat import (
     merge_signature_columns,
+    save_serialization_kwargs,
     trainer_processing_kwargs,
     training_args_keep_extra_columns,
 )
@@ -54,6 +55,27 @@ class TrainerCompatTest(unittest.TestCase):
         self.assertEqual(
             trainer_processing_kwargs("tok", trainer_cls=_Subclass),
             {"processing_class": "tok"},
+        )
+
+    def test_transformers5_omits_safe_serialization(self):
+        class _Args:
+            pass
+
+        def save_pretrained(self, output_dir, selected_adapters=None):
+            pass
+
+        self.assertEqual(save_serialization_kwargs(_Args(), save_pretrained), {})
+
+    def test_transformers4_passes_save_safetensors_when_accepted(self):
+        class _Args:
+            save_safetensors = False
+
+        def save_pretrained(self, output_dir, safe_serialization=True):
+            pass
+
+        self.assertEqual(
+            save_serialization_kwargs(_Args(), save_pretrained),
+            {"safe_serialization": False},
         )
 
     def test_keep_grpo_columns(self):

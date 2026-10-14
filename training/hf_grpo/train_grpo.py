@@ -56,6 +56,7 @@ from training.grpo_defaults import DEFAULT_BETA_KL
 from .modeling import completion_token_counts, grpo_loss, sampled_token_logprobs, token_kl_k3_sum
 from .trainer_compat import (
     merge_signature_columns,
+    save_serialization_kwargs,
     trainer_processing_kwargs,
     training_args_keep_extra_columns,
 )
@@ -325,7 +326,7 @@ class GRPOTrainer(Trainer):
         if hasattr(raw, "set_adapter"):
             raw.set_adapter(self.trainable_adapter_name)
         freeze_kl_ref_adapter(raw)
-        save_kw: Dict[str, Any] = {"safe_serialization": self.args.save_safetensors}
+        save_kw: Dict[str, Any] = save_serialization_kwargs(self.args, raw.save_pretrained)
         if state_dict is not None:
             save_kw["state_dict"] = drop_kl_ref_keys(state_dict)
         raw.save_pretrained(

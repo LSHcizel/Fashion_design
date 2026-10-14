@@ -28,6 +28,25 @@ def trainer_processing_kwargs(tokenizer: Any, trainer_cls: Any = None) -> Dict[s
     return {}
 
 
+def save_serialization_kwargs(training_args: Any, save_fn: Any = None) -> Dict[str, Any]:
+    """
+    transformers 4 用 ``TrainingArguments.save_safetensors`` 决定是否写 safetensors。
+    transformers 5 删掉了该字段，``save_pretrained`` 也不再接受 ``safe_serialization``。
+    """
+    if not hasattr(training_args, "save_safetensors"):
+        return {}
+    kw = {"safe_serialization": bool(training_args.save_safetensors)}
+    if save_fn is None:
+        return kw
+    try:
+        params = inspect.signature(save_fn).parameters
+    except (TypeError, ValueError):
+        return kw
+    if any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        return kw
+    return {key: value for key, value in kw.items() if key in params}
+
+
 def training_args_keep_extra_columns() -> Dict[str, Any]:
     """
     Trainer 默认按 model.forward 签名丢掉自定义列。
