@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
 import torch
 
 from training.hf_grpo.data import select_grpo_rows
 from training.hf_grpo.modeling import grpo_loss, token_kl_k3_sum
-from training.hf_grpo.train_grpo import GroupBatchSampler
+from training.hf_grpo.train_grpo import (
+    GroupBatchSampler,
+    drop_kl_ref_keys,
+    forward_frozen_kl_ref,
+    kl_ref_kind_from_flags,
+)
 
 
 class SelectGrpoRowsTests(unittest.TestCase):
@@ -119,6 +126,100 @@ class GrpoLossScaleTests(unittest.TestCase):
             token_kl_sum=total,
         )
         self.assertAlmostEqual(float(kl), one, places=5)
+
+
+class _Out:
+    def __init__(self, logits: torch.Tensor) -> None:
+        self.logits = logits
+
+
+class _Switchable(torch.nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.active_adapter = "default"
+        self.scale = {"default": 2.0, "kl_ref": 5.0}
+
+    def set_adapter(self, name: str) -> None:
+        self.active_adapter = name
+
+    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> _Out:
+        del attention_mask
+        return _Out(input_ids * self.scale[self.active_adapter])
+
+
+class FrozenKlRefTests(unittest.TestCase):
+    def test_sft_adapter_is_frozen_ref_not_the_base(self) -> None:
+        self.assertEqual(
+            kl_ref_kind_from_flags(ref_is_adapter=True, policy_is_adapter=True, same_base=True),
+            "frozen_adapter",
+        )
+        with self.assertRaises(SystemExit):
+            kl_ref_kind_from_flags(ref_is_adapter=True, policy_is_adapter=True, same_base=False)
+
+    def test_base_path_still_disables_adapter(self) -> None:
+        self.assertEqual(
+            kl_ref_kind_from_flags(ref_is_adapter=False, policy_is_adapter=True, same_base=True),
+            "disable_base",
+        )
+
+    def test_forward_uses_kl_ref_then_restores_trainable_adapter(self) -> None:
+        model = _Switchable()
+        model.train()
+        logits = forward_frozen_kl_ref(model, torch.ones(1, 2), torch.ones(1, 2))
+        self.assertTrue(torch.equal(logits, torch.full((1, 2), 5.0)))
+        self.assertEqual(model.active_adapter, "default")
+        self.assertTrue(model.training)
+
+    def test_checkpoint_state_drops_frozen_adapter(self) -> None:
+        kept = drop_kl_ref_keys(
+            {
+                "layers.0.lora_A.default.weight": torch.tensor(1.0),
+                "layers.0.lora_A.kl_ref.weight": torch.tensor(2.0),
+            }
+        )
+        self.assertIsNotNone(kept)
+        assert kept is not None
+        self.assertEqual(list(kept), ["layers.0.lora_A.default.weight"])
+
+    def test_loaded_sft_adapter_stays_put_when_policy_moves(self) -> None:
+        from peft import LoraConfig, get_peft_model
+
+        from training.hf_grpo.model_load import attach_frozen_kl_ref
+
+        class Tiny(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.q_proj = torch.nn.Linear(4, 4, bias=False)
+
+            def forward(self, x: torch.Tensor) -> torch.Tensor:
+                return self.q_proj(x)
+
+        torch.manual_seed(0)
+        policy = get_peft_model(
+            Tiny(),
+            LoraConfig(r=2, lora_alpha=4, target_modules=["q_proj"], bias="none"),
+        )
+        with tempfile.TemporaryDirectory() as td:
+            sft = Path(td) / "sft"
+            policy.save_pretrained(sft)
+            for _name, param in policy.named_parameters():
+                if param.requires_grad:
+                    param.data.add_(1.0)
+            attach_frozen_kl_ref(policy, sft)
+            x = torch.ones(1, 4)
+            policy.set_adapter("default")
+            moved = policy(x).detach()
+            policy.set_adapter("kl_ref")
+            frozen = policy(x).detach()
+            policy.set_adapter("default")
+            self.assertFalse(torch.allclose(moved, frozen))
+            for name, param in policy.named_parameters():
+                if ".kl_ref." in name:
+                    self.assertFalse(param.requires_grad)
+            out = Path(td) / "round"
+            policy.save_pretrained(out, selected_adapters=["default"])
+            self.assertTrue((out / "adapter_config.json").is_file())
+            self.assertFalse((out / "kl_ref").exists())
 
 
 if __name__ == "__main__":

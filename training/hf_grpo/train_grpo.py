@@ -39,8 +39,12 @@ from .data import (
 from .model_load import (
     DEFAULT_LORA_ALPHA,
     DEFAULT_LORA_R,
+    KL_REF_ADAPTER_NAME,
+    active_adapter_name,
     adapter_base_model_path,
     apply_lora,
+    attach_frozen_kl_ref,
+    freeze_kl_ref_adapter,
     is_peft_adapter_dir,
     load_peft_policy,
     same_model_path,
@@ -167,6 +171,56 @@ class _GroupEpochCallback(TrainerCallback):
         return control
 
 
+def kl_ref_kind_from_flags(
+    *,
+    ref_is_adapter: bool,
+    policy_is_adapter: bool,
+    same_base: bool,
+) -> str:
+    """KL 怎么加载。
+
+    ``frozen_adapter``：参考是一份 LoRA（SFT），挂在同一基座上并冻结。
+    ``disable_base``：参考就是 LoRA 的基座，前向时关掉 adapter。
+    ``separate_model``：参考是另一份完整权重，单独加载并冻结。
+    """
+    if ref_is_adapter:
+        if not same_base:
+            raise SystemExit("KL adapter 的基座与 policy 基座不同，不能挂在同一份 7B 上")
+        return "frozen_adapter"
+    if policy_is_adapter and same_base:
+        return "disable_base"
+    return "separate_model"
+
+
+def forward_frozen_kl_ref(
+    model: nn.Module,
+    input_ids: torch.Tensor,
+    attention_mask: torch.Tensor,
+) -> torch.Tensor:
+    """用冻结的 ``kl_ref`` adapter 做一次前向，然后切回原来的可训练 adapter。"""
+    was_training = bool(model.training)
+    previous = active_adapter_name(model)
+    model.eval()
+    try:
+        model.set_adapter(KL_REF_ADAPTER_NAME)  # type: ignore[attr-defined]
+        with torch.no_grad():
+            logits = model(input_ids=input_ids, attention_mask=attention_mask).logits
+    finally:
+        model.set_adapter(previous)  # type: ignore[attr-defined]
+        freeze_kl_ref_adapter(model)
+        if was_training:
+            model.train()
+    return logits
+
+
+def drop_kl_ref_keys(state_dict: Optional[Dict[str, torch.Tensor]]) -> Optional[Dict[str, torch.Tensor]]:
+    """存 checkpoint 时去掉冻结参考 adapter，避免下一轮把它当成可训练权重读回来。"""
+    if state_dict is None:
+        return None
+    marker = f".{KL_REF_ADAPTER_NAME}."
+    return {key: value for key, value in state_dict.items() if marker not in key}
+
+
 class GRPOCollator:
     def __init__(self, pad_token_id: int) -> None:
         self.pad_token_id = pad_token_id
@@ -182,16 +236,20 @@ class GRPOTrainer(Trainer):
         beta_kl: float = DEFAULT_BETA_KL,
         kl_squared: bool = True,
         share_ref_via_disable_adapter: bool = False,
+        frozen_kl_adapter: bool = False,
+        trainable_adapter_name: str = "default",
         group_batch_sampler: Optional[GroupBatchSampler] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        if not share_ref_via_disable_adapter and ref_model is None:
-            raise ValueError("ref_model required unless share_ref_via_disable_adapter")
+        if not share_ref_via_disable_adapter and not frozen_kl_adapter and ref_model is None:
+            raise ValueError("ref_model required unless KL 用基座或冻结的 SFT adapter")
         self.ref_model = ref_model
         self.beta_kl = beta_kl
         self.kl_squared = kl_squared
         self.share_ref_via_disable_adapter = share_ref_via_disable_adapter
+        self.frozen_kl_adapter = frozen_kl_adapter
+        self.trainable_adapter_name = trainable_adapter_name
         self.group_batch_sampler = group_batch_sampler
         self._step_metrics = WindowMeanMetrics()
 
@@ -226,10 +284,14 @@ class GRPOTrainer(Trainer):
         input_ids = inputs["input_ids"]
         attn = inputs["attention_mask"]
         comp_start = inputs["completion_start"]
+        raw = self.accelerator.unwrap_model(model)
+        if self.frozen_kl_adapter:
+            raw.set_adapter(self.trainable_adapter_name)  # type: ignore[attr-defined]
         out = model(input_ids=input_ids, attention_mask=attn)
         logits = out.logits
-        if self.share_ref_via_disable_adapter:
-            raw = self.accelerator.unwrap_model(model)
+        if self.frozen_kl_adapter:
+            ref_logits = forward_frozen_kl_ref(raw, input_ids, attn)
+        elif self.share_ref_via_disable_adapter:
             with torch.no_grad():
                 with raw.disable_adapter():
                     ref_logits = raw(input_ids=input_ids, attention_mask=attn).logits
@@ -254,6 +316,26 @@ class GRPOTrainer(Trainer):
         sum_p = logp_p.sum(dim=-1)
         sum_k3 = token_kl_k3_sum(logp_p, logp_r, mask)
         return sum_p, token_count, sum_k3
+
+    def _save(self, output_dir=None, state_dict=None):  # type: ignore[override]
+        if not self.frozen_kl_adapter:
+            return super()._save(output_dir, state_dict)
+        output_dir = output_dir if output_dir is not None else self.args.output_dir
+        raw = self.accelerator.unwrap_model(self.model)
+        if hasattr(raw, "set_adapter"):
+            raw.set_adapter(self.trainable_adapter_name)
+        freeze_kl_ref_adapter(raw)
+        save_kw: Dict[str, Any] = {"safe_serialization": self.args.save_safetensors}
+        if state_dict is not None:
+            save_kw["state_dict"] = drop_kl_ref_keys(state_dict)
+        raw.save_pretrained(
+            output_dir,
+            selected_adapters=[self.trainable_adapter_name],
+            **save_kw,
+        )
+        if self.processing_class is not None:
+            self.processing_class.save_pretrained(output_dir)
+        torch.save(self.args, str(Path(output_dir) / "training_args.bin"))
 
     def training_step(self, model: nn.Module, inputs: Dict[str, torch.Tensor], *args: Any, **kwargs: Any):
         """一组候选分条前向，梯度累加后再更新。整组一次优化步，显存仍按单条。"""
@@ -337,7 +419,8 @@ def main() -> None:
         type=str,
         default="",
         help=(
-            "冻结参考策略 π_ref（KL 锚点）。留空时读 grpo.hf-local-training.ref-model（改写器训练前快照）。"
+            "冻结参考策略 π_ref。传 SFT 的 LoRA 目录时，KL 从 SFT 之后起算。"
+            "留空时读 grpo.hf-local-training.ref-model（训练前基座，前向时关掉 adapter）。"
         ),
     )
     p.add_argument("--out", type=Path, required=True)
@@ -406,30 +489,51 @@ def main() -> None:
         common_kw["torch_dtype"] = torch_dtype
 
     ref_path = args.ref_model.strip() or default_hf_local_grpo_ref_model()
-    share_ref = False
+    policy_is_adapter = is_peft_adapter_dir(model_id)
+    ref_is_adapter = is_peft_adapter_dir(ref_path)
+    will_lora = (not policy_is_adapter) and should_use_lora(
+        full_finetune=args.full_finetune, lora_r=args.lora_r
+    )
+    policy_base = adapter_base_model_path(model_id) if policy_is_adapter else model_id
+    if ref_is_adapter:
+        same_base = same_model_path(policy_base, adapter_base_model_path(ref_path))
+    else:
+        same_base = same_model_path(policy_base, ref_path)
+    kind = kl_ref_kind_from_flags(
+        ref_is_adapter=ref_is_adapter,
+        policy_is_adapter=policy_is_adapter or will_lora,
+        same_base=same_base,
+    )
+    share_ref = kind == "disable_base"
+    frozen_kl = kind == "frozen_adapter"
     ref: Optional[nn.Module] = None
+    trainable_adapter_name = "default"
 
-    if is_peft_adapter_dir(model_id):
-        base_id = adapter_base_model_path(model_id)
-        logger.info("从 LoRA 目录加载 policy=%s base=%s", model_id, base_id)
-        policy = AutoModelForCausalLM.from_pretrained(base_id, **common_kw)
+    if policy_is_adapter:
+        logger.info("从 LoRA 目录加载 policy=%s base=%s", model_id, policy_base)
+        policy = AutoModelForCausalLM.from_pretrained(policy_base, **common_kw)
         if hasattr(policy.config, "use_cache"):
             policy.config.use_cache = False
         policy = load_peft_policy(policy, model_id)
-        if same_model_path(base_id, ref_path):
-            share_ref = True
-            logger.info("KL 用 disable_adapter（同一份基座，不再加载第二份 7B ref）")
-        else:
-            logger.info("adapter 基座与 --ref-model 不同，ref 放到 CPU: %s", ref_path)
     else:
         policy = AutoModelForCausalLM.from_pretrained(model_id, **common_kw)
         if hasattr(policy.config, "use_cache"):
             policy.config.use_cache = False
-        if should_use_lora(full_finetune=args.full_finetune, lora_r=args.lora_r):
+        if will_lora:
             logger.info("在全量 policy 上新挂 LoRA r=%s", args.lora_r)
             policy = apply_lora(policy, lora_r=args.lora_r, lora_alpha=args.lora_alpha)
 
-    if not share_ref:
+    if frozen_kl:
+        trainable_adapter_name = attach_frozen_kl_ref(policy, ref_path)
+        logger.info(
+            "KL 冻在 SFT adapter %s（同一份基座上的 %s，不更新，不再加载第二份 7B）",
+            ref_path,
+            KL_REF_ADAPTER_NAME,
+        )
+    elif share_ref:
+        logger.info("KL 用 disable_adapter（基座 %s，不再加载第二份 7B ref）", ref_path)
+    else:
+        logger.info("独立 ref 放到 CPU: %s", ref_path)
         ref = AutoModelForCausalLM.from_pretrained(ref_path, **common_kw)
         ref.requires_grad_(False)
         ref.eval()
@@ -471,6 +575,8 @@ def main() -> None:
         ref_model=ref,
         beta_kl=args.beta_kl,
         share_ref_via_disable_adapter=share_ref,
+        frozen_kl_adapter=frozen_kl,
+        trainable_adapter_name=trainable_adapter_name,
         group_batch_sampler=group_sampler,
         model=policy,
         args=ta,

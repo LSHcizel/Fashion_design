@@ -4,7 +4,7 @@
 1. **SFT 一次**（``train_sft.py``）：改写器基座 + ``phase_a_sft.jsonl`` → ``<work-dir>/sft/``。
 2. **短 GRPO 多轮**（``train_grpo.py``）：每轮 epoch 默认 0.25；
    第 1 轮 policy = SFT，之后 policy = 上一轮 GRPO；
-   **ref 始终冻在** ``grpo.hf-local-training.ref-model``（冷启动快照）。
+   **ref 冻在** ``<work-dir>/sft/``（SFT 结束时的 LoRA，之后各轮都不更新）。
    每轮写入 ``<work-dir>/grpo/round_XX/``，并写验收摘要。
 
 双头 RM 不在本脚本内训练。后续若用新 K 路样本继续，走
@@ -74,6 +74,16 @@ def write_latest(grpo_root: Path, *, round_idx: int, policy_dir: Path, ref_dir: 
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(blob, ensure_ascii=False, indent=2), encoding="utf-8")
     return out
+
+
+def resolve_sft_kl_ref(sft_out: Path, *, dry_run: bool) -> str:
+    """GRPO 的 KL 锚点是 SFT 目录。干跑时目录可以还不存在。"""
+    sft_out = Path(sft_out)
+    marker = sft_out / "adapter_config.json"
+    full = sft_out / "config.json"
+    if marker.is_file() or full.is_file() or dry_run:
+        return str(sft_out.resolve())
+    raise SystemExit(f"GRPO 的 KL 要冻在 SFT 之后，找不到 {marker}")
 
 
 def resolve_grpo_start(
@@ -387,7 +397,6 @@ def main() -> None:
             default_hf_grpo_epochs_per_round,
             default_hf_grpo_rounds,
             default_hf_local_grpo_model,
-            default_hf_local_grpo_ref_model,
         )
     except Exception as exc:  # noqa: BLE001
         raise SystemExit(
@@ -407,7 +416,6 @@ def main() -> None:
         )
 
     base = (args.base_model or "").strip() or default_hf_local_grpo_model()
-    ref = default_hf_local_grpo_ref_model()
     work = args.work_dir.resolve()
     sft_out = work / "sft"
     grpo_root = work / "grpo"
@@ -433,6 +441,7 @@ def main() -> None:
         logger.info("已跳过 GRPO（--skip-grpo）；SFT → %s", sft_out)
         return
 
+    ref = resolve_sft_kl_ref(sft_out, dry_run=args.dry_run)
     policy, round_idx = resolve_grpo_start(
         skip_sft=args.skip_sft,
         sft_out=sft_out,

@@ -19,6 +19,7 @@ from training.hf_grpo.run_recommended_training import (
     grpo_round_dir,
     load_latest,
     resolve_grpo_start,
+    resolve_sft_kl_ref,
     write_latest,
 )
 
@@ -322,6 +323,17 @@ class GrpoRoundPlanTests(unittest.TestCase):
                 merged=merged,
             )
             self.assertEqual(out, merged)
+
+    def test_kl_ref_is_the_sft_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            sft = Path(td) / "sft"
+            sft.mkdir()
+            (sft / "adapter_config.json").write_text("{}", encoding="utf-8")
+            self.assertEqual(resolve_sft_kl_ref(sft, dry_run=False), str(sft.resolve()))
+            missing = Path(td) / "missing"
+            with self.assertRaises(SystemExit):
+                resolve_sft_kl_ref(missing, dry_run=False)
+            self.assertEqual(resolve_sft_kl_ref(missing, dry_run=True), str(missing.resolve()))
 
     def test_skip_sft_without_checkpoint_fails(self) -> None:
         with tempfile.TemporaryDirectory() as td:

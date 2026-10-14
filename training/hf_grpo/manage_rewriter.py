@@ -2,7 +2,7 @@
 改写器服务权重：merge LoRA、切到新完整权重、恢复默认基座。
 
 只改 ``fashion_config.yaml`` 的 ``grpo.rewriter-llm.model`` / ``model-path``。
-``hf-local-training.ref-model`` 保持原改写器，作为 KL 锚点。
+``hf-local-training.ref-model`` 保持原改写器，那是基座路径。GRPO 的 KL 锚在当次运行的 SFT adapter。
 
 用法（仓库根目录）::
 
@@ -175,7 +175,7 @@ def cmd_status(_: argparse.Namespace) -> None:
     print(f"rewriter-llm.model-path = {path}")
     print(f"resolved                = {resolved}")
     print(f"mode                    = {'default' if using_default else 'custom'}")
-    print(f"KL / 训练锚点保持        = {DEFAULT_PATH}（未改 hf-local-training.ref-model）")
+    print(f"基座 ref-model 保持      = {DEFAULT_PATH}（未改 hf-local-training.ref-model）")
 
 
 def cmd_use(args: argparse.Namespace) -> None:

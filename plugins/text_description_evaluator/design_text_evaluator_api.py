@@ -262,7 +262,7 @@ def default_hf_local_grpo_model() -> str:
 
 
 def default_hf_local_grpo_ref_model() -> str:
-    """GRPO KL 锚点：``grpo.hf-local-training.ref-model``，缺省同 ``default_hf_local_grpo_model()``。"""
+    """训练前基座。冷启动的 KL 锚点由编排脚本改传 SFT 目录，不读这里。"""
     hf = grpo_hf_local_training_config()
     ref = hf.get("ref-model")
     if isinstance(ref, str) and ref.strip():

@@ -7,6 +7,8 @@ from typing import Any, List, Sequence, Union
 
 DEFAULT_LORA_R = 16
 DEFAULT_LORA_ALPHA = 32
+# 与正在训练的 adapter 分开。只用于 KL，不进优化器，也不写入 GRPO 的 checkpoint。
+KL_REF_ADAPTER_NAME = "kl_ref"
 DEFAULT_LORA_DROPOUT = 0.05
 DEFAULT_LORA_TARGETS: tuple[str, ...] = (
     "q_proj",
@@ -87,6 +89,52 @@ def load_peft_policy(base_model: Any, adapter_dir: Union[str, Path]) -> Any:
     )
     prepare_lora_for_checkpointing(model)
     return model
+
+
+def active_adapter_name(model: Any) -> str:
+    """当前生效的 adapter。PEFT 在不同版本里把它放在字符串或列表上。"""
+    name = getattr(model, "active_adapter", None)
+    if isinstance(name, str) and name:
+        return name
+    adapters = getattr(model, "active_adapters", None)
+    if isinstance(adapters, str) and adapters:
+        return adapters
+    if isinstance(adapters, (list, tuple)) and adapters:
+        return str(adapters[0])
+    if isinstance(name, (list, tuple)) and name:
+        return str(name[0])
+    return "default"
+
+
+def freeze_kl_ref_adapter(model: Any) -> None:
+    """``set_adapter`` 会把当前 adapter 重新设成可训练，参考 adapter 每次切回来都要再冻上。"""
+    marker = f".{KL_REF_ADAPTER_NAME}."
+    for name, param in model.named_parameters():
+        if marker in name:
+            param.requires_grad_(False)
+
+
+def attach_frozen_kl_ref(model: Any, ref_adapter_dir: Union[str, Path]) -> str:
+    """在可训练 LoRA 旁边再挂一份冻结的参考 adapter，并切回可训练的那份。
+
+    参考权重来自 ``ref_adapter_dir``（冷启动里是 SFT 目录）。随后策略 adapter 继续更新，
+    这份参考不动，所以 KL 从 SFT 之后起算，而不是从训练前的基座起算。
+    """
+    trainable = active_adapter_name(model)
+    if trainable == KL_REF_ADAPTER_NAME:
+        raise ValueError("可训练 adapter 不能占用 kl_ref 这个名字")
+    try:
+        model.load_adapter(
+            str(ref_adapter_dir),
+            adapter_name=KL_REF_ADAPTER_NAME,
+            is_trainable=False,
+        )
+    except TypeError:
+        model.load_adapter(str(ref_adapter_dir), adapter_name=KL_REF_ADAPTER_NAME)
+    freeze_kl_ref_adapter(model)
+    model.set_adapter(trainable)
+    freeze_kl_ref_adapter(model)
+    return trainable
 
 
 def adapter_base_model_path(adapter_dir: Union[str, Path]) -> str:

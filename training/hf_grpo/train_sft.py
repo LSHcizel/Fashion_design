@@ -1,7 +1,7 @@
 """阶段 A：对 ``phase_a_sft.jsonl`` 做因果 LM 监督微调（仅 assistant 段计损失）。
 
 单独运行或与 ``run_recommended_training.py`` 编排一起使用；完成后将 checkpoint 目录作为
-``train_grpo.py`` 的 ``--model``（并由编排脚本将 ``--ref-model`` 指向基座）。
+``train_grpo.py`` 的 ``--model``。编排脚本把 ``--ref-model`` 指到这份 SFT 目录，KL 从这里起算。
 """
 
 from __future__ import annotations
