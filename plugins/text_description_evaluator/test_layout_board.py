@@ -11,7 +11,8 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
 
 
 PREFIX = (
-    "One photograph of one woman at one moment, from one camera. "
+    "One photograph of one woman at one moment, from one camera in front of her face. "
+    "She faces the camera. Front view only, not from behind. "
     "Show only what that camera sees on her body. "
     "No collage, no flat lay, no product shot, no extra views, no text."
 )

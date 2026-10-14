@@ -1,4 +1,4 @@
-"""改写前的品牌风格卡：解析到品牌才附上，只约束廓形、工艺、配色和结构。"""
+"""品牌习惯卡：只作为第二改写器读取已有设计的资料，不再写进第一改写器。"""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 _INDEX = (
     Path(__file__).resolve().parents[2]
@@ -129,36 +129,22 @@ def _section_bullets(description: str) -> Dict[str, List[str]]:
     return buckets
 
 
-def _card_text(house: str, sections: Dict[str, List[str]]) -> str:
-    lines = [
-        "BRAND STYLE CARD",
-        f"House: {house}",
-        "Use this only to materialize the theme and concept extracted from SOURCE. "
-        "The card does not replace that theme. If a habit would add clothes from another theme, "
-        "keep the SOURCE theme and drop the habit. Write the habit as something the camera sees. "
-        "Do not copy this card into the paragraph. Do not add a logo or monogram that SOURCE "
-        "does not already have.",
-    ]
-    wrote = False
-    for label in ("Silhouette", "Craft", "Palette", "Construction"):
-        bullets = sections.get(label) or []
-        if not bullets:
-            continue
-        wrote = True
-        lines.append(f"{label}: " + " | ".join(bullets))
-    if not wrote:
-        return ""
-    return "\n".join(lines)
+def _houses_with_habits(sections_by_house: Dict[str, Dict[str, List[str]]]) -> List[str]:
+    houses = []
+    for house, sections in sections_by_house.items():
+        if any(sections.get(label) for label in ("Silhouette", "Craft", "Palette", "Construction")):
+            houses.append(house)
+    return houses
 
 
 @lru_cache(maxsize=4)
 def _load_catalog(index_path: str):
     path = Path(index_path)
     if not path.is_file():
-        return {}, {}, (), ()
+        return {}, (), (), {}
     payload = json.loads(path.read_text(encoding="utf-8"))
     by_key: Dict[str, str] = {}
-    cards: Dict[str, str] = {}
+    sections_by_house: Dict[str, Dict[str, List[str]]] = {}
     for row in payload.get("collections") or []:
         if not isinstance(row, dict):
             continue
@@ -166,23 +152,22 @@ def _load_catalog(index_path: str):
         if not house:
             continue
         by_key[_fold(house)] = house
-        card = _card_text(house, _section_bullets(str(row.get("description") or "")))
-        if card:
-            cards[house] = card
+        sections_by_house[house] = _section_bullets(str(row.get("description") or ""))
     for alias, target in _ALIASES.items():
         house = by_key.get(target)
         if house:
             by_key[alias] = house
+    houses = _houses_with_habits(sections_by_house)
     patterns = tuple(
         (_phrase_pattern(house), house)
-        for house in sorted(set(cards), key=len, reverse=True)
+        for house in sorted(houses, key=len, reverse=True)
     )
     alias_patterns = tuple(
         (_phrase_pattern(alias), by_key[alias])
         for alias in sorted(_ALIASES, key=len, reverse=True)
         if alias in by_key
     )
-    return by_key, cards, patterns, alias_patterns
+    return by_key, patterns, alias_patterns, sections_by_house
 
 
 def _catalog(index_path: Optional[Path] = None):
@@ -211,7 +196,7 @@ def resolve_brand(
     index_path: Optional[Path] = None,
 ) -> Optional[str]:
     """工作流品牌优先；否则按文本顺序找第一个已知品牌。找不到返回 None。"""
-    by_key, _cards, patterns, alias_patterns = _catalog(index_path)
+    by_key, patterns, alias_patterns, _sections = _catalog(index_path)
     if not by_key:
         return None
     raw = str(explicit or "").strip()
@@ -231,20 +216,43 @@ def resolve_brand(
     return None
 
 
-def brand_style_block(
+def iter_style_houses(index_path: Optional[Path] = None) -> Iterable[str]:
+    _by_key, _patterns, _alias_patterns, sections_by_house = _catalog(index_path)
+    return tuple(_houses_with_habits(sections_by_house))
+
+
+def brand_preference_items(
     *,
     explicit: Optional[str] = None,
     texts: Sequence[str] = (),
     index_path: Optional[Path] = None,
-) -> str:
-    """解析到品牌且风格卡有可见做法时返回业务上下文；否则返回空串。"""
+) -> Tuple[str, List[Dict[str, str]]]:
+    """把已解析品牌的习惯卡拆成单条做法。每条只含一个段名和一句做法。"""
     house = resolve_brand(explicit=explicit, texts=texts, index_path=index_path)
     if not house:
+        return "", []
+    _by_key, _patterns, _alias_patterns, sections_by_house = _catalog(index_path)
+    buckets = sections_by_house.get(house) or {}
+    items: List[Dict[str, str]] = []
+    for label in ("Silhouette", "Craft", "Palette", "Construction"):
+        for bullet in buckets.get(label) or []:
+            text = str(bullet or "").strip()
+            if text:
+                items.append({"section": label, "text": text})
+    return house, items
+
+
+def format_existing_designs(house: str, items: Sequence[Dict[str, str]]) -> str:
+    """把这家已有的四段做法列给第二改写器，不写成第一改写器的品牌卡。"""
+    if not house or not items:
         return ""
-    _by_key, cards, _patterns, _alias_patterns = _catalog(index_path)
-    return str(cards.get(house) or "")
+    lines = [f"House: {house}", "Existing designs on file:"]
+    for label in ("Silhouette", "Craft", "Palette", "Construction"):
+        bullets = [str(item.get("text") or "").strip() for item in items if item.get("section") == label]
+        bullets = [bullet for bullet in bullets if bullet]
+        if not bullets:
+            continue
+        lines.append(f"{label}:")
+        lines.extend(f"- {bullet}" for bullet in bullets)
+    return "\n".join(lines)
 
-
-def iter_style_houses(index_path: Optional[Path] = None) -> Iterable[str]:
-    _by_key, cards, _patterns, _alias_patterns = _catalog(index_path)
-    return tuple(cards)

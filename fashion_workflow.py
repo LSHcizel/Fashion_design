@@ -1086,6 +1086,7 @@ class FashionWorkflow:
                     look_desc = LookDescriptionAgent._strip_key_elements_section(
                         extract_prompt(resp, "LOOK_DESCRIPTION")
                     )
+                    look_desc = self._apply_brand_tone_rewrite(look_desc)
                     self.look_stylist.look_descriptions.append(look_desc)
                     
                     # 保存重新生成的look
@@ -1676,7 +1677,8 @@ class FashionWorkflow:
     # ------------------------------------------------------------------ #
 
     _LOOK_PROMPT_PREFIX = (
-        "One photograph of one woman at one moment, from one camera. "
+        "One photograph of one woman at one moment, from one camera in front of her face. "
+        "She faces the camera. Front view only, not from behind. "
         "Show only what that camera sees on her body. "
         "No collage, no flat lay, no product shot, no extra views, no text."
     )
@@ -1692,9 +1694,9 @@ class FashionWorkflow:
                 if kept and kept[-1] != "":
                     kept.append("")
                 continue
-            if stripped in (
-                FashionWorkflow._LOOK_PROMPT_PREFIX,
-                FashionWorkflow._OLD_LOOK_PROMPT_PREFIX,
+            low = stripped.lower()
+            if low.startswith("one photograph of one woman") or low.startswith(
+                FashionWorkflow._OLD_LOOK_PROMPT_PREFIX.lower()
             ):
                 continue
             if re.match(r"(?i)^look[\s_]*\d+\b", stripped):
@@ -1755,8 +1757,38 @@ class FashionWorkflow:
         result["coverage_axis_score"] = (eval_result.get("scores") or {}).get("coverage_score", {}).get("score")
         result["quality_axis_score"] = (eval_result.get("scores") or {}).get("quality_score", {}).get("penalized_score")
 
-    def _rewrite_extra_context(self, baseline_eval: dict | None = None, source_text: str = "") -> str:
-        from plugins.parallel_k_rewrite.brand_style import brand_style_block
+    def _apply_brand_tone_rewrite(self, description: str) -> str:
+        """第二改写器：已生成的 description，在确切品牌和主题下按调性局部改写。"""
+        brand = str(getattr(self, "brand", None) or "").strip()
+        theme = str(
+            getattr(self, "_current_sub_theme_name", None)
+            or getattr(self, "theme", None)
+            or ""
+        ).strip()
+        text = str(description or "").strip()
+        if not brand or not theme or not text:
+            return description
+        try:
+            from plugins.brand_tone_rewriter import rewrite_generated_description
+
+            rewritten = rewrite_generated_description(
+                brand=brand,
+                theme=theme,
+                description=text,
+            )
+            paragraph = str(rewritten.get("description") or "").strip()
+            return paragraph or description
+        except Exception as exc:
+            if getattr(self, "verbose", False):
+                print(f"brand tone rewrite skipped: {exc}")
+            return description
+
+    def _rewrite_extra_context(
+        self,
+        baseline_eval: dict | None = None,
+        source_text: str = "",
+        generate_text=None,
+    ) -> str:
         from plugins.parallel_k_rewrite.k_candidate_generator import (
             REWRITE_BRAND_LOGO_LOCK,
             REWRITE_ELEMENT_RECONSTRUCTION,
@@ -1765,24 +1797,17 @@ class FashionWorkflow:
             format_exposed_repair_brief,
         )
 
+        del generate_text
         bits = []
         if getattr(self, "design_target_prompt", None):
             bits.append(str(self.design_target_prompt))
         sub = getattr(self, "_current_sub_theme_name", None)
         if sub:
             bits.append(f"Chapter: {sub}")
-        style = brand_style_block(
-            explicit=getattr(self, "brand", None),
-            texts=[str(getattr(self, "design_target_prompt", None) or ""), source_text or ""],
-        )
-        if style:
-            bits.append(style)
         bits.append(
             "Extract theme and design concept from the look description, keep them consistent, "
             "then you may change overall clothing (color, pairing, detail design) to raise "
-            "DesignMerit. If a BRAND STYLE CARD is present, use it only for proportion, craft, "
-            "palette, and construction of that same theme. When the card conflicts with the theme, "
-            "keep the theme. Visible ideas are not limited to a fixed count; each idea must serve "
+            "DesignMerit. Visible ideas are not limited to a fixed count; each idea must serve "
             "that extracted theme and concept. Resolve exposed consistency problems and lower "
             "exposed penalty deductions. Do not treat a collection-shared interchangeable "
             "garment formula as the identity."
@@ -1828,10 +1853,15 @@ class FashionWorkflow:
         if self.verbose:
             print(f"  [TextEval] Look {look_number} gates failed; K-rewrite via rewriter-llm ...")
         try:
+            evaluator = build_parallel_k_evaluator()
             parallel = generate_k_parallel_rewrites(
                 look_desc_raw,
-                evaluator=build_parallel_k_evaluator(),
-                extra_context=self._rewrite_extra_context(baseline_eval, source_text=look_desc_raw),
+                evaluator=evaluator,
+                extra_context=self._rewrite_extra_context(
+                    baseline_eval,
+                    source_text=look_desc_raw,
+                    generate_text=evaluator.judge.generate_text,
+                ),
             )
         except JudgeConnectionError as exc:
             if self.verbose:
@@ -2087,6 +2117,7 @@ class FashionWorkflow:
                     look_desc = LookDescriptionAgent._strip_key_elements_section(
                         extract_prompt(resp, "LOOK_DESCRIPTION")
                     )
+                    look_desc = self._apply_brand_tone_rewrite(look_desc)
                     look_descriptions.append(look_desc)
                     self.look_stylist.look_descriptions.append(look_desc)
                     
@@ -2212,6 +2243,7 @@ class FashionWorkflow:
                     look_desc = LookDescriptionAgent._strip_key_elements_section(
                         extract_prompt(resp, "LOOK_DESCRIPTION")
                     )
+                    look_desc = self._apply_brand_tone_rewrite(look_desc)
                     look_descriptions.append(look_desc)
                     self.look_stylist.look_descriptions.append(look_desc)
                     
