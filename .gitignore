@@ -95,8 +95,7 @@ training/runs/grpo_corpus2000_20261011/online/round_*/*
 !training/runs/corpus/
 !training/runs/corpus/**
 
-# 20261014 冷启动与两条冒烟改写：目录内现有和以后新增的文件都可跟踪。
-# 权重不入库。samples.jsonl（约 122MB）和 phase_b_grpo.jsonl（约 109MB）超过 GitHub 100MB，仍排除。
+# 20261014 冷启动与两条冒烟改写：目录内现有和以后新增的文件都可跟踪。权重不入库。
 !training/runs/grpo_corpus2000_20261014/
 !training/runs/grpo_corpus2000_20261014/**
 !training/runs/grpo_corpus2000_20261014_smoke2/
@@ -109,10 +108,6 @@ training/runs/grpo_corpus2000_20261014_smoke2/**/*.safetensors
 training/runs/grpo_corpus2000_20261014_smoke2/**/*.bin
 training/runs/grpo_corpus2000_20261014_smoke2/**/*.pt
 training/runs/grpo_corpus2000_20261014_smoke2/**/*.pth
-training/runs/grpo_corpus2000_20261014/samples.jsonl
-training/runs/grpo_corpus2000_20261014/**/phase_b_grpo.jsonl
-training/runs/grpo_corpus2000_20261014/odin_rm/pairs.jsonl
-training/runs/grpo_corpus2000_20261014/odin_rm/samples_rq.jsonl
 
 # Local HF weights (large)
 models/
@@ -128,4 +123,13 @@ fashion_research_dir/season_themes_2026-09/**/_run*.log
 !fashion_research_dir/season_themes_2026-09/source_corpus_combined_2000.jsonl
 !fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/
 !fashion_research_dir/season_themes_2026-09/mild_defect_from_keep/**
+
+# 全量采数和 RM 导出会超过 GitHub 100MB。任何 run 下同名文件都不入库。
+# 放在文件末尾，后加的白名单也不能把它们重新放进来。
+# 两条冒烟改写的 samples.jsonl 很小，单独保留。
+training/runs/**/samples.jsonl
+training/runs/**/phase_b_grpo.jsonl
+training/runs/**/pairs.jsonl
+training/runs/**/samples_rq.jsonl
+!training/runs/grpo_corpus2000_20261014_smoke2/samples.jsonl
 
