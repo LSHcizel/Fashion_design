@@ -1,0 +1,5 @@
+{
+  "round": 1,
+  "policy_dir": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261014_lenfix/hf_checkpoints/grpo/round_01",
+  "ref_dir": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261014_lenfix/hf_checkpoints/sft"
+}

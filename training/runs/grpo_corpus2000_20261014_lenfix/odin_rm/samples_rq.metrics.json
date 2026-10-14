@@ -1,0 +1,12 @@
+{
+  "n_scored": 18000,
+  "mean_r_Q": 0.320643,
+  "mean_r_L": 0.509276,
+  "pearson_r_Q_vs_log_len": 0.03409208543201697,
+  "pearson_r_L_vs_log_len": 0.9418478620767121,
+  "note": "验收：ρ(r_Q, ℓ)≈0，ρ(r_L, ℓ)>0。S_fp 仍是裁判 0～1。",
+  "samples_in": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261011/samples.jsonl",
+  "samples_out": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261014_lenfix/odin_rm/samples_rq.jsonl",
+  "ckpt": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261014_lenfix/odin_rm/rm",
+  "include_in_training": 15603
+}
