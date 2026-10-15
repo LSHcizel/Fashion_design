@@ -1,0 +1,157 @@
+{
+  "round": 1,
+  "policy_dir": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261015/hf_checkpoints/grpo/round_01",
+  "ref_dir": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261015/hf_checkpoints/sft",
+  "sft_dir": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261015/hf_checkpoints/sft",
+  "epochs_this_round": 1.0,
+  "cold_start": {
+    "dual_head_rm": "once",
+    "sft": "once",
+    "grpo": "short_rounds",
+    "kl_ref": "frozen_at_cold_start"
+  },
+  "data": {
+    "rows": 15603,
+    "groups": 2000,
+    "included_for_training": 15603,
+    "mean_R_content": 0.509624,
+    "mean_S_fp": 0.795671,
+    "mean_total_penalty": 0.050147,
+    "mean_char_len": 842.951804,
+    "score_gate_pass_rate": 0.749279,
+    "penalty_gate_pass_rate": 0.962315,
+    "both_gates_pass_rate": 0.749279,
+    "gate_rows": 15603,
+    "advantage_positive_rate": 0.499007,
+    "mean_advantage": 0.0,
+    "path": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261015/odin_rm/export/phase_b_grpo.jsonl"
+  },
+  "score_lift": {
+    "note": "rewrites / originals 是本轮采样时裁判打的分，不是本轮梯度更新之后重新生成的。展示用的提升是 best_rewrite_lift_vs_original：每组只取总分最高的一条改写，减去该原文，再对组取平均。lift_vs_original 仍是组内全部改写的均值减原文。lift_vs_previous_round 是本轮改写均值减上一轮改写均值；两边原文集合不同时，这是总体水平差。质量轴是 quality_base_score。模块分缺省时对应提升为 null，新采样会写入 module_scores。",
+    "rewrites": {
+      "rows": 15603,
+      "groups": 2000,
+      "mean_S_fp": 0.795671,
+      "mean_quality": 0.804851,
+      "mean_coverage": 0.916254,
+      "mean_total_penalty": 0.050147,
+      "score_gate_pass_rate": 0.749279,
+      "penalty_gate_pass_rate": 0.962315,
+      "both_gates_pass_rate": 0.749279,
+      "modules": {
+        "DesignMerit": {
+          "zh": "设计价值",
+          "mean": 0.631201
+        },
+        "InformationDensity": {
+          "zh": "信息密度",
+          "mean": 0.88813
+        },
+        "ConcisenessAndDensity": {
+          "zh": "可见性优先级",
+          "mean": 0.902759
+        },
+        "GenerationReadiness": {
+          "zh": "生成适配",
+          "mean": 0.902083
+        },
+        "BindingAccuracy": {
+          "zh": "属性绑定",
+          "mean": 0.988159
+        },
+        "LanguageClarity": {
+          "zh": "语言清晰",
+          "mean": 0.999752
+        },
+        "StructuralClarity": {
+          "zh": "结构清晰",
+          "mean": 0.770877
+        }
+      }
+    },
+    "originals": {
+      "rows": 0,
+      "groups": 0,
+      "mean_S_fp": null,
+      "mean_quality": null,
+      "mean_coverage": null,
+      "mean_total_penalty": null,
+      "score_gate_pass_rate": null,
+      "penalty_gate_pass_rate": null,
+      "both_gates_pass_rate": null,
+      "modules": {
+        "DesignMerit": {
+          "zh": "设计价值",
+          "mean": null
+        },
+        "InformationDensity": {
+          "zh": "信息密度",
+          "mean": null
+        },
+        "ConcisenessAndDensity": {
+          "zh": "可见性优先级",
+          "mean": null
+        },
+        "GenerationReadiness": {
+          "zh": "生成适配",
+          "mean": null
+        },
+        "BindingAccuracy": {
+          "zh": "属性绑定",
+          "mean": null
+        },
+        "LanguageClarity": {
+          "zh": "语言清晰",
+          "mean": null
+        },
+        "StructuralClarity": {
+          "zh": "结构清晰",
+          "mean": null
+        }
+      }
+    },
+    "lift_vs_original": {
+      "groups": 0,
+      "S_fp": null,
+      "quality": null,
+      "coverage": null,
+      "total_penalty": null,
+      "modules": {
+        "DesignMerit": null,
+        "InformationDensity": null,
+        "ConcisenessAndDensity": null,
+        "GenerationReadiness": null,
+        "BindingAccuracy": null,
+        "LanguageClarity": null,
+        "StructuralClarity": null
+      }
+    },
+    "best_rewrite_lift_vs_original": {
+      "groups": 0,
+      "S_fp": null,
+      "quality": null,
+      "coverage": null,
+      "total_penalty": null,
+      "modules": {
+        "DesignMerit": null,
+        "InformationDensity": null,
+        "ConcisenessAndDensity": null,
+        "GenerationReadiness": null,
+        "BindingAccuracy": null,
+        "LanguageClarity": null,
+        "StructuralClarity": null
+      },
+      "groups_best_higher": 0,
+      "groups_best_lower": 0,
+      "groups_best_tied": 0
+    },
+    "lift_vs_previous_round": null
+  },
+  "human_checklist": [
+    "抽看改写是否编造原文没有的事实",
+    "主干单品是否对称稳定、能否直接当出图 prompt",
+    "是否明显靠写长涨分",
+    "得分门与惩罚门通过率是否好于上一轮抽检"
+  ],
+  "note": "data 与 score_lift 统计的是当前 phase_b 上采样时的裁判分，不是本轮权重更新之后重新写出来的表现。score_lift.lift_vs_original 是改写相对同组原文的质量轴、模块分和总分提升；lift_vs_previous_round 是相对上一轮改写均值的提升。验收刚写入的 policy 请用 policy_dir 重新 K 路抽检。"
+}

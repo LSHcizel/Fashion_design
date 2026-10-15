@@ -1,0 +1,20 @@
+{
+  "samples_jsonl": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261015/odin_rm/samples_rq.jsonl",
+  "phase_a_sft_jsonl": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261015/odin_rm/export/phase_a_sft.jsonl",
+  "phase_b_grpo_jsonl": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261015/odin_rm/export/phase_b_grpo.jsonl",
+  "two_phase_summary_txt": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261015/odin_rm/export/two_phase_summary.txt",
+  "groups": 2000,
+  "sft_examples": 2000,
+  "grpo_rows": 15603,
+  "reward_key": "R_content",
+  "beta_rank_param": null,
+  "rank_correction_beta_effective": null,
+  "pi_old_model_for_ranking_effective": null,
+  "rank_correction_auto_enabled": false,
+  "rank_correction_groups_applied": 0,
+  "rank_correction_groups_skipped_valve": 0,
+  "rank_correction_groups_manual": 0,
+  "min_group_size_note": 2,
+  "phase_A": "监督微调：每组最高奖励 completion 作为 assistant 标签",
+  "phase_B": "GRPO：R_content →（可选 Rewarding the Unlikely）r_i → 组内标准化 advantage；训练时叠加 KL(π||π_ref)"
+}
