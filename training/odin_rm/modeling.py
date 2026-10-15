@@ -2,7 +2,7 @@
 双头奖励模型（ODIN）：共用表征 + r_Q / r_L。
 
 r_Q、r_L 是线性头输出，无 sigmoid、无 clip。
-训 RM 时排序用 r_sum = r_Q + r_L；策略训练只取 r_Q。
+同组输赢只比 r_Q，差距对齐 S_fp 的差距；r_Q 同时拟合这条改写自己的 S_fp。r_L 只吸收句长。策略训练只取 r_Q。
 """
 
 from __future__ import annotations
@@ -11,7 +11,6 @@ from typing import Any, Dict, Optional, Tuple
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 def last_token_hidden(hidden: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
@@ -59,6 +58,8 @@ def odin_rm_loss(
     r_l_lose: torch.Tensor,
     log_len_win: torch.Tensor,
     log_len_lose: torch.Tensor,
+    teacher_win: torch.Tensor,
+    teacher_lose: torch.Tensor,
     *,
     head_q: nn.Module,
     head_l: nn.Module,
@@ -66,36 +67,46 @@ def odin_rm_loss(
     lambda_orth: float = 1.0,
 ) -> Tuple[torch.Tensor, Dict[str, float]]:
     """
-    L = L_rank + λ_L [ρ(r_Q, ℓ)² − ρ(r_L, ℓ)] + λ_O |W_Q · W_L|
+    L = L_cmp + L_fit + λ_L [ρ(r_Q, ℓ)² − ρ(r_L, ℓ)] + λ_O |W_Q · W_L|
 
-    L_rank = mean( −log σ( (r_Q+r_L)_win − (r_Q+r_L)_lose ) )
+    同一组里的输赢只比 r_Q：
+    L_cmp = mean( ((r_Q⁺ − r_Q⁻) − (S_fp⁺ − S_fp⁻))² )
+    L_fit = mean( (r_Q − S_fp)² )
+    长度头不进入这两项。
     """
-    r_sum_w = r_q_win + r_l_win
-    r_sum_l = r_q_lose + r_l_lose
-    delta = r_sum_w - r_sum_l
-    l_rank = F.softplus(-delta).mean()
+    q_w = r_q_win.reshape(-1)
+    q_l = r_q_lose.reshape(-1)
+    s_w = teacher_win.reshape(-1).to(dtype=q_w.dtype)
+    s_l = teacher_lose.reshape(-1).to(dtype=q_l.dtype)
+    gap_q = q_w - q_l
+    gap_s = s_w - s_l
+    l_cmp = (gap_q - gap_s).square().mean()
+    l_fit = 0.5 * ((q_w - s_w).square().mean() + (q_l - s_l).square().mean())
 
-    r_q_all = torch.cat([r_q_win, r_q_lose], dim=0)
-    r_l_all = torch.cat([r_l_win, r_l_lose], dim=0)
-    ell = torch.cat([log_len_win, log_len_lose], dim=0).to(dtype=r_q_all.dtype)
+    r_q_all = torch.cat([q_w, q_l], dim=0)
+    r_l_all = torch.cat([r_l_win.reshape(-1), r_l_lose.reshape(-1)], dim=0)
+    s_all = torch.cat([s_w, s_l], dim=0)
+    ell = torch.cat([log_len_win, log_len_lose], dim=0).reshape(-1).to(dtype=r_q_all.dtype)
     rho_q = batch_pearson(r_q_all, ell)
     rho_l = batch_pearson(r_l_all, ell)
+    rho_qs = batch_pearson(r_q_all, s_all)
     l_corr = length_disentangle_term(rho_q, rho_l)
 
     wq = linear_weight_vec(head_q)
     wl = linear_weight_vec(head_l)
     l_orth = (wq * wl).sum().abs()
 
-    total = l_rank + float(lambda_corr) * l_corr + float(lambda_orth) * l_orth
+    total = l_cmp + l_fit + float(lambda_corr) * l_corr + float(lambda_orth) * l_orth
     stats = {
         "loss": float(total.detach()),
-        "L_rank": float(l_rank.detach()),
+        "L_cmp": float(l_cmp.detach()),
+        "L_fit": float(l_fit.detach()),
         "L_corr": float(l_corr.detach()),
         "L_orth": float(l_orth.detach()),
         "rho_q": float(rho_q.detach()),
         "rho_l": float(rho_l.detach()),
-        "acc_sum": float((delta.detach() > 0).float().mean()),
-        "acc_q": float(((r_q_win - r_q_lose).detach() > 0).float().mean()),
+        "rho_qs": float(rho_qs.detach()),
+        "acc_q": float((gap_q.detach() > 0).float().mean()),
     }
     return total, stats
 

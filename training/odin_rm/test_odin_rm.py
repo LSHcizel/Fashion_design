@@ -64,6 +64,23 @@ class PairBuildingTests(unittest.TestCase):
         for splits in by_g.values():
             self.assertEqual(len(splits), 1)
 
+    def test_pairs_stay_inside_one_group(self) -> None:
+        recs = [
+            _rec("a", 0, 0.9, "a high"),
+            _rec("a", 1, 0.2, "a low"),
+            _rec("b", 0, 0.1, "b low"),
+            _rec("b", 1, 0.8, "b high"),
+        ]
+        pairs = pairs_from_group(recs)
+        self.assertEqual(len(pairs), 2)
+        seen = set()
+        for p in pairs:
+            self.assertEqual(p["group_id"], p["chosen"]["group_id"])
+            self.assertEqual(p["group_id"], p["rejected"]["group_id"])
+            seen.add(p["group_id"])
+            self.assertGreater(p["chosen"]["teacher_score"], p["rejected"]["teacher_score"])
+        self.assertEqual(seen, {"a", "b"})
+
 
 class RewardWritebackTests(unittest.TestCase):
     def test_r_q_becomes_grpo_scalar(self) -> None:
@@ -165,14 +182,62 @@ class OdinLossTests(unittest.TestCase):
         rql, rll = rm.scores_from_hidden(h_l)
         llw = torch.tensor([1.0, 2.0, 3.0])
         lll = torch.tensor([1.1, 2.2, 3.3])
+        tw = torch.tensor([0.9, 0.8, 0.7])
+        tl = torch.tensor([0.2, 0.3, 0.4])
         loss, stats = odin_rm_loss(
-            rqw, rlw, rql, rll, llw, lll,
+            rqw, rlw, rql, rll, llw, lll, tw, tl,
             head_q=rm.head_q, head_l=rm.head_l,
         )
         self.assertTrue(torch.isfinite(loss))
-        self.assertIn("acc_sum", stats)
+        self.assertIn("L_cmp", stats)
+        self.assertIn("L_fit", stats)
+        self.assertIn("acc_q", stats)
         loss.backward()
         self.assertIsNotNone(next(rm.head_q.parameters()).grad)
+
+    def test_fit_follows_teacher_and_ignores_length_head(self) -> None:
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch not installed")
+        from training.odin_rm.modeling import DualHeadRewardModel, odin_rm_loss
+
+        class Tiny(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.config = type("c", (), {"hidden_size": 4})()
+
+        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
+        tw = torch.tensor([0.9, 0.8, 0.7])
+        tl = torch.tensor([0.2, 0.3, 0.1])
+        matched_q_w = tw.clone().requires_grad_(True)
+        matched_q_l = tl.clone().requires_grad_(True)
+        swapped_q_w = tl.clone().requires_grad_(True)
+        swapped_q_l = tw.clone().requires_grad_(True)
+        long_w = torch.tensor([4.0, 5.0, 6.0])
+        short_l = torch.tensor([0.1, 0.2, 0.3])
+        llw = torch.tensor([1.0, 2.0, 3.0])
+        lll = torch.tensor([1.2, 2.2, 3.2])
+        kwargs = dict(head_q=rm.head_q, head_l=rm.head_l, lambda_corr=0.0, lambda_orth=0.0)
+        fit_match, stats_match = odin_rm_loss(
+            matched_q_w, long_w, matched_q_l, short_l, llw, lll, tw, tl, **kwargs
+        )
+        fit_swap, stats_swap = odin_rm_loss(
+            swapped_q_w, long_w, swapped_q_l, short_l, llw, lll, tw, tl, **kwargs
+        )
+        fit_other_len, stats_other = odin_rm_loss(
+            matched_q_w, short_l, matched_q_l, long_w, llw, lll, tw, tl, **kwargs
+        )
+        self.assertAlmostEqual(stats_match["L_cmp"], 0.0, places=6)
+        self.assertAlmostEqual(stats_match["L_fit"], 0.0, places=6)
+        self.assertGreater(stats_swap["L_cmp"], stats_match["L_cmp"])
+        self.assertGreater(stats_swap["L_fit"], stats_match["L_fit"])
+        self.assertAlmostEqual(stats_other["L_cmp"], stats_match["L_cmp"], places=6)
+        self.assertAlmostEqual(stats_other["L_fit"], stats_match["L_fit"], places=6)
+        self.assertEqual(stats_match["acc_q"], 1.0)
+        self.assertEqual(stats_swap["acc_q"], 0.0)
+        self.assertLess(float(fit_match.detach()), float(fit_swap.detach()))
+        self.assertAlmostEqual(float(fit_match.detach()), float(fit_other_len.detach()), places=5)
 
     def test_anti_length_content_head_costs_more_than_uncorrelated(self) -> None:
         try:

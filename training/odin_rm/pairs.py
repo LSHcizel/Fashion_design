@@ -1,4 +1,4 @@
-"""从 K 路 samples.jsonl 造 Bradley–Terry 偏好对（老师 = 裁判 s_fp_base）。"""
+"""从 K 路 samples.jsonl 造同组比较对（老师 = 该条改写自己的裁判 S_fp）。"""
 
 from __future__ import annotations
 
@@ -32,7 +32,30 @@ def pairs_from_group(
     *,
     min_margin: float = 1e-6,
 ) -> List[Dict[str, Any]]:
+    """只在同一个 group_id 内两两比较。混进别的组时按组拆开，不造跨组对。"""
+    buckets: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for rec in records:
+        gid = str(rec.get("group_id") or "")
+        if not gid:
+            continue
+        buckets[gid].append(rec)
+    if len(buckets) != 1:
+        out: List[Dict[str, Any]] = []
+        for recs in buckets.values():
+            out.extend(_pairs_within_one_group(recs, min_margin=min_margin))
+        return out
+    return _pairs_within_one_group(next(iter(buckets.values())), min_margin=min_margin)
+
+
+def _pairs_within_one_group(
+    records: Sequence[Dict[str, Any]],
+    *,
+    min_margin: float,
+) -> List[Dict[str, Any]]:
     """同一 group 内两两比裁判分；平分 / 差距过小丢掉。"""
+    group_ids = {str(rec.get("group_id") or "") for rec in records}
+    if len(group_ids) != 1:
+        raise ValueError("比较对不能跨 group_id")
     scored: List[Tuple[float, Dict[str, Any]]] = []
     for rec in records:
         if not include_in_training(rec):
@@ -55,10 +78,13 @@ def pairs_from_group(
                 win, lose = rec_i, rec_j
             else:
                 win, lose = rec_j, rec_i
+            gid = str(win.get("group_id") or "")
+            if gid != str(lose.get("group_id") or ""):
+                raise ValueError("比较对不能跨 group_id")
             out.append(
                 {
                     "schema_version": "odin_pref_pair_v1",
-                    "group_id": rec_i.get("group_id"),
+                    "group_id": gid,
                     "chosen": _side_payload(win),
                     "rejected": _side_payload(lose),
                     "teacher_margin": round(abs(s_i - s_j), 6),
@@ -126,6 +152,13 @@ def build_preference_pairs(
         "min_margin": min_margin,
         "holdout_frac": holdout_frac,
         "teacher": "s_fp_base / S_fp（不用 R_content）",
+        "pairing": "within_group_only",
+        "cross_group_pairs": sum(
+            1
+            for p in pairs
+            if str(p.get("group_id") or "") != str((p.get("chosen") or {}).get("group_id") or "")
+            or str(p.get("group_id") or "") != str((p.get("rejected") or {}).get("group_id") or "")
+        ),
     }
     return pairs, summary
 

@@ -124,6 +124,11 @@ def _log_lens(pairs: Sequence[Dict[str, Any]], which: str, device: torch.device)
     return torch.tensor(vals, dtype=torch.float32, device=device)
 
 
+def _teacher_scores(pairs: Sequence[Dict[str, Any]], which: str, device: torch.device) -> torch.Tensor:
+    vals = [float(p[which]["teacher_score"]) for p in pairs]
+    return torch.tensor(vals, dtype=torch.float32, device=device)
+
+
 def _mean_stats(rows: List[Dict[str, float]]) -> Dict[str, float]:
     if not rows:
         return {}
@@ -154,8 +159,10 @@ def eval_pairs_cached(
         rql, rll = rm.scores_from_hidden(h_l)
         llw = _log_lens(chunk, "chosen", device)
         lll = _log_lens(chunk, "rejected", device)
+        tw = _teacher_scores(chunk, "chosen", device)
+        tl = _teacher_scores(chunk, "rejected", device)
         _, stats = odin_rm_loss(
-            rqw, rlw, rql, rll, llw, lll,
+            rqw, rlw, rql, rll, llw, lll, tw, tl,
             head_q=rm.head_q, head_l=rm.head_l,
             lambda_corr=lambda_corr, lambda_orth=lambda_orth,
         )
@@ -265,8 +272,10 @@ def train_heads_cached(
             rql, rll = rm.scores_from_hidden(h_l)
             llw = _log_lens(chunk, "chosen", device)
             lll = _log_lens(chunk, "rejected", device)
+            tw = _teacher_scores(chunk, "chosen", device)
+            tl = _teacher_scores(chunk, "rejected", device)
             loss, stats = odin_rm_loss(
-                rqw, rlw, rql, rll, llw, lll,
+                rqw, rlw, rql, rll, llw, lll, tw, tl,
                 head_q=rm.head_q, head_l=rm.head_l,
                 lambda_corr=lambda_corr, lambda_orth=lambda_orth,
             )
@@ -423,13 +432,15 @@ def main() -> None:
             last={**{f"train_{k}": v for k, v in last_train.items()}, **{f"holdout_{k}": v for k, v in last_hold.items()}},
             keys=(
                 "train_loss",
-                "train_L_rank",
-                "train_acc_sum",
+                "train_L_cmp",
+                "train_L_fit",
                 "train_acc_q",
+                "train_rho_qs",
                 "holdout_loss",
-                "holdout_L_rank",
-                "holdout_acc_sum",
+                "holdout_L_cmp",
+                "holdout_L_fit",
                 "holdout_acc_q",
+                "holdout_rho_qs",
             ),
         )
         append_metrics(metrics_jsonl, summary)
