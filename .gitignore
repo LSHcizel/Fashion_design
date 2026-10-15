@@ -122,6 +122,13 @@ training/runs/grpo_corpus2000_20261015/**/*.safetensors
 training/runs/grpo_corpus2000_20261015/**/*.bin
 training/runs/grpo_corpus2000_20261015/**/*.pt
 training/runs/grpo_corpus2000_20261015/**/*.pth
+# 20261015_rq 冷启动：指标与导出可跟踪，权重不入库。
+!training/runs/grpo_corpus2000_20261015_rq/
+!training/runs/grpo_corpus2000_20261015_rq/**
+training/runs/grpo_corpus2000_20261015_rq/**/*.safetensors
+training/runs/grpo_corpus2000_20261015_rq/**/*.bin
+training/runs/grpo_corpus2000_20261015_rq/**/*.pt
+training/runs/grpo_corpus2000_20261015_rq/**/*.pth
 
 # Local HF weights (large)
 models/
