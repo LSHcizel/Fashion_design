@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Optional, Tuple
 
 import torch
@@ -119,7 +120,7 @@ def token_kl_k3_sum(
     mask: torch.Tensor,
 ) -> torch.Tensor:
     """
-    Schulman k3 在 completion token 上的和。
+    Schulman k3 在 completion token 上的和。最后一维是 token，前面的维保留。
 
     ``k3 = exp(log π_ref - log π) - (log π_ref - log π) - 1``。
     对数比限制在 ±10，避免参考概率远高于策略时指数溢出。
@@ -129,38 +130,72 @@ def token_kl_k3_sum(
         _KL_LOG_RATIO_CLAMP,
     )
     k3 = torch.exp(delta) - delta - 1.0
-    return k3.masked_fill(~mask, 0.0).sum()
+    return k3.masked_fill(~mask, 0.0).sum(dim=-1)
+
+
+def clipped_surrogate_sum(
+    logp_policy: torch.Tensor,
+    logp_ref: torch.Tensor,
+    mask: torch.Tensor,
+    advantage: torch.Tensor,
+) -> torch.Tensor:
+    """
+    DeepSeekMath / PPO 的悲观替代目标，按 completion token 求和。
+
+    ``min(ratio · A, clip(ratio) · A)``，``ratio = π_θ / π_SFT``。
+    clip 取 ``exp(±√(2·KL_TARGET))``，即 ±0.1 nat。越出这段后，继续抬高
+    正优势或压低负优势都不再减小损失。
+    """
+    from training.grpo_defaults import LOG_RATIO_BUDGET
+
+    delta = (logp_policy.float() - logp_ref.detach().float()).clamp(
+        -_KL_LOG_RATIO_CLAMP,
+        _KL_LOG_RATIO_CLAMP,
+    )
+    ratio = torch.exp(delta)
+    clipped = ratio.clamp(min=math.exp(-LOG_RATIO_BUDGET), max=math.exp(LOG_RATIO_BUDGET))
+    adv = advantage.detach().to(dtype=ratio.dtype).reshape(-1, 1)
+    chosen = torch.minimum(ratio * adv, clipped * adv)
+    return chosen.masked_fill(~mask, 0.0).sum(dim=-1)
 
 
 def grpo_loss(
-    logp_policy: torch.Tensor,
-    logp_ref: torch.Tensor,
-    advantage: torch.Tensor,
+    surrogate_sum: torch.Tensor,
+    token_count: torch.Tensor,
+    token_kl_sum: torch.Tensor,
     *,
-    beta_kl: float,
-    kl_squared: bool = True,
-    sum_logp_policy: Optional[torch.Tensor] = None,
-    token_count: Optional[torch.Tensor] = None,
-    token_kl_sum: Optional[torch.Tensor] = None,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    beta_max: float,
+    group_tokens: Optional[torch.Tensor] = None,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
-    策略项默认是 token 上的 ``-sum(A * log p) / sum(T)``：每条句子不再先除以自己的长度。
-    未提供 ``sum_logp_policy`` 时退回 ``-mean(A * mean_logp)``。
+    策略项是 ``-sum(min(ratio·A, clip(ratio)·A)) / sum(T)``。
 
-    KL 是 completion token 上 k3 的平均。``token_kl_sum`` 由 :func:`token_kl_k3_sum` 给出。
-    ``logp_ref`` 与 ``kl_squared`` 保留给旧调用，不再参与计算。
+    KL 系数由当前 k3 决定：不超过 :data:`KL_TARGET` 时为 0，
+    到 :data:`KL_SEVERE` 时升到 ``beta_max``。惩罚只加在超出预算的那一段。
+    返回 ``(loss, policy_term, kl_term, beta)``。多条样本时按 token 加权后相加。
     """
-    del logp_ref, kl_squared
-    if sum_logp_policy is not None:
-        counts = token_count if token_count is not None else torch.ones_like(sum_logp_policy)
-        denom = counts.to(dtype=sum_logp_policy.dtype).sum().clamp(min=1)
-        pol = -(advantage.detach() * sum_logp_policy).sum() / denom
-    else:
-        pol = -(advantage.detach() * logp_policy).mean()
-        denom = torch.ones((), device=pol.device, dtype=pol.dtype)
-    if token_kl_sum is None:
-        kl = torch.zeros((), device=pol.device, dtype=pol.dtype)
-    else:
-        kl = token_kl_sum.to(dtype=pol.dtype) / denom.to(dtype=pol.dtype)
-    total = pol + float(beta_kl) * kl
-    return total, pol, kl
+    from training.grpo_defaults import KL_TARGET, dynamic_kl_coefficient
+
+    counts = token_count.to(dtype=surrogate_sum.dtype).clamp(min=1)
+    denom = (
+        counts.sum().clamp(min=1)
+        if group_tokens is None
+        else group_tokens.to(dtype=surrogate_sum.dtype)
+    )
+    k3 = token_kl_sum.to(dtype=surrogate_sum.dtype)
+    seq_kl = k3 / counts
+    pol = -surrogate_sum.to(dtype=surrogate_sum.dtype) / denom
+    share = counts / denom
+    beta_row = torch.stack(
+        [
+            seq_kl.new_tensor(dynamic_kl_coefficient(float(value.detach()), beta_max))
+            for value in seq_kl.reshape(-1)
+        ]
+    ).reshape(seq_kl.shape)
+    excess = (seq_kl - KL_TARGET).clamp(min=0)
+    loss = pol + beta_row * excess * share
+    kl_share = k3 / denom
+    beta_share = beta_row * share
+    if loss.ndim > 0:
+        return loss.sum(), pol.sum(), kl_share.sum(), beta_share.sum()
+    return loss, pol, kl_share, beta_share

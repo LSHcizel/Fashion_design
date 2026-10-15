@@ -9,7 +9,7 @@ from pathlib import Path
 import torch
 
 from training.hf_grpo.data import select_grpo_rows
-from training.hf_grpo.modeling import grpo_loss, token_kl_k3_sum
+from training.hf_grpo.modeling import clipped_surrogate_sum, grpo_loss, token_kl_k3_sum
 from training.hf_grpo.train_grpo import (
     GroupBatchSampler,
     drop_kl_ref_keys,
@@ -81,31 +81,92 @@ class GroupBatchSamplerTests(unittest.TestCase):
 
 
 class GrpoLossScaleTests(unittest.TestCase):
-    def test_policy_term_uses_token_sum_not_per_sequence_mean(self) -> None:
-        # 短句 2 token、长句 6 token，优势相同。按句平均会让长句每个 token 的梯度更小。
-        advantage = torch.tensor([1.0, 1.0])
-        sum_logp = torch.tensor([-2.0, -6.0])
+    def test_policy_term_weights_longer_sequences_by_token(self) -> None:
+        # 短句 2 token、长句 6 token，比率都是 1、优势都是 1。按句平均会让两句各占一半。
+        surrogate_sum = torch.tensor([2.0, 6.0])
         token_count = torch.tensor([2.0, 6.0])
-        mean_logp = sum_logp / token_count
-        ref = torch.zeros(2)
-        loss, pol, kl = grpo_loss(
-            mean_logp,
-            ref,
-            advantage,
-            beta_kl=0.0,
-            sum_logp_policy=sum_logp,
-            token_count=token_count,
+        loss, pol, kl, beta = grpo_loss(
+            surrogate_sum,
+            token_count,
+            torch.zeros(2),
+            beta_max=10.0,
         )
-        # -sum(A * sum_logp) / sum(T) = -(-2 + -6) / 8 = 1
-        self.assertAlmostEqual(float(pol), 1.0, places=5)
-        self.assertAlmostEqual(float(loss), 1.0, places=5)
-        per_sequence_mean = float((-(advantage * mean_logp).mean()))
-        self.assertAlmostEqual(per_sequence_mean, 1.0, places=5)
-        # 长句贡献 6/8 的策略项，而不是和短句各占一半。
-        long_share = float((advantage[1] * sum_logp[1]).abs() / token_count.sum())
-        short_share = float((advantage[0] * sum_logp[0]).abs() / token_count.sum())
-        self.assertGreater(long_share, short_share)
+        # -sum(surrogate) / sum(T) = -(2 + 6) / 8 = -1
+        self.assertAlmostEqual(float(pol), -1.0, places=5)
+        self.assertAlmostEqual(float(loss), -1.0, places=5)
         self.assertAlmostEqual(float(kl), 0.0, places=5)
+        self.assertAlmostEqual(float(beta), 0.0, places=5)
+        self.assertGreater(float(surrogate_sum[1]), float(surrogate_sum[0]))
+
+    def test_positive_advantage_stops_past_the_nat_budget(self) -> None:
+        import math
+
+        logp = torch.tensor([[0.5]], requires_grad=True)
+        ref = torch.tensor([[0.0]])
+        mask = torch.tensor([[True]])
+        total = clipped_surrogate_sum(logp, ref, mask, torch.tensor([1.0]))
+        cap = math.exp(math.sqrt(2.0 * 0.005))
+        self.assertAlmostEqual(float(total), cap, places=5)
+        total.backward()
+        self.assertEqual(float(logp.grad), 0.0)
+
+    def test_negative_advantage_stops_below_the_nat_budget(self) -> None:
+        import math
+
+        logp = torch.tensor([[-0.5]], requires_grad=True)
+        ref = torch.tensor([[0.0]])
+        mask = torch.tensor([[True]])
+        total = clipped_surrogate_sum(logp, ref, mask, torch.tensor([-1.0]))
+        floor = math.exp(-math.sqrt(2.0 * 0.005))
+        self.assertAlmostEqual(float(total), -floor, places=5)
+        total.backward()
+        self.assertEqual(float(logp.grad), 0.0)
+
+    def test_inside_budget_the_surrogate_follows_the_ratio(self) -> None:
+        import math
+
+        logp = torch.tensor([[0.05]], requires_grad=True)
+        ref = torch.tensor([[0.0]])
+        mask = torch.tensor([[True]])
+        total = clipped_surrogate_sum(logp, ref, mask, torch.tensor([1.0]))
+        ratio = math.exp(0.05)
+        self.assertAlmostEqual(float(total), ratio, places=5)
+        total.backward()
+        self.assertAlmostEqual(float(logp.grad), ratio, places=5)
+
+    def test_kl_inside_budget_does_not_enter_the_loss(self) -> None:
+        loss, pol, kl, beta = grpo_loss(
+            torch.tensor([2.0]),
+            torch.tensor([2.0]),
+            torch.tensor([0.002]),
+            beta_max=10.0,
+        )
+        self.assertAlmostEqual(float(kl), 0.001, places=5)
+        self.assertAlmostEqual(float(beta), 0.0, places=5)
+        self.assertAlmostEqual(float(loss), float(pol), places=5)
+
+    def test_kl_coefficient_grows_only_after_the_budget(self) -> None:
+        mild_loss, _pol, mild_kl, mild_beta = grpo_loss(
+            torch.zeros(1),
+            torch.tensor([1.0]),
+            torch.tensor([0.01]),
+            beta_max=10.0,
+        )
+        severe_loss, _pol2, severe_kl, severe_beta = grpo_loss(
+            torch.zeros(1),
+            torch.tensor([1.0]),
+            torch.tensor([0.02]),
+            beta_max=10.0,
+        )
+        frac = (0.01 - 0.005) / (0.02 - 0.005)
+        expected_mild = 10.0 * frac * frac
+        self.assertAlmostEqual(float(mild_kl), 0.01, places=5)
+        self.assertAlmostEqual(float(mild_beta), expected_mild, places=5)
+        self.assertAlmostEqual(float(mild_loss), expected_mild * (0.01 - 0.005), places=5)
+        self.assertAlmostEqual(float(severe_kl), 0.02, places=5)
+        self.assertAlmostEqual(float(severe_beta), 10.0, places=5)
+        self.assertAlmostEqual(float(severe_loss), 10.0 * (0.02 - 0.005), places=5)
+        self.assertLess(float(mild_beta), float(severe_beta))
 
     def test_token_kl_matches_schulman_k3(self) -> None:
         import math
@@ -116,14 +177,11 @@ class GrpoLossScaleTests(unittest.TestCase):
         total = token_kl_k3_sum(logp_policy, logp_ref, mask)
         one = math.exp(-0.1) + 0.1 - 1.0
         self.assertAlmostEqual(float(total), 2.0 * one, places=5)
-        _loss, _pol, kl = grpo_loss(
-            torch.tensor([-2.0]),
-            torch.tensor([-2.2]),
-            torch.tensor([1.0]),
-            beta_kl=10.0,
-            sum_logp_policy=torch.tensor([-2.0]),
-            token_count=torch.tensor([2.0]),
-            token_kl_sum=total,
+        _loss, _pol, kl, _beta = grpo_loss(
+            torch.tensor([2.0]),
+            torch.tensor([2.0]),
+            total.reshape(1),
+            beta_max=10.0,
         )
         self.assertAlmostEqual(float(kl), one, places=5)
 

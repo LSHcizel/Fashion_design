@@ -422,7 +422,7 @@ def main() -> None:
         "--beta-kl",
         type=float,
         default=DEFAULT_BETA_KL,
-        help="逐 token k3 的系数。每个 token 偏离约 0.1 nat 时与策略项同一量级",
+        help="动态 KL 系数的上限。k3 ≤ 0.005 时系数为 0；k3 到 0.02 时升到这个上限",
     )
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--max-length", type=int, default=2048)

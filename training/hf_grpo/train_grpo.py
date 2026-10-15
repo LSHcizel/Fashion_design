@@ -53,7 +53,13 @@ from .model_load import (
 from .metrics_callback import JsonlMetricsCallback
 from training.grpo_defaults import DEFAULT_BETA_KL
 
-from .modeling import completion_token_counts, grpo_loss, sampled_token_logprobs, token_kl_k3_sum
+from .modeling import (
+    clipped_surrogate_sum,
+    completion_token_counts,
+    grpo_loss,
+    sampled_token_logprobs,
+    token_kl_k3_sum,
+)
 from .trainer_compat import (
     merge_signature_columns,
     save_serialization_kwargs,
@@ -314,9 +320,9 @@ class GRPOTrainer(Trainer):
             logp_p = logp_p[:, :width]
             logp_r = logp_r[:, :width]
         token_count = mask.sum(dim=-1).clamp(min=1).to(dtype=logp_p.dtype)
-        sum_p = logp_p.sum(dim=-1)
+        surrogate = clipped_surrogate_sum(logp_p, logp_r, mask, inputs["advantage"])
         sum_k3 = token_kl_k3_sum(logp_p, logp_r, mask)
-        return sum_p, token_count, sum_k3
+        return surrogate, token_count, sum_k3
 
     def _save(self, output_dir=None, state_dict=None):  # type: ignore[override]
         if not self.frozen_kl_adapter:
@@ -350,21 +356,27 @@ class GRPOTrainer(Trainer):
         adv_all = inputs["advantage"]
         pol_acc = torch.zeros((), device=adv_all.device)
         kl_acc = torch.zeros((), device=adv_all.device)
+        beta_acc = torch.zeros((), device=adv_all.device)
         loss_acc = torch.zeros((), device=adv_all.device)
         for start in range(n):
             part = {key: value[start : start + 1] for key, value in inputs.items()}
-            sum_p, _count, sum_k3 = self._pair_logprobs(model, part)
-            adv = part["advantage"]
-            pol = -(adv.detach() * sum_p).sum() / total_tokens.to(dtype=sum_p.dtype)
-            kl = sum_k3.to(dtype=sum_p.dtype) / total_tokens.to(dtype=sum_p.dtype)
-            loss = pol + float(self.beta_kl) * kl
+            surrogate, _count, sum_k3 = self._pair_logprobs(model, part)
+            loss, pol, kl, beta = grpo_loss(
+                surrogate,
+                _count,
+                sum_k3,
+                beta_max=float(self.beta_kl),
+                group_tokens=total_tokens,
+            )
             self.accelerator.backward(loss)
             pol_acc = pol_acc + pol.detach()
             kl_acc = kl_acc + kl.detach()
+            beta_acc = beta_acc + beta.detach()
             loss_acc = loss_acc + loss.detach()
         self._step_metrics.add(
             policy_term=float(pol_acc),
             kl_term=float(kl_acc),
+            beta_kl=float(beta_acc),
             grpo_loss=float(loss_acc),
             mean_advantage=float(adv_all.detach().float().mean()),
         )
@@ -378,19 +390,17 @@ class GRPOTrainer(Trainer):
         **_: Any,
     ):
         adv = inputs["advantage"].to(model.device)
-        sum_p, token_count, sum_k3 = self._pair_logprobs(model, inputs)
-        loss, pol, kl = grpo_loss(
-            sum_p,
-            sum_p,
-            adv,
-            beta_kl=self.beta_kl,
-            sum_logp_policy=sum_p,
-            token_count=token_count,
-            token_kl_sum=sum_k3,
+        surrogate, token_count, sum_k3 = self._pair_logprobs(model, inputs)
+        loss, pol, kl, beta = grpo_loss(
+            surrogate,
+            token_count,
+            sum_k3,
+            beta_max=float(self.beta_kl),
         )
         self._step_metrics.add(
             policy_term=float(pol.detach()),
             kl_term=float(kl.detach()),
+            beta_kl=float(beta.detach()),
             grpo_loss=float(loss.detach()),
             mean_advantage=float(adv.detach().mean()),
         )
@@ -442,7 +452,12 @@ def main() -> None:
         default=0.05,
         help="组内 R_content 标准差低于此值则整组不训（避免把噪声标准化成 ±1）",
     )
-    p.add_argument("--beta-kl", type=float, default=DEFAULT_BETA_KL)
+    p.add_argument(
+        "--beta-kl",
+        type=float,
+        default=DEFAULT_BETA_KL,
+        help="动态 KL 系数的上限。k3 ≤ 0.005 时系数为 0；k3 到 0.02 时升到这个上限",
+    )
     p.add_argument(
         "--dtype",
         choices=["bf16", "fp16", "fp32"],
@@ -588,7 +603,14 @@ def main() -> None:
             JsonlMetricsCallback(
                 args.out / "metrics.jsonl",
                 stage="grpo",
-                summary_keys=("loss", "grpo_loss", "policy_term", "kl_term", "mean_advantage"),
+                summary_keys=(
+                    "loss",
+                    "grpo_loss",
+                    "policy_term",
+                    "kl_term",
+                    "beta_kl",
+                    "mean_advantage",
+                ),
             )
         ],
         **trainer_processing_kwargs(tokenizer, trainer_cls=GRPOTrainer),
