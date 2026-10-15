@@ -211,13 +211,14 @@ grpo:
     # KL 锚点 = 训练前改写器快照（勿指向基座 judge 目录）；多轮短 GRPO 仍锚在此，不随轮次更新
     ref-model: "models/Qwen2.5-7B-Rewriter"
     # 冷启动只 SFT 一次。学习率 1e-6，每轮 1 个 epoch。
-    # KL 系数 10 乘逐 token 的 k3。每个 token 偏离约 0.1 nat 时，KL 梯度与策略项同一量级。
+    # --beta-kl 是动态系数的上限，默认 10。k3 ≤ 0.005（约 0.1 nat）时不罚；到约 0.2 nat（k3≈0.02）才升到上限。
     # 同一份标签不连跑多轮。下一轮由 run_next_grpo_round 导入权重、重新采样、冻结 RM 打分后再 GRPO。
+    # 组内 R_content 标准差低于 0.01 的组不进 GRPO（--min-reward-std）。
     grpo-rounds: 1
     grpo-epochs-per-round: 1.0
     # 24G 上 7B 全参反传会 OOM；训练脚本默认 LoRA r=16。大卡才加 --full-finetune
 
-  # ODIN 档 3：冻住基座 7B，只训两个线性头 r_Q / r_L。不要指向 rewriter。
+  # ODIN 档 3：冻住基座 7B。比较对只在同组内。r_Q 分差对齐 S_fp 分差，冗长扣分只是这条分差上的修正。不要指向 rewriter。
   # python -m training.odin_rm.run_pipeline --samples training/runs/<id>/samples.jsonl --work-dir training/runs/<id>/odin_rm
   odin-rm:
     model: "models/Qwen2.5-7B-Instruct"

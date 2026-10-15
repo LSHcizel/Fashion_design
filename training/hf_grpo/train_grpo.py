@@ -30,6 +30,7 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
 from training.step_metrics import WindowMeanMetrics
 
 from .data import (
+    DEFAULT_MIN_REWARD_STD,
     completion_token_start,
     load_phase_b_rows,
     messages_from_phase_b_row,
@@ -449,7 +450,7 @@ def main() -> None:
     p.add_argument(
         "--min-reward-std",
         type=float,
-        default=0.05,
+        default=DEFAULT_MIN_REWARD_STD,
         help="组内 R_content 标准差低于此值则整组不训（避免把噪声标准化成 ±1）",
     )
     p.add_argument(

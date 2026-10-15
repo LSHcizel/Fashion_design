@@ -8,7 +8,7 @@ from pathlib import Path
 
 import torch
 
-from training.hf_grpo.data import select_grpo_rows
+from training.hf_grpo.data import DEFAULT_MIN_REWARD_STD, select_grpo_rows
 from training.hf_grpo.modeling import clipped_surrogate_sum, grpo_loss, token_kl_k3_sum
 from training.hf_grpo.train_grpo import (
     GroupBatchSampler,
@@ -69,6 +69,23 @@ class SelectGrpoRowsTests(unittest.TestCase):
         kept, summary = select_grpo_rows(rows, min_reward_std=0.05)
         self.assertEqual(kept, [])
         self.assertEqual(summary["groups_dropped_low_meaningful"], 1)
+
+    def test_default_threshold_is_one_hundredth(self) -> None:
+        self.assertEqual(DEFAULT_MIN_REWARD_STD, 0.01)
+        # 两条分数差 0.04，总体标准差 0.02，过 0.01，不过旧的 0.05。
+        rows = [
+            {"group_id": "g", "advantage": 1.0, "R_content": 0.80},
+            {"group_id": "g", "advantage": -1.0, "R_content": 0.76},
+        ]
+        kept, summary = select_grpo_rows(rows)
+        self.assertEqual(summary["groups_kept"], 1)
+        self.assertEqual(len(kept), 2)
+        tight = [
+            {"group_id": "g", "advantage": 1.0, "R_content": 0.800},
+            {"group_id": "g", "advantage": -1.0, "R_content": 0.790},
+        ]
+        _, tight_summary = select_grpo_rows(tight)
+        self.assertEqual(tight_summary["groups_dropped_small_gap"], 1)
 
 
 class GroupBatchSamplerTests(unittest.TestCase):

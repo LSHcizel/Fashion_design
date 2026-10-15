@@ -189,8 +189,9 @@ class OdinLossTests(unittest.TestCase):
             head_q=rm.head_q, head_l=rm.head_l,
         )
         self.assertTrue(torch.isfinite(loss))
-        self.assertIn("L_cmp", stats)
         self.assertIn("L_fit", stats)
+        self.assertIn("L_cmp", stats)
+        self.assertIn("mean_verb", stats)
         self.assertIn("acc_q", stats)
         loss.backward()
         self.assertIsNotNone(next(rm.head_q.parameters()).grad)
@@ -236,8 +237,108 @@ class OdinLossTests(unittest.TestCase):
         self.assertAlmostEqual(stats_other["L_fit"], stats_match["L_fit"], places=6)
         self.assertEqual(stats_match["acc_q"], 1.0)
         self.assertEqual(stats_swap["acc_q"], 0.0)
-        self.assertLess(float(fit_match.detach()), float(fit_swap.detach()))
-        self.assertAlmostEqual(float(fit_match.detach()), float(fit_other_len.detach()), places=5)
+        self.assertAlmostEqual(stats_match["mean_verb"], 0.0, places=6)
+
+    def test_slightly_long_is_a_small_deduction_and_double_length_is_not(self) -> None:
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch not installed")
+        from training.odin_rm.modeling import DualHeadRewardModel, odin_rm_loss
+
+        class Tiny(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.config = type("c", (), {"hidden_size": 4})()
+
+        from training.odin_rm.modeling import (
+            DOUBLE_SOURCE_NAT,
+            MILD_OVER_NAT,
+            MILD_PENALTY,
+            WITHIN_GROUP_SFP_STD,
+            verbosity_penalty,
+        )
+
+        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
+        shorter = verbosity_penalty(torch.tensor([-0.2]))
+        mild = verbosity_penalty(torch.tensor([MILD_OVER_NAT]))
+        doubled = verbosity_penalty(torch.tensor([DOUBLE_SOURCE_NAT]))
+        self.assertAlmostEqual(float(shorter), 0.0, places=6)
+        self.assertAlmostEqual(float(mild), MILD_PENALTY, places=4)
+        self.assertAlmostEqual(float(doubled), WITHIN_GROUP_SFP_STD, places=4)
+        self.assertLess(float(mild), 0.01)
+        src = torch.tensor([2.0])
+        # 分差 0.02：稍许偏长扣 0.005，高分仍是目标；长到两倍扣 0.053，目标倒向较短的那条。
+        s_hi = torch.tensor([0.80])
+        s_lo = torch.tensor([0.78])
+        q_hi = torch.tensor([0.80])
+        q_lo = torch.tensor([0.78])
+        _, mild_stats = odin_rm_loss(
+            q_hi, torch.zeros(1), q_lo, torch.zeros(1),
+            src + MILD_OVER_NAT, src, s_hi, s_lo,
+            head_q=rm.head_q, head_l=rm.head_l,
+            source_log_win=src, source_log_lose=src,
+        )
+        self.assertEqual(mild_stats["acc_q"], 1.0)
+        _, long_stats = odin_rm_loss(
+            q_hi, torch.zeros(1), q_lo, torch.zeros(1),
+            src + DOUBLE_SOURCE_NAT, src, s_hi, s_lo,
+            head_q=rm.head_q, head_l=rm.head_l,
+            source_log_win=src, source_log_lose=src,
+        )
+        self.assertEqual(long_stats["acc_q"], 0.0)
+        self.assertGreater(long_stats["mean_verb"], mild_stats["mean_verb"])
+
+    def test_gap_stays_with_sfp_and_length_is_the_only_shift(self) -> None:
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch not installed")
+        from training.odin_rm.modeling import (
+            DOUBLE_SOURCE_NAT,
+            GAP_MATCH_WEIGHT,
+            WITHIN_GROUP_SFP_STD,
+            DualHeadRewardModel,
+            odin_rm_loss,
+        )
+
+        class Tiny(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.config = type("c", (), {"hidden_size": 4})()
+
+        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
+        self.assertAlmostEqual(GAP_MATCH_WEIGHT, 1.0 / WITHIN_GROUP_SFP_STD, places=6)
+        src = torch.tensor([2.0])
+        s_hi = torch.tensor([0.80])
+        s_lo = torch.tensor([0.78])
+        kwargs = dict(head_q=rm.head_q, head_l=rm.head_l, source_log_win=src, source_log_lose=src)
+        # 不长过原文：r_Q 抄 S_fp 时，分差与裁判一致，长度残差为 0。
+        _, same = odin_rm_loss(
+            s_hi, torch.zeros(1), s_lo, torch.zeros(1),
+            src, src, s_hi, s_lo, **kwargs,
+        )
+        self.assertAlmostEqual(same["L_cmp"], 0.0, places=6)
+        self.assertAlmostEqual(same["gap_sfp_mae"], 0.0, places=6)
+        self.assertAlmostEqual(same["verb_resid_mae"], 0.0, places=6)
+        # 高分那条长到原文两倍：仍抄 S_fp 时，分差没跟上扣分，长度残差就是这 0.053。
+        _, copied = odin_rm_loss(
+            s_hi, torch.zeros(1), s_lo, torch.zeros(1),
+            src + DOUBLE_SOURCE_NAT, src, s_hi, s_lo, **kwargs,
+        )
+        self.assertAlmostEqual(copied["gap_sfp_mae"], 0.0, places=4)
+        self.assertAlmostEqual(copied["verb_resid_mae"], WITHIN_GROUP_SFP_STD, places=4)
+        # 漏掉一个组内标准差：加权后的分差损失等于 0.053，而不是 0.053²。
+        self.assertAlmostEqual(copied["L_cmp"], WITHIN_GROUP_SFP_STD, places=3)
+        # 把扣分写进 r_Q 之后，和 S_fp 的分差正好等于冗长扣分，长度残差回到 0。
+        q_hi = s_hi - WITHIN_GROUP_SFP_STD
+        _, shifted = odin_rm_loss(
+            q_hi, torch.zeros(1), s_lo, torch.zeros(1),
+            src + DOUBLE_SOURCE_NAT, src, s_hi, s_lo, **kwargs,
+        )
+        self.assertAlmostEqual(shifted["L_cmp"], 0.0, places=4)
+        self.assertAlmostEqual(shifted["verb_resid_mae"], 0.0, places=4)
+        self.assertAlmostEqual(shifted["gap_sfp_mae"], WITHIN_GROUP_SFP_STD, places=4)
 
     def test_anti_length_content_head_costs_more_than_uncorrelated(self) -> None:
         try:

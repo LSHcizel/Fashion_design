@@ -159,10 +159,14 @@ def advantage_span(members: List[Dict[str, Any]]) -> float:
     return max(advs) - min(advs)
 
 
+# 组内 R_content 标准差低于此值则整组不训。0.05 会把 r_Q 压扁后的大部分组丢掉。
+DEFAULT_MIN_REWARD_STD = 0.01
+
+
 def select_grpo_rows(
     rows: List[Dict[str, Any]],
     *,
-    min_reward_std: float = 0.05,
+    min_reward_std: float = DEFAULT_MIN_REWARD_STD,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
     """
     丢掉组内奖励几乎一样的组。

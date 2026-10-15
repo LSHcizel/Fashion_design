@@ -129,6 +129,17 @@ def _teacher_scores(pairs: Sequence[Dict[str, Any]], which: str, device: torch.d
     return torch.tensor(vals, dtype=torch.float32, device=device)
 
 
+def _source_log_lens(pairs: Sequence[Dict[str, Any]], which: str, device: torch.device) -> torch.Tensor:
+    vals = []
+    for p in pairs:
+        side = p[which]
+        raw = side.get("source_log_len")
+        if raw is None:
+            raw = side.get("log_len") or 0.0
+        vals.append(float(raw))
+    return torch.tensor(vals, dtype=torch.float32, device=device)
+
+
 def _mean_stats(rows: List[Dict[str, float]]) -> Dict[str, float]:
     if not rows:
         return {}
@@ -161,10 +172,13 @@ def eval_pairs_cached(
         lll = _log_lens(chunk, "rejected", device)
         tw = _teacher_scores(chunk, "chosen", device)
         tl = _teacher_scores(chunk, "rejected", device)
+        sw = _source_log_lens(chunk, "chosen", device)
+        sl = _source_log_lens(chunk, "rejected", device)
         _, stats = odin_rm_loss(
             rqw, rlw, rql, rll, llw, lll, tw, tl,
             head_q=rm.head_q, head_l=rm.head_l,
             lambda_corr=lambda_corr, lambda_orth=lambda_orth,
+            source_log_win=sw, source_log_lose=sl,
         )
         stats_rows.append(stats)
     return _mean_stats(stats_rows)
@@ -274,10 +288,13 @@ def train_heads_cached(
             lll = _log_lens(chunk, "rejected", device)
             tw = _teacher_scores(chunk, "chosen", device)
             tl = _teacher_scores(chunk, "rejected", device)
+            sw = _source_log_lens(chunk, "chosen", device)
+            sl = _source_log_lens(chunk, "rejected", device)
             loss, stats = odin_rm_loss(
                 rqw, rlw, rql, rll, llw, lll, tw, tl,
                 head_q=rm.head_q, head_l=rm.head_l,
                 lambda_corr=lambda_corr, lambda_orth=lambda_orth,
+                source_log_win=sw, source_log_lose=sl,
             )
             opt.zero_grad(set_to_none=True)
             loss.backward()
@@ -432,15 +449,21 @@ def main() -> None:
             last={**{f"train_{k}": v for k, v in last_train.items()}, **{f"holdout_{k}": v for k, v in last_hold.items()}},
             keys=(
                 "train_loss",
-                "train_L_cmp",
                 "train_L_fit",
+                "train_L_cmp",
                 "train_acc_q",
                 "train_rho_qs",
+                "train_mean_verb",
+                "train_gap_sfp_mae",
+                "train_verb_resid_mae",
                 "holdout_loss",
-                "holdout_L_cmp",
                 "holdout_L_fit",
+                "holdout_L_cmp",
                 "holdout_acc_q",
                 "holdout_rho_qs",
+                "holdout_mean_verb",
+                "holdout_gap_sfp_mae",
+                "holdout_verb_resid_mae",
             ),
         )
         append_metrics(metrics_jsonl, summary)

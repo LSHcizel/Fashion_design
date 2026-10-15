@@ -8,7 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from .data import include_in_training, log_len_of, teacher_score
+from .data import include_in_training, log_len_of, source_log_len_of, teacher_score
 
 
 def _side_payload(rec: Dict[str, Any]) -> Dict[str, Any]:
@@ -19,6 +19,7 @@ def _side_payload(rec: Dict[str, Any]) -> Dict[str, Any]:
         "completion": rec.get("completion"),
         "teacher_score": teacher_score(rec),
         "log_len": log_len_of(rec),
+        "source_log_len": source_log_len_of(rec),
         "char_len": rec.get("char_len"),
         "context": {
             "shared_source_text": ctx.get("shared_source_text"),
