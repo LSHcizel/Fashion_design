@@ -161,3 +161,15 @@ training/runs/**/pairs.jsonl
 training/runs/**/samples_rq.jsonl
 !training/runs/grpo_corpus2000_20261014_smoke2/samples.jsonl
 
+# 20261017 冷启动：指标与导出可跟踪，权重不入库。
+!training/runs/grpo_corpus2000_20261017/
+!training/runs/grpo_corpus2000_20261017/**
+training/runs/grpo_corpus2000_20261017/**/*.safetensors
+training/runs/grpo_corpus2000_20261017/**/*.bin
+training/runs/grpo_corpus2000_20261017/**/*.pt
+training/runs/grpo_corpus2000_20261017/**/*.pth
+
+# 超过 GitHub 100MB，任何白名单之后都不入库。
+training/runs/**/pairs.jsonl
+training/runs/**/samples_rq.jsonl
+training/runs/**/phase_b_grpo.jsonl
