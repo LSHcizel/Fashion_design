@@ -1,0 +1,14 @@
+{
+  "samples_jsonl": "/home/lsh/Fashion_design/training/runs/grpo_corpus2000_20261011/samples.jsonl",
+  "sample_rows": 18000,
+  "groups": 2000,
+  "groups_with_pairs": 1927,
+  "pairs": 41036,
+  "train_pairs": 37781,
+  "holdout_pairs": 3255,
+  "min_margin": 1e-06,
+  "holdout_frac": 0.1,
+  "teacher": "s_fp_base / S_fp（不用 R_content）",
+  "pairing": "within_group_only",
+  "cross_group_pairs": 0
+}
