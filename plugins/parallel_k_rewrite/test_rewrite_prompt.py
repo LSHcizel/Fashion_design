@@ -67,6 +67,8 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("one footwear family", prompt)
         self.assertIn("contradictory binding", prompt)
         self.assertIn("SINGLE FRAME", prompt)
+        self.assertIn("CLOTHED RUNWAY", prompt)
+        self.assertIn("not bare skin", prompt)
         self.assertIn("one camera in front of her face", prompt)
         self.assertIn("Front view only, not from behind", prompt)
         self.assertIn("No Look number", prompt)
@@ -165,7 +167,7 @@ class RewritePromptPolicyTests(unittest.TestCase):
         self.assertIn("禁止换成别的牌子", spec)
         self.assertIn("标志性风格卡", spec)
         self.assertIn("与主题冲突时以原文主题为准", spec)
-        self.assertIn("\"penalty_gate_max\": 0.25", spec)
+        self.assertIn("\"penalty_gate_max\": 0.2", spec)
         self.assertIn("必须删除另一套衣服并严格统一成一套", spec)
         from plugins.text_description_evaluator.design_text_evaluator_api import (
             DESIGN_MERIT_JUDGE_GUIDE,

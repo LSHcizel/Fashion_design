@@ -112,6 +112,9 @@ class SecondRewriterTests(unittest.TestCase):
                 self.assertIn("THEME: salon released toward the shore", kwargs["user_prompt"])
                 self.assertIn("Existing designs on file", kwargs["user_prompt"])
                 self.assertIn("serious conflicting inconsistency", kwargs["user_prompt"])
+                self.assertIn("Large replacement is allowed", kwargs["user_prompt"])
+                self.assertIn("fully dressed", kwargs["user_prompt"])
+                self.assertNotIn("stray far", kwargs["user_prompt"])
                 return (
                     '{"feature_points": ["soft tailoring"], '
                     '"signature_points": ["chain-weighted hem"], '
@@ -119,11 +122,15 @@ class SecondRewriterTests(unittest.TestCase):
                 )
             if len(seen) == 2:
                 self.assertIn("brand and theme fit", kwargs["user_prompt"])
-                self.assertIn("replace a garment type", kwargs["user_prompt"])
+                self.assertIn("Replace a garment type", kwargs["user_prompt"])
+                self.assertIn("Large replacement is allowed", kwargs["user_prompt"])
+                self.assertNotIn("stray far", kwargs["user_prompt"])
                 self.assertNotIn("ELEMENT RECONSTRUCTION", kwargs["user_prompt"])
                 self.assertIn("chain-weighted hem", kwargs["user_prompt"])
                 return '{"suggestions": [{"edit": "weight the jacket hem with a chain", "where": "hem"}]}'
             self.assertIn("fits this house's tone", kwargs["user_prompt"])
+            self.assertIn("Large replacement is allowed", kwargs["user_prompt"])
+            self.assertNotIn("stray far", kwargs["user_prompt"])
             return (
                 '{"kept": ["weight the jacket hem with a chain"], "dropped": [], '
                 '"reflection": "The chain hem is Chanel and still a day suit.", '

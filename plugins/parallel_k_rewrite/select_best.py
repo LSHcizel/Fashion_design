@@ -38,25 +38,45 @@ def rank_key(evaluation: Optional[Dict[str, Any]]) -> Tuple[float, float]:
     )
 
 
-def improves_score_and_penalty(
+DEFAULT_PENALTY_GATE_MAX = 0.2
+
+
+def penalty_within_gate(
+    evaluation: Optional[Dict[str, Any]],
+    penalty_gate_max: float = DEFAULT_PENALTY_GATE_MAX,
+) -> bool:
+    """惩罚不超过门限。缺惩罚分视为超门。"""
+    penalty = _penalty(evaluation) if isinstance(evaluation, dict) else None
+    if penalty is None:
+        return False
+    return penalty <= float(penalty_gate_max) + 1e-9
+
+
+def adoptable_rewrite(
     evaluation: Optional[Dict[str, Any]],
     baseline: Optional[Dict[str, Any]],
+    *,
+    penalty_gate_max: float = DEFAULT_PENALTY_GATE_MAX,
 ) -> bool:
-    """总分严格提高，并且惩罚严格降低。缺惩罚分视为做不到。"""
+    """总分严格上升，且惩罚不超过门限。缺惩罚分视为不可采纳。"""
     if not isinstance(evaluation, dict) or not isinstance(baseline, dict):
         return False
-    new_penalty = _penalty(evaluation)
-    base_penalty = _penalty(baseline)
-    if new_penalty is None or base_penalty is None:
+    if not penalty_within_gate(evaluation, penalty_gate_max):
         return False
-    return _s_fp(evaluation) > _s_fp(baseline) and new_penalty < base_penalty
+    return _s_fp(evaluation) > _s_fp(baseline)
 
 
 def is_strictly_better(
     evaluation: Optional[Dict[str, Any]],
     baseline: Optional[Dict[str, Any]],
+    *,
+    penalty_gate_max: float = DEFAULT_PENALTY_GATE_MAX,
 ) -> bool:
-    return improves_score_and_penalty(evaluation, baseline)
+    return adoptable_rewrite(
+        evaluation,
+        baseline,
+        penalty_gate_max=penalty_gate_max,
+    )
 
 
 def candidate_eligible(cand: Dict[str, Any]) -> bool:
@@ -72,13 +92,18 @@ def pick_best_candidate(
     candidates: Iterable[Dict[str, Any]],
     *,
     baseline_evaluation: Optional[Dict[str, Any]],
+    penalty_gate_max: float = DEFAULT_PENALTY_GATE_MAX,
 ) -> Optional[Dict[str, Any]]:
-    """同时提高总分并降低惩罚的候选里，取效果最好的一条。"""
+    """总分高于原文且惩罚不超门限的候选里，取得分最高的一条。"""
     eligible = [
         c
         for c in candidates
         if candidate_eligible(c)
-        and improves_score_and_penalty(c.get("evaluation"), baseline_evaluation)
+        and adoptable_rewrite(
+            c.get("evaluation"),
+            baseline_evaluation,
+            penalty_gate_max=penalty_gate_max,
+        )
     ]
     if not eligible:
         return None
@@ -89,9 +114,15 @@ def pick_rewrite_if_better(
     *,
     baseline_evaluation: Optional[Dict[str, Any]],
     candidates: Iterable[Dict[str, Any]],
+    penalty_gate_max: float = DEFAULT_PENALTY_GATE_MAX,
 ) -> Optional[Dict[str, Any]]:
     """
-    只采纳同时比原文总分更高、惩罚更低的改写，并在其中取总分最高的一条。
-    总分相同则取惩罚更低的一条。没有同时做到这两点的改写不替换原文。
+    第一轮改写后，总分高于原文且惩罚不超过门限的候选都可采纳。
+    在其中取得分最高的一条；总分相同则取惩罚更低的一条。
+    没有这样的候选则不替换原文。
     """
-    return pick_best_candidate(candidates, baseline_evaluation=baseline_evaluation)
+    return pick_best_candidate(
+        candidates,
+        baseline_evaluation=baseline_evaluation,
+        penalty_gate_max=penalty_gate_max,
+    )

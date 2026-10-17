@@ -2,6 +2,9 @@
 
 一次优化步只包含同一条原文的 K 个候选。策略项用 completion 的对数概率之和
 （再按组内 token 总数平均），不再让长句先除以自己的长度。
+
+排序损失 ``softplus(ℓ_低 - ℓ_高)`` 只写入 metrics，不反传。固定探针组在开训、
+每 ``--probe-every`` 步和结束时重算；从约 0.693 下降表示高优势改写变得更可能。
 """
 
 from __future__ import annotations
@@ -27,7 +30,7 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
     default_hf_local_grpo_model,
     default_hf_local_grpo_ref_model,
 )
-from training.step_metrics import WindowMeanMetrics
+from training.step_metrics import WindowMeanMetrics, append_metrics
 
 from .data import (
     DEFAULT_MIN_REWARD_STD,
@@ -57,6 +60,7 @@ from training.grpo_defaults import DEFAULT_BETA_KL
 from .modeling import (
     clipped_surrogate_sum,
     completion_token_counts,
+    group_rank_loss,
     grpo_loss,
     sampled_token_logprobs,
     token_kl_k3_sum,
@@ -179,6 +183,146 @@ class _GroupEpochCallback(TrainerCallback):
         return control
 
 
+def split_probe_groups(
+    rows: List[Dict[str, Any]],
+    *,
+    n_groups: int,
+    seed: int = 0,
+) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """抽出固定探针组，其余才参与梯度。至少留一组给训练。"""
+    if n_groups <= 0 or not rows:
+        return list(rows), []
+    buckets: Dict[str, List[Dict[str, Any]]] = {}
+    order: List[str] = []
+    for i, row in enumerate(rows):
+        gid = str(row.get("group_id") or f"row-{i}")
+        if gid not in buckets:
+            order.append(gid)
+            buckets[gid] = []
+        buckets[gid].append(row)
+    if len(order) < 2:
+        return list(rows), []
+    n = min(int(n_groups), len(order) - 1)
+    chosen = set(random.Random(seed).sample(order, n))
+    train: List[Dict[str, Any]] = []
+    probe: List[Dict[str, Any]] = []
+    for gid in order:
+        (probe if gid in chosen else train).extend(buckets[gid])
+    return train, probe
+
+
+def iter_group_batches(dataset: PhaseBGRPODataset, collator: GRPOCollator) -> List[Dict[str, torch.Tensor]]:
+    """按原文分组、不打乱，每组一个已经 pad 好的 batch。"""
+    buckets: Dict[str, List[int]] = {}
+    order: List[str] = []
+    for i, gid in enumerate(dataset.group_ids):
+        if gid not in buckets:
+            order.append(gid)
+            buckets[gid] = []
+        buckets[gid].append(i)
+    return [collator([dataset[i] for i in buckets[gid]]) for gid in order]
+
+
+@torch.no_grad()
+def probe_rank_loss(model: nn.Module, batches: List[Dict[str, torch.Tensor]]) -> Optional[float]:
+    """固定组上的排序损失。每条单独前向，避免一整组同时占满显存。"""
+    if not batches:
+        return None
+    was_training = bool(model.training)
+    model.eval()
+    device = next(model.parameters()).device
+    losses: List[float] = []
+    try:
+        for batch in batches:
+            n = int(batch["input_ids"].shape[0])
+            means = []
+            for i in range(n):
+                ids = batch["input_ids"][i : i + 1].to(device)
+                attn = batch["attention_mask"][i : i + 1].to(device)
+                start = batch["completion_start"][i : i + 1].to(device)
+                logits = model(input_ids=ids, attention_mask=attn).logits
+                logp, mask = sampled_token_logprobs(logits, ids, start, attn)
+                count = mask.sum(dim=-1).clamp(min=1).to(dtype=logp.dtype)
+                means.append((logp.sum(dim=-1) / count).reshape(()))
+            rank = group_rank_loss(torch.stack(means), batch["advantage"].to(device))
+            if rank is not None:
+                losses.append(float(rank))
+    finally:
+        if was_training:
+            model.train()
+    if not losses:
+        return None
+    return sum(losses) / len(losses)
+
+
+class RankProbeCallback(TrainerCallback):
+    """开训、每 ``every`` 步、结束时，在同一批组上重算排序损失。"""
+
+    def __init__(
+        self,
+        batches: List[Dict[str, torch.Tensor]],
+        *,
+        every: int,
+        metrics_path: Path,
+    ) -> None:
+        self.batches = batches
+        self.every = int(every)
+        self.metrics_path = Path(metrics_path)
+        self._done: set[int] = set()
+        self._first: Optional[float] = None
+        self._last: Optional[float] = None
+
+    def _run(self, step: int, model: Optional[nn.Module]) -> None:
+        if model is None or step in self._done:
+            return
+        value = probe_rank_loss(model, self.batches)
+        if value is None:
+            return
+        self._done.add(step)
+        if self._first is None:
+            self._first = value
+        self._last = value
+        append_metrics(
+            self.metrics_path,
+            {
+                "stage": "grpo",
+                "event": "probe",
+                "global_step": int(step),
+                "probe_rank_loss": value,
+                "probe_groups": len(self.batches),
+            },
+        )
+        logger.info("固定组排序损失 step=%s probe_rank_loss=%.4f（log 2≈0.693）", step, value)
+
+    def on_train_begin(self, args, state, control, **kwargs):  # type: ignore[no-untyped-def]
+        self._run(int(getattr(state, "global_step", 0) or 0), kwargs.get("model"))
+        return control
+
+    def on_step_end(self, args, state, control, **kwargs):  # type: ignore[no-untyped-def]
+        step = int(getattr(state, "global_step", 0) or 0)
+        if self.every > 0 and step % self.every == 0:
+            self._run(step, kwargs.get("model"))
+        return control
+
+    def on_train_end(self, args, state, control, **kwargs):  # type: ignore[no-untyped-def]
+        step = int(getattr(state, "global_step", 0) or 0)
+        self._run(step, kwargs.get("model"))
+        if self._first is not None and self._last is not None:
+            append_metrics(
+                self.metrics_path,
+                {
+                    "stage": "grpo",
+                    "event": "probe_summary",
+                    "global_step": step,
+                    "first_probe_rank_loss": self._first,
+                    "last_probe_rank_loss": self._last,
+                    "delta_probe_rank_loss": self._last - self._first,
+                    "probe_groups": len(self.batches),
+                },
+            )
+        return control
+
+
 def kl_ref_kind_from_flags(
     *,
     ref_is_adapter: bool,
@@ -288,7 +432,7 @@ class GRPOTrainer(Trainer):
         self,
         model: nn.Module,
         inputs: Dict[str, torch.Tensor],
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         input_ids = inputs["input_ids"]
         attn = inputs["attention_mask"]
         comp_start = inputs["completion_start"]
@@ -323,7 +467,8 @@ class GRPOTrainer(Trainer):
         token_count = mask.sum(dim=-1).clamp(min=1).to(dtype=logp_p.dtype)
         surrogate = clipped_surrogate_sum(logp_p, logp_r, mask, inputs["advantage"])
         sum_k3 = token_kl_k3_sum(logp_p, logp_r, mask)
-        return surrogate, token_count, sum_k3
+        mean_logp = (logp_p.sum(dim=-1) / token_count).detach()
+        return surrogate, token_count, sum_k3, mean_logp
 
     def _save(self, output_dir=None, state_dict=None):  # type: ignore[override]
         if not self.frozen_kl_adapter:
@@ -359,9 +504,10 @@ class GRPOTrainer(Trainer):
         kl_acc = torch.zeros((), device=adv_all.device)
         beta_acc = torch.zeros((), device=adv_all.device)
         loss_acc = torch.zeros((), device=adv_all.device)
+        mean_logps = []
         for start in range(n):
             part = {key: value[start : start + 1] for key, value in inputs.items()}
-            surrogate, _count, sum_k3 = self._pair_logprobs(model, part)
+            surrogate, _count, sum_k3, mean_logp = self._pair_logprobs(model, part)
             loss, pol, kl, beta = grpo_loss(
                 surrogate,
                 _count,
@@ -374,12 +520,18 @@ class GRPOTrainer(Trainer):
             kl_acc = kl_acc + kl.detach()
             beta_acc = beta_acc + beta.detach()
             loss_acc = loss_acc + loss.detach()
+            mean_logps.append(mean_logp.reshape(()))
+        rank = group_rank_loss(torch.stack(mean_logps), adv_all)
+        extra: Dict[str, float] = {}
+        if rank is not None:
+            extra["rank_loss"] = float(rank)
         self._step_metrics.add(
             policy_term=float(pol_acc),
             kl_term=float(kl_acc),
             beta_kl=float(beta_acc),
             grpo_loss=float(loss_acc),
             mean_advantage=float(adv_all.detach().float().mean()),
+            **extra,
         )
         return loss_acc.detach()
 
@@ -391,19 +543,24 @@ class GRPOTrainer(Trainer):
         **_: Any,
     ):
         adv = inputs["advantage"].to(model.device)
-        surrogate, token_count, sum_k3 = self._pair_logprobs(model, inputs)
+        surrogate, token_count, sum_k3, mean_logp = self._pair_logprobs(model, inputs)
         loss, pol, kl, beta = grpo_loss(
             surrogate,
             token_count,
             sum_k3,
             beta_max=float(self.beta_kl),
         )
+        rank = group_rank_loss(mean_logp, adv)
+        extra: Dict[str, float] = {}
+        if rank is not None:
+            extra["rank_loss"] = float(rank)
         self._step_metrics.add(
             policy_term=float(pol.detach()),
             kl_term=float(kl.detach()),
             beta_kl=float(beta.detach()),
             grpo_loss=float(loss.detach()),
             mean_advantage=float(adv.detach().mean()),
+            **extra,
         )
         if return_outputs:
             return loss, {"policy_term": pol.detach(), "kl_term": kl.detach()}
@@ -460,6 +617,19 @@ def main() -> None:
         help="动态 KL 系数的上限。k3 ≤ 0.005 时系数为 0；k3 到 0.02 时升到这个上限",
     )
     p.add_argument(
+        "--probe-groups",
+        type=int,
+        default=16,
+        help="抽出这么多组不参与梯度，训练过程中反复计算排序损失。0 表示不抽。",
+    )
+    p.add_argument(
+        "--probe-every",
+        type=int,
+        default=100,
+        help="每隔这么多优化步，在固定组上重算排序损失。开训和结束时总会算一次。",
+    )
+    p.add_argument("--probe-seed", type=int, default=0, help="抽取固定探针组的随机种子")
+    p.add_argument(
         "--dtype",
         choices=["bf16", "fp16", "fp32"],
         default="bf16",
@@ -487,6 +657,15 @@ def main() -> None:
     logger.info("GRPO 组过滤: %s", group_summary)
     if not rows:
         raise SystemExit("过滤后没有可训练的组：组内奖励差太小，或每组不足 2 条")
+    train_rows, probe_rows = split_probe_groups(
+        rows, n_groups=args.probe_groups, seed=args.probe_seed
+    )
+    logger.info(
+        "GRPO 排序探针: 抽出 %s 条 / 训练 %s 条。固定组不参与梯度，每 %s 步重算排序损失",
+        len(probe_rows),
+        len(train_rows),
+        args.probe_every,
+    )
 
     tok_src = model_id
     adapter_tok = Path(model_id)
@@ -558,7 +737,7 @@ def main() -> None:
             ref.to("cpu")
             logger.info("独立 ref 放 CPU，避免与 policy 同时占满 24G")
 
-    ds = PhaseBGRPODataset(rows, tokenizer, args.max_length, system_prompt=sys_prompt)
+    ds = PhaseBGRPODataset(train_rows, tokenizer, args.max_length, system_prompt=sys_prompt)
     if len(ds) == 0:
         raise SystemExit("no rows with valid advantage")
     group_sampler = GroupBatchSampler(ds.group_ids, seed=0)
@@ -569,6 +748,13 @@ def main() -> None:
         args.grad_accum,
     )
     collator = GRPOCollator(tokenizer.pad_token_id or 0)
+    probe_ds = (
+        PhaseBGRPODataset(probe_rows, tokenizer, args.max_length, system_prompt=sys_prompt)
+        if probe_rows
+        else None
+    )
+    probe_batches = iter_group_batches(probe_ds, collator) if probe_ds is not None and len(probe_ds) else []
+    logger.info("固定探针组数: %s", len(probe_batches))
 
     use_bf16 = args.dtype == "bf16"
     use_fp16 = args.dtype == "fp16"
@@ -601,6 +787,11 @@ def main() -> None:
         data_collator=collator,
         callbacks=[
             _GroupEpochCallback(group_sampler),
+            RankProbeCallback(
+                probe_batches,
+                every=args.probe_every,
+                metrics_path=args.out / "metrics.jsonl",
+            ),
             JsonlMetricsCallback(
                 args.out / "metrics.jsonl",
                 stage="grpo",
@@ -611,6 +802,7 @@ def main() -> None:
                     "kl_term",
                     "beta_kl",
                     "mean_advantage",
+                    "rank_loss",
                 ),
             )
         ],

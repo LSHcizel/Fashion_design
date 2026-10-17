@@ -159,6 +159,29 @@ def clipped_surrogate_sum(
     return chosen.masked_fill(~mask, 0.0).sum(dim=-1)
 
 
+def group_rank_loss(
+    mean_logprobs: torch.Tensor,
+    advantages: torch.Tensor,
+) -> Optional[torch.Tensor]:
+    """组内排序损失。只用于观察，不参与反传。
+
+    ``mean_logprobs`` 是每条 completion 的长度归一化 ``log π``。
+    对所有 ``A_i > A_j`` 的配对取 ``softplus(ℓ_j - ℓ_i)`` 再平均。
+    高低分概率相同时等于 ``log 2``（约 0.693）；高优势句更可能时朝 0 下降。
+    没有严格高低对时返回 ``None``。
+    """
+    ell = mean_logprobs.detach().float().reshape(-1)
+    adv = advantages.detach().float().reshape(-1)
+    if ell.numel() != adv.numel() or ell.numel() < 2:
+        return None
+    higher = adv.unsqueeze(1) > adv.unsqueeze(0)
+    if not bool(higher.any()):
+        return None
+    # diff[i, j] = ℓ_j - ℓ_i
+    diff = ell.unsqueeze(0) - ell.unsqueeze(1)
+    return F.softplus(diff)[higher].mean()
+
+
 def grpo_loss(
     surrogate_sum: torch.Tensor,
     token_count: torch.Tensor,

@@ -364,29 +364,40 @@ DESIGN_MERIT_DIMENSIONS = {
 }
 # Single DesignMerit judge block: used only in the DesignMerit user prompt (not repeated in system).
 DESIGN_MERIT_JUDGE_GUIDE = (
-    "Score the feature that would still identify this look if color, fabric, and brand words were swapped. "
-    "Do not score completeness, layout, or garment category.\n"
-    "DESIGN (may stay 0.75–1.0): one of these on a single outfit — "
-    "a pattern, texture, or print covering the whole cloth; "
-    "decoration that traces one outline (appliqué, trim, fringe, scallop, or beading "
-    "along the neckline, front, hem, cuff, or slit); "
-    "or an inner garment of the SAME theme that still reads as its own piece when the outer is opened. "
+    "Score the operation that would still identify this look if color, fabric, and brand words were swapped. "
+    "Do not score completeness, layout, or garment category. "
+    "These axes are the quality score for design.\n"
+    "HIGH (0.75–1.0) follows the design points of inverse runway descriptions: "
+    "one operation strong enough that the photograph would be a different look without it. "
+    "The operation may shift proportion, make the surface itself the identity, "
+    "change the outline through volume, repeat or break a part, "
+    "give a cloth or a closure a job it does not usually do, "
+    "make an opening into the structure, "
+    "or leave an inner piece readable when the outer is opened. "
+    "These are kinds of force, not a menu. "
+    "Do not require a named motif, and do not give a high score because a familiar motif is mentioned. "
+    "A new operation of the same force scores in this band. "
+    "A familiar motif used only as ordinary finishing does not. "
     "A small placement on one side of that same garment is not a second idea and not a conflict.\n"
+    "LOW: the paragraph only completes a standard garment. "
+    "Score design_distinctiveness, craft_embellishment_salience, and silhouette_combination_originality "
+    "at most 0.25, and the other DesignMerit axes at most 0.5, when nothing in the photograph would change "
+    "if that finish were removed: a line that only follows an edge the tailoring already drew, "
+    "a layer that disappears into the outer piece, factory closure, "
+    "or a category named with its cloth. "
+    "Precise names do not raise the score. "
+    "The same low band covers a collection-shared interchangeable trunk-garment formula. "
+    "Factory finishing beside an operation that changes the photograph does not by itself force 0.25.\n"
     "CONFLICT is not design. Cap the metric at 0.25, and do not keep it high because the facts are specific: "
     "two sleeve grammars, two bottoms, or two shoe types; "
     "one garment with two bindings for neckline, sleeve, length, closure, or shell; "
     "or a garment from another theme (bridal, coronation, flamenco, mourning, masquerade, "
     "morning dress, rococo, or the same kind of foreign register), including as an inner layer. "
-    "Two trunks colliding in volume is not one of those three features.\n"
-    "Low 0.25–0.5 when none of those three features is present and there is no conflict: "
-    "hem/cuff reveal, self-belt, tucked shirt, factory finishing (concealed placket, topstitch, piping), "
-    "brand hardware, fabric-mood, theme dualities, "
-    "or a collection-shared interchangeable trunk-garment formula. "
-    "Factory finishing on one identity does not by itself force 0.25. "
+    "Two trunks colliding in volume is not that identifying operation.\n"
     "Do not copy one score onto every axis. "
     "Do not lower merely for a coat, cropped jacket, or shorts as a category. Ignore T2I preamble.\n"
-    "Reason: name that feature in one clause, or name the conflict; then pick the score. "
-    "Evidence: quote that feature, or quote the conflicting garments."
+    "Reason: name the operation in one clause, or name the conflict; then pick the score. "
+    "Evidence: quote that operation, or quote the conflicting garments."
 )
 # Per-axis floors after the judge. Shared series/finishing grammar stays low on idea axes.
 DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_ORDINARY = 0.25
@@ -426,10 +437,10 @@ _DESIGN_IDENTIFYING_SIGNATURES = (
         "edge_path",
         re.compile(
             r"(appliqu[eé]|frayed|fringe[d]?\b|cutwork|crochet|"
-            r"bead(?:ed|work)|charm-like|tassel|rosette|feather trim|braided trim|"
-            r"zigzag|scalloped|decorative (?:border|trim|edging)|banded trim|"
-            r"(?:sequin|ruffle|trim|edging|border|binding)\w*.{0,80}"
-            r"(?:along|down|at|from|outlines?|running|borders?)\s+"
+            r"bead(?:ed|work)|charm-like|tassel|rosette|feather trim|"
+            r"zigzag|scalloped|banded trim|"
+            r"(?:sequin|ruffle)\w*.{0,80}"
+            r"(?:along|down|at|from|outlines?|running)\s+"
             r"(?:the\s+)?(?:neckline|front|hem|cuff|opening|sleeve|slit|neck|waist))",
             re.I,
         ),
@@ -1212,54 +1223,36 @@ def compute_design_merit_metric_caps(
         if prev is None or cap < float(prev["cap"]):
             caps[metric] = {"cap": cap, "reason": reason}
 
-    if not has_any_sig:
-        if shared_wardrobe:
-            _propose(
-                "design_distinctiveness",
-                DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_ORDINARY,
-                "no identifying idea; shared finishing or series wardrobe",
-            )
-        else:
-            _propose(
-                "design_distinctiveness",
-                DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_CEILING,
-                "no identifying idea",
-            )
-
     if not has_any_sig and shared_wardrobe:
+        _propose(
+            "design_distinctiveness",
+            DESIGN_MERIT_AUX_CAP_DISTINCTIVENESS_ORDINARY,
+            "shared finishing or series wardrobe",
+        )
         _propose(
             "visual_observation_grounding",
             DESIGN_MERIT_AUX_CAP_GROUNDING,
             "observation is cut/finishing, not an identifying idea",
         )
+        _propose(
+            "design_signal_purity",
+            DESIGN_MERIT_AUX_CAP_PURITY_THEME,
+            "theme or series narrative without an identifying idea",
+        )
 
-    if not has_combo_sig:
-        if cues["ordinary_dressing"] or cues["series_formula"]:
-            _propose(
-                "silhouette_combination_originality",
-                DESIGN_MERIT_AUX_CAP_COMBINATION,
-                "ordinary or series stacking, no second identity",
-            )
-        elif not has_any_sig:
-            _propose(
-                "silhouette_combination_originality",
-                DESIGN_MERIT_AUX_CAP_COMBINATION_WEAK,
-                "no same-theme inner identity",
-            )
+    if (not has_combo_sig) and (cues["ordinary_dressing"] or cues["series_formula"]):
+        _propose(
+            "silhouette_combination_originality",
+            DESIGN_MERIT_AUX_CAP_COMBINATION,
+            "ordinary or series stacking, no second identity",
+        )
 
-    if not has_any_sig:
-        if cues["theme_pose"] or cues["series_formula"]:
-            _propose(
-                "design_signal_purity",
-                DESIGN_MERIT_AUX_CAP_PURITY_THEME,
-                "theme or series narrative without an identifying idea",
-            )
-        else:
-            _propose(
-                "design_signal_purity",
-                DESIGN_MERIT_AUX_CAP_PURITY_CEILING,
-                "no identifying idea",
-            )
+    if (not has_any_sig) and cues["theme_pose"]:
+        _propose(
+            "design_signal_purity",
+            DESIGN_MERIT_AUX_CAP_PURITY_THEME,
+            "theme or series narrative without an identifying idea",
+        )
 
     if conflict.get("active"):
         for metric in (
@@ -1384,8 +1377,6 @@ _OFF_BODY_RE = re.compile(
     r"|if removed"
     r"|its own garment"
     r"|read as its own"
-    r"|completes? the look"
-    r"|finish(?:es)? the look"
     r")"
 )
 LAYOUT_BOARD_PENALTY_FLOOR = 0.75
@@ -1442,7 +1433,7 @@ Judging principles:
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
 9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale. An explicit score cap in a metric rule overrides that rubric.
 10. For DesignMerit, score only the identifying idea (module guide). Completeness, precision, and imageability are other modules. Ignore T2I preamble.
-11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard single-frame line and the old T2I preamble are fixed boilerplate—ignore them; never penalize them alone. A Look number, a collage, a flat lay, a product shot, or an off-body catalog clause in the paragraph ("if removed", "its own garment", "complete the look") is not boilerplate: generation_readiness and visibility_priority stay at most 0.25 while it remains.
+11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard single-frame line and the old T2I preamble are fixed boilerplate—ignore them; never penalize them alone. A Look number, a collage, a flat lay, a product shot, or an off-body catalog clause in the paragraph ("if removed", "its own garment") is not boilerplate: generation_readiness and visibility_priority stay at most 0.25 while it remains. Shoes or accessories still on the body, including a closer such as "finish the look" or "complete the look", are not that clause and do not cap the quality axes.
 12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable as one worn photograph**. Do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich. Imaging-rich wording does not override a same-element, theme-clash, or single-frame score cap. A Look title, collage, flat lay, product shot, second view, or off-body garment keeps generation_readiness at most 0.25.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
 14. For information_density, score whether each clause adds a new imageable fact. Do not score character count: shorter is not higher, longer is not lower. High density keeps the identifying anchors (craft path, the surface that makes this look recognizable, inside-outside layering) and does not restate them. Dropping those anchors to get a shorter paragraph caps the score at 0.5. A near-copy or a fact rewritten in new words is restatement, not a new fact. One closing palette/mood sentence does not lower the score. Two identities or a same-element contradiction still in the text caps the score at 0.5.
@@ -1603,7 +1594,7 @@ Return format:
             "(e.g., half tailored suit vs half cold-shoulder bishop silk) without one coherent design grammar; also when one coat stacks incompatible collar/military/armor codes without layering rationale.\n"
             "Raise coordination_penalty when leg harnesses conflict with very wide loose trousers without explainable attachment, or waist/hip has multiple belt-harness systems with unclear order; "
             "raise rationality_penalty when harness+trouser construction is physically implausible as ordinary wear.\n"
-            "HARD FLOOR for generation_content_penalty: if the paragraph still contains a Look number or look title, a collage, a flat lay, a product shot, a second view, or an off-body catalog clause (if removed, its own garment, complete the look, finish the look), the score is at least 0.75. Two or more of those, or an explicit collage/flat-lay/product-shot request, means 1.0. The official first line that says no collage and no flat lay is boilerplate and does not raise this penalty. Scores 0, 0.25, and 0.5 are forbidden while those facts remain in the paragraph.\n"
+            "HARD FLOOR for generation_content_penalty: if the paragraph still contains a Look number or look title, a collage, a flat lay, a product shot, a second view, or an off-body catalog clause (if removed, its own garment), the score is at least 0.75. Two or more of those, or an explicit collage/flat-lay/product-shot request, means 1.0. The official first line that says no collage and no flat lay is boilerplate and does not raise this penalty. Shoes or accessories still worn on the body do not raise it, including a closer such as finish the look or complete the look. Scores 0, 0.25, and 0.5 are forbidden while a real board fact remains in the paragraph.\n"
             "Each penalty score must be one of its allowed discrete values (typically 0, 0.25, 0.5, 0.75, 1.0), "
             "where higher means a worse issue, analogous to inverted quality rubric levels.\n"
             "Return JSON only."
@@ -1620,7 +1611,7 @@ Return format:
         return {
             "generation_content_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
-                "judge_guidance": "按**生图内容价值**分档。**0~0.25**：可见服装事实占主导；允许段末 1 句 palette/mood。**官方单帧开场白**（One photograph of one woman… / No collage, no flat lay）和旧开场白（Please generate female models and the matching clothing for them. / 请生成女模…）**不计罚、不升档**，评测管线通常会预先剥离。**硬下限**：正文仍有 Look 编号或标题、拼贴、平铺、产品图、第二机位，或离身货品句（if removed、its own garment、complete the look、finish the look）时，本惩罚 ≥ 0.75，禁止打 0、0.25、0.5；两类同时在，或明确要求 collage/flat lay/product shot，打 1.0。**≥0.5** 非成像内容占相当比重：(1) 模特姿态/走位/心理（stance should / forward step / poised / 模特应…）；(2) 同一可见事实多处重复无新增像素；(3) 抽象场域/身份/奢华评论明显多于可见锚点。**≥0.75**：上述叠加且可见事实稀疏。",
+                "judge_guidance": "按**生图内容价值**分档。**0~0.25**：可见服装事实占主导；允许段末 1 句 palette/mood。**官方单帧开场白**（One photograph of one woman… / No collage, no flat lay）和旧开场白（Please generate female models and the matching clothing for them. / 请生成女模…）**不计罚、不升档**，评测管线通常会预先剥离。**硬下限**：正文仍有 Look 编号或标题、拼贴、平铺、产品图、第二机位，或离身货品句（if removed、its own garment）时，本惩罚 ≥ 0.75，禁止打 0、0.25、0.5；两类同时在，或明确要求 collage/flat lay/product shot，打 1.0。鞋和配饰仍穿在身上时，finish the look、complete the look 这种收句不计离身货品，不因此抬惩罚，也不因此压低质量轴。**≥0.5** 非成像内容占相当比重：(1) 模特姿态/走位/心理（stance should / forward step / poised / 模特应…）；(2) 同一可见事实多处重复无新增像素；(3) 抽象场域/身份/奢华评论明显多于可见锚点。**≥0.75**：上述叠加且可见事实稀疏。",
             },
             "consistency_penalty": {
                 "allowed_scores": [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -1750,7 +1741,7 @@ Return format:
                     f"\n{module_name} module — T2I content priority (ignore layout):\n"
                     "- High: sentences map to visible pixels (garment form, material, color, trim path, layering, accessory placement).\n"
                     "- generation_readiness stays at most 0.25 while a same-element contradiction or a second theme's garments remain. Specific visible facts do not raise it.\n"
-                    "- generation_readiness and visibility_priority stay at most 0.25 while the paragraph still has a Look number, a collage, a flat lay, a product shot, a second view, or an off-body catalog clause (if removed, its own garment, complete the look). The official single-frame first line does not count.\n"
+                    "- generation_readiness and visibility_priority stay at most 0.25 while the paragraph still has a Look number, a collage, a flat lay, a product shot, a second view, or an off-body catalog clause (if removed, its own garment). The official single-frame first line does not count. A closer such as finish the look or complete the look, with the shoes still on the body, does not cap these axes.\n"
                     "- Low: model stance/pose, abstract salon/promenade/identity essay dominating over visible facts.\n"
                     "- IGNORE the official single-frame line and the old T2I preamble: Please generate female models and the matching clothing for them.\n"
                     "- Do NOT penalize numbered sections or bullet lists if content is imaging-rich and semantically ordered.\n"
@@ -2196,7 +2187,7 @@ class DesignTextEvaluator:
     def _resolve_optimization_gate_config(self, gate_config: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
         spec_gates = self.spec.get("optimization_gates", {}) or {}
         score_gate_min = float(spec_gates.get("score_gate_min", 0.8))
-        penalty_gate_max = float(spec_gates.get("penalty_gate_max", 0.25))
+        penalty_gate_max = float(spec_gates.get("penalty_gate_max", 0.2))
         if gate_config:
             if gate_config.get("score_gate_min") is not None:
                 score_gate_min = float(gate_config["score_gate_min"])

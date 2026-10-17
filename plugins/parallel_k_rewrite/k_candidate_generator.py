@@ -68,7 +68,8 @@ REWRITE_DESIGN_MERIT = (
     "GenerationReadiness, sentences a camera can render; ConcisenessAndDensity, visible clothes "
     "before mood; InformationDensity, each sentence adds a new visible fact; DesignMerit, one "
     "feature that still identifies the look after color and cloth change, placed on the garment, "
-    "and still a wearable piece of this theme. Do not treat DesignMerit as the only target. "
+    "and still a wearable, fully dressed piece of this theme. Do not treat DesignMerit as the only target. "
+    "Exposed skin does not improve any score. "
     "Lower penalties: one consistent outfit, wearable construction, no formula sentence, "
     "no collage or crop or non-visual essay. "
     "Write one Vogue runway frame. One woman faces the camera. Full figure from head to shoes. "
@@ -482,6 +483,14 @@ REWRITE_SINGLE_FRAME = (
     "Do not copy the single-frame instruction line into the paragraph."
 )
 
+REWRITE_CLOTHED = (
+    "CLOTHED RUNWAY (hard): The woman is fully dressed. Clothes cover the chest, the torso, and the legs. "
+    "An open neckline, a cutaway, or a low front still has a shirt, a camisole, or a bodice on the body. "
+    "Do not write bare chest, bare breasts, lingerie worn as the outfit, sheer cloth that shows the body, "
+    "or skin used as the design. Do not use seductive, sensual, or erotic framing. "
+    "Do not raise any score by exposing skin. A bold opening stays a garment."
+)
+
 REWRITE_CONSISTENCY_REPAIR = (
     "STRICT UNIFICATION. Delete the other set of clothes and strictly unify into one set: "
     "one sleeve grammar, one bottom, one footwear family, one neckline, one length, one closure, one shell. "
@@ -540,7 +549,8 @@ def build_rewrite_user_prompt(
         "RULES FOR THE TEXT ABOVE:\n"
         "Write one natural runway photograph. A fuller design is allowed only inside SOURCE's theme and concept.\n\n"
         f"{REWRITE_CONSISTENCY_REPAIR}\n\n"
-        f"{REWRITE_SINGLE_FRAME}\n\n"
+        f"{REWRITE_SINGLE_FRAME}\n"
+        f"{REWRITE_CLOTHED}\n\n"
         f"{REWRITE_SHARED_STRATEGY}\n"
         f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
         f"{REWRITE_WHOLE_LOOK_SCOPE}\n"
@@ -560,6 +570,7 @@ def build_rewrite_user_prompt(
         "8. One moment, one body, one camera in front of her face. She faces the camera. "
         "Front view only, not from behind. No Look number, no collage, no flat lay, "
         "no product shot, no rear view, and no off-body catalog sentence.\n"
+        "9. Keep the chest, torso, and legs clothed. An opening shows a shirt, a camisole, or a bodice, not bare skin.\n"
     )
     return user
 
@@ -825,7 +836,7 @@ def generate_k_parallel_rewrites(
         为 True（默认）时，对去重保留的候选调用 `evaluate_text`，门限与分数与
         `plugins/text_description_evaluator` 完全一致；False 则仅生成文本（旧行为）。
     gate_config :
-        传入 `evaluate_text` 的门限覆盖，例如 ``{"score_gate_min": 0.8, "penalty_gate_max": 0.25}``；
+        传入 `evaluate_text` 的门限覆盖，例如 ``{"score_gate_min": 0.8, "penalty_gate_max": 0.2}``；
         为 None 时使用 spec 中 ``optimization_gates`` 默认。
     eval_source_prefix :
         评判 `source_name` 前缀，单条为 ``{prefix}.c{index}``。

@@ -1,9 +1,10 @@
 """第二改写器：只改已经生成的 description。
 
 输入是确切的品牌、品牌主题和这段 description。先读这家在该主题下的已有做法和相近做法，
-找出体现品牌风格的特征点和标识点；再按这些点改写。策略可以换掉衣服款式，
-也可以补上更前卫的新元素。引入标准是：不过分脱离原 description，
-没有严重冲突的不一致就视为可行。不经过评分器。模型走 API 的 gpt-5.4-mini。
+找出体现品牌风格的特征点和标识点；再按这些点改写。只要符合品牌和主题调性，
+并且设计合理，就允许较大幅度替换款式、廓形、体积、表面和搭配。
+仍是一套能穿的衣服。只有换成另一家、叠成第二套，或出现严重冲突时才丢掉。
+不经过评分器。模型走 API 的 gpt-5.4-mini。
 """
 
 from __future__ import annotations
@@ -19,31 +20,43 @@ from plugins.brand_tone_rewriter.brand_card import (
 
 MODEL_NAME = "gpt-5.4-mini"
 
+_FEASIBLE = (
+    "Large replacement is allowed when the result fits this house's tone under this theme "
+    "and the design is reasonable: one worn look, one body, clothes a person can wear. "
+    "Garment type, silhouette, volume, surface, closure, pairing, and color may all be replaced. "
+    "Do not keep the generated clothes only because they are already written. "
+    "Drop a replacement only when it imports another house, stacks a second outfit, "
+    "or creates a serious conflicting inconsistency. "
+    "The result stays fully dressed: clothes cover the chest, the torso, and the legs. "
+    "An open or low neckline still has a shirt, a camisole, or a bodice. "
+    "Do not write bare chest, bare breasts, lingerie worn as the outfit, sheer cloth that shows the body, "
+    "or seductive, sensual, or erotic framing. "
+    "A house habit of a plunge becomes a clothed neckline. A bold replacement stays a garment."
+)
+
 _ANALYZE_SYSTEM = (
     "You analyze existing and similar fashion designs for one house and one theme. "
     "You do not write the look. Feature points are visible design traits that carry this "
     "house's style into this theme, including the sharper and more avant-garde habits on file. "
     "Signature points are the few traits that would still identify the house if the color and "
-    "the fabric changed. Similar designs are the on-file habits that can enter this description. "
-    "Prefer the more forward habit when it can sit on the clothes already described. "
-    "A new element is feasible when it does not stray far from the generated description and "
-    "does not create a serious conflicting inconsistency. Do not drop a habit only because it "
-    "is sharper, stranger, or from a more specific motif. Drop it only when it would break the "
-    "garment already described or contradict it outright. Do not invent a house. "
+    "the fabric changed. Similar designs are the on-file habits that may replace the generated clothes outright. "
+    "Prefer the habit that most clearly carries this house's tone under this theme, "
+    "including a large replacement of garment type, volume, or surface. "
+    f"{_FEASIBLE} "
+    "Do not drop a habit only because it is sharper, stranger, or from a more specific motif. "
+    "Do not invent a house. "
     'Return JSON only: {"feature_points": ["..."], "signature_points": ["..."], '
     '"similar_designs": ["..."]}.'
 )
 
 _SUGGEST_SYSTEM = (
     "You propose edits that make one generated fashion description fit one house and one theme. "
-    "This is not a score and not a repair. Be bold about the clothes. You may replace a garment's "
-    "type when another type belongs to this house under this theme: a jacket may become a coat, "
-    "a knit, a shirt, a dress, or another piece this house would actually wear. You may add a "
-    "new element from the feature points, including a sharper motif, such as a layer, a trim, a "
-    "closure, a graphic, or a finishing piece. Color, pairing, silhouette, layering, surface, "
-    "and construction may change as well. A replacement or an addition is feasible when it does "
-    "not stray far from the generated description and does not create a serious conflicting "
-    "inconsistency. Do not import another house or another house's logo. "
+    "This is not a score and not a repair. Large replacement is the expected move when it fits the tone. "
+    "You may replace a garment type when another type belongs to this house under this theme: "
+    "a jacket may become a coat, a knit, a shirt, a dress, or another piece this house would actually wear. "
+    "You may replace the whole silhouette, volume, surface, and pairing. "
+    f"{_FEASIBLE} "
+    "Do not import another house or another house's logo. "
     "Use the feature points and signature points. Keep one worn look, one moment, one camera in front of her face. "
     "She faces the camera. Front view only, not from behind. "
     'Return JSON only: {"suggestions": [{"edit": "...", "where": "..."}]}.'
@@ -51,11 +64,13 @@ _SUGGEST_SYSTEM = (
 
 _REFLECT_SYSTEM = (
     "You judge only whether a combined design fits this house's tone under this theme. "
-    "There is no score. A bolder edit may replace a garment type or add an element. "
-    "Keep it when it does not stray far from the generated description and does not create a "
-    "serious conflicting inconsistency. Drop an edit only when the clash with the original "
-    "description is serious. "
+    "There is no score. Keep a large replacement when it fits this house's tone under this theme "
+    "and remains a reasonable design. "
+    f"{_FEASIBLE} "
+    "Drop an edit only when the clash is a second outfit, another house, or a serious conflicting inconsistency. "
     "After that reflection, write one English paragraph: the new description. "
+    "Write the replacement as the clothes the camera sees. Do not shrink a large replacement "
+    "back into a small trim on the original garment. "
     "One moment, one body, one camera in front of her face. She faces the camera. "
     "Front view only, not from behind. No collage, no rear view, no second view, no text. "
     'Return JSON only: {"kept": ["..."], "dropped": ["..."], "reflection": "...", '
@@ -171,9 +186,9 @@ def rewrite_generated_description(
                 f"{existing}\n\n"
                 "GENERATED DESCRIPTION:\n"
                 f"{description}\n\n"
-                "Bring forward the more avant-garde on-file habits that can enter this description. "
-                "A habit is feasible when it does not stray far from the generated description "
-                "and does not create a serious conflicting inconsistency. "
+                "Bring forward on-file habits that can replace the generated clothes at a large scale "
+                "while staying inside this house's tone under this theme. "
+                f"{_FEASIBLE} "
                 "Name the feature points and the signature points, and list those feasible designs."
             ),
             700,
@@ -195,9 +210,10 @@ def rewrite_generated_description(
                     f"BRAND: {house}\nTHEME: {theme}\n\n"
                     f"FEATURE POINTS:\n- " + "\n- ".join(result["feature_points"]) + "\n\n"
                     f"SIGNATURE POINTS:\n- " + "\n- ".join(result["signature_points"]) + "\n\n"
-                    "Rewrite for brand and theme fit. You may replace a garment type and add a "
-                    "sharper element when it does not stray far from the generated description "
-                    "and does not create a serious conflicting inconsistency.\n\n"
+                    "Rewrite for brand and theme fit. A large replacement is allowed when it is a "
+                    "reasonable design in this house's tone under this theme. "
+                    "Replace a garment type, the silhouette, the volume, or the surface when that fits. "
+                    f"{_FEASIBLE}\n\n"
                     "GENERATED DESCRIPTION:\n"
                     f"{description}"
                 ),
@@ -252,10 +268,9 @@ def _reflection_user(
             "GENERATED DESCRIPTION:",
             description,
             "",
-            "Keep a suggestion when the combined look still fits this house's tone "
-            "and the added element does not stray far from the generated description "
-            "or create a serious conflicting inconsistency. "
-            "Then write the new description.",
+            "Keep a suggestion when the combined look still fits this house's tone. "
+            f"{_FEASIBLE} "
+            "Then write the new description so each kept edit is visible.",
         ]
     )
     return "\n".join(lines)

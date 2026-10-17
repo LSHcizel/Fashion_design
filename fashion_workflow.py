@@ -1046,6 +1046,7 @@ class FashionWorkflow:
         self.look_stylist.sub_theme = sub_theme_name
         self.look_stylist.design_target_prompt = self.design_target_prompt
         self.look_stylist.theme = self.theme
+        self.look_stylist.brand = self.brand
         
         # 使用压缩的theme_analysis
         condensed_theme_analysis_path = os.path.join(chapter_dir, "theme_analysis_condensed.txt")
@@ -1071,8 +1072,9 @@ class FashionWorkflow:
                     research_topic=(
                         f"Design Target: {self.design_target_prompt}\n"
                         f"Look Number: {look_number}\n"
-                        "Give this look an updated identifying idea that is distinct from already generated "
-                        "looks in this chapter. Do not only swap color, material, or brand words of a previous look."
+                        "Select one weighted element for this brand and this concept. "
+                        "Assemble it, then render texture, pattern, lines, and targeted details. "
+                        "Length is not limited. The ending is not prescribed."
                     ),
                     phase="look description generation",
                     feedback="",
@@ -1219,6 +1221,8 @@ class FashionWorkflow:
         self.concept_designer.sub_theme = sub_theme_name
 
         research_topic = (
+            "Build one complete concept system for this chapter from the theme. "
+            "Do not write a photograph or element cards.\n"
             f"Design Target: {self.design_target_prompt}\n"
             f"Theme: {self.theme}\n"
             f"Chapter Number: {chapter_number}\n"
@@ -1469,6 +1473,7 @@ class FashionWorkflow:
         self.look_stylist.sub_theme = chapter["name"]
         self.look_stylist.design_target_prompt = self.design_target_prompt
         self.look_stylist.theme = self.theme
+        self.look_stylist.brand = self.brand
         condensed_theme_analysis = self._condense_theme_analysis_for_looks(
             self.theme_analyzer.theme_analysis,
             sub_theme_name=chapter["name"],
@@ -1643,7 +1648,13 @@ class FashionWorkflow:
             if self.verbose:
                 print(f"@@ Workflow #{self.workflow_index} - Chapter {actual_chapter_number} - Design Elements - Step {_i} @@")
             resp = self.elements_specialist.inference(
-                research_topic=f"Theme: {self.theme}\nDesign Target: {self.design_target_prompt}\nSub-Theme/Chapter: {chapter['name']}",
+                research_topic=(
+                    "Extract concrete design elements from the finished concept for this chapter. "
+                    "Do not write another concept.\n"
+                    f"Theme: {self.theme}\n"
+                    f"Design Target: {self.design_target_prompt}\n"
+                    f"Sub-Theme/Chapter: {chapter['name']}"
+                ),
                 phase="design elements proposal",
                 feedback="",
                 step=_i
@@ -1821,6 +1832,13 @@ class FashionWorkflow:
             bits.append(repair)
         return "\n".join(bits)
 
+    def _text_gate_config(self) -> dict:
+        cfg = self.evaluator_config
+        return {
+            "score_gate_min": cfg.score_gate_min,
+            "penalty_gate_max": cfg.penalty_gate_max,
+        }
+
     def _try_k_rewrite_on_gate_fail(
         self,
         *,
@@ -1852,6 +1870,7 @@ class FashionWorkflow:
 
         if self.verbose:
             print(f"  [TextEval] Look {look_number} gates failed; K-rewrite via rewriter-llm ...")
+        gate_config = self._text_gate_config()
         try:
             evaluator = build_parallel_k_evaluator()
             parallel = generate_k_parallel_rewrites(
@@ -1862,6 +1881,7 @@ class FashionWorkflow:
                     source_text=look_desc_raw,
                     generate_text=evaluator.judge.generate_text,
                 ),
+                gate_config=gate_config,
             )
         except JudgeConnectionError as exc:
             if self.verbose:
@@ -1875,6 +1895,7 @@ class FashionWorkflow:
         chosen = pick_rewrite_if_better(
             baseline_evaluation=baseline_eval,
             candidates=parallel.get("candidates") or [],
+            penalty_gate_max=gate_config["penalty_gate_max"],
         )
         temps = [
             c.get("temperature")
@@ -1885,8 +1906,8 @@ class FashionWorkflow:
         if chosen is None:
             if self.verbose:
                 print(
-                    f"  [TextEval] Look {look_number} K-rewrite not better than original; "
-                    "this look will be excluded"
+                    f"  [TextEval] Look {look_number} K-rewrite has no candidate "
+                    "with a higher score inside the penalty gate; this look will be excluded"
                 )
             result["mode"] = "evaluate_only"
             return
@@ -1953,8 +1974,8 @@ class FashionWorkflow:
         1. evaluator 未启用 → 透传
         2. 评原文；双门限均通过 → 保留原文本
         3. 未通过且 ``keep_on_gate_fail`` → 保留原文，不改写，仍纳入本章
-        4. 未通过且 ``rewrite_on_gate_fail`` → 8001 K 路改写；同时提高总分并降低惩罚的候选里，取总分最高的一条并回写
-        5. 没有同时做到这两点，或改写器不可用 → 不回写。该 look 不纳入本章；同章 look 都不被采纳时才废弃子主题
+        4. 未通过且 ``rewrite_on_gate_fail`` → 8001 第一轮 K 路改写；总分高于原文且惩罚不超过门限的候选都可采纳，取得分最高的一条并回写
+        5. 没有这样的候选，或改写器不可用 → 不回写。该 look 不纳入本章；同章 look 都不被采纳时才废弃子主题
         """
         cfg = self.evaluator_config
         evaluator = self.text_evaluator
@@ -1989,7 +2010,10 @@ class FashionWorkflow:
             if self.verbose:
                 print(f"  [TextEval] Evaluating look {look_number} ...")
             try:
-                eval_result = evaluator.evaluate_txt_file(Path(eval_path))
+                eval_result = evaluator.evaluate_txt_file(
+                    Path(eval_path),
+                    gate_config=self._text_gate_config(),
+                )
             except Exception as exc:
                 # keep-on-gate-fail：评判断连/失败时仍保留原文，避免整条生成流中断
                 if getattr(cfg, "keep_on_gate_fail", False):
@@ -2080,6 +2104,7 @@ class FashionWorkflow:
         
         # 使用设计元素生成 Look 描述
         self.look_stylist.candidate_elements = self.elements_specialist.candidate_elements
+        self.look_stylist.brand = self.brand
         # 传递当前group的设计概念
         self.look_stylist.design_concepts = self.elements_specialist.design_concepts
 
@@ -2103,8 +2128,9 @@ class FashionWorkflow:
                     research_topic=(
                         f"Design Target: {self.design_target_prompt}\n"
                         f"Look Number: {look_number}\n"
-                        "Give this look an updated identifying idea that is distinct from already generated "
-                        "looks in this chapter. Do not only swap color, material, or brand words of a previous look."
+                        "Select one weighted element for this brand and this concept. "
+                        "Assemble it, then render texture, pattern, lines, and targeted details. "
+                        "Length is not limited. The ending is not prescribed."
                     ),
                     phase="look description generation",
                     feedback="",
@@ -2178,7 +2204,12 @@ class FashionWorkflow:
             if self.verbose:
                 print(f"@@ Workflow #{self.workflow_index} - Step {_i} @@")
             resp = self.elements_specialist.inference(
-                research_topic=f"Theme: {self.theme}\nDesign Target: {self.design_target_prompt}",
+                research_topic=(
+                    "Extract concrete design elements from the finished concept. "
+                    "Do not write another concept.\n"
+                    f"Theme: {self.theme}\n"
+                    f"Design Target: {self.design_target_prompt}"
+                ),
                 phase="design elements proposal",
                 feedback="",
                 step=_i
@@ -2213,6 +2244,8 @@ class FashionWorkflow:
         
         # 使用设计元素生成 Look 描述
         self.look_stylist.design_target_prompt = self.design_target_prompt
+        self.look_stylist.brand = self.brand
+        self.look_stylist.theme = self.theme
         self.look_stylist.candidate_elements = self.elements_specialist.candidate_elements
         self.look_stylist.design_concepts = self.concept_designer.design_concepts
 
@@ -2229,8 +2262,9 @@ class FashionWorkflow:
                         f"Design Target: {self.design_target_prompt}\n"
                         f"Theme: {self.theme}\n"
                         f"Look Number: {look_idx + 1}\n"
-                        "Give this look an updated identifying idea that is distinct from already generated "
-                        "looks in this chapter. Do not only swap color, material, or brand words of a previous look."
+                        "Select one weighted element for this brand and this concept. "
+                        "Assemble it, then render texture, pattern, lines, and targeted details. "
+                        "Length is not limited. The ending is not prescribed."
                     ),
                     phase="look description generation",
                     feedback="",
@@ -2304,7 +2338,7 @@ class TextEvaluatorConfig:
     adaptive_penalty_threshold: float = 0.05
     # 双门限（与 spec optimization_gates / evaluate_text 一致）
     score_gate_min: float = 0.8
-    penalty_gate_max: float = 0.25
+    penalty_gate_max: float = 0.2
     # API 配置（None 表示从 spec 默认读取）
     evaluator_api_key: str | None = None
     evaluator_api_base: str | None = None
@@ -2420,7 +2454,7 @@ def parse_yaml(yaml_file_loc):
     parser.evaluator_adaptive_min_quality_score = float(ev.get("adaptive-min-quality-score", 0.80))
     parser.evaluator_adaptive_penalty_threshold = float(ev.get("adaptive-penalty-threshold", 0.05))
     parser.evaluator_score_gate_min = float(ev.get("score-gate-min", 0.8))
-    parser.evaluator_penalty_gate_max = float(ev.get("penalty-gate-max", 0.25))
+    parser.evaluator_penalty_gate_max = float(ev.get("penalty-gate-max", 0.2))
     parser.evaluator_api_key = ev.get("api-key") or None
     parser.evaluator_api_base = ev.get("api-base") or None
     parser.evaluator_model = ev.get("model") or None

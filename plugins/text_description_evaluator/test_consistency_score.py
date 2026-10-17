@@ -47,6 +47,27 @@ class ConflictDefinitionTests(unittest.TestCase):
         self.assertIn("edge_path", list_design_identifying_signatures(jacket_text))
         self.assertIn("second_identity", list_design_identifying_signatures(tweed_text))
 
+    def test_motif_words_do_not_lock_the_design_score(self) -> None:
+        from plugins.text_description_evaluator.design_text_evaluator_api import (
+            DESIGN_MERIT_JUDGE_GUIDE,
+        )
+
+        braid = (
+            "A woman faces the camera in a long black wool gabardine coat with a rigid border "
+            "tracing the collar, front opening, hem, and cuffs in oxidized gold braid, worn over "
+            "a matte ivory silk faille column dress."
+        )
+        ribbons = (
+            "A short coat is worn with a skirt of hanging black and white satin ribbons "
+            "and shredded strips."
+        )
+        self.assertNotIn("design_distinctiveness", compute_design_merit_metric_caps(braid)["caps"])
+        self.assertNotIn("design_distinctiveness", compute_design_merit_metric_caps(ribbons)["caps"])
+        self.assertIn("kinds of force, not a menu", DESIGN_MERIT_JUDGE_GUIDE)
+        self.assertIn("interchangeable trunk-garment formula", DESIGN_MERIT_JUDGE_GUIDE)
+        self.assertNotIn("ribbons, shreds", DESIGN_MERIT_JUDGE_GUIDE)
+        self.assertNotIn("horn toggles", DESIGN_MERIT_JUDGE_GUIDE)
+
     def test_placement_and_one_identity_finishing_are_not_conflicts(self) -> None:
         text = (
             "A narrow ink coat frames a parchment silk-crepe blouse and warm grey slim wool trousers. "

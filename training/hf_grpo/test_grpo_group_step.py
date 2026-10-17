@@ -6,15 +6,18 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import math
+
 import torch
 
 from training.hf_grpo.data import DEFAULT_MIN_REWARD_STD, select_grpo_rows
-from training.hf_grpo.modeling import clipped_surrogate_sum, grpo_loss, token_kl_k3_sum
+from training.hf_grpo.modeling import clipped_surrogate_sum, group_rank_loss, grpo_loss, token_kl_k3_sum
 from training.hf_grpo.train_grpo import (
     GroupBatchSampler,
     drop_kl_ref_keys,
     forward_frozen_kl_ref,
     kl_ref_kind_from_flags,
+    split_probe_groups,
 )
 
 
@@ -86,6 +89,82 @@ class SelectGrpoRowsTests(unittest.TestCase):
         ]
         _, tight_summary = select_grpo_rows(tight)
         self.assertEqual(tight_summary["groups_dropped_small_gap"], 1)
+
+
+class GroupRankLossTests(unittest.TestCase):
+    def test_equal_logprob_is_log_two(self) -> None:
+        loss = group_rank_loss(torch.zeros(3), torch.tensor([1.0, 0.0, -1.0]))
+        self.assertIsNotNone(loss)
+        assert loss is not None
+        self.assertAlmostEqual(float(loss), math.log(2.0), places=5)
+
+    def test_higher_advantage_more_probable_lowers_the_loss(self) -> None:
+        tied = group_rank_loss(torch.tensor([0.0, 0.0]), torch.tensor([1.0, -1.0]))
+        preferred = group_rank_loss(torch.tensor([1.0, 0.0]), torch.tensor([1.0, -1.0]))
+        reversed_pref = group_rank_loss(torch.tensor([0.0, 1.0]), torch.tensor([1.0, -1.0]))
+        assert tied is not None and preferred is not None and reversed_pref is not None
+        self.assertLess(float(preferred), float(tied))
+        self.assertGreater(float(reversed_pref), float(tied))
+
+    def test_flat_advantages_have_no_pair(self) -> None:
+        self.assertIsNone(group_rank_loss(torch.zeros(2), torch.zeros(2)))
+
+    def test_metric_does_not_keep_a_gradient(self) -> None:
+        ell = torch.tensor([0.2, -0.2], requires_grad=True)
+        loss = group_rank_loss(ell, torch.tensor([1.0, -1.0]))
+        assert loss is not None
+        self.assertFalse(loss.requires_grad)
+
+
+class ProbeSplitTests(unittest.TestCase):
+    def test_held_out_groups_leave_training(self) -> None:
+        rows = []
+        for gid in ("a", "b", "c", "d"):
+            rows.append({"group_id": gid, "advantage": 1.0})
+            rows.append({"group_id": gid, "advantage": -1.0})
+        train, probe = split_probe_groups(rows, n_groups=2, seed=0)
+        train_ids = {row["group_id"] for row in train}
+        probe_ids = {row["group_id"] for row in probe}
+        self.assertEqual(len(probe_ids), 2)
+        self.assertEqual(len(train_ids), 2)
+        self.assertEqual(train_ids & probe_ids, set())
+        self.assertEqual(len(train) + len(probe), len(rows))
+        again, _ = split_probe_groups(rows, n_groups=2, seed=0)
+        self.assertEqual([row["group_id"] for row in again], [row["group_id"] for row in train])
+
+    def test_zero_probe_keeps_every_row(self) -> None:
+        rows = [{"group_id": "a"}, {"group_id": "b"}]
+        train, probe = split_probe_groups(rows, n_groups=0, seed=0)
+        self.assertEqual(train, rows)
+        self.assertEqual(probe, [])
+
+
+class ProbeForwardTests(unittest.TestCase):
+    def test_identical_completions_score_log_two(self) -> None:
+        from training.hf_grpo.train_grpo import probe_rank_loss
+
+        class _LM(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.bias = torch.nn.Parameter(torch.zeros(6))
+
+            def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> object:
+                del attention_mask
+                b, length = input_ids.shape
+                logits = self.bias.view(1, 1, -1).expand(b, length, -1).contiguous()
+                return type("Out", (), {"logits": logits})()
+
+        ids = torch.tensor([[1, 2, 3, 4], [1, 2, 3, 4]])
+        batch = {
+            "input_ids": ids,
+            "attention_mask": torch.ones_like(ids),
+            "completion_start": torch.tensor([1, 1]),
+            "advantage": torch.tensor([1.0, -1.0]),
+        }
+        value = probe_rank_loss(_LM(), [batch])
+        self.assertIsNotNone(value)
+        assert value is not None
+        self.assertAlmostEqual(value, math.log(2.0), places=5)
 
 
 class GroupBatchSamplerTests(unittest.TestCase):

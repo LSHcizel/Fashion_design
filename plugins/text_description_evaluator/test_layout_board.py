@@ -35,6 +35,12 @@ class LayoutBoardTests(unittest.TestCase):
         self.assertIn("look label", found["classes"])
         self.assertIn("off-body catalog", found["classes"])
 
+    def test_shoes_on_the_body_are_not_off_body(self) -> None:
+        finish = PREFIX + "\n\nA long black coat. Black satin pumps finish the look."
+        complete = PREFIX + "\n\nA long black coat. Black leather pumps complete the look."
+        self.assertFalse(detect_layout_board(finish)["active"])
+        self.assertFalse(detect_layout_board(complete)["active"])
+
     def test_penalty_floor_uses_generation_content_penalty(self) -> None:
         penalties = {
             "generation_content_penalty": 0.0,

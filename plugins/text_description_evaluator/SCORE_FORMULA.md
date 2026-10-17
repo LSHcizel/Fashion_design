@@ -86,19 +86,22 @@ GRPO 同组调用 `apply_group_z_len_r_content` 后，结果里带 `odin_diagnos
 裁判质量轴 `Q` 仍是 0～1，只当老师。本地 RM：
 
 ```
-t = S_fp − verbosity(ℓ − ℓ_source)
-verbosity(e) = 0                         # e ≤ 0，不长过原文
-           = 0.053 · e                 # 0 < e ≤ 0.10，稍许偏长，尽头只扣 0.005
-           = 0.005 + 0.136 · (e−0.10)² # e > 0.10；e = ln 2（原文两倍）时扣 0.053
-(r_Q⁺ − r_Q⁻) 对齐 (S_fp⁺ − S_fp⁻) − (verbosity⁺ − verbosity⁻)
-r_L 的差距拟合 log 句长差
-L_RM = mean((r_Q − t)²)
-     + (1/0.053) · mean(((r_Q⁺−r_Q⁻) − (t⁺−t⁻))²)
+r_Q 拟合 S_fp；r_L 的差距拟合 log 句长差
+gap_s = S_fp⁺ − S_fp⁻
+w_score = 0                         # |gap_s| ≤ 0.10
+        = (|gap_s|−0.10) / 0.10    # 0.10 < |gap_s| < 0.20
+        = 1                         # |gap_s| ≥ 0.20
+w_len = 1                           # ℓ⁺−ℓ⁻ ≤ 0.10 nat：高分不更长，或只长一点点
+      = 0                           # ℓ⁺−ℓ⁻ ≥ ln 2：高分一侧长到约两倍
+w = w_score · w_len
+L_RM = mean((r_Q − S_fp)²)
+     + Σ w · relu(gap_s − gap_q)² / Σ w
+     + mean((1 − w_score) · gap_q²)
      + mean(((r_L⁺−r_L⁻) − (ℓ⁺−ℓ⁻))²)
 R_content := r_Q
 ```
 
-比较对只在同一 `group_id` 内两两构造，不跨组。拟合完成时，`r_Q` 的分差和 `S_fp` 的分差只差冗长扣分：稍许偏长几乎不动，过度冗长才改这条分差。分差项乘 `1/0.053`，避免点对点误差靠预测组均值把组内差距缩掉。0.10 nat（约 10%）和 0.053 都来自这批样本：前者是「稍许偏长」的宽度，后者是组内 `S_fp` 标准差的中位数。不把 `ρ(r_Q, ℓ)²` 加进损失，否则这点扣分会被压掉。短于原文不加分。GRPO 丢掉组内标准差低于 0.01 的组。
+比较对只在同一 `group_id` 内两两构造，不跨组。长度进 `r_L`，不进 `r_Q`，也没有写死的分数系数。`|S_fp 分差| ≥ 0.20` 时，若两条句长接近，或高分改写更短，比较损失在 `r_Q` 分差小于 `S_fp` 分差时为正，抄到同样分差后为 0，不会把这块分差收小。高分一侧长到约两倍时，这条对不再逼 `r_Q` 排序。`|S_fp 分差| ≤ 0.10` 的对不学输赢，并把 `r_Q` 分差收到 0。不把 `ρ(r_Q, ℓ)²` 加进损失。GRPO 丢掉组内标准差低于 0.01 的组。
 
 入口：`python -m training.odin_rm.run_pipeline --samples <samples.jsonl> --work-dir <dir>`  
 然后再跑 `training/hf_grpo/run_recommended_training.py`（phase_a/b 已按 r_Q 算 advantage）。
