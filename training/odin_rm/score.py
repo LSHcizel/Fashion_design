@@ -74,28 +74,51 @@ def _score_batch(
     return out
 
 
+def _residual_after_teacher(values: List[float], teachers: List[float]) -> List[float]:
+    """values 对 teachers 的一元回归残差。teachers 没有波动时残差为 0。"""
+    n = len(values)
+    mean_y = sum(teachers) / n
+    var_y = sum((y - mean_y) ** 2 for y in teachers)
+    mean_x = sum(values) / n
+    if var_y < 1e-18:
+        return [0.0] * n
+    slope = sum((x - mean_x) * (y - mean_y) for x, y in zip(values, teachers)) / var_y
+    intercept = mean_x - slope * mean_y
+    return [x - (intercept + slope * y) for x, y in zip(values, teachers)]
+
+
 def summarize_rm_scores(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     rqs: List[float] = []
     rls: List[float] = []
     ells: List[float] = []
     teachers: List[float] = []
+    paired_rqs: List[float] = []
+    paired_ells: List[float] = []
     for rec in rows:
         block = rec.get("odin_rm") or {}
         if block.get("r_Q") is None:
             continue
-        rqs.append(float(block["r_Q"]))
-        rls.append(float(block["r_L"]))
-        ells.append(log_len_of(rec))
+        rq = float(block["r_Q"])
+        rl = float(block.get("r_L") or 0.0)
+        ell = log_len_of(rec)
+        rqs.append(rq)
+        rls.append(rl)
+        ells.append(ell)
         ts = teacher_score(rec)
-        if ts is not None:
-            teachers.append(ts)
+        if ts is None:
+            continue
+        teachers.append(float(ts))
+        paired_rqs.append(rq)
+        paired_ells.append(ell)
+    residual = _residual_after_teacher(paired_rqs, teachers) if teachers else []
     return {
         "n_scored": len(rqs),
         "mean_r_Q": None if not rqs else round(sum(rqs) / len(rqs), 6),
         "mean_r_L": None if not rls else round(sum(rls) / len(rls), 6),
         "pearson_r_Q_vs_log_len": pearson_corr(rqs, ells),
         "pearson_r_L_vs_log_len": pearson_corr(rls, ells),
-        "note": "验收：ρ(r_Q, ℓ)≈0，ρ(r_L, ℓ)>0。S_fp 仍是裁判 0～1。",
+        "pearson_r_Q_residual_vs_log_len": pearson_corr(residual, paired_ells),
+        "note": "验收：扣掉 S_fp 后 ρ(r_Q 残差, ℓ)≈0，ρ(r_L, ℓ)>0。r_Q 分差守住 S_fp。",
     }
 
 

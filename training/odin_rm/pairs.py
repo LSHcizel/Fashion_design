@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .data import include_in_training, log_len_of, source_log_len_of, teacher_score
+from .modeling import MIN_SCORE_GAP, RL_CLOSE
 
 
 def _side_payload(rec: Dict[str, Any]) -> Dict[str, Any]:
@@ -28,10 +29,17 @@ def _side_payload(rec: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _excess_of(rec: Dict[str, Any]) -> float:
+    src = source_log_len_of(rec)
+    if src is None:
+        return 0.0
+    return max(0.0, log_len_of(rec) - src)
+
+
 def pairs_from_group(
     records: Sequence[Dict[str, Any]],
     *,
-    min_margin: float = 1e-6,
+    min_margin: float = MIN_SCORE_GAP,
 ) -> List[Dict[str, Any]]:
     """只在同一个 group_id 内两两比较。混进别的组时按组拆开，不造跨组对。"""
     buckets: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
@@ -53,7 +61,7 @@ def _pairs_within_one_group(
     *,
     min_margin: float,
 ) -> List[Dict[str, Any]]:
-    """同一 group 内两两比裁判分；平分 / 差距过小丢掉。"""
+    """同一 group 内两两都纳入。原得分差至少 0.10 时按分数定先后。分差更小但超长差得开时标成 same_score_length，超长更少的一侧放在 chosen。内容目标仍是 S_fp 分差。"""
     group_ids = {str(rec.get("group_id") or "") for rec in records}
     if len(group_ids) != 1:
         raise ValueError("比较对不能跨 group_id")
@@ -73,12 +81,22 @@ def _pairs_within_one_group(
         for j in range(i + 1, n):
             s_i, rec_i = scored[i]
             s_j, rec_j = scored[j]
-            if abs(s_i - s_j) < min_margin:
-                continue
-            if s_i > s_j:
-                win, lose = rec_i, rec_j
+            gap_s = abs(s_i - s_j)
+            e_i = _excess_of(rec_i)
+            e_j = _excess_of(rec_j)
+            gap_e = abs(e_i - e_j)
+            if gap_s < min_margin and gap_e >= RL_CLOSE:
+                if e_i <= e_j:
+                    win, lose = rec_i, rec_j
+                else:
+                    win, lose = rec_j, rec_i
+                kind = "same_score_length"
             else:
-                win, lose = rec_j, rec_i
+                if s_i >= s_j:
+                    win, lose = rec_i, rec_j
+                else:
+                    win, lose = rec_j, rec_i
+                kind = "score"
             gid = str(win.get("group_id") or "")
             if gid != str(lose.get("group_id") or ""):
                 raise ValueError("比较对不能跨 group_id")
@@ -86,9 +104,10 @@ def _pairs_within_one_group(
                 {
                     "schema_version": "odin_pref_pair_v1",
                     "group_id": gid,
+                    "pair_kind": kind,
                     "chosen": _side_payload(win),
                     "rejected": _side_payload(lose),
-                    "teacher_margin": round(abs(s_i - s_j), 6),
+                    "teacher_margin": round(gap_s, 6),
                 }
             )
     return out
@@ -120,7 +139,7 @@ def assign_splits(
 def build_preference_pairs(
     samples_jsonl: Path,
     *,
-    min_margin: float = 1e-6,
+    min_margin: float = MIN_SCORE_GAP,
     holdout_frac: float = 0.1,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     groups: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
@@ -174,7 +193,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description="K 路样本 → ODIN RM 偏好对 JSONL")
     p.add_argument("--samples", type=Path, required=True, help="samples.jsonl")
     p.add_argument("--out", type=Path, required=True, help="pairs.jsonl")
-    p.add_argument("--min-margin", type=float, default=1e-6)
+    p.add_argument("--min-margin", type=float, default=MIN_SCORE_GAP)
     p.add_argument("--holdout-frac", type=float, default=0.1)
     args = p.parse_args()
     pairs, summary = build_preference_pairs(

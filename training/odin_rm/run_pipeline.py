@@ -79,8 +79,8 @@ def main() -> None:
     p.add_argument("--rm-batch", type=int, default=8)
     p.add_argument("--encode-batch", type=int, default=1)
     p.add_argument("--score-batch", type=int, default=1)
-    p.add_argument("--lambda-corr", type=float, default=1.0)
-    p.add_argument("--lambda-orth", type=float, default=1.0)
+    p.add_argument("--lambda-corr", type=float, default=None, help="空则用 yaml odin-rm.lambda-corr")
+    p.add_argument("--lambda-orth", type=float, default=None, help="空则用 yaml odin-rm.lambda-orth")
     p.add_argument("--holdout-frac", type=float, default=0.1)
     p.add_argument("--skip-train", action="store_true", help="复用已有双头 RM，不再训练")
     p.add_argument("--skip-pairs", action="store_true", help="跳过造偏好对（后续轮只打分时可用）")
@@ -130,13 +130,13 @@ def main() -> None:
             str(args.rm_batch),
             "--encode-batch",
             str(args.encode_batch),
-            "--lambda-corr",
-            str(args.lambda_corr),
-            "--lambda-orth",
-            str(args.lambda_orth),
             "--holdout-frac",
             str(args.holdout_frac),
         ]
+        if args.lambda_corr is not None:
+            argv.extend(["--lambda-corr", str(args.lambda_corr)])
+        if args.lambda_orth is not None:
+            argv.extend(["--lambda-orth", str(args.lambda_orth)])
         if args.model.strip():
             argv.extend(["--model", args.model.strip()])
         old = sys.argv

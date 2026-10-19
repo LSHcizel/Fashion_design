@@ -2,17 +2,13 @@
 双头奖励模型（ODIN）：共用表征 + r_Q / r_L。
 
 r_Q 读最后一个 token 的两层映射，r_L 是线性头。都无 sigmoid、无 clip。
-S_fp 是评分器原始分。r_Q 是主体，r_L 只占一小截，两者相加还原 S_fp。
-组内分差不到 0.20 时，整段留在 r_Q，两侧 r_L 的目标都是 0。
-再按固定 0.20 去扣，会把比这更小的分差收成 0。
-分差达到 0.20 之后，句长接近或两侧 r_L 接近时，r_Q 分差仍对齐 S_fp 分差。
-高分一侧明显更长时，这一档才按超长幅度缩小，长到约一倍时最多缩小 0.20。
-策略训练只取 r_Q。
+长度标准是本组改写原文的字数。r_L 报出改写超出原文的幅度，短于原文的目标是 0。
+r_Q 分差始终对齐 S_fp 分差。S_fp 一样时，字数不同也不把 r_Q 拉开。
+ρ(r_Q, 相对原文字数) 只写入日志。验收看扣掉 S_fp 之后的残差还跟不跟字数走。策略训练只取 r_Q。
 """
 
 from __future__ import annotations
 
-import math
 from typing import Any, Dict, Optional, Tuple
 
 import torch
@@ -43,17 +39,6 @@ def batch_pearson(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return (xf * yf).sum() / denom
 
 
-# 大分差对上，两侧 r_L 差到这个幅度才算已经分开。
-GAP_MARGIN = 0.10
-# 分差达到此值后，才允许长度从头里扣，最多扣这么多。
-# 不到此值的组内分差整段留在 r_Q。
-GAP_FULL = 0.20
-# 句长差在这以内视为上下浮动不大。
-LENGTH_CLOSE_NAT = 0.10
-# 长到一倍视为超长，r_L 的惩罚在这里取满。
-LENGTH_FAR_NAT = math.log(2.0)
-
-
 def length_disentangle_term(rho_q: torch.Tensor, rho_l: torch.Tensor) -> torch.Tensor:
     """内容头与句长的相关停在 0；长度头继续吸收句长。
 
@@ -63,18 +48,15 @@ def length_disentangle_term(rho_q: torch.Tensor, rho_l: torch.Tensor) -> torch.T
     return rho_q.square() - rho_l
 
 
-def pair_gap_weight(gap_t: torch.Tensor) -> torch.Tensor:
-    """0.10 以下为 0，0.20 及以上为 1。用于大分差对上判断两侧 r_L 是否还接近。"""
-    g = gap_t.reshape(-1).abs()
-    span = GAP_FULL - GAP_MARGIN
-    return ((g - GAP_MARGIN) / span).clamp(0, 1)
+# S_fp 分差低于此值，视为原得分一样。只用于给同分长度对打标记，不改变 r_Q 目标。
+MIN_SCORE_GAP = 0.10
+# 超长幅度差达到此值，造对时标成 same_score_length，便于事后检查。
+RL_CLOSE = 0.10
 
 
-def length_excess_weight(abs_gap_ell: torch.Tensor) -> torch.Tensor:
-    """两侧句长差。|Δℓ| ≤ 0.10 nat 为 0，差到一倍为 1。"""
-    d = abs_gap_ell.reshape(-1)
-    span = LENGTH_FAR_NAT - LENGTH_CLOSE_NAT
-    return ((d - LENGTH_CLOSE_NAT) / span).clamp(0, 1)
+def over_source_length(log_len: torch.Tensor, source_log: torch.Tensor) -> torch.Tensor:
+    """超出本组原文字数的 log 幅度。短于或等于原文时为 0。"""
+    return (log_len - source_log).clamp(min=0)
 
 
 def odin_rm_loss(
@@ -89,20 +71,18 @@ def odin_rm_loss(
     *,
     head_q: nn.Module,
     head_l: nn.Module,
-    lambda_corr: float = 1.0,
+    lambda_corr: float = 0.02,
     lambda_orth: float = 1.0,
     source_log_win: Optional[torch.Tensor] = None,
     source_log_lose: Optional[torch.Tensor] = None,
 ) -> Tuple[torch.Tensor, Dict[str, float]]:
     """
-    L = L_rec + L_gap + L_rl
+    L = L_gap + λ_orth · L_len
 
-    r_Q + r_L 还原 S_fp。
-    |S_fp 分差| < 0.20 时，r_Q 分差对齐原始分差，两侧 r_L 目标都是 0。
-    |S_fp 分差| ≥ 0.20 时，r_L 仍只在超长一侧取到最多 0.20。
-    这一档里句长接近或两侧 r_L 接近时，r_Q 分差对齐 S_fp 分差。
-    高分一侧更长时，对齐的目标改为 max(S_fp 分差 − 0.20×超长幅度, 0)。
-    批次上的 Pearson 不进损失：它的量级是 1，会把刚护住的小分差重新压平。
+    L_len 让 r_L 等于改写超出原文的 log 幅度。短于原文时期望 r_L 为 0。
+    L_gap 让 r_Q 分差始终对齐 S_fp 分差，不按超长差扣减。
+    组内比较对不论 S_fp 分差大小都计入。
+    ρ(r_Q, ℓ − ℓ_原文) 只写入统计，不进损失。
     """
     q_w = r_q_win.reshape(-1)
     q_l = r_q_lose.reshape(-1)
@@ -110,72 +90,47 @@ def odin_rm_loss(
     l_l = r_l_lose.reshape(-1).to(dtype=q_w.dtype)
     s_w = teacher_win.reshape(-1).float().to(dtype=q_w.dtype)
     s_l = teacher_lose.reshape(-1).float().to(dtype=q_w.dtype)
-    _ = (source_log_win, source_log_lose)
-    gap_q = q_w - q_l
-    gap_s = s_w - s_l
+    _ = (head_q, head_l, lambda_corr)
     ell_w = log_len_win.reshape(-1).to(dtype=q_w.dtype)
     ell_l = log_len_lose.reshape(-1).to(dtype=q_w.dtype)
-    gap_ell = ell_w - ell_l
-    w_score = pair_gap_weight(gap_s).to(dtype=q_w.dtype)
-    w_ex = length_excess_weight(gap_ell.abs()).to(dtype=q_w.dtype)
-    w_close = 1.0 - w_ex
-    # 分差不到 0.20 时不许按长度扣。扣满 0.20 会把这条分差收成 0。
-    small = (gap_s.abs() < GAP_FULL).to(dtype=q_w.dtype)
-    w_use_large = 1.0 - (1.0 - w_score) * (1.0 - w_ex)
-    w_use = torch.where(small > 0, torch.ones_like(w_use_large), w_use_large)
-    rec = 0.5 * ((q_w + l_w - s_w).square() + (q_l + l_l - s_l).square())
-    l_rec = (w_use * rec).sum() / w_use.sum().clamp(min=1.0)
-    # r_L 是否接近看头自己的输出，权重不反传，避免把 r_L 拉开去逃避分差项。
-    gap_rl = l_w - l_l
-    w_rl_close = (1.0 - pair_gap_weight(gap_rl.detach())).to(dtype=q_w.dtype)
-    # 只在高分一侧更长、且原始分差已经达到 0.20 时缩小分差。高分更短不减。
-    w_hi_long = length_excess_weight(gap_ell.clamp(min=0)).to(dtype=q_w.dtype)
-    gap_target_large = (gap_s - GAP_FULL * w_hi_long).clamp(min=0)
-    gap_target = torch.where(small > 0, gap_s, gap_target_large)
-    w_gap_large = w_score * torch.maximum(torch.maximum(w_close, w_rl_close), w_hi_long)
-    w_gap = torch.where(small > 0, torch.ones_like(w_gap_large), w_gap_large)
-    l_gap = (w_gap * (gap_q - gap_target).square()).sum() / w_gap.sum().clamp(min=1.0)
-    # 小分差对上 r_L 目标是 0，和 r_Q 保住的分差一致。
-    # 大分差对上，长侧最多拿走 0.20，短侧目标是 0。句长差不到 0.10 nat 时两边目标都是 0。
-    pen = GAP_FULL * w_ex * (1.0 - small)
-    longer_win = (gap_ell > 0).to(dtype=q_w.dtype)
-    t_lw = pen * longer_win
-    t_ll = pen * (1.0 - longer_win)
-    l_rl = 0.5 * ((l_w - t_lw).square() + (l_l - t_ll).square()).mean()
+    src_w = ell_w if source_log_win is None else source_log_win.reshape(-1).to(dtype=q_w.dtype)
+    src_l = ell_l if source_log_lose is None else source_log_lose.reshape(-1).to(dtype=q_w.dtype)
+    excess_w = over_source_length(ell_w, src_w).detach()
+    excess_l = over_source_length(ell_l, src_l).detach()
+    gap_q = q_w - q_l
+    gap_s = s_w - s_l
+    gap_excess = excess_w - excess_l
+    len_err = 0.5 * ((l_w - excess_w).square() + (l_l - excess_l).square())
+    l_len = len_err.mean()
+    l_gap = (gap_q - gap_s).square().mean()
 
+    dev = torch.cat([ell_w - src_w, ell_l - src_l], dim=0)
     r_q_all = torch.cat([q_w, q_l], dim=0)
     r_l_all = torch.cat([l_w, l_l], dim=0)
     s_all = torch.cat([s_w, s_l], dim=0)
-    ell = torch.cat([ell_w, ell_l], dim=0)
-    rho_q = batch_pearson(r_q_all, ell)
-    rho_l = batch_pearson(r_l_all, ell)
+    excess_all = torch.cat([excess_w, excess_l], dim=0)
+    rho_q = batch_pearson(r_q_all, dev)
+    rho_l = batch_pearson(r_l_all, excess_all)
     rho_qs = batch_pearson(r_q_all, s_all)
-    rho_rec = batch_pearson(r_q_all + r_l_all, s_all)
-
-    _ = (head_q, head_l, lambda_corr, lambda_orth)
-    total = l_rec + l_gap + l_rl
-    open_mask = w_gap > 0
-    if bool(open_mask.any()):
-        acc_open = float((gap_q.detach()[open_mask] * gap_s.detach()[open_mask] > 0).float().mean())
-        gap_mae = float((gap_q.detach()[open_mask] - gap_target.detach()[open_mask]).abs().mean())
-    else:
-        acc_open = 1.0
-        gap_mae = float((gap_q.detach() - gap_s.detach()).abs().mean())
+    l_orth = rho_q.square()
+    total = l_gap + float(lambda_orth) * l_len
+    score_ok = gap_s.abs() >= MIN_SCORE_GAP
+    len_ok = gap_excess.abs() >= RL_CLOSE
+    gap_mae = float((gap_q.detach() - gap_s.detach()).abs().mean())
+    acc_q = float((gap_q.detach() * gap_s.detach() > 0).float().mean())
+    same_score = ((~score_ok) & len_ok).to(dtype=q_w.dtype)
     stats = {
         "loss": float(total.detach()),
-        "L_rec": float(l_rec.detach()),
         "L_gap": float(l_gap.detach()),
-        "L_rl": float(l_rl.detach()),
-        "open_frac": float((w_gap > 0).float().mean().detach()),
-        "effect_frac": float((w_use > 0).float().mean().detach()),
+        "L_len": float(l_len.detach()),
+        "L_orth": float(l_orth.detach()),
+        "usable_frac": 1.0,
+        "same_score_frac": float(same_score.mean().detach()),
         "rho_q": float(rho_q.detach()),
         "rho_l": float(rho_l.detach()),
         "rho_qs": float(rho_qs.detach()),
-        "rho_rec": float(rho_rec.detach()),
         "gap_sfp_mae": gap_mae,
-        "len_rank": float(w_close.detach().mean()),
-        "acc_q": float((gap_q.detach() * gap_s.detach() > 0).float().mean()),
-        "acc_q_open": acc_open,
+        "acc_q": acc_q,
     }
     return total, stats
 

@@ -219,12 +219,12 @@ grpo:
     grpo-epochs-per-round: 1.0
     # 24G 上 7B 全参反传会 OOM；训练脚本默认 LoRA r=16。大卡才加 --full-finetune
 
-  # ODIN 档 3：冻住基座 7B。比较对只在同组内。r_Q 拟合 S_fp，长度只进 r_L。句长接近或高分更短时，明显的 S_fp 分差在 r_Q 上不被收小。不要指向 rewriter。
+  # ODIN 档 3：冻住基座 7B。比较对只在同组内，S_fp 分差不论大小都纳入。r_Q 守住 S_fp 分差，字数只进 r_L。不要指向 rewriter。
   # python -m training.odin_rm.run_pipeline --samples training/runs/<id>/samples.jsonl --work-dir training/runs/<id>/odin_rm
   odin-rm:
     model: "models/Qwen2.5-7B-Instruct"
     freeze-backbone: true
-    lambda-corr: 1.0
+    lambda-corr: 0.02
     lambda-orth: 1.0
     max-length: 2048
     epochs: 3.0

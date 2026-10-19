@@ -20,7 +20,7 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
 from training.step_metrics import append_metrics, progress_summary
 
 from .data import messages_from_record
-from .modeling import DualHeadRewardModel, odin_rm_loss
+from .modeling import MIN_SCORE_GAP, DualHeadRewardModel, odin_rm_loss
 from .pairs import build_preference_pairs
 
 logger = logging.getLogger(__name__)
@@ -303,7 +303,8 @@ def train_heads_cached(
             if step % max(1, log_every) == 0 or step == 1 or step == total_steps:
                 hold = eval_pairs_cached(
                     rm, cache, hold_pairs, device=device,
-                    lambda_corr=lambda_corr, lambda_orth=lambda_orth, batch=max(1, batch),
+                    lambda_corr=lambda_corr, lambda_orth=lambda_orth,
+                    batch=max(1, batch),
                 )
                 row = {"step": step, "train": stats, "holdout": hold}
                 history.append(row)
@@ -338,9 +339,14 @@ def main() -> None:
     p.add_argument("--encode-batch", type=int, default=1)
     p.add_argument("--epochs", type=float, default=float(od.get("epochs") or 3.0))
     p.add_argument("--lr", type=float, default=float(od.get("lr") or 1e-3))
-    p.add_argument("--lambda-corr", type=float, default=float(od.get("lambda-corr") or 1.0))
+    p.add_argument("--lambda-corr", type=float, default=float(od.get("lambda-corr") if od.get("lambda-corr") is not None else 0.02))
     p.add_argument("--lambda-orth", type=float, default=float(od.get("lambda-orth") or 1.0))
-    p.add_argument("--min-margin", type=float, default=1e-6)
+    p.add_argument(
+        "--min-margin",
+        type=float,
+        default=MIN_SCORE_GAP,
+        help="低于此值视为同分。组内对全部保留，不再按这个值丢对",
+    )
     p.add_argument("--holdout-frac", type=float, default=0.1)
     p.add_argument("--log-every", type=int, default=20)
     p.add_argument("--seed", type=int, default=0)
@@ -449,25 +455,21 @@ def main() -> None:
             last={**{f"train_{k}": v for k, v in last_train.items()}, **{f"holdout_{k}": v for k, v in last_hold.items()}},
             keys=(
                 "train_loss",
-                "train_L_rec",
                 "train_L_gap",
-                "train_L_rl",
+                "train_L_len",
                 "train_acc_q",
-                "train_acc_q_open",
-                "train_open_frac",
-                "train_effect_frac",
-                "train_rho_rec",
+                "train_rho_q",
+                "train_rho_l",
                 "train_gap_sfp_mae",
+                "train_same_score_frac",
                 "holdout_loss",
-                "holdout_L_rec",
                 "holdout_L_gap",
-                "holdout_L_rl",
+                "holdout_L_len",
                 "holdout_acc_q",
-                "holdout_acc_q_open",
-                "holdout_open_frac",
-                "holdout_effect_frac",
-                "holdout_rho_rec",
+                "holdout_rho_q",
+                "holdout_rho_l",
                 "holdout_gap_sfp_mae",
+                "holdout_same_score_frac",
             ),
         )
         append_metrics(metrics_jsonl, summary)
