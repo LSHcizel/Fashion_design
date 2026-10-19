@@ -90,6 +90,7 @@ class RewardWritebackTests(unittest.TestCase):
         apply_r_q_to_record(rec, r_q=-1.25, r_l=3.0, backbone="x")
         self.assertEqual(rec["R_content"], -1.25)
         self.assertEqual(pick_reward_scalar(rec), -1.25)
+        self.assertEqual(pick_reward_scalar(rec, prefer="S_fp"), 0.7)
         self.assertEqual(rec["S_fp"], 0.7)
         self.assertEqual(rec["r_content"]["odin_stage"], 3)
         self.assertEqual(rec["r_content"]["r_Q"], -1.25)

@@ -1,5 +1,6 @@
 """
-冷启动第 2、3 步：训双头 RM 并导出 phase_a/b，再 SFT 一次 + 多轮短 GRPO。
+冷启动第 2、3 步：默认训双头 RM 并导出 phase_a/b，再 SFT 一次 + 多轮短 GRPO。
+``--use-sfp`` 跳过 RM，用裁判 S_fp 导出后再做 SFT 和 GRPO。RM 代码仍保留。
 
 采数（第 1 步）需已写出 samples.jsonl。默认路径与
 ``collect_k_rewrite_samples.py --run-id`` 对齐。
@@ -36,7 +37,7 @@ def _run(cmd: Sequence[str], *, dry_run: bool) -> None:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(
-        description="冷启动：双头 RM（一次）→ SFT（一次）→ 多轮短 GRPO",
+        description="冷启动：默认双头 RM（一次）→ SFT（一次）→ 多轮短 GRPO；--use-sfp 时奖励直接用 S_fp",
     )
     p.add_argument(
         "--run-id",
@@ -82,6 +83,11 @@ def main() -> None:
     p.add_argument("--sft-no-early-stop", action="store_true")
     p.add_argument("--system-prompt-file", type=Path, default=None)
     p.add_argument("--skip-rm", action="store_true", help="已有 odin export 时跳过第 2 步")
+    p.add_argument(
+        "--use-sfp",
+        action="store_true",
+        help="不训双头 RM。用裁判 S_fp 导出 phase_a/b，再做 SFT 和 GRPO。RM 代码保留",
+    )
     p.add_argument("--skip-sft", action="store_true", help="只跑第 2 步，或第 3 步跳过 SFT")
     p.add_argument("--skip-grpo", action="store_true", help="第 3 步只 SFT")
     p.add_argument("--stop-after-rm", action="store_true", help="只做第 2 步")
@@ -103,12 +109,28 @@ def main() -> None:
     samples = (args.samples or (run_root / "samples.jsonl")).resolve()
     odin_work = (args.odin_work_dir or (run_root / "odin_rm")).resolve()
     train_work = (args.train_work_dir or (run_root / "hf_checkpoints")).resolve()
-    export_dir = odin_work / "export"
+    export_dir = (run_root / "sfp_export" if args.use_sfp else odin_work / "export").resolve()
     phase_a = export_dir / "phase_a_sft.jsonl"
     phase_b = export_dir / "phase_b_grpo.jsonl"
     py = sys.executable
 
-    if not args.skip_rm:
+    if args.use_sfp:
+        if not args.dry_run and not samples.is_file():
+            raise SystemExit(f"找不到 samples（请先完成第 1 步采数）: {samples}")
+        logger.info("第 2 步：用 S_fp 导出，不训 RM → %s", export_dir)
+        if not args.dry_run:
+            from training.grpo_pipeline import default_include_for_training, export_two_phase_from_samples
+
+            manifest = export_two_phase_from_samples(
+                samples,
+                export_dir,
+                filter_fn=default_include_for_training,
+                reward_key="S_fp",
+            )
+            logger.info("S_fp export: %s", manifest)
+            if not (phase_a.is_file() and phase_b.is_file()):
+                raise SystemExit(f"S_fp 导出未写出 phase_a/b: {export_dir}")
+    elif not args.skip_rm:
         if not args.dry_run and not samples.is_file():
             raise SystemExit(f"找不到 samples（请先完成第 1 步采数）: {samples}")
         odin_cmd: List[str] = [

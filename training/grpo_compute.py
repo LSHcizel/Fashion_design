@@ -14,9 +14,15 @@ from __future__ import annotations
 from statistics import mean, pstdev
 from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple
 
+RewardKey = Literal["R_content", "S_fp", "total_score"]
 
-def pick_reward_scalar(record: Dict[str, Any], *, prefer: Literal["R_content", "total_score"] = "R_content") -> float:
-    """从单条训练样本中取标量奖励。"""
+
+def pick_reward_scalar(record: Dict[str, Any], *, prefer: RewardKey = "R_content") -> float:
+    """从单条训练样本中取标量奖励。
+
+    ``S_fp`` 与旧名 ``total_score`` 只读裁判分，不读 ``R_content``。
+    这样不会拿到档 1 的长度修正，也不会拿到档 3 写回去的 r_Q。
+    """
     if prefer == "R_content":
         g = record.get("grpo") or {}
         r = g.get("reward_scalar")
@@ -101,7 +107,7 @@ def apply_rank_reward_multiplier(
 def build_group_training_rows(
     records: List[Dict[str, Any]],
     *,
-    reward_key: Literal["R_content", "total_score"] = "R_content",
+    reward_key: RewardKey = "R_content",
     beta_rank: Optional[float] = None,
     old_policy_ranks: Optional[List[int]] = None,
     rank_correction_group_meta: Optional[Dict[str, Any]] = None,

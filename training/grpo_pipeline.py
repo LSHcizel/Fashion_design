@@ -19,6 +19,7 @@ from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple
 from plugins.text_description_evaluator.completion_vocab import row_excluded_for_low_meaningful
 
 from .grpo_compute import (
+    RewardKey,
     build_group_training_rows,
     pick_reward_scalar,
     skip_rank_correction_for_group,
@@ -138,7 +139,7 @@ def default_include_for_training(rec: Dict[str, Any]) -> bool:
 def build_sft_record_for_group(
     records: List[Dict[str, Any]],
     *,
-    reward_key: Literal["R_content", "total_score"] = "R_content",
+    reward_key: RewardKey = "R_content",
     system_prompt_text: str = "",
 ) -> Optional[Dict[str, Any]]:
     """
@@ -192,7 +193,7 @@ def export_two_phase_from_samples(
     out_dir: Path,
     *,
     system_prompt_text: str = "",
-    reward_key: Literal["R_content", "total_score"] = "R_content",
+    reward_key: RewardKey = "R_content",
     beta_rank: Optional[float] = None,
     pi_old_model_for_ranking: Optional[str] = None,
     pi_old_dtype: Literal["bf16", "fp16", "fp32"] = "bf16",
