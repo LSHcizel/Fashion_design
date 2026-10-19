@@ -203,7 +203,7 @@ class OdinLossTests(unittest.TestCase):
             import torch
         except ImportError:
             self.skipTest("torch not installed")
-        from training.odin_rm.modeling import DualHeadRewardModel, odin_rm_loss
+        from training.odin_rm.modeling import LENGTH_FREE, PENALTY_AT_DOUBLE, DualHeadRewardModel, odin_rm_loss
 
         class Tiny(torch.nn.Module):
             def __init__(self) -> None:
@@ -232,25 +232,33 @@ class OdinLossTests(unittest.TestCase):
             s_hi, torch.zeros(1), s_lo, torch.zeros(1), src - 0.4, src - 0.2, s_hi, s_lo, **kwargs,
         )
         self.assertAlmostEqual(shorter["L_len"], 0.0, places=6)
-        # 长到一倍却报 0：长度项等于超长幅度的平方。
+        # 长到一倍却报 0：长度项等于扣分的平方。扣分是 0.15，不是整段 log 超长。
         far = src + torch.log(torch.tensor([2.0]))
+        pen = torch.tensor([PENALTY_AT_DOUBLE])
         _, too_long = odin_rm_loss(
             s_hi, torch.zeros(1), s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
         )
-        self.assertAlmostEqual(too_long["L_len"], 0.5 * torch.log(torch.tensor(2.0)).square().item(), places=4)
-        # 长侧如实报出超长幅度：长度项为 0。
-        excess = torch.log(torch.tensor([2.0]))
+        self.assertAlmostEqual(too_long["L_len"], 0.5 * pen.square().item(), places=4)
+        # 只长出 0.10：小波动不扣，报 0 时长度项仍是 0。
+        nudge = src + LENGTH_FREE
+        _, within = odin_rm_loss(
+            s_hi, torch.zeros(1), s_lo, torch.zeros(1), nudge, src, s_hi, s_lo, **kwargs,
+        )
+        self.assertAlmostEqual(within["L_len"], 0.0, places=6)
+        self.assertAlmostEqual(within["L_gap"], 0.0, places=6)
+        # 长侧如实报出 0.15：长度项为 0。
         _, reported = odin_rm_loss(
-            s_hi, excess, s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
+            s_hi - pen, pen, s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
         )
         self.assertAlmostEqual(reported["L_len"], 0.0, places=5)
+        self.assertAlmostEqual(reported["L_rec"], 0.0, places=5)
 
     def test_close_excess_keeps_sfp_gap(self) -> None:
         try:
             import torch
         except ImportError:
             self.skipTest("torch not installed")
-        from training.odin_rm.modeling import DualHeadRewardModel, odin_rm_loss
+        from training.odin_rm.modeling import PENALTY_AT_DOUBLE, DualHeadRewardModel, odin_rm_loss
 
         class Tiny(torch.nn.Module):
             def __init__(self) -> None:
@@ -285,24 +293,26 @@ class OdinLossTests(unittest.TestCase):
         )
         self.assertAlmostEqual(flipped["L_gap"], 0.60 ** 2, places=4)
         self.assertEqual(flipped["acc_q"], 0.0)
-        # 一侧长到一倍：r_Q 仍守住 S_fp 分差，不按超长扣减。
+        # 一侧长到一倍：r_Q 分差留下 0.30-0.15，r_L 拿走这 0.15。
         far = src + torch.log(torch.tensor([2.0]))
-        excess = torch.log(torch.tensor([2.0]))
+        pen = torch.tensor([PENALTY_AT_DOUBLE])
+        _, kept = odin_rm_loss(
+            s_hi - pen, pen, s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
+        )
+        self.assertAlmostEqual(kept["L_gap"], 0.0, places=4)
+        self.assertAlmostEqual(kept["L_rec"], 0.0, places=4)
+        # 原样抄上 0.30：分差项等于扣分的平方。
         _, copied = odin_rm_loss(
-            s_hi, excess, s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
+            s_hi, pen, s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
         )
-        self.assertAlmostEqual(copied["L_gap"], 0.0, places=4)
-        _, deducted = odin_rm_loss(
-            s_hi - excess, excess, s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(deducted["L_gap"], excess.square().item(), places=4)
+        self.assertAlmostEqual(copied["L_gap"], PENALTY_AT_DOUBLE ** 2, places=4)
 
-    def test_same_score_keeps_r_q_gap_at_zero(self) -> None:
+    def test_same_score_double_length_lowers_r_q(self) -> None:
         try:
             import torch
         except ImportError:
             self.skipTest("torch not installed")
-        from training.odin_rm.modeling import DualHeadRewardModel, odin_rm_loss
+        from training.odin_rm.modeling import PENALTY_AT_DOUBLE, DualHeadRewardModel, odin_rm_loss
         from training.odin_rm.pairs import pairs_from_group
 
         class Tiny(torch.nn.Module):
@@ -313,8 +323,8 @@ class OdinLossTests(unittest.TestCase):
         rm = DualHeadRewardModel(Tiny(), hidden_size=4)
         src = torch.tensor([5.0])
         score = torch.tensor([0.70])
-        excess = torch.log(torch.tensor([2.0]))
-        far = src + excess
+        pen = torch.tensor([PENALTY_AT_DOUBLE])
+        far = src + torch.log(torch.tensor([2.0]))
         kwargs = dict(
             head_q=rm.head_q,
             head_l=rm.head_l,
@@ -323,17 +333,18 @@ class OdinLossTests(unittest.TestCase):
             source_log_win=src,
             source_log_lose=src,
         )
-        # 同分、B 长到一倍：两边 r_Q 相同，分差项为 0。字数差不进内容头。
-        _, tied = odin_rm_loss(
-            score, torch.zeros(1), score, excess, src, far, score, score, **kwargs,
-        )
-        self.assertAlmostEqual(tied["L_gap"], 0.0, places=4)
-        self.assertEqual(tied["same_score_frac"], 1.0)
-        # 把长的 r_Q 压低：分差项等于压低量的平方。
+        # 同分、B 长到一倍：B 的 r_Q 低 0.15、r_L 报 0.15 时分差项为 0。
         _, separated = odin_rm_loss(
-            score, torch.zeros(1), score - excess, excess, src, far, score, score, **kwargs,
+            score, torch.zeros(1), score - pen, pen, src, far, score, score, **kwargs,
         )
-        self.assertAlmostEqual(separated["L_gap"], excess.square().item(), places=4)
+        self.assertAlmostEqual(separated["L_gap"], 0.0, places=4)
+        self.assertAlmostEqual(separated["L_rec"], 0.0, places=4)
+        self.assertEqual(separated["same_score_frac"], 1.0)
+        # 两篇 r_Q 仍一样：分差项等于 0.15 的平方。
+        _, tied = odin_rm_loss(
+            score, torch.zeros(1), score, pen, src, far, score, score, **kwargs,
+        )
+        self.assertAlmostEqual(tied["L_gap"], PENALTY_AT_DOUBLE ** 2, places=4)
         pairs = pairs_from_group(
             [_rec("g", 0, 0.70, "a" * 10), _rec("g", 1, 0.70, "b" * 1000)]
         )

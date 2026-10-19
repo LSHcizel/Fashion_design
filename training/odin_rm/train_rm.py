@@ -456,6 +456,7 @@ def main() -> None:
             keys=(
                 "train_loss",
                 "train_L_gap",
+                "train_L_rec",
                 "train_L_len",
                 "train_acc_q",
                 "train_rho_q",
@@ -464,6 +465,7 @@ def main() -> None:
                 "train_same_score_frac",
                 "holdout_loss",
                 "holdout_L_gap",
+                "holdout_L_rec",
                 "holdout_L_len",
                 "holdout_acc_q",
                 "holdout_rho_q",

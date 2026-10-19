@@ -118,7 +118,7 @@ def summarize_rm_scores(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
         "pearson_r_Q_vs_log_len": pearson_corr(rqs, ells),
         "pearson_r_L_vs_log_len": pearson_corr(rls, ells),
         "pearson_r_Q_residual_vs_log_len": pearson_corr(residual, paired_ells),
-        "note": "验收：扣掉 S_fp 后 ρ(r_Q 残差, ℓ)≈0，ρ(r_L, ℓ)>0。r_Q 分差守住 S_fp。",
+        "note": "验收：超长不到 0.10 不扣。扣掉 S_fp 后 ρ(r_Q 残差, ℓ)<0，ρ(r_L, ℓ)>0。长到一倍从 r_Q 扣 0.15。",
     }
 
 

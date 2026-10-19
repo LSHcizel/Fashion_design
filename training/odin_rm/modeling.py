@@ -2,13 +2,14 @@
 双头奖励模型（ODIN）：共用表征 + r_Q / r_L。
 
 r_Q 读最后一个 token 的两层映射，r_L 是线性头。都无 sigmoid、无 clip。
-长度标准是本组改写原文的字数。r_L 报出改写超出原文的幅度，短于原文的目标是 0。
-r_Q 分差始终对齐 S_fp 分差。S_fp 一样时，字数不同也不把 r_Q 拉开。
-ρ(r_Q, 相对原文字数) 只写入日志。验收看扣掉 S_fp 之后的残差还跟不跟字数走。策略训练只取 r_Q。
+长度标准是本组改写原文的字数。超长不到 0.10 不扣分，短于原文也不加分。
+再长出去的部分从 r_Q 挪进 r_L，长到一倍扣 0.15。两个头加总还原 S_fp。
+字数接近时 r_Q 分差对齐 S_fp 分差。策略训练只取 r_Q。
 """
 
 from __future__ import annotations
 
+import math
 from typing import Any, Dict, Optional, Tuple
 
 import torch
@@ -48,15 +49,26 @@ def length_disentangle_term(rho_q: torch.Tensor, rho_l: torch.Tensor) -> torch.T
     return rho_q.square() - rho_l
 
 
-# S_fp 分差低于此值，视为原得分一样。只用于给同分长度对打标记，不改变 r_Q 目标。
+# S_fp 分差低于此值，视为原得分一样。只用于给同分长度对打标记。
 MIN_SCORE_GAP = 0.10
 # 超长幅度差达到此值，造对时标成 same_score_length，便于事后检查。
 RL_CLOSE = 0.10
+# 超出原文不到这一截视为小波动，r_Q 不扣、r_L 目标是 0。约 10.5% 字数。
+LENGTH_FREE = 0.10
+# 长到一倍（excess = ln 2）时，从 r_Q 扣进 r_L 的分数。
+PENALTY_AT_DOUBLE = 0.15
 
 
 def over_source_length(log_len: torch.Tensor, source_log: torch.Tensor) -> torch.Tensor:
     """超出本组原文字数的 log 幅度。短于或等于原文时为 0。"""
     return (log_len - source_log).clamp(min=0)
+
+
+def length_score_penalty(excess: torch.Tensor) -> torch.Tensor:
+    """小波动不扣。过了 LENGTH_FREE 之后线性增加，长到一倍扣 PENALTY_AT_DOUBLE。"""
+    span = math.log(2.0) - LENGTH_FREE
+    over = (excess - LENGTH_FREE).clamp(min=0)
+    return over * (PENALTY_AT_DOUBLE / span)
 
 
 def odin_rm_loss(
@@ -77,11 +89,11 @@ def odin_rm_loss(
     source_log_lose: Optional[torch.Tensor] = None,
 ) -> Tuple[torch.Tensor, Dict[str, float]]:
     """
-    L = L_gap + λ_orth · L_len
+    L = L_gap + L_rec + λ_orth · L_len
 
-    L_len 让 r_L 等于改写超出原文的 log 幅度。短于原文时期望 r_L 为 0。
-    L_gap 让 r_Q 分差始终对齐 S_fp 分差，不按超长差扣减。
-    组内比较对不论 S_fp 分差大小都计入。
+    扣分只由这一篇自己的超长决定。超长不到 0.10 时扣分是 0。
+    L_len 让 r_L 等于扣分。L_gap 让 r_Q 分差等于 S_fp 分差减去扣分差。
+    L_rec 让两侧都满足 r_Q + r_L = S_fp。
     ρ(r_Q, ℓ − ℓ_原文) 只写入统计，不进损失。
     """
     q_w = r_q_win.reshape(-1)
@@ -97,12 +109,17 @@ def odin_rm_loss(
     src_l = ell_l if source_log_lose is None else source_log_lose.reshape(-1).to(dtype=q_w.dtype)
     excess_w = over_source_length(ell_w, src_w).detach()
     excess_l = over_source_length(ell_l, src_l).detach()
+    pen_w = length_score_penalty(excess_w)
+    pen_l = length_score_penalty(excess_l)
     gap_q = q_w - q_l
     gap_s = s_w - s_l
     gap_excess = excess_w - excess_l
-    len_err = 0.5 * ((l_w - excess_w).square() + (l_l - excess_l).square())
+    target = gap_s - (pen_w - pen_l)
+    len_err = 0.5 * ((l_w - pen_w).square() + (l_l - pen_l).square())
     l_len = len_err.mean()
-    l_gap = (gap_q - gap_s).square().mean()
+    l_gap = (gap_q - target).square().mean()
+    rec = 0.5 * ((q_w + l_w - s_w).square() + (q_l + l_l - s_l).square())
+    l_rec = rec.mean()
 
     dev = torch.cat([ell_w - src_w, ell_l - src_l], dim=0)
     r_q_all = torch.cat([q_w, q_l], dim=0)
@@ -113,15 +130,16 @@ def odin_rm_loss(
     rho_l = batch_pearson(r_l_all, excess_all)
     rho_qs = batch_pearson(r_q_all, s_all)
     l_orth = rho_q.square()
-    total = l_gap + float(lambda_orth) * l_len
+    total = l_gap + l_rec + float(lambda_orth) * l_len
     score_ok = gap_s.abs() >= MIN_SCORE_GAP
     len_ok = gap_excess.abs() >= RL_CLOSE
-    gap_mae = float((gap_q.detach() - gap_s.detach()).abs().mean())
-    acc_q = float((gap_q.detach() * gap_s.detach() > 0).float().mean())
+    gap_mae = float((gap_q.detach() - target.detach()).abs().mean())
+    acc_q = float((gap_q.detach() * target.detach() > 0).float().mean())
     same_score = ((~score_ok) & len_ok).to(dtype=q_w.dtype)
     stats = {
         "loss": float(total.detach()),
         "L_gap": float(l_gap.detach()),
+        "L_rec": float(l_rec.detach()),
         "L_len": float(l_len.detach()),
         "L_orth": float(l_orth.detach()),
         "usable_frac": 1.0,

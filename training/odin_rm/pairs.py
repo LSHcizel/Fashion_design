@@ -61,7 +61,7 @@ def _pairs_within_one_group(
     *,
     min_margin: float,
 ) -> List[Dict[str, Any]]:
-    """同一 group 内两两都纳入。原得分差至少 0.10 时按分数定先后。分差更小但超长差得开时标成 same_score_length，超长更少的一侧放在 chosen。内容目标仍是 S_fp 分差。"""
+    """同一 group 内两两都纳入。原得分差至少 0.10 时按分数定先后。分差更小但超长差得开时标成 same_score_length，超长更少的一侧放在 chosen。内容目标是 S_fp 分差减去超长扣分。"""
     group_ids = {str(rec.get("group_id") or "") for rec in records}
     if len(group_ids) != 1:
         raise ValueError("比较对不能跨 group_id")
