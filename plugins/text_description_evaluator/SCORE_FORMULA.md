@@ -86,22 +86,32 @@ GRPO 同组调用 `apply_group_z_len_r_content` 后，结果里带 `odin_diagnos
 裁判质量轴 `Q` 仍是 0～1，只当老师。本地 RM：
 
 ```
-r_Q 拟合 S_fp；r_L 的差距拟合 log 句长差
+r_Q + r_L 还原 S_fp
 gap_s = S_fp⁺ − S_fp⁻
-w_score = 0                         # |gap_s| ≤ 0.10
-        = (|gap_s|−0.10) / 0.10    # 0.10 < |gap_s| < 0.20
-        = 1                         # |gap_s| ≥ 0.20
-w_len = 1                           # ℓ⁺−ℓ⁻ ≤ 0.10 nat：高分不更长，或只长一点点
-      = 0                           # ℓ⁺−ℓ⁻ ≥ ln 2：高分一侧长到约两倍
-w = w_score · w_len
-L_RM = mean((r_Q − S_fp)²)
-     + Σ w · relu(gap_s − gap_q)² / Σ w
-     + mean((1 − w_score) · gap_q²)
-     + mean(((r_L⁺−r_L⁻) − (ℓ⁺−ℓ⁻))²)
+|gap_s| < 0.20：
+  gap_t = gap_s          # 整段留在 r_Q
+  t_L = 0                # 两侧都不扣
+  u = 1，w_gap = 1
+|gap_s| ≥ 0.20：
+  w_ex = 0                            # |ℓ⁺−ℓ⁻| ≤ 0.10 nat
+       = (|Δℓ|−0.10) / (ln2−0.10)    # 其间
+       = 1                            # |Δℓ| ≥ ln 2，超长
+  w_rl = 1                            # |r_L⁺−r_L⁻| ≤ 0.10
+       = 0                            # |r_L⁺−r_L⁻| ≥ 0.20
+  w_hi = 0                            # ℓ⁺−ℓ⁻ ≤ 0.10：高分不更长
+       = (ℓ⁺−ℓ⁻−0.10) / (ln2−0.10)   # 高分一侧更长
+       = 1                            # 高分一侧长到约两倍
+  w_gap = max(1 − w_ex, w_rl, w_hi)
+  gap_t = max(gap_s − 0.20·w_hi, 0)  # 高分过长时缩小分差
+  t_L(长) = 0.20 · w_ex               # 短侧目标是 0；不超长时两边都是 0
+  u = 1
+L_RM = Σ u · ((r_Q + r_L − S_fp)²) / Σ u
+     + Σ w_gap · (gap_q − gap_t)² / Σ w_gap
+     + mean((r_L − t_L)²)
 R_content := r_Q
 ```
 
-比较对只在同一 `group_id` 内两两构造，不跨组。长度进 `r_L`，不进 `r_Q`，也没有写死的分数系数。`|S_fp 分差| ≥ 0.20` 时，若两条句长接近，或高分改写更短，比较损失在 `r_Q` 分差小于 `S_fp` 分差时为正，抄到同样分差后为 0，不会把这块分差收小。高分一侧长到约两倍时，这条对不再逼 `r_Q` 排序。`|S_fp 分差| ≤ 0.10` 的对不学输赢，并把 `r_Q` 分差收到 0。不把 `ρ(r_Q, ℓ)²` 加进损失。GRPO 丢掉组内标准差低于 0.01 的组。
+比较对只在同一 `group_id` 内两两构造，不跨组。组内分差不到 0.20 时，`r_Q` 分差对齐原始分差，偏大偏小都算损失，两侧 `r_L` 收到 0。固定扣 0.20 会把这条分差收成 0，所以这一档不扣。分差达到 0.20 之后，`r_L` 才在一侧超长时取到最多 0.20。句长差在 0.10 nat 以内，或两侧 `r_L` 仍接近时，`r_Q` 分差继续对齐 `S_fp` 分差。高分一侧明显更长时，对齐的目标改为把 `S_fp` 分差缩小，长到约两倍时缩小 0.20。高分一侧更短时不缩小。策略训练只取 `r_Q`。GRPO 丢掉组内标准差低于 0.01 的组。
 
 入口：`python -m training.odin_rm.run_pipeline --samples <samples.jsonl> --work-dir <dir>`  
 然后再跑 `training/hf_grpo/run_recommended_training.py`（phase_a/b 已按 r_Q 算 advantage）。

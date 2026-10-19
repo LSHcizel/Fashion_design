@@ -3,9 +3,11 @@
 
 r_Q 读最后一个 token 的两层映射，r_L 是线性头。都无 sigmoid、无 clip。
 S_fp 是评分器原始分。r_Q 是主体，r_L 只占一小截，两者相加还原 S_fp。
-句长上下浮动不大，或两侧 r_L 接近时，明显的 S_fp 分差要原样出现在 r_Q 上，偏大偏小都算损失。
-高分一侧明显更长时，r_Q 分差按超长幅度缩小，长到约一倍时最多缩小 0.20。
-只有超长一侧的 r_L 才取到 0.20。策略训练只取 r_Q。
+组内分差不到 0.20 时，整段留在 r_Q，两侧 r_L 的目标都是 0。
+再按固定 0.20 去扣，会把比这更小的分差收成 0。
+分差达到 0.20 之后，句长接近或两侧 r_L 接近时，r_Q 分差仍对齐 S_fp 分差。
+高分一侧明显更长时，这一档才按超长幅度缩小，长到约一倍时最多缩小 0.20。
+策略训练只取 r_Q。
 """
 
 from __future__ import annotations
@@ -41,9 +43,10 @@ def batch_pearson(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return (xf * yf).sum() / denom
 
 
-# 低于此值的裁判分差，留出集方向一致率停在 0.50，不作为输赢目标。
+# 大分差对上，两侧 r_L 差到这个幅度才算已经分开。
 GAP_MARGIN = 0.10
-# 达到此值后比较损失满权重。这一档的方向一致率是 0.86。
+# 分差达到此值后，才允许长度从头里扣，最多扣这么多。
+# 不到此值的组内分差整段留在 r_Q。
 GAP_FULL = 0.20
 # 句长差在这以内视为上下浮动不大。
 LENGTH_CLOSE_NAT = 0.10
@@ -61,7 +64,7 @@ def length_disentangle_term(rho_q: torch.Tensor, rho_l: torch.Tensor) -> torch.T
 
 
 def pair_gap_weight(gap_t: torch.Tensor) -> torch.Tensor:
-    """裁判分差越大，越要让 r_Q 跟上。0.10 以下权重为 0，0.20 及以上为 1。"""
+    """0.10 以下为 0，0.20 及以上为 1。用于大分差对上判断两侧 r_L 是否还接近。"""
     g = gap_t.reshape(-1).abs()
     span = GAP_FULL - GAP_MARGIN
     return ((g - GAP_MARGIN) / span).clamp(0, 1)
@@ -94,10 +97,12 @@ def odin_rm_loss(
     """
     L = L_rec + L_gap + L_rl
 
-    r_Q + r_L 还原 S_fp。还原项和分差项只计效果明显的对。
-    r_L 的目标平时是 0。超长一侧的 r_L 目标才到 0.20，另一侧仍是 0。
-    |S_fp 分差| 明显，且句长接近或两侧 r_L 接近时，r_Q 分差对齐 S_fp 分差，偏大偏小都算。
+    r_Q + r_L 还原 S_fp。
+    |S_fp 分差| < 0.20 时，r_Q 分差对齐原始分差，两侧 r_L 目标都是 0。
+    |S_fp 分差| ≥ 0.20 时，r_L 仍只在超长一侧取到最多 0.20。
+    这一档里句长接近或两侧 r_L 接近时，r_Q 分差对齐 S_fp 分差。
     高分一侧更长时，对齐的目标改为 max(S_fp 分差 − 0.20×超长幅度, 0)。
+    批次上的 Pearson 不进损失：它的量级是 1，会把刚护住的小分差重新压平。
     """
     q_w = r_q_win.reshape(-1)
     q_l = r_q_lose.reshape(-1)
@@ -114,20 +119,25 @@ def odin_rm_loss(
     w_score = pair_gap_weight(gap_s).to(dtype=q_w.dtype)
     w_ex = length_excess_weight(gap_ell.abs()).to(dtype=q_w.dtype)
     w_close = 1.0 - w_ex
-    # 分数差或长度差有一边明显，还原才进损失。两边都接近的对不拉动 r_Q。
-    w_use = 1.0 - (1.0 - w_score) * (1.0 - w_ex)
+    # 分差不到 0.20 时不许按长度扣。扣满 0.20 会把这条分差收成 0。
+    small = (gap_s.abs() < GAP_FULL).to(dtype=q_w.dtype)
+    w_use_large = 1.0 - (1.0 - w_score) * (1.0 - w_ex)
+    w_use = torch.where(small > 0, torch.ones_like(w_use_large), w_use_large)
     rec = 0.5 * ((q_w + l_w - s_w).square() + (q_l + l_l - s_l).square())
     l_rec = (w_use * rec).sum() / w_use.sum().clamp(min=1.0)
     # r_L 是否接近看头自己的输出，权重不反传，避免把 r_L 拉开去逃避分差项。
     gap_rl = l_w - l_l
     w_rl_close = (1.0 - pair_gap_weight(gap_rl.detach())).to(dtype=q_w.dtype)
-    # 只在高分一侧更长时缩小分差。高分更短不减。
+    # 只在高分一侧更长、且原始分差已经达到 0.20 时缩小分差。高分更短不减。
     w_hi_long = length_excess_weight(gap_ell.clamp(min=0)).to(dtype=q_w.dtype)
-    gap_target = (gap_s - GAP_FULL * w_hi_long).clamp(min=0)
-    w_gap = w_score * torch.maximum(torch.maximum(w_close, w_rl_close), w_hi_long)
+    gap_target_large = (gap_s - GAP_FULL * w_hi_long).clamp(min=0)
+    gap_target = torch.where(small > 0, gap_s, gap_target_large)
+    w_gap_large = w_score * torch.maximum(torch.maximum(w_close, w_rl_close), w_hi_long)
+    w_gap = torch.where(small > 0, torch.ones_like(w_gap_large), w_gap_large)
     l_gap = (w_gap * (gap_q - gap_target).square()).sum() / w_gap.sum().clamp(min=1.0)
-    # 长侧最多拿走 0.20，短侧目标是 0。句长差不到 0.10 nat 时两边目标都是 0。
-    pen = GAP_FULL * w_ex
+    # 小分差对上 r_L 目标是 0，和 r_Q 保住的分差一致。
+    # 大分差对上，长侧最多拿走 0.20，短侧目标是 0。句长差不到 0.10 nat 时两边目标都是 0。
+    pen = GAP_FULL * w_ex * (1.0 - small)
     longer_win = (gap_ell > 0).to(dtype=q_w.dtype)
     t_lw = pen * longer_win
     t_ll = pen * (1.0 - longer_win)

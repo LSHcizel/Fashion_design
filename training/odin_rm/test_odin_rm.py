@@ -246,7 +246,7 @@ class OdinLossTests(unittest.TestCase):
         self.assertAlmostEqual(bulky["L_rec"], 0.0, places=6)
         self.assertGreater(bulky["L_rl"], matched["L_rl"])
 
-    def test_dull_pairs_drop_out(self) -> None:
+    def test_small_gap_is_kept(self) -> None:
         try:
             import torch
         except ImportError:
@@ -263,15 +263,18 @@ class OdinLossTests(unittest.TestCase):
         kwargs = dict(head_q=rm.head_q, head_l=rm.head_l)
         s_hi = torch.tensor([0.80])
         s_lo = torch.tensor([0.78])
+        # 句长相同，r_Q 抄上 0.02 的分差：三项都是 0。
         _, copied = odin_rm_loss(s_hi, z, s_lo, z, z, z, s_hi, s_lo, **kwargs)
         _, blown = odin_rm_loss(
             torch.tensor([0.90]), z, torch.tensor([0.70]), z, z, z, s_hi, s_lo, **kwargs,
         )
-        self.assertEqual(copied["effect_frac"], 0.0)
+        self.assertEqual(copied["effect_frac"], 1.0)
+        self.assertEqual(copied["open_frac"], 1.0)
         self.assertAlmostEqual(copied["loss"], 0.0, places=6)
-        self.assertAlmostEqual(blown["loss"], 0.0, places=6)
+        self.assertAlmostEqual(copied["gap_sfp_mae"], 0.0, places=6)
+        self.assertAlmostEqual(blown["L_gap"], 0.18 ** 2, places=4)
 
-    def test_long_side_quality_drops_when_score_is_close(self) -> None:
+    def test_small_gap_survives_when_winner_is_longer(self) -> None:
         try:
             import torch
         except ImportError:
@@ -289,28 +292,29 @@ class OdinLossTests(unittest.TestCase):
         kwargs = dict(head_q=rm.head_q, head_l=rm.head_l)
         s_hi = torch.tensor([0.55])
         s_lo = torch.tensor([0.50])
-        # 原始分接近、高分一侧长到一倍：r_L 仍是 0 时，长度项为正。
+        # 分差 0.05，高分一侧长到一倍：r_Q 仍抄上这 0.05，r_L 保持 0。
         _, copied = odin_rm_loss(
             s_hi, z, s_lo, z, far, z, s_hi, s_lo, **kwargs,
         )
-        self.assertGreater(copied["L_rl"], 0.0)
+        self.assertAlmostEqual(copied["loss"], 0.0, places=6)
         self.assertEqual(copied["effect_frac"], 1.0)
-        # 长侧 r_L 取 0.20，r_Q 相应少 0.20，加总仍是 S_fp。短侧 r_L 保持 0。
+        # 把 0.05 收成 0：分差项为正。
+        _, wiped = odin_rm_loss(
+            s_hi, z, s_hi, z, far, z, s_hi, s_lo, **kwargs,
+        )
+        self.assertAlmostEqual(wiped["L_gap"], 0.05 ** 2, places=4)
+        # 长侧改拿 0.20，r_Q 少掉 0.20：加总仍是 S_fp，但分差被反了过来。
         _, split = odin_rm_loss(
             s_hi - GAP_FULL, torch.tensor([GAP_FULL]), s_lo, z, far, z, s_hi, s_lo, **kwargs,
         )
-        self.assertAlmostEqual(split["L_rl"], 0.0, places=6)
         self.assertAlmostEqual(split["L_rec"], 0.0, places=6)
-        # 把这 0.20 扣到短的一侧：长度项回升。
-        _, wrong = odin_rm_loss(
-            s_hi, z, s_lo - GAP_FULL, torch.tensor([GAP_FULL]), far, z, s_hi, s_lo, **kwargs,
-        )
-        self.assertGreater(wrong["L_rl"], split["L_rl"])
-        # 句长只差 0.05 nat，而且原始分差也不大：整对不进损失。
+        self.assertAlmostEqual(split["L_gap"], 0.20 ** 2, places=4)
+        self.assertGreater(split["L_rl"], 0.0)
+        # 句长只差 0.05 nat：小分差仍要留在 r_Q。
         _, tiny_len = odin_rm_loss(
             s_hi, z, s_lo, z, z + 0.05, z, s_hi, s_lo, **kwargs,
         )
-        self.assertEqual(tiny_len["effect_frac"], 0.0)
+        self.assertEqual(tiny_len["effect_frac"], 1.0)
         self.assertAlmostEqual(tiny_len["loss"], 0.0, places=6)
 
     def test_long_winner_shrinks_sfp_gap(self) -> None:
