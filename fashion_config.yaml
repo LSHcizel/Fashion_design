@@ -212,7 +212,7 @@ grpo:
     # KL 锚点 = 训练前改写器快照（勿指向基座 judge 目录）；多轮短 GRPO 仍锚在此，不随轮次更新
     ref-model: "models/Qwen2.5-7B-Rewriter"
     # 冷启动只 SFT 一次。GRPO 学习率 1e-5，每轮 1 个 epoch。
-    # 只使用组内 S_fp 极差至少 0.20 的组做 SFT 和 GRPO。
+    # 只使用组内 r_Q 极差至少 0.20 的组做 SFT 和 GRPO。
     # KL 系数固定 0.001，每一步都加。每累积 8 组（约 64 条）更新一次参数。
     # 同一份标签不连跑多轮。下一轮由 run_next_grpo_round 导入权重、重新采样、冻结 RM 打分后再 GRPO。
     # 组内 R_content 标准差低于 0.01 的组不进 GRPO（--min-reward-std）。

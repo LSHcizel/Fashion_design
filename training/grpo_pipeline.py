@@ -224,7 +224,8 @@ def export_two_phase_from_samples(
     min_group_size :
         GRPO 至少需要 2 条才有非零组内方差；``G<min_group_size`` 的组可写入但 advantage 可能全 0。
     min_score_range :
-        组内最高 ``S_fp`` 减最低 ``S_fp`` 低于此值的组不进 SFT，也不进 GRPO。
+        组内最高奖励减最低奖励低于此值的组不进 SFT，也不进 GRPO。
+        奖励由 ``reward_key`` 决定。双头 RM 导出时这是 ``r_Q``。
     """
     eff_beta, eff_pi, use_auto_rank = _resolve_rank_correction_params(
         beta_rank=beta_rank,
@@ -273,7 +274,7 @@ def export_two_phase_from_samples(
     with path_a.open("w", encoding="utf-8") as fa, path_b.open("w", encoding="utf-8") as fb:
         for gid, recs in groups.items():
             n_groups_seen += 1
-            scores = [pick_reward_scalar(rec, prefer="S_fp") for rec in recs]
+            scores = [pick_reward_scalar(rec, prefer=reward_key) for rec in recs]
             score_range = (max(scores) - min(scores)) if len(scores) >= 2 else 0.0
             if score_range < float(min_score_range):
                 n_groups_narrow += 1
@@ -370,7 +371,7 @@ def export_two_phase_from_samples(
         "rank_correction_groups_skipped_valve": n_rank_skipped_valve,
         "rank_correction_groups_manual": n_rank_manual,
         "min_group_size_note": min_group_size,
-        "phase_A": "监督微调：只保留组内 S_fp 极差达到门槛的组，每组最高奖励 completion 作为 assistant 标签",
+        "phase_A": "监督微调：只保留组内奖励极差达到门槛的组，每组最高奖励 completion 作为 assistant 标签",
         "phase_B": "GRPO：同一批组。奖励减去组均值得到 advantage，不除以标准差；训练时叠加 KL(π||π_ref)",
     }
     (out_dir / "two_phase_summary.txt").write_text(

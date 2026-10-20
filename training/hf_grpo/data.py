@@ -133,13 +133,16 @@ def completion_token_start(
 
 
 def group_reward_values(members: List[Dict[str, Any]]) -> List[float]:
-    """组内每条的奖励。优先裁判 ``S_fp``，否则 ``R_content``。"""
+    """组内每条的奖励。优先 RM 的 ``r_Q``，其次 ``R_content``。没有这两项时才读裁判 ``S_fp``。"""
     vals: List[float] = []
     for row in members:
-        if row.get("S_fp") is not None:
-            vals.append(float(row["S_fp"]))
+        rc = row.get("r_content") or {}
+        if rc.get("r_Q") is not None:
+            vals.append(float(rc["r_Q"]))
         elif row.get("R_content") is not None:
             vals.append(float(row["R_content"]))
+        elif row.get("S_fp") is not None:
+            vals.append(float(row["S_fp"]))
         elif row.get("r_after_rank") is not None:
             vals.append(float(row["r_after_rank"]))
     return vals

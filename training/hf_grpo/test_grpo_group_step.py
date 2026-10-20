@@ -95,6 +95,27 @@ class SelectGrpoRowsTests(unittest.TestCase):
         ]
         _, tight_summary = select_grpo_rows(tight)
         self.assertEqual(tight_summary["groups_dropped_small_gap"], 1)
+        judged_narrow = [
+            {
+                "group_id": "g",
+                "advantage": 0.3,
+                "S_fp": 0.62,
+                "R_content": 0.20,
+                "r_content": {"r_Q": 0.20},
+                "group_stats": {"std_r_for_advantage": 0.3},
+            },
+            {
+                "group_id": "g",
+                "advantage": -0.3,
+                "S_fp": 0.58,
+                "R_content": 0.70,
+                "r_content": {"r_Q": 0.70},
+                "group_stats": {"std_r_for_advantage": 0.3},
+            },
+        ]
+        kept_rq, rq_summary = select_grpo_rows(judged_narrow)
+        self.assertEqual(rq_summary["groups_kept"], 1)
+        self.assertEqual(len(kept_rq), 2)
 
 
 class GroupRankLossTests(unittest.TestCase):

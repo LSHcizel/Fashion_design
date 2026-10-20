@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple
 
 RewardKey = Literal["R_content", "S_fp", "total_score"]
 
-# 组内最高 S_fp 减最低 S_fp 低于此值，不进 SFT / GRPO。
+# 组内奖励极差低于此值，不进 SFT / GRPO。双头 RM 之后奖励是 r_Q。
 MIN_GROUP_SCORE_RANGE = 0.20
 
 

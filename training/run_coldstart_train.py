@@ -1,7 +1,7 @@
 """
 冷启动第 2、3 步：默认训双头 RM 并导出 phase_a/b，再 SFT 一次 + 多轮短 GRPO。
 ``--use-sfp`` 跳过 RM，用裁判 S_fp 导出后再做 SFT 和 GRPO。RM 代码仍保留。
-组内最高 S_fp 减最低 S_fp 不到 0.20 的组不进入 SFT 和 GRPO。
+组内 r_Q 极差不到 0.20 的组不进入 SFT 和 GRPO。``--use-sfp`` 时这条极差改读裁判 S_fp。
 
 采数（第 1 步）需已写出 samples.jsonl。默认路径与
 ``collect_k_rewrite_samples.py --run-id`` 对齐。
