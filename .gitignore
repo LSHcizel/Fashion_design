@@ -173,3 +173,18 @@ training/runs/grpo_corpus2000_20261017/**/*.pth
 training/runs/**/pairs.jsonl
 training/runs/**/samples_rq.jsonl
 training/runs/**/phase_b_grpo.jsonl
+
+# 20261020 冷启动（直接用 S_fp）：指标与导出可跟踪，权重不入库。
+!training/runs/grpo_corpus2000_20261020_sfp/
+!training/runs/grpo_corpus2000_20261020_sfp/**
+training/runs/grpo_corpus2000_20261020_sfp/**/*.safetensors
+training/runs/grpo_corpus2000_20261020_sfp/**/*.bin
+training/runs/grpo_corpus2000_20261020_sfp/**/*.pt
+training/runs/grpo_corpus2000_20261020_sfp/**/*.pth
+
+# 白名单写在后面时会把大文件重新放行，这里再挡一次。
+training/runs/**/samples.jsonl
+training/runs/**/phase_b_grpo.jsonl
+training/runs/**/pairs.jsonl
+training/runs/**/samples_rq.jsonl
+training/runs/**/tokenizer.json
