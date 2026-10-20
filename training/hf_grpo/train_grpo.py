@@ -34,6 +34,7 @@ from training.step_metrics import WindowMeanMetrics, append_metrics
 
 from .data import (
     DEFAULT_MIN_REWARD_STD,
+    DEFAULT_MIN_SCORE_RANGE,
     completion_token_start,
     load_phase_b_rows,
     messages_from_phase_b_row,
@@ -512,7 +513,7 @@ class GRPOTrainer(Trainer):
                 surrogate,
                 _count,
                 sum_k3,
-                beta_max=float(self.beta_kl),
+                beta_kl=float(self.beta_kl),
                 group_tokens=total_tokens,
             )
             self.accelerator.backward(loss)
@@ -548,7 +549,7 @@ class GRPOTrainer(Trainer):
             surrogate,
             token_count,
             sum_k3,
-            beta_max=float(self.beta_kl),
+            beta_kl=float(self.beta_kl),
         )
         rank = group_rank_loss(mean_logp, adv)
         extra: Dict[str, float] = {}
@@ -596,25 +597,31 @@ def main() -> None:
     p.add_argument("--system-prompt-file", type=Path, default=None)
     p.add_argument("--max-length", type=int, default=2048)
     p.add_argument("--epochs", type=float, default=1.0)
-    p.add_argument("--lr", type=float, default=1e-6)
+    p.add_argument("--lr", type=float, default=1e-5)
     p.add_argument("--batch", type=int, default=1)
     p.add_argument(
         "--grad-accum",
         type=int,
-        default=1,
-        help="按组更新时忽略。一次优化步就是同一原文的全部候选。",
+        default=8,
+        help="累积这么多组再更新一次参数。默认 8 组，约 64 条，对齐 PromptEnhancer。",
     )
     p.add_argument(
         "--min-reward-std",
         type=float,
         default=DEFAULT_MIN_REWARD_STD,
-        help="组内 R_content 标准差低于此值则整组不训（避免把噪声标准化成 ±1）",
+        help="组内奖励标准差低于此值则整组不训",
+    )
+    p.add_argument(
+        "--min-score-range",
+        type=float,
+        default=DEFAULT_MIN_SCORE_RANGE,
+        help="组内最高分减最低分低于此值则不训。默认 0.20，只留分差大的组",
     )
     p.add_argument(
         "--beta-kl",
         type=float,
         default=DEFAULT_BETA_KL,
-        help="动态 KL 系数的上限。k3 ≤ 0.005 时系数为 0；k3 到 0.02 时升到这个上限",
+        help="每一步都加的 KL 系数，对齐 PromptEnhancer 的 0.001",
     )
     p.add_argument(
         "--probe-groups",
@@ -653,7 +660,11 @@ def main() -> None:
     rows = load_phase_b_rows(args.jsonl)
     if not rows:
         raise SystemExit("empty jsonl")
-    rows, group_summary = select_grpo_rows(rows, min_reward_std=args.min_reward_std)
+    rows, group_summary = select_grpo_rows(
+        rows,
+        min_reward_std=args.min_reward_std,
+        min_score_range=args.min_score_range,
+    )
     logger.info("GRPO 组过滤: %s", group_summary)
     if not rows:
         raise SystemExit("过滤后没有可训练的组：组内奖励差太小，或每组不足 2 条")
@@ -742,7 +753,7 @@ def main() -> None:
         raise SystemExit("no rows with valid advantage")
     group_sampler = GroupBatchSampler(ds.group_ids, seed=0)
     logger.info(
-        "GRPO 按组更新：%s 组、%s 条。gradient_accumulation_steps=1（传入的 --grad-accum=%s 不跨组累积）",
+        "GRPO：%s 组、%s 条。每 %s 组更新一次参数",
         len(group_sampler),
         len(ds),
         args.grad_accum,
@@ -764,7 +775,7 @@ def main() -> None:
         learning_rate=args.lr,
         lr_scheduler_type="constant",
         per_device_train_batch_size=args.batch,
-        gradient_accumulation_steps=1,
+        gradient_accumulation_steps=max(1, int(args.grad_accum)),
         logging_steps=10,
         save_steps=500,
         bf16=use_bf16,

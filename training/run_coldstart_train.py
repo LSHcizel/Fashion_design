@@ -1,6 +1,7 @@
 """
 冷启动第 2、3 步：默认训双头 RM 并导出 phase_a/b，再 SFT 一次 + 多轮短 GRPO。
 ``--use-sfp`` 跳过 RM，用裁判 S_fp 导出后再做 SFT 和 GRPO。RM 代码仍保留。
+组内最高 S_fp 减最低 S_fp 不到 0.20 的组不进入 SFT 和 GRPO。
 
 采数（第 1 步）需已写出 samples.jsonl。默认路径与
 ``collect_k_rewrite_samples.py --run-id`` 对齐。
@@ -72,7 +73,7 @@ def main() -> None:
     p.add_argument("--grad-accum", type=int, default=8)
     p.add_argument("--grpo-rounds", type=int, default=None)
     p.add_argument("--grpo-epochs", type=float, default=None)
-    p.add_argument("--grpo-lr", type=float, default=1e-6)
+    p.add_argument("--grpo-lr", type=float, default=1e-5)
     p.add_argument(
         "--beta-kl",
         type=float,

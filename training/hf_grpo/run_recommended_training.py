@@ -353,7 +353,7 @@ def main() -> None:
         default=None,
         help="每一轮的 epoch；空则读 yaml grpo-epochs-per-round（缺省 1）",
     )
-    p.add_argument("--grpo-lr", type=float, default=1e-6)
+    p.add_argument("--grpo-lr", type=float, default=1e-5)
     p.add_argument(
         "--beta-kl",
         type=float,

@@ -3,7 +3,7 @@
 
 约定（与计划文档一致）：
 - 主奖励 ``R`` 使用 ``R_content``（ODIN 内容通道）；若无则回退 ``total_score``。
-- 组内标准化：Â_i = (R'_i - μ_G) / (σ_G + ε)；σ_G=0 时优势全 0。
+- 组内优势：Â_i = R'_i - μ_G。不除以标准差，极差大的组权重大；σ_G=0 时优势全 0。
 - 可选「Rewarding the Unlikely」乘性修正：r_i = R_i × (1 - β_rank × (G - rank_i) / G)，
   rank 小 = 旧策略下更易生成；可由 ``training.pi_old_ranking`` 用 HF π_old 自动算 rank，
   或由调用方传入 ``old_policy_ranks``。
@@ -15,6 +15,9 @@ from statistics import mean, pstdev
 from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple
 
 RewardKey = Literal["R_content", "S_fp", "total_score"]
+
+# 组内最高 S_fp 减最低 S_fp 低于此值，不进 SFT / GRPO。
+MIN_GROUP_SCORE_RANGE = 0.20
 
 
 def pick_reward_scalar(record: Dict[str, Any], *, prefer: RewardKey = "R_content") -> float:
@@ -49,7 +52,11 @@ def pick_reward_scalar(record: Dict[str, Any], *, prefer: RewardKey = "R_content
 
 
 def group_baseline_advantages(rewards: Sequence[float], eps: float = 1e-8) -> Tuple[List[float], float, float]:
-    """对同一组奖励做均值方差标准化，返回 (advantages, μ, σ)。"""
+    """组内只减均值，返回 (advantages, μ, σ)。
+
+    优势就是这条稿比组均值高多少分。不除以标准差，所以极差 0.25 的组
+    推力大约是极差 0.01 的组的几十倍。σ 仍返回，用来丢掉几乎没有分差的组。
+    """
     vals = [float(x) for x in rewards]
     G = len(vals)
     if G == 0:
@@ -60,7 +67,7 @@ def group_baseline_advantages(rewards: Sequence[float], eps: float = 1e-8) -> Tu
     sig = pstdev(vals)
     if sig < eps:
         return [0.0] * G, mu, sig
-    return [(v - mu) / sig for v in vals], mu, sig
+    return [v - mu for v in vals], mu, sig
 
 
 def skip_rank_correction_for_group(rewards: Sequence[float], *, eps: float = 1e-12) -> bool:

@@ -417,7 +417,7 @@ def main() -> None:
     p.add_argument("--train-work-dir", type=Path, default=None, help="hf_checkpoints；空则 training/runs/<run-id>/hf_checkpoints")
     p.add_argument("--grpo-policy", default="", help="起始 policy；空则读 grpo/latest.json")
     p.add_argument("--grpo-epochs", type=float, default=None, help="本轮 epoch；空则 yaml，缺省 1")
-    p.add_argument("--grpo-lr", type=float, default=1e-6)
+    p.add_argument("--grpo-lr", type=float, default=1e-5)
     p.add_argument(
         "--beta-kl",
         type=float,

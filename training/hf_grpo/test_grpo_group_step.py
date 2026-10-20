@@ -10,7 +10,7 @@ import math
 
 import torch
 
-from training.hf_grpo.data import DEFAULT_MIN_REWARD_STD, select_grpo_rows
+from training.hf_grpo.data import DEFAULT_MIN_REWARD_STD, DEFAULT_MIN_SCORE_RANGE, select_grpo_rows
 from training.hf_grpo.modeling import clipped_surrogate_sum, group_rank_loss, grpo_loss, token_kl_k3_sum
 from training.hf_grpo.train_grpo import (
     GroupBatchSampler,
@@ -73,19 +73,25 @@ class SelectGrpoRowsTests(unittest.TestCase):
         self.assertEqual(kept, [])
         self.assertEqual(summary["groups_dropped_low_meaningful"], 1)
 
-    def test_default_threshold_is_one_hundredth(self) -> None:
+    def test_default_keeps_a_wide_gap_and_drops_a_narrow_one(self) -> None:
         self.assertEqual(DEFAULT_MIN_REWARD_STD, 0.01)
-        # 两条分数差 0.04，总体标准差 0.02，过 0.01，不过旧的 0.05。
-        rows = [
-            {"group_id": "g", "advantage": 1.0, "R_content": 0.80},
-            {"group_id": "g", "advantage": -1.0, "R_content": 0.76},
+        self.assertEqual(DEFAULT_MIN_SCORE_RANGE, 0.20)
+        wide = [
+            {"group_id": "g", "advantage": 0.2, "S_fp": 0.95, "group_stats": {"std_r_for_advantage": 0.2}},
+            {"group_id": "g", "advantage": -0.2, "S_fp": 0.50, "group_stats": {"std_r_for_advantage": 0.2}},
         ]
-        kept, summary = select_grpo_rows(rows)
+        kept, summary = select_grpo_rows(wide)
         self.assertEqual(summary["groups_kept"], 1)
         self.assertEqual(len(kept), 2)
+        narrow = [
+            {"group_id": "g", "advantage": 1.0, "S_fp": 0.80, "group_stats": {"std_r_for_advantage": 0.02}},
+            {"group_id": "g", "advantage": -1.0, "S_fp": 0.76, "group_stats": {"std_r_for_advantage": 0.02}},
+        ]
+        _, narrow_summary = select_grpo_rows(narrow)
+        self.assertEqual(narrow_summary["groups_dropped_narrow_range"], 1)
         tight = [
-            {"group_id": "g", "advantage": 1.0, "R_content": 0.800},
-            {"group_id": "g", "advantage": -1.0, "R_content": 0.790},
+            {"group_id": "g", "advantage": 1.0, "S_fp": 0.800, "group_stats": {"std_r_for_advantage": 0.005}},
+            {"group_id": "g", "advantage": -1.0, "S_fp": 0.790, "group_stats": {"std_r_for_advantage": 0.005}},
         ]
         _, tight_summary = select_grpo_rows(tight)
         self.assertEqual(tight_summary["groups_dropped_small_gap"], 1)
@@ -185,13 +191,13 @@ class GrpoLossScaleTests(unittest.TestCase):
             surrogate_sum,
             token_count,
             torch.zeros(2),
-            beta_max=10.0,
+            beta_kl=0.001,
         )
-        # -sum(surrogate) / sum(T) = -(2 + 6) / 8 = -1
+        # -sum(surrogate) / sum(T) = -(2 + 6) / 8 = -1。KL 为 0 时损失等于策略项。
         self.assertAlmostEqual(float(pol), -1.0, places=5)
         self.assertAlmostEqual(float(loss), -1.0, places=5)
         self.assertAlmostEqual(float(kl), 0.0, places=5)
-        self.assertAlmostEqual(float(beta), 0.0, places=5)
+        self.assertAlmostEqual(float(beta), 0.001, places=5)
         self.assertGreater(float(surrogate_sum[1]), float(surrogate_sum[0]))
 
     def test_positive_advantage_stops_past_the_nat_budget(self) -> None:
@@ -230,39 +236,36 @@ class GrpoLossScaleTests(unittest.TestCase):
         total.backward()
         self.assertAlmostEqual(float(logp.grad), ratio, places=5)
 
-    def test_kl_inside_budget_does_not_enter_the_loss(self) -> None:
+    def test_constant_kl_coefficient_always_enters_the_loss(self) -> None:
         loss, pol, kl, beta = grpo_loss(
             torch.tensor([2.0]),
             torch.tensor([2.0]),
             torch.tensor([0.002]),
-            beta_max=10.0,
+            beta_kl=0.001,
         )
         self.assertAlmostEqual(float(kl), 0.001, places=5)
-        self.assertAlmostEqual(float(beta), 0.0, places=5)
-        self.assertAlmostEqual(float(loss), float(pol), places=5)
+        self.assertAlmostEqual(float(beta), 0.001, places=5)
+        self.assertAlmostEqual(float(loss), float(pol) + 0.001 * 0.001, places=5)
 
-    def test_kl_coefficient_grows_only_after_the_budget(self) -> None:
+    def test_kl_coefficient_stays_constant_as_divergence_grows(self) -> None:
         mild_loss, _pol, mild_kl, mild_beta = grpo_loss(
             torch.zeros(1),
             torch.tensor([1.0]),
             torch.tensor([0.01]),
-            beta_max=10.0,
+            beta_kl=0.001,
         )
         severe_loss, _pol2, severe_kl, severe_beta = grpo_loss(
             torch.zeros(1),
             torch.tensor([1.0]),
             torch.tensor([0.02]),
-            beta_max=10.0,
+            beta_kl=0.001,
         )
-        frac = (0.01 - 0.005) / (0.02 - 0.005)
-        expected_mild = 10.0 * frac * frac
         self.assertAlmostEqual(float(mild_kl), 0.01, places=5)
-        self.assertAlmostEqual(float(mild_beta), expected_mild, places=5)
-        self.assertAlmostEqual(float(mild_loss), expected_mild * (0.01 - 0.005), places=5)
+        self.assertAlmostEqual(float(mild_beta), 0.001, places=5)
+        self.assertAlmostEqual(float(mild_loss), 0.001 * 0.01, places=5)
         self.assertAlmostEqual(float(severe_kl), 0.02, places=5)
-        self.assertAlmostEqual(float(severe_beta), 10.0, places=5)
-        self.assertAlmostEqual(float(severe_loss), 10.0 * (0.02 - 0.005), places=5)
-        self.assertLess(float(mild_beta), float(severe_beta))
+        self.assertAlmostEqual(float(severe_beta), 0.001, places=5)
+        self.assertAlmostEqual(float(severe_loss), 0.001 * 0.02, places=5)
 
     def test_token_kl_matches_schulman_k3(self) -> None:
         import math
@@ -277,7 +280,7 @@ class GrpoLossScaleTests(unittest.TestCase):
             torch.tensor([2.0]),
             torch.tensor([2.0]),
             total.reshape(1),
-            beta_max=10.0,
+            beta_kl=0.001,
         )
         self.assertAlmostEqual(float(kl), one, places=5)
 

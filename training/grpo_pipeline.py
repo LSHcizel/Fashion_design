@@ -23,6 +23,7 @@ from .grpo_compute import (
     build_group_training_rows,
     pick_reward_scalar,
     skip_rank_correction_for_group,
+    MIN_GROUP_SCORE_RANGE,
 )
 from .record_builder import SCHEMA_VERSION as SAMPLES_SCHEMA
 from .record_builder import record_include_in_training
@@ -201,6 +202,7 @@ def export_two_phase_from_samples(
     rank_correction_skip_valve: bool = True,
     old_policy_ranks_by_group: Optional[Dict[str, List[int]]] = None,
     min_group_size: int = 2,
+    min_score_range: float = MIN_GROUP_SCORE_RANGE,
     filter_fn: Callable[[Dict[str, Any]], bool] = default_include_for_training,
 ) -> Dict[str, Any]:
     """
@@ -221,6 +223,8 @@ def export_two_phase_from_samples(
         为 True 时：全组 R 非正或几乎相同则跳过排名修正（计划文档「安全阀」）。
     min_group_size :
         GRPO 至少需要 2 条才有非零组内方差；``G<min_group_size`` 的组可写入但 advantage 可能全 0。
+    min_score_range :
+        组内最高 ``S_fp`` 减最低 ``S_fp`` 低于此值的组不进 SFT，也不进 GRPO。
     """
     eff_beta, eff_pi, use_auto_rank = _resolve_rank_correction_params(
         beta_rank=beta_rank,
@@ -258,6 +262,8 @@ def export_two_phase_from_samples(
     groups = load_samples_by_group(samples_jsonl, include_filter=filter_fn)
 
     n_groups = 0
+    n_groups_seen = 0
+    n_groups_narrow = 0
     n_sft = 0
     n_grpo_rows = 0
     n_rank_applied = 0
@@ -266,6 +272,12 @@ def export_two_phase_from_samples(
 
     with path_a.open("w", encoding="utf-8") as fa, path_b.open("w", encoding="utf-8") as fb:
         for gid, recs in groups.items():
+            n_groups_seen += 1
+            scores = [pick_reward_scalar(rec, prefer="S_fp") for rec in recs]
+            score_range = (max(scores) - min(scores)) if len(scores) >= 2 else 0.0
+            if score_range < float(min_score_range):
+                n_groups_narrow += 1
+                continue
             n_groups += 1
             sft = build_sft_record_for_group(
                 recs,
@@ -343,7 +355,10 @@ def export_two_phase_from_samples(
         "phase_a_sft_jsonl": str(path_a.resolve()),
         "phase_b_grpo_jsonl": str(path_b.resolve()),
         "two_phase_summary_txt": str((out_dir / "two_phase_summary.txt").resolve()),
+        "groups_seen": n_groups_seen,
         "groups": n_groups,
+        "groups_skipped_narrow_range": n_groups_narrow,
+        "min_score_range": min_score_range,
         "sft_examples": n_sft,
         "grpo_rows": n_grpo_rows,
         "reward_key": reward_key,
@@ -355,8 +370,8 @@ def export_two_phase_from_samples(
         "rank_correction_groups_skipped_valve": n_rank_skipped_valve,
         "rank_correction_groups_manual": n_rank_manual,
         "min_group_size_note": min_group_size,
-        "phase_A": "监督微调：每组最高奖励 completion 作为 assistant 标签",
-        "phase_B": "GRPO：R_content →（可选 Rewarding the Unlikely）r_i → 组内标准化 advantage；训练时叠加 KL(π||π_ref)",
+        "phase_A": "监督微调：只保留组内 S_fp 极差达到门槛的组，每组最高奖励 completion 作为 assistant 标签",
+        "phase_B": "GRPO：同一批组。奖励减去组均值得到 advantage，不除以标准差；训练时叠加 KL(π||π_ref)",
     }
     (out_dir / "two_phase_summary.txt").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"

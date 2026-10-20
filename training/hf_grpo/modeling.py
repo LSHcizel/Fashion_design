@@ -187,18 +187,15 @@ def grpo_loss(
     token_count: torch.Tensor,
     token_kl_sum: torch.Tensor,
     *,
-    beta_max: float,
+    beta_kl: float,
     group_tokens: Optional[torch.Tensor] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     策略项是 ``-sum(min(ratio·A, clip(ratio)·A)) / sum(T)``。
 
-    KL 系数由当前 k3 决定：不超过 :data:`KL_TARGET` 时为 0，
-    到 :data:`KL_SEVERE` 时升到 ``beta_max``。惩罚只加在超出预算的那一段。
+    KL 项是常数 ``beta_kl`` 乘上 completion 上的平均 k3，每一步都加。
     返回 ``(loss, policy_term, kl_term, beta)``。多条样本时按 token 加权后相加。
     """
-    from training.grpo_defaults import KL_TARGET, dynamic_kl_coefficient
-
     counts = token_count.to(dtype=surrogate_sum.dtype).clamp(min=1)
     denom = (
         counts.sum().clamp(min=1)
@@ -206,19 +203,12 @@ def grpo_loss(
         else group_tokens.to(dtype=surrogate_sum.dtype)
     )
     k3 = token_kl_sum.to(dtype=surrogate_sum.dtype)
-    seq_kl = k3 / counts
     pol = -surrogate_sum.to(dtype=surrogate_sum.dtype) / denom
     share = counts / denom
-    beta_row = torch.stack(
-        [
-            seq_kl.new_tensor(dynamic_kl_coefficient(float(value.detach()), beta_max))
-            for value in seq_kl.reshape(-1)
-        ]
-    ).reshape(seq_kl.shape)
-    excess = (seq_kl - KL_TARGET).clamp(min=0)
-    loss = pol + beta_row * excess * share
     kl_share = k3 / denom
-    beta_share = beta_row * share
+    beta = kl_share.new_tensor(float(beta_kl))
+    loss = pol + beta * kl_share
+    beta_share = beta * share
     if loss.ndim > 0:
         return loss.sum(), pol.sum(), kl_share.sum(), beta_share.sum()
     return loss, pol, kl_share, beta_share

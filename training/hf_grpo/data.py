@@ -12,6 +12,7 @@ from collections import defaultdict
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from plugins.text_description_evaluator.completion_vocab import row_excluded_for_low_meaningful
+from training.grpo_compute import MIN_GROUP_SCORE_RANGE as DEFAULT_MIN_SCORE_RANGE
 
 JsonPath = Union[str, Path]
 
@@ -131,6 +132,19 @@ def completion_token_start(
     return max(plen, 1)
 
 
+def group_reward_values(members: List[Dict[str, Any]]) -> List[float]:
+    """组内每条的奖励。优先裁判 ``S_fp``，否则 ``R_content``。"""
+    vals: List[float] = []
+    for row in members:
+        if row.get("S_fp") is not None:
+            vals.append(float(row["S_fp"]))
+        elif row.get("R_content") is not None:
+            vals.append(float(row["R_content"]))
+        elif row.get("r_after_rank") is not None:
+            vals.append(float(row["r_after_rank"]))
+    return vals
+
+
 def group_reward_std(members: List[Dict[str, Any]]) -> Optional[float]:
     """组内奖励标准差。优先用导出时写下的 ``std_r_for_advantage``。"""
     if not members:
@@ -139,17 +153,20 @@ def group_reward_std(members: List[Dict[str, Any]]) -> Optional[float]:
     raw = stats.get("std_r_for_advantage")
     if raw is not None:
         return float(raw)
-    vals: List[float] = []
-    for row in members:
-        if row.get("R_content") is not None:
-            vals.append(float(row["R_content"]))
-        elif row.get("r_after_rank") is not None:
-            vals.append(float(row["r_after_rank"]))
+    vals = group_reward_values(members)
     if len(vals) < 2:
         return None
     mu = sum(vals) / len(vals)
     var = sum((v - mu) ** 2 for v in vals) / len(vals)
     return var ** 0.5
+
+
+def group_reward_range(members: List[Dict[str, Any]]) -> Optional[float]:
+    """组内最高分减去最低分。"""
+    vals = group_reward_values(members)
+    if len(vals) < 2:
+        return None
+    return max(vals) - min(vals)
 
 
 def advantage_span(members: List[Dict[str, Any]]) -> float:
@@ -159,7 +176,7 @@ def advantage_span(members: List[Dict[str, Any]]) -> float:
     return max(advs) - min(advs)
 
 
-# 组内 R_content 标准差低于此值则整组不训。0.05 会把 r_Q 压扁后的大部分组丢掉。
+# 组内奖励标准差低于此值则整组不训。
 DEFAULT_MIN_REWARD_STD = 0.01
 
 
@@ -167,12 +184,12 @@ def select_grpo_rows(
     rows: List[Dict[str, Any]],
     *,
     min_reward_std: float = DEFAULT_MIN_REWARD_STD,
+    min_score_range: float = DEFAULT_MIN_SCORE_RANGE,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
     """
-    丢掉组内奖励几乎一样的组。
+    只留下组内分差足够大的组。
 
-    这种组标准化后优势会被放大成 ±1，梯度方向是噪声。
-    ``min_reward_std`` 作用在 ``R_content``（或导出时的奖励标准差）上，不是标准化后的优势。
+    标准差低于 ``min_reward_std``，或最高分减最低分低于 ``min_score_range``，整组不训。
     """
     buckets: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     order: List[str] = []
@@ -184,6 +201,7 @@ def select_grpo_rows(
 
     kept: List[Dict[str, Any]] = []
     dropped_small = 0
+    dropped_narrow = 0
     dropped_flat_adv = 0
     dropped_short = 0
     dropped_vocab = 0
@@ -203,14 +221,19 @@ def select_grpo_rows(
         if std is not None and std < float(min_reward_std):
             dropped_small += 1
             continue
+        gap = group_reward_range(members)
+        if gap is not None and gap < float(min_score_range):
+            dropped_narrow += 1
+            continue
         if advantage_span(members) < 1e-6:
             dropped_flat_adv += 1
             continue
         kept.extend(members)
     summary = {
         "groups_in": len(order),
-        "groups_kept": len(order) - dropped_small - dropped_flat_adv - dropped_short - dropped_vocab,
+        "groups_kept": len(order) - dropped_small - dropped_narrow - dropped_flat_adv - dropped_short - dropped_vocab,
         "groups_dropped_small_gap": dropped_small,
+        "groups_dropped_narrow_range": dropped_narrow,
         "groups_dropped_flat_advantage": dropped_flat_adv,
         "groups_dropped_too_small": dropped_short,
         "groups_dropped_low_meaningful": dropped_vocab,
