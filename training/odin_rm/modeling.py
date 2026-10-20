@@ -1,19 +1,17 @@
 """
-双头奖励模型（ODIN）：共用表征 + r_Q / r_L。
+双头奖励模型（ODIN）：共用表征 + 两个线性头 r_Q / r_L。
 
-r_Q 读最后一个 token 的两层映射，r_L 是线性头。都无 sigmoid、无 clip。
-长度标准是本组改写原文的字数。超长不到 0.10 不扣分，短于原文也不加分。
-再长出去的部分从 r_Q 挪进 r_L，长到一倍扣 0.15。两个头加总还原 S_fp。
-字数接近时 r_Q 分差对齐 S_fp 分差。策略训练只取 r_Q。
+排序和分差都落在 r_Q 上。长度相关仍是式 (9)，但 λ_L 弱于分差项。
+两个头都做 weight normalization。L(y) 是回复 token 数。策略训练只取 r_Q。
 """
 
 from __future__ import annotations
 
-import math
 from typing import Any, Dict, Optional, Tuple
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 def last_token_hidden(hidden: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
@@ -40,35 +38,37 @@ def batch_pearson(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     return (xf * yf).sum() / denom
 
 
-def length_disentangle_term(rho_q: torch.Tensor, rho_l: torch.Tensor) -> torch.Tensor:
-    """内容头与句长的相关停在 0；长度头继续吸收句长。
-
-    ρ(r_Q, ℓ) 本身没有下界，直接最小化会把内容头推到越短越高。
-    平方在 0 处梯度消失，正负相关都加损失，避免用删信息换短句。
-    """
-    return rho_q.square() - rho_l
-
-
-# S_fp 分差低于此值，视为原得分一样。只用于给同分长度对打标记。
-MIN_SCORE_GAP = 0.10
-# 超长幅度差达到此值，造对时标成 same_score_length，便于事后检查。
-RL_CLOSE = 0.10
-# 超出原文不到这一截视为小波动，r_Q 不扣、r_L 目标是 0。约 10.5% 字数。
-LENGTH_FREE = 0.10
-# 长到一倍（excess = ln 2）时，从 r_Q 扣进 r_L 的分数。
-PENALTY_AT_DOUBLE = 0.15
+# 裁判分差不大于此值的对不进 RM 训练。比较用严格大于。
+MIN_SCORE_GAP = 0.1
+# λ_L 弱于论文的 1，避免长度相关把 S_fp 分差从 r_Q 里拖走。
+LAMBDA_L = 0.1
+# λ_O 仍约束两个头的方向分开。
+LAMBDA_O = 1.0
+# 分差项权重大于长度项：r_Q 分差对齐 S_fp 分差。
+LAMBDA_GAP = 10.0
 
 
-def over_source_length(log_len: torch.Tensor, source_log: torch.Tensor) -> torch.Tensor:
-    """超出本组原文字数的 log 幅度。短于或等于原文时为 0。"""
-    return (log_len - source_log).clamp(min=0)
+def length_correlation_loss(
+    r_q: torch.Tensor,
+    r_l: torch.Tensor,
+    length: torch.Tensor,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """式 (9)：质量头与 token 数去相关，长度头与 token 数正相关。"""
+    rho_q = batch_pearson(r_q, length)
+    rho_l = batch_pearson(r_l, length)
+    return rho_q.abs() - rho_l, rho_q, rho_l
 
 
-def length_score_penalty(excess: torch.Tensor) -> torch.Tensor:
-    """小波动不扣。过了 LENGTH_FREE 之后线性增加，长到一倍扣 PENALTY_AT_DOUBLE。"""
-    span = math.log(2.0) - LENGTH_FREE
-    over = (excess - LENGTH_FREE).clamp(min=0)
-    return over * (PENALTY_AT_DOUBLE / span)
+def _projection_weight(head: nn.Module) -> torch.Tensor:
+    weight = getattr(head, "weight", None)
+    if weight is None:
+        raise TypeError("ODIN 的头必须是线性层")
+    return weight.float().reshape(-1)
+
+
+def orthogonality_loss(head_q: nn.Module, head_l: nn.Module) -> torch.Tensor:
+    """式 (10)：|W_Q W_L^T|。weight 已是 weight normalization 之后的投影。"""
+    return torch.dot(_projection_weight(head_q), _projection_weight(head_l)).abs()
 
 
 def odin_rm_loss(
@@ -76,87 +76,80 @@ def odin_rm_loss(
     r_l_win: torch.Tensor,
     r_q_lose: torch.Tensor,
     r_l_lose: torch.Tensor,
-    log_len_win: torch.Tensor,
-    log_len_lose: torch.Tensor,
+    len_win: torch.Tensor,
+    len_lose: torch.Tensor,
     teacher_win: torch.Tensor,
     teacher_lose: torch.Tensor,
     *,
     head_q: nn.Module,
     head_l: nn.Module,
-    lambda_corr: float = 0.02,
-    lambda_orth: float = 1.0,
-    source_log_win: Optional[torch.Tensor] = None,
-    source_log_lose: Optional[torch.Tensor] = None,
+    lambda_l: float = LAMBDA_L,
+    lambda_o: float = LAMBDA_O,
+    lambda_gap: float = LAMBDA_GAP,
 ) -> Tuple[torch.Tensor, Dict[str, float]]:
     """
-    L = L_gap + L_rec + λ_orth · L_len
+    L = L^R + λ_gap L_gap + λ_L L^L(y_w) + λ_L L^L(y_l) + λ_O L^O。
 
-    扣分只由这一篇自己的超长决定。超长不到 0.10 时扣分是 0。
-    L_len 让 r_L 等于扣分。L_gap 让 r_Q 分差等于 S_fp 分差减去扣分差。
-    L_rec 让两侧都满足 r_Q + r_L = S_fp。
-    ρ(r_Q, ℓ − ℓ_原文) 只写入统计，不进损失。
+    L^R 和 L_gap 只看 r_Q。L_gap 让 r_Q 分差等于 S_fp 分差。
+    L^L 仍是式 (9)，λ_L 小于 λ_gap。
     """
     q_w = r_q_win.reshape(-1)
     q_l = r_q_lose.reshape(-1)
     l_w = r_l_win.reshape(-1).to(dtype=q_w.dtype)
     l_l = r_l_lose.reshape(-1).to(dtype=q_w.dtype)
-    s_w = teacher_win.reshape(-1).float().to(dtype=q_w.dtype)
-    s_l = teacher_lose.reshape(-1).float().to(dtype=q_w.dtype)
-    _ = (head_q, head_l, lambda_corr)
-    ell_w = log_len_win.reshape(-1).to(dtype=q_w.dtype)
-    ell_l = log_len_lose.reshape(-1).to(dtype=q_w.dtype)
-    src_w = ell_w if source_log_win is None else source_log_win.reshape(-1).to(dtype=q_w.dtype)
-    src_l = ell_l if source_log_lose is None else source_log_lose.reshape(-1).to(dtype=q_w.dtype)
-    excess_w = over_source_length(ell_w, src_w).detach()
-    excess_l = over_source_length(ell_l, src_l).detach()
-    pen_w = length_score_penalty(excess_w)
-    pen_l = length_score_penalty(excess_l)
+    n_w = len_win.reshape(-1).to(dtype=q_w.dtype)
+    n_l = len_lose.reshape(-1).to(dtype=q_w.dtype)
+    s_w = teacher_win.reshape(-1).to(dtype=q_w.dtype)
+    s_l = teacher_lose.reshape(-1).to(dtype=q_w.dtype)
+
     gap_q = q_w - q_l
     gap_s = s_w - s_l
-    gap_excess = excess_w - excess_l
-    target = gap_s - (pen_w - pen_l)
-    len_err = 0.5 * ((l_w - pen_w).square() + (l_l - pen_l).square())
-    l_len = len_err.mean()
-    l_gap = (gap_q - target).square().mean()
-    rec = 0.5 * ((q_w + l_w - s_w).square() + (q_l + l_l - s_l).square())
-    l_rec = rec.mean()
+    l_rank = -F.logsigmoid(gap_q).mean()
+    l_gap = (gap_q - gap_s).square().mean()
+    l_len_w, rho_q_w, rho_l_w = length_correlation_loss(q_w, l_w, n_w)
+    l_len_l, rho_q_l, rho_l_l = length_correlation_loss(q_l, l_l, n_l)
+    l_len = l_len_w + l_len_l
+    l_orth = orthogonality_loss(head_q, head_l)
+    total = (
+        l_rank
+        + float(lambda_gap) * l_gap
+        + float(lambda_l) * l_len
+        + float(lambda_o) * l_orth
+    )
 
-    dev = torch.cat([ell_w - src_w, ell_l - src_l], dim=0)
-    r_q_all = torch.cat([q_w, q_l], dim=0)
-    r_l_all = torch.cat([l_w, l_l], dim=0)
-    s_all = torch.cat([s_w, s_l], dim=0)
-    excess_all = torch.cat([excess_w, excess_l], dim=0)
-    rho_q = batch_pearson(r_q_all, dev)
-    rho_l = batch_pearson(r_l_all, excess_all)
-    rho_qs = batch_pearson(r_q_all, s_all)
-    l_orth = rho_q.square()
-    total = l_gap + l_rec + float(lambda_orth) * l_len
-    score_ok = gap_s.abs() >= MIN_SCORE_GAP
-    len_ok = gap_excess.abs() >= RL_CLOSE
-    gap_mae = float((gap_q.detach() - target.detach()).abs().mean())
-    acc_q = float((gap_q.detach() * target.detach() > 0).float().mean())
-    same_score = ((~score_ok) & len_ok).to(dtype=q_w.dtype)
+    margin_sum = (q_w + l_w) - (q_l + l_l)
+    acc_sum = float((margin_sum.detach() > 0).float().mean())
+    acc_q = float((gap_q.detach() > 0).float().mean())
+    rho_q = 0.5 * (rho_q_w + rho_q_l)
+    rho_l = 0.5 * (rho_l_w + rho_l_l)
     stats = {
         "loss": float(total.detach()),
+        "L_R": float(l_rank.detach()),
         "L_gap": float(l_gap.detach()),
-        "L_rec": float(l_rec.detach()),
-        "L_len": float(l_len.detach()),
-        "L_orth": float(l_orth.detach()),
-        "usable_frac": 1.0,
-        "same_score_frac": float(same_score.mean().detach()),
+        "L_L": float(l_len.detach()),
+        "L_O": float(l_orth.detach()),
+        "gap_mae": float((gap_q.detach() - gap_s.detach()).abs().mean()),
         "rho_q": float(rho_q.detach()),
         "rho_l": float(rho_l.detach()),
-        "rho_qs": float(rho_qs.detach()),
-        "gap_sfp_mae": gap_mae,
+        "rho_q_win": float(rho_q_w.detach()),
+        "rho_q_lose": float(rho_q_l.detach()),
+        "rho_l_win": float(rho_l_w.detach()),
+        "rho_l_lose": float(rho_l_l.detach()),
+        "acc_sum": acc_sum,
         "acc_q": acc_q,
     }
     return total, stats
 
 
+def _weight_norm_linear(hidden_size: int) -> nn.Module:
+    layer = nn.Linear(hidden_size, 1, bias=True)
+    return nn.utils.parametrizations.weight_norm(layer)
+
+
 class DualHeadRewardModel(nn.Module):
     """
     backbone：CausalLM / 任意带 last_hidden_state 的编码器。
-    r_Q 是两层映射；r_L 是 Linear(d→1) + weight_norm。
+    r_Q、r_L 都是 Linear(d→1) + weight_norm。
     """
 
     def __init__(self, backbone: nn.Module, hidden_size: Optional[int] = None) -> None:
@@ -169,16 +162,8 @@ class DualHeadRewardModel(nn.Module):
         if d <= 0:
             raise ValueError("hidden_size 未知：请显式传入")
         self.hidden_size = int(d)
-        # 线性读出在整次训练里都没把同组输赢分开（acc_q 停在 0.52）。
-        # 两层映射仍只用缓存的 last-token，不解冻 7B。
-        width = min(256, self.hidden_size)
-        self.head_q = nn.Sequential(
-            nn.Linear(self.hidden_size, width),
-            nn.GELU(),
-            nn.Linear(width, 1),
-        )
-        head_l = nn.Linear(self.hidden_size, 1, bias=False)
-        self.head_l = nn.utils.parametrizations.weight_norm(head_l)
+        self.head_q = _weight_norm_linear(self.hidden_size)
+        self.head_l = _weight_norm_linear(self.hidden_size)
 
     def pool_hidden(
         self,

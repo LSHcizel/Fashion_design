@@ -38,10 +38,9 @@ class PairBuildingTests(unittest.TestCase):
             _rec("g", 2, 0.9, "also long", r_content=0.9),
         ]
         pairs = pairs_from_group(recs)
-        self.assertEqual(len(pairs), 3)
-        opened = [p for p in pairs if p["teacher_margin"] >= 0.10]
-        self.assertEqual(len(opened), 2)
-        for p in opened:
+        self.assertEqual(len(pairs), 2)
+        for p in pairs:
+            self.assertGreater(p["teacher_margin"], 0.1)
             self.assertGreater(
                 p["chosen"]["teacher_score"], p["rejected"]["teacher_score"]
             )
@@ -82,6 +81,16 @@ class PairBuildingTests(unittest.TestCase):
             seen.add(p["group_id"])
             self.assertGreater(p["chosen"]["teacher_score"], p["rejected"]["teacher_score"])
         self.assertEqual(seen, {"a", "b"})
+
+    def test_margin_must_be_strictly_above_threshold(self) -> None:
+        tied = pairs_from_group([_rec("g", 0, 0.70, "aa"), _rec("g", 1, 0.70, "bb")])
+        self.assertEqual(tied, [])
+        exact = pairs_from_group([_rec("g", 0, 0.80, "aa"), _rec("g", 1, 0.70, "bb")])
+        self.assertEqual(exact, [])
+        opened = pairs_from_group([_rec("g", 0, 0.81, "aa"), _rec("g", 1, 0.70, "bb")])
+        self.assertEqual(len(opened), 1)
+        self.assertEqual(opened[0]["pair_kind"], "score")
+        self.assertEqual(opened[0]["chosen"]["candidate_index"], 0)
 
 
 class RewardWritebackTests(unittest.TestCase):
@@ -192,211 +201,18 @@ class OdinLossTests(unittest.TestCase):
             head_q=rm.head_q, head_l=rm.head_l,
         )
         self.assertTrue(torch.isfinite(loss))
+        self.assertIn("L_R", stats)
         self.assertIn("L_gap", stats)
-        self.assertIn("L_len", stats)
-        self.assertNotIn("L_ord", stats)
+        self.assertIn("L_L", stats)
+        self.assertIn("L_O", stats)
         loss.backward()
         self.assertIsNotNone(next(rm.head_q.parameters()).grad)
         self.assertIsNotNone(next(rm.head_l.parameters()).grad)
 
-    def test_length_head_reports_excess_over_source(self) -> None:
+    def test_ranking_and_gap_stay_on_quality_head(self) -> None:
         try:
             import torch
-        except ImportError:
-            self.skipTest("torch not installed")
-        from training.odin_rm.modeling import LENGTH_FREE, PENALTY_AT_DOUBLE, DualHeadRewardModel, odin_rm_loss
-
-        class Tiny(torch.nn.Module):
-            def __init__(self) -> None:
-                super().__init__()
-                self.config = type("c", (), {"hidden_size": 4})()
-
-        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
-        src = torch.tensor([5.0])
-        s_hi = torch.tensor([0.90])
-        s_lo = torch.tensor([0.60])
-        kwargs = dict(
-            head_q=rm.head_q,
-            head_l=rm.head_l,
-            lambda_corr=0.0,
-            source_log_win=src,
-            source_log_lose=src,
-        )
-        # 与原文一样长，r_L 报 0，r_Q 分差对齐 S_fp：长度和分差都是 0。
-        _, matched = odin_rm_loss(
-            s_hi, torch.zeros(1), s_lo, torch.zeros(1), src, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(matched["L_len"], 0.0, places=6)
-        self.assertAlmostEqual(matched["L_gap"], 0.0, places=6)
-        # 短于原文仍报 0：不因偏短加损失。
-        _, shorter = odin_rm_loss(
-            s_hi, torch.zeros(1), s_lo, torch.zeros(1), src - 0.4, src - 0.2, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(shorter["L_len"], 0.0, places=6)
-        # 长到一倍却报 0：长度项等于扣分的平方。扣分是 0.15，不是整段 log 超长。
-        far = src + torch.log(torch.tensor([2.0]))
-        pen = torch.tensor([PENALTY_AT_DOUBLE])
-        _, too_long = odin_rm_loss(
-            s_hi, torch.zeros(1), s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(too_long["L_len"], 0.5 * pen.square().item(), places=4)
-        # 只长出 0.10：小波动不扣，报 0 时长度项仍是 0。
-        nudge = src + LENGTH_FREE
-        _, within = odin_rm_loss(
-            s_hi, torch.zeros(1), s_lo, torch.zeros(1), nudge, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(within["L_len"], 0.0, places=6)
-        self.assertAlmostEqual(within["L_gap"], 0.0, places=6)
-        # 长侧如实报出 0.15：长度项为 0。
-        _, reported = odin_rm_loss(
-            s_hi - pen, pen, s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(reported["L_len"], 0.0, places=5)
-        self.assertAlmostEqual(reported["L_rec"], 0.0, places=5)
-
-    def test_close_excess_keeps_sfp_gap(self) -> None:
-        try:
-            import torch
-        except ImportError:
-            self.skipTest("torch not installed")
-        from training.odin_rm.modeling import PENALTY_AT_DOUBLE, DualHeadRewardModel, odin_rm_loss
-
-        class Tiny(torch.nn.Module):
-            def __init__(self) -> None:
-                super().__init__()
-                self.config = type("c", (), {"hidden_size": 4})()
-
-        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
-        src = torch.tensor([5.0])
-        s_hi = torch.tensor([0.90])
-        s_lo = torch.tensor([0.60])
-        kwargs = dict(
-            head_q=rm.head_q,
-            head_l=rm.head_l,
-            lambda_corr=0.0,
-            lambda_orth=0.0,
-            source_log_win=src,
-            source_log_lose=src,
-        )
-        # 超长幅度都是 0：分差被收小要付出分差项。头自己把 r_L 拉开，不能借此逃避。
-        _, shrunk = odin_rm_loss(
-            torch.tensor([0.70]), torch.zeros(1), s_lo, torch.zeros(1), src, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(shrunk["L_gap"], 0.20 ** 2, places=4)
-        far_rl = torch.log(torch.tensor([2.0]))
-        _, shrunk_but_head_split = odin_rm_loss(
-            torch.tensor([0.70]), far_rl, s_lo, torch.zeros(1), src, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(shrunk_but_head_split["L_gap"], shrunk["L_gap"], places=4)
-        # 分差对调：对齐项按整段分差计，名次随之错开。
-        _, flipped = odin_rm_loss(
-            s_lo, torch.zeros(1), s_hi, torch.zeros(1), src, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(flipped["L_gap"], 0.60 ** 2, places=4)
-        self.assertEqual(flipped["acc_q"], 0.0)
-        # 一侧长到一倍：r_Q 分差留下 0.30-0.15，r_L 拿走这 0.15。
-        far = src + torch.log(torch.tensor([2.0]))
-        pen = torch.tensor([PENALTY_AT_DOUBLE])
-        _, kept = odin_rm_loss(
-            s_hi - pen, pen, s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(kept["L_gap"], 0.0, places=4)
-        self.assertAlmostEqual(kept["L_rec"], 0.0, places=4)
-        # 原样抄上 0.30：分差项等于扣分的平方。
-        _, copied = odin_rm_loss(
-            s_hi, pen, s_lo, torch.zeros(1), far, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(copied["L_gap"], PENALTY_AT_DOUBLE ** 2, places=4)
-
-    def test_same_score_double_length_lowers_r_q(self) -> None:
-        try:
-            import torch
-        except ImportError:
-            self.skipTest("torch not installed")
-        from training.odin_rm.modeling import PENALTY_AT_DOUBLE, DualHeadRewardModel, odin_rm_loss
-        from training.odin_rm.pairs import pairs_from_group
-
-        class Tiny(torch.nn.Module):
-            def __init__(self) -> None:
-                super().__init__()
-                self.config = type("c", (), {"hidden_size": 4})()
-
-        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
-        src = torch.tensor([5.0])
-        score = torch.tensor([0.70])
-        pen = torch.tensor([PENALTY_AT_DOUBLE])
-        far = src + torch.log(torch.tensor([2.0]))
-        kwargs = dict(
-            head_q=rm.head_q,
-            head_l=rm.head_l,
-            lambda_corr=0.0,
-            lambda_orth=0.0,
-            source_log_win=src,
-            source_log_lose=src,
-        )
-        # 同分、B 长到一倍：B 的 r_Q 低 0.15、r_L 报 0.15 时分差项为 0。
-        _, separated = odin_rm_loss(
-            score, torch.zeros(1), score - pen, pen, src, far, score, score, **kwargs,
-        )
-        self.assertAlmostEqual(separated["L_gap"], 0.0, places=4)
-        self.assertAlmostEqual(separated["L_rec"], 0.0, places=4)
-        self.assertEqual(separated["same_score_frac"], 1.0)
-        # 两篇 r_Q 仍一样：分差项等于 0.15 的平方。
-        _, tied = odin_rm_loss(
-            score, torch.zeros(1), score, pen, src, far, score, score, **kwargs,
-        )
-        self.assertAlmostEqual(tied["L_gap"], PENALTY_AT_DOUBLE ** 2, places=4)
-        pairs = pairs_from_group(
-            [_rec("g", 0, 0.70, "a" * 10), _rec("g", 1, 0.70, "b" * 1000)]
-        )
-        self.assertEqual(len(pairs), 1)
-        self.assertEqual(pairs[0]["pair_kind"], "same_score_length")
-        self.assertEqual(pairs[0]["chosen"]["candidate_index"], 0)
-        self.assertLess(pairs[0]["chosen"]["log_len"], pairs[0]["rejected"]["log_len"])
-
-    def test_small_score_gap_still_trains_content_head(self) -> None:
-        try:
-            import torch
-        except ImportError:
-            self.skipTest("torch not installed")
-        from training.odin_rm.modeling import MIN_SCORE_GAP, DualHeadRewardModel, odin_rm_loss
-        from training.odin_rm.pairs import pairs_from_group
-
-        class Tiny(torch.nn.Module):
-            def __init__(self) -> None:
-                super().__init__()
-                self.config = type("c", (), {"hidden_size": 4})()
-
-        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
-        src = torch.tensor([5.0])
-        s_hi = torch.tensor([0.55])
-        s_lo = torch.tensor([0.50])
-        self.assertLess(float(s_hi - s_lo), MIN_SCORE_GAP)
-        kwargs = dict(
-            head_q=rm.head_q,
-            head_l=rm.head_l,
-            lambda_orth=0.0,
-            source_log_win=src,
-            source_log_lose=src,
-        )
-        _, matched = odin_rm_loss(
-            s_hi, torch.zeros(1), s_lo, torch.zeros(1), src, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(matched["L_gap"], 0.0, places=6)
-        self.assertEqual(matched["usable_frac"], 1.0)
-        _, reversed_gap = odin_rm_loss(
-            s_lo, torch.zeros(1), s_hi, torch.zeros(1), src, src, s_hi, s_lo, **kwargs,
-        )
-        self.assertAlmostEqual(reversed_gap["L_gap"], 0.10 ** 2, places=4)
-        pairs = pairs_from_group(
-            [_rec("g", 0, 0.55, "aa"), _rec("g", 1, 0.50, "bb")]
-        )
-        self.assertEqual(len(pairs), 1)
-        self.assertEqual(pairs[0]["pair_kind"], "score")
-
-    def test_aligned_gap_keeps_correlation_out_of_loss(self) -> None:
-        try:
-            import torch
+            import torch.nn.functional as F
         except ImportError:
             self.skipTest("torch not installed")
         from training.odin_rm.modeling import DualHeadRewardModel, odin_rm_loss
@@ -407,25 +223,112 @@ class OdinLossTests(unittest.TestCase):
                 self.config = type("c", (), {"hidden_size": 4})()
 
         rm = DualHeadRewardModel(Tiny(), hidden_size=4)
-        ell = torch.tensor([1.0, 2.0, 3.0])
-        src = torch.full((3,), 2.0)
-        s_w = torch.tensor([0.30, 0.60, 0.90])
-        s_l = torch.tensor([0.10, 0.40, 0.70])
+        lengths = torch.tensor([10.0, 20.0, 30.0, 40.0])
+        high = torch.full((4,), 3.0)
+        zero = torch.zeros(4)
+        s_w = torch.full((4,), 0.8)
+        s_l = torch.full((4,), 0.2)
         kwargs = dict(
-            head_q=rm.head_q,
-            head_l=rm.head_l,
-            lambda_orth=0.0,
-            source_log_win=src,
-            source_log_lose=src,
+            head_q=rm.head_q, head_l=rm.head_l,
+            lambda_l=0.0, lambda_o=0.0, lambda_gap=0.0,
         )
-        _, aligned = odin_rm_loss(
-            s_w, torch.zeros(3), s_l, torch.zeros(3), ell, ell, s_w, s_l,
-            lambda_corr=1.0, **kwargs,
+        _, ranked = odin_rm_loss(high, zero, zero, zero, lengths, lengths, s_w, s_l, **kwargs)
+        expected = float(-F.logsigmoid(torch.tensor(3.0)))
+        self.assertAlmostEqual(ranked["L_R"], expected, places=5)
+        self.assertEqual(ranked["acc_q"], 1.0)
+        _, via_length = odin_rm_loss(zero, high, zero, zero, lengths, lengths, s_w, s_l, **kwargs)
+        self.assertAlmostEqual(via_length["L_R"], float(-F.logsigmoid(torch.tensor(0.0))), places=5)
+        self.assertGreater(via_length["L_R"], ranked["L_R"])
+        _, flipped = odin_rm_loss(zero, zero, high, zero, lengths, lengths, s_w, s_l, **kwargs)
+        self.assertGreater(flipped["L_R"], ranked["L_R"])
+        self.assertEqual(flipped["acc_q"], 0.0)
+
+        q_w = torch.full((4,), 0.8)
+        q_l = torch.full((4,), 0.2)
+        _, matched = odin_rm_loss(
+            q_w, zero, q_l, zero, lengths, lengths, q_w, q_l,
+            head_q=rm.head_q, head_l=rm.head_l, lambda_l=0.0, lambda_o=0.0, lambda_gap=10.0,
         )
-        self.assertAlmostEqual(aligned["L_gap"], 0.0, places=5)
-        self.assertGreater(abs(aligned["rho_q"]), 0.9)
-        self.assertAlmostEqual(aligned["loss"], 0.0, places=5)
-        self.assertGreater(aligned["L_orth"], 0.5)
+        self.assertAlmostEqual(matched["L_gap"], 0.0, places=6)
+        _, missed = odin_rm_loss(
+            zero, zero, zero, zero, lengths, lengths, q_w, q_l,
+            head_q=rm.head_q, head_l=rm.head_l, lambda_l=0.0, lambda_o=0.0, lambda_gap=10.0,
+        )
+        self.assertAlmostEqual(missed["L_gap"], 0.6 ** 2, places=5)
+        self.assertGreater(missed["loss"] - missed["L_R"], matched["loss"] - matched["L_R"])
+
+    def test_length_loss_is_equation_9_on_both_sides(self) -> None:
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch not installed")
+        from training.odin_rm.modeling import DualHeadRewardModel, length_correlation_loss, odin_rm_loss
+
+        class Tiny(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.config = type("c", (), {"hidden_size": 4})()
+
+        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
+        lengths = torch.tensor([10.0, 20.0, 30.0, 40.0])
+        r_l = lengths.clone()
+        r_q = torch.tensor([1.0, 0.0, 1.0, 0.0])
+        one, rho_q, rho_l = length_correlation_loss(r_q, r_l, lengths)
+        self.assertAlmostEqual(float(rho_l), 1.0, places=5)
+        self.assertGreater(float(rho_q.abs()), 0.0)
+        zeros = torch.zeros(4)
+        _, stats = odin_rm_loss(
+            r_q, r_l, r_q, r_l, lengths, lengths, zeros, zeros,
+            head_q=rm.head_q, head_l=rm.head_l, lambda_l=1.0, lambda_o=0.0, lambda_gap=0.0,
+        )
+        self.assertAlmostEqual(stats["L_L"], float(one + one), places=5)
+        pos, _, _ = length_correlation_loss(lengths, torch.zeros(4), lengths)
+        neg, _, _ = length_correlation_loss(-lengths, torch.zeros(4), lengths)
+        flat, _, _ = length_correlation_loss(torch.tensor([0.2, 0.2, 0.2, 0.2]), torch.zeros(4), lengths)
+        self.assertAlmostEqual(float(pos), float(neg), places=5)
+        self.assertAlmostEqual(float(pos), 1.0, places=5)
+        self.assertLess(float(flat), float(pos))
+
+    def test_orthogonality_is_absolute_weight_dot(self) -> None:
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch not installed")
+        from training.odin_rm.modeling import DualHeadRewardModel, odin_rm_loss, orthogonality_loss
+
+        class Tiny(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.config = type("c", (), {"hidden_size": 4})()
+
+        def set_direction(head, vec) -> None:
+            direction = torch.tensor(vec, dtype=torch.float32).view(1, -1)
+            with torch.no_grad():
+                head.parametrizations.weight.original1.copy_(direction)
+
+        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
+        set_direction(rm.head_q, [1.0, 0.0, 0.0, 0.0])
+        set_direction(rm.head_l, [0.0, 1.0, 0.0, 0.0])
+        self.assertAlmostEqual(float(orthogonality_loss(rm.head_q, rm.head_l).detach()), 0.0, places=5)
+        set_direction(rm.head_l, [1.0, 0.0, 0.0, 0.0])
+        dot = float(torch.dot(rm.head_q.weight.detach().reshape(-1), rm.head_l.weight.detach().reshape(-1)).abs())
+        self.assertAlmostEqual(float(orthogonality_loss(rm.head_q, rm.head_l).detach()), dot, places=5)
+        self.assertGreater(dot, 0.0)
+        lengths = torch.tensor([10.0, 20.0, 30.0])
+        zeros = torch.zeros(3)
+        _, stats = odin_rm_loss(
+            zeros, zeros, zeros, zeros, lengths, lengths, zeros, zeros,
+            head_q=rm.head_q, head_l=rm.head_l, lambda_l=0.0, lambda_o=1.0, lambda_gap=0.0,
+        )
+        self.assertAlmostEqual(stats["L_O"], dot, places=5)
+        self.assertAlmostEqual(stats["loss"], stats["L_R"] + dot, places=4)
+
+    def test_old_same_score_length_pairs_are_dropped(self) -> None:
+        from training.odin_rm.pairs import pair_in_rm_training
+
+        self.assertFalse(pair_in_rm_training({"pair_kind": "same_score_length", "teacher_margin": 0.0}))
+        self.assertFalse(pair_in_rm_training({"pair_kind": "score", "teacher_margin": 0.1}))
+        self.assertTrue(pair_in_rm_training({"pair_kind": "score", "teacher_margin": 0.11}))
 
     def test_residual_correlation_drops_when_r_q_copies_sfp(self) -> None:
         from training.odin_rm.score import summarize_rm_scores
@@ -439,21 +342,6 @@ class OdinLossTests(unittest.TestCase):
         summary = summarize_rm_scores(rows)
         self.assertIsNone(summary["pearson_r_Q_residual_vs_log_len"])
         self.assertGreater(summary["pearson_r_L_vs_log_len"], 0.9)
-
-    def test_anti_length_content_head_costs_more_than_uncorrelated(self) -> None:
-        try:
-            import torch
-        except ImportError:
-            self.skipTest("torch not installed")
-        from training.odin_rm.modeling import length_disentangle_term
-
-        rho_l = torch.tensor(0.94)
-        flat = length_disentangle_term(torch.tensor(0.0), rho_l)
-        anti = length_disentangle_term(torch.tensor(-0.94), rho_l)
-        same_dir = length_disentangle_term(torch.tensor(0.94), rho_l)
-        self.assertLess(float(flat), float(anti))
-        self.assertLess(float(flat), float(same_dir))
-
 
 if __name__ == "__main__":
     unittest.main()

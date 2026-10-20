@@ -13,6 +13,9 @@ import logging
 import sys
 from pathlib import Path
 
+from plugins.text_description_evaluator.design_text_evaluator_api import grpo_odin_rm_config
+
+from .modeling import LAMBDA_GAP, LAMBDA_L, LAMBDA_O, MIN_SCORE_GAP
 from .pairs import build_preference_pairs
 from .score import score_samples
 from .train_rm import main as train_rm_main
@@ -79,8 +82,15 @@ def main() -> None:
     p.add_argument("--rm-batch", type=int, default=8)
     p.add_argument("--encode-batch", type=int, default=1)
     p.add_argument("--score-batch", type=int, default=1)
-    p.add_argument("--lambda-corr", type=float, default=None, help="空则用 yaml odin-rm.lambda-corr")
-    p.add_argument("--lambda-orth", type=float, default=None, help="空则用 yaml odin-rm.lambda-orth")
+    p.add_argument("--lambda-l", type=float, default=None, help="空则用 yaml；长度相关权重，默认 0.1")
+    p.add_argument("--lambda-o", type=float, default=None, help="空则用 yaml；正交损失权重，默认 1")
+    p.add_argument("--lambda-gap", type=float, default=None, help="空则用 yaml；r_Q 对齐 S_fp 分差的权重，默认 10")
+    p.add_argument(
+        "--min-margin",
+        type=float,
+        default=None,
+        help="空则用 yaml；S_fp 分差不大于此值的对不进 RM",
+    )
     p.add_argument("--holdout-frac", type=float, default=0.1)
     p.add_argument("--skip-train", action="store_true", help="复用已有双头 RM，不再训练")
     p.add_argument("--skip-pairs", action="store_true", help="跳过造偏好对（后续轮只打分时可用）")
@@ -95,9 +105,31 @@ def main() -> None:
     samples_rq = work / "samples_rq.jsonl"
     export_dir = work / "export"
 
+    od = grpo_odin_rm_config()
+    min_margin = (
+        float(args.min_margin)
+        if args.min_margin is not None
+        else float(od.get("min-margin") if od.get("min-margin") is not None else MIN_SCORE_GAP)
+    )
+    lambda_l = (
+        float(args.lambda_l)
+        if args.lambda_l is not None
+        else float(od.get("lambda-l") if od.get("lambda-l") is not None else LAMBDA_L)
+    )
+    lambda_o = (
+        float(args.lambda_o)
+        if args.lambda_o is not None
+        else float(od.get("lambda-o") if od.get("lambda-o") is not None else LAMBDA_O)
+    )
+    lambda_gap = (
+        float(args.lambda_gap)
+        if args.lambda_gap is not None
+        else float(od.get("lambda-gap") if od.get("lambda-gap") is not None else LAMBDA_GAP)
+    )
+
     if not args.skip_pairs:
         pairs, summary = build_preference_pairs(
-            args.samples, holdout_frac=args.holdout_frac
+            args.samples, min_margin=min_margin, holdout_frac=args.holdout_frac
         )
         from .data import write_jsonl
 
@@ -132,11 +164,15 @@ def main() -> None:
             str(args.encode_batch),
             "--holdout-frac",
             str(args.holdout_frac),
+            "--lambda-l",
+            str(lambda_l),
+            "--lambda-o",
+            str(lambda_o),
+            "--lambda-gap",
+            str(lambda_gap),
+            "--min-margin",
+            str(min_margin),
         ]
-        if args.lambda_corr is not None:
-            argv.extend(["--lambda-corr", str(args.lambda_corr)])
-        if args.lambda_orth is not None:
-            argv.extend(["--lambda-orth", str(args.lambda_orth)])
         if args.model.strip():
             argv.extend(["--model", args.model.strip()])
         old = sys.argv

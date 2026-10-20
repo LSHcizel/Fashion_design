@@ -8,8 +8,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from .data import include_in_training, log_len_of, source_log_len_of, teacher_score
-from .modeling import MIN_SCORE_GAP, RL_CLOSE
+from .data import include_in_training, log_len_of, teacher_score
+from .modeling import MIN_SCORE_GAP
 
 
 def _side_payload(rec: Dict[str, Any]) -> Dict[str, Any]:
@@ -20,7 +20,6 @@ def _side_payload(rec: Dict[str, Any]) -> Dict[str, Any]:
         "completion": rec.get("completion"),
         "teacher_score": teacher_score(rec),
         "log_len": log_len_of(rec),
-        "source_log_len": source_log_len_of(rec),
         "char_len": rec.get("char_len"),
         "context": {
             "shared_source_text": ctx.get("shared_source_text"),
@@ -29,11 +28,20 @@ def _side_payload(rec: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _excess_of(rec: Dict[str, Any]) -> float:
-    src = source_log_len_of(rec)
-    if src is None:
-        return 0.0
-    return max(0.0, log_len_of(rec) - src)
+def teacher_margin(pair: Dict[str, Any]) -> float:
+    raw = pair.get("teacher_margin")
+    if raw is not None:
+        return abs(float(raw))
+    chosen = float((pair.get("chosen") or {}).get("teacher_score") or 0.0)
+    rejected = float((pair.get("rejected") or {}).get("teacher_score") or 0.0)
+    return abs(chosen - rejected)
+
+
+def pair_in_rm_training(pair: Dict[str, Any], min_margin: float = MIN_SCORE_GAP) -> bool:
+    """分差必须严格大于 min_margin。旧的同分长度对不再进入训练。"""
+    if pair.get("pair_kind") == "same_score_length":
+        return False
+    return round(teacher_margin(pair), 6) > float(min_margin)
 
 
 def pairs_from_group(
@@ -61,7 +69,7 @@ def _pairs_within_one_group(
     *,
     min_margin: float,
 ) -> List[Dict[str, Any]]:
-    """同一 group 内两两都纳入。原得分差至少 0.10 时按分数定先后。分差更小但超长差得开时标成 same_score_length，超长更少的一侧放在 chosen。内容目标是 S_fp 分差减去超长扣分。"""
+    """同一 group 内两两比较。S_fp 分差不大于 min_margin 的对丢弃。高分一侧是 chosen。"""
     group_ids = {str(rec.get("group_id") or "") for rec in records}
     if len(group_ids) != 1:
         raise ValueError("比较对不能跨 group_id")
@@ -81,22 +89,14 @@ def _pairs_within_one_group(
         for j in range(i + 1, n):
             s_i, rec_i = scored[i]
             s_j, rec_j = scored[j]
-            gap_s = abs(s_i - s_j)
-            e_i = _excess_of(rec_i)
-            e_j = _excess_of(rec_j)
-            gap_e = abs(e_i - e_j)
-            if gap_s < min_margin and gap_e >= RL_CLOSE:
-                if e_i <= e_j:
-                    win, lose = rec_i, rec_j
-                else:
-                    win, lose = rec_j, rec_i
-                kind = "same_score_length"
+            gap_s = round(abs(s_i - s_j), 6)
+            if gap_s <= float(min_margin):
+                continue
+            if s_i > s_j:
+                win, lose = rec_i, rec_j
             else:
-                if s_i >= s_j:
-                    win, lose = rec_i, rec_j
-                else:
-                    win, lose = rec_j, rec_i
-                kind = "score"
+                win, lose = rec_j, rec_i
+            kind = "score"
             gid = str(win.get("group_id") or "")
             if gid != str(lose.get("group_id") or ""):
                 raise ValueError("比较对不能跨 group_id")

@@ -1,4 +1,4 @@
-"""训 ODIN 双头 RM。默认冻住 backbone，只训两个头（可先缓存 last-token hidden）。"""
+"""训 ODIN 双头 RM。冻住 backbone，只微调两个线性头。损失用论文式 (11)。"""
 
 from __future__ import annotations
 
@@ -19,9 +19,9 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
 )
 from training.step_metrics import append_metrics, progress_summary
 
-from .data import messages_from_record
-from .modeling import MIN_SCORE_GAP, DualHeadRewardModel, odin_rm_loss
-from .pairs import build_preference_pairs
+from .data import messages_from_record, response_token_count
+from .modeling import LAMBDA_GAP, LAMBDA_L, LAMBDA_O, MIN_SCORE_GAP, DualHeadRewardModel, odin_rm_loss
+from .pairs import build_preference_pairs, pair_in_rm_training
 
 logger = logging.getLogger(__name__)
 
@@ -119,24 +119,25 @@ def _stack_cached(
     return torch.stack(rows, dim=0).to(device)
 
 
-def _log_lens(pairs: Sequence[Dict[str, Any]], which: str, device: torch.device) -> torch.Tensor:
-    vals = [float(p[which].get("log_len") or 0.0) for p in pairs]
+def _attach_token_counts(pairs: Sequence[Dict[str, Any]], tokenizer) -> None:
+    """把回复 token 数写到两侧。同一段文本只分词一次。"""
+    cache: Dict[str, int] = {}
+    for pair in pairs:
+        for name in ("chosen", "rejected"):
+            side = pair[name]
+            text = str(side.get("completion") or "")
+            if text not in cache:
+                cache[text] = response_token_count(tokenizer, text)
+            side["n_tokens"] = cache[text]
+
+
+def _token_counts(pairs: Sequence[Dict[str, Any]], which: str, device: torch.device) -> torch.Tensor:
+    vals = [float(p[which].get("n_tokens") or 0.0) for p in pairs]
     return torch.tensor(vals, dtype=torch.float32, device=device)
 
 
 def _teacher_scores(pairs: Sequence[Dict[str, Any]], which: str, device: torch.device) -> torch.Tensor:
     vals = [float(p[which]["teacher_score"]) for p in pairs]
-    return torch.tensor(vals, dtype=torch.float32, device=device)
-
-
-def _source_log_lens(pairs: Sequence[Dict[str, Any]], which: str, device: torch.device) -> torch.Tensor:
-    vals = []
-    for p in pairs:
-        side = p[which]
-        raw = side.get("source_log_len")
-        if raw is None:
-            raw = side.get("log_len") or 0.0
-        vals.append(float(raw))
     return torch.tensor(vals, dtype=torch.float32, device=device)
 
 
@@ -154,8 +155,9 @@ def eval_pairs_cached(
     pairs: Sequence[Dict[str, Any]],
     *,
     device: torch.device,
-    lambda_corr: float,
-    lambda_orth: float,
+    lambda_l: float,
+    lambda_o: float,
+    lambda_gap: float,
     batch: int,
 ) -> Dict[str, float]:
     if not pairs:
@@ -168,17 +170,14 @@ def eval_pairs_cached(
         h_l = _stack_cached(cache, chunk, "rejected", device)
         rqw, rlw = rm.scores_from_hidden(h_w)
         rql, rll = rm.scores_from_hidden(h_l)
-        llw = _log_lens(chunk, "chosen", device)
-        lll = _log_lens(chunk, "rejected", device)
+        nw = _token_counts(chunk, "chosen", device)
+        nl = _token_counts(chunk, "rejected", device)
         tw = _teacher_scores(chunk, "chosen", device)
         tl = _teacher_scores(chunk, "rejected", device)
-        sw = _source_log_lens(chunk, "chosen", device)
-        sl = _source_log_lens(chunk, "rejected", device)
         _, stats = odin_rm_loss(
-            rqw, rlw, rql, rll, llw, lll, tw, tl,
+            rqw, rlw, rql, rll, nw, nl, tw, tl,
             head_q=rm.head_q, head_l=rm.head_l,
-            lambda_corr=lambda_corr, lambda_orth=lambda_orth,
-            source_log_win=sw, source_log_lose=sl,
+            lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
         )
         stats_rows.append(stats)
     return _mean_stats(stats_rows)
@@ -254,8 +253,9 @@ def train_heads_cached(
     epochs: float,
     batch: int,
     lr: float,
-    lambda_corr: float,
-    lambda_orth: float,
+    lambda_l: float,
+    lambda_o: float,
+    lambda_gap: float,
     log_every: int,
     seed: int,
     metrics_path: Optional[Path] = None,
@@ -265,6 +265,8 @@ def train_heads_cached(
         [p for p in list(rm.head_q.parameters()) + list(rm.head_l.parameters()) if p.requires_grad],
         lr=lr,
     )
+    if int(batch) < 2:
+        logger.warning("batch=%s 时 Pearson 相关没有定义，长度损失为 0。论文的 L^L 需要 batch ≥ 2。", batch)
     n = len(train_pairs)
     steps_per_epoch = max(1, math.ceil(n / max(1, batch)))
     total_steps = max(1, int(round(float(epochs) * steps_per_epoch)))
@@ -284,17 +286,14 @@ def train_heads_cached(
             h_l = _stack_cached(cache, chunk, "rejected", device)
             rqw, rlw = rm.scores_from_hidden(h_w)
             rql, rll = rm.scores_from_hidden(h_l)
-            llw = _log_lens(chunk, "chosen", device)
-            lll = _log_lens(chunk, "rejected", device)
+            nw = _token_counts(chunk, "chosen", device)
+            nl = _token_counts(chunk, "rejected", device)
             tw = _teacher_scores(chunk, "chosen", device)
             tl = _teacher_scores(chunk, "rejected", device)
-            sw = _source_log_lens(chunk, "chosen", device)
-            sl = _source_log_lens(chunk, "rejected", device)
             loss, stats = odin_rm_loss(
-                rqw, rlw, rql, rll, llw, lll, tw, tl,
+                rqw, rlw, rql, rll, nw, nl, tw, tl,
                 head_q=rm.head_q, head_l=rm.head_l,
-                lambda_corr=lambda_corr, lambda_orth=lambda_orth,
-                source_log_win=sw, source_log_lose=sl,
+                lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
             )
             opt.zero_grad(set_to_none=True)
             loss.backward()
@@ -303,7 +302,7 @@ def train_heads_cached(
             if step % max(1, log_every) == 0 or step == 1 or step == total_steps:
                 hold = eval_pairs_cached(
                     rm, cache, hold_pairs, device=device,
-                    lambda_corr=lambda_corr, lambda_orth=lambda_orth,
+                    lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
                     batch=max(1, batch),
                 )
                 row = {"step": step, "train": stats, "holdout": hold}
@@ -339,13 +338,14 @@ def main() -> None:
     p.add_argument("--encode-batch", type=int, default=1)
     p.add_argument("--epochs", type=float, default=float(od.get("epochs") or 3.0))
     p.add_argument("--lr", type=float, default=float(od.get("lr") or 1e-3))
-    p.add_argument("--lambda-corr", type=float, default=float(od.get("lambda-corr") if od.get("lambda-corr") is not None else 0.02))
-    p.add_argument("--lambda-orth", type=float, default=float(od.get("lambda-orth") or 1.0))
+    p.add_argument("--lambda-l", type=float, default=float(od.get("lambda-l") if od.get("lambda-l") is not None else LAMBDA_L))
+    p.add_argument("--lambda-o", type=float, default=float(od.get("lambda-o") if od.get("lambda-o") is not None else LAMBDA_O))
+    p.add_argument("--lambda-gap", type=float, default=float(od.get("lambda-gap") if od.get("lambda-gap") is not None else LAMBDA_GAP))
     p.add_argument(
         "--min-margin",
         type=float,
-        default=MIN_SCORE_GAP,
-        help="低于此值视为同分。组内对全部保留，不再按这个值丢对",
+        default=float(od.get("min-margin") if od.get("min-margin") is not None else MIN_SCORE_GAP),
+        help="S_fp 分差不大于此值的对不进 RM 训练",
     )
     p.add_argument("--holdout-frac", type=float, default=0.1)
     p.add_argument("--log-every", type=int, default=20)
@@ -369,6 +369,9 @@ def main() -> None:
             args.samples, min_margin=args.min_margin, holdout_frac=args.holdout_frac
         )
         logger.info("built pairs: %s", summary)
+    n_raw = len(pairs)
+    pairs = [x for x in pairs if pair_in_rm_training(x, args.min_margin)]
+    logger.info("RM 对：%s / %s（S_fp 分差 > %s）", len(pairs), n_raw, args.min_margin)
     train_pairs = [x for x in pairs if x.get("split") != "holdout"]
     hold_pairs = [x for x in pairs if x.get("split") == "holdout"]
     if not train_pairs:
@@ -406,6 +409,7 @@ def main() -> None:
             "用冻 backbone + 缓存 hidden 的默认路径。"
         )
 
+    _attach_token_counts(train_pairs + hold_pairs, tokenizer)
     sides = _collect_unique_sides(train_pairs + hold_pairs)
     cache = encode_hidden_cache(
         rm, tokenizer, sides,
@@ -416,7 +420,7 @@ def main() -> None:
     history = train_heads_cached(
         rm, cache, train_pairs, hold_pairs,
         device=device, epochs=args.epochs, batch=args.batch, lr=args.lr,
-        lambda_corr=args.lambda_corr, lambda_orth=args.lambda_orth,
+        lambda_l=args.lambda_l, lambda_o=args.lambda_o, lambda_gap=args.lambda_gap,
         log_every=args.log_every, seed=args.seed,
         metrics_path=metrics_jsonl,
     )
@@ -425,8 +429,10 @@ def main() -> None:
         backbone_path=model_id,
         freeze_backbone=True,
         extra={
-            "lambda_corr": args.lambda_corr,
-            "lambda_orth": args.lambda_orth,
+            "lambda_l": args.lambda_l,
+            "lambda_o": args.lambda_o,
+            "lambda_gap": args.lambda_gap,
+            "min_margin": args.min_margin,
             "epochs": args.epochs,
             "lr": args.lr,
             "train_pairs": len(train_pairs),
@@ -436,7 +442,7 @@ def main() -> None:
     )
     hold_final = eval_pairs_cached(
         rm, cache, hold_pairs or train_pairs[: min(64, len(train_pairs))],
-        device=device, lambda_corr=args.lambda_corr, lambda_orth=args.lambda_orth,
+        device=device, lambda_l=args.lambda_l, lambda_o=args.lambda_o, lambda_gap=args.lambda_gap,
         batch=args.batch,
     )
     (args.out / "train_metrics.json").write_text(
@@ -455,23 +461,25 @@ def main() -> None:
             last={**{f"train_{k}": v for k, v in last_train.items()}, **{f"holdout_{k}": v for k, v in last_hold.items()}},
             keys=(
                 "train_loss",
+                "train_L_R",
                 "train_L_gap",
-                "train_L_rec",
-                "train_L_len",
+                "train_L_L",
+                "train_L_O",
+                "train_gap_mae",
+                "train_acc_sum",
                 "train_acc_q",
                 "train_rho_q",
                 "train_rho_l",
-                "train_gap_sfp_mae",
-                "train_same_score_frac",
                 "holdout_loss",
+                "holdout_L_R",
                 "holdout_L_gap",
-                "holdout_L_rec",
-                "holdout_L_len",
+                "holdout_L_L",
+                "holdout_L_O",
+                "holdout_gap_mae",
+                "holdout_acc_sum",
                 "holdout_acc_q",
                 "holdout_rho_q",
                 "holdout_rho_l",
-                "holdout_gap_sfp_mae",
-                "holdout_same_score_frac",
             ),
         )
         append_metrics(metrics_jsonl, summary)

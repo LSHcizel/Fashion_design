@@ -68,13 +68,10 @@ def log_len_of(rec: Dict[str, Any]) -> float:
     return math.log1p(float(max(0, int(n))))
 
 
-def source_log_len_of(rec: Dict[str, Any]) -> Optional[float]:
-    """原文 log1p(字数)。没有原文时返回 None，冗长扣分记 0。"""
-    ctx = rec.get("context") or {}
-    text = str(ctx.get("shared_source_text") or "").strip()
-    if not text:
-        return None
-    return math.log1p(len(text))
+def response_token_count(tokenizer, text: str) -> int:
+    """回复 token 数，对应论文的 L(y)。不计特殊符号。"""
+    ids = tokenizer(str(text or ""), add_special_tokens=False).get("input_ids") or []
+    return int(len(ids))
 
 
 def candidate_key(rec: Dict[str, Any]) -> str:
