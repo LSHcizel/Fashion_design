@@ -172,6 +172,14 @@ def main() -> None:
             str(lambda_gap),
             "--min-margin",
             str(min_margin),
+            "--unfreeze-layers",
+            str(int(od.get("unfreeze-layers") if od.get("unfreeze-layers") is not None else 2)),
+            "--layer-lr",
+            str(float(od.get("layer-lr") if od.get("layer-lr") is not None else 1e-5)),
+            "--patience-evals",
+            str(int(od.get("patience-evals") if od.get("patience-evals") is not None else 15)),
+            "--min-epochs",
+            str(float(od.get("min-epochs") if od.get("min-epochs") is not None else 1.0)),
         ]
         if args.model.strip():
             argv.extend(["--model", args.model.strip()])

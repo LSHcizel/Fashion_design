@@ -1,4 +1,4 @@
-"""训 ODIN 双头 RM。冻住 backbone，只微调两个线性头。损失用论文式 (11)。"""
+"""训 ODIN 双头 RM。默认解开基座最后两层，其余冻住；按留出集 acc_q 保存最好的权重。"""
 
 from __future__ import annotations
 
@@ -20,13 +20,29 @@ from plugins.text_description_evaluator.design_text_evaluator_api import (
 from training.step_metrics import append_metrics, progress_summary
 
 from .data import messages_from_record, response_token_count
-from .modeling import LAMBDA_GAP, LAMBDA_L, LAMBDA_O, MIN_SCORE_GAP, DualHeadRewardModel, odin_rm_loss
+from .modeling import (
+    LAMBDA_GAP,
+    LAMBDA_L,
+    LAMBDA_O,
+    MIN_SCORE_GAP,
+    DualHeadRewardModel,
+    last_token_from_inner,
+    load_tuned_layers,
+    odin_rm_loss,
+    set_suffix_train,
+    tuned_layer_state,
+    unfreeze_last_layers,
+)
 from .pairs import build_preference_pairs, pair_in_rm_training
 
 logger = logging.getLogger(__name__)
 
 HEADS_NAME = "odin_heads.pt"
 RM_CONFIG_NAME = "odin_rm_config.json"
+DEFAULT_UNFREEZE_LAYERS = 2
+DEFAULT_LAYER_LR = 1e-5
+DEFAULT_PATIENCE_EVALS = 15
+DEFAULT_MIN_EPOCHS = 1.0
 
 
 def _dtype(name: str):
@@ -190,11 +206,17 @@ def save_rm(
     backbone_path: str,
     freeze_backbone: bool,
     extra: Optional[Dict[str, Any]] = None,
+    tuned_names: Optional[Sequence[str]] = None,
+    unfreeze_layers: int = 0,
 ) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     blob = rm.heads_state_dict()
     blob["backbone_path"] = backbone_path
     blob["freeze_backbone"] = freeze_backbone
+    tuned = tuned_layer_state(rm.backbone, list(tuned_names) if tuned_names is not None else None)
+    if tuned:
+        blob["tuned_layers"] = tuned
+        blob["unfreeze_layers"] = int(unfreeze_layers)
     torch.save(blob, out_dir / HEADS_NAME)
     cfg = {
         "backbone_path": backbone_path,
@@ -236,7 +258,10 @@ def load_rm(
         backbone.config.use_cache = False
     rm = DualHeadRewardModel(backbone, hidden_size=int(heads.get("hidden_size") or 0) or None)
     rm.load_heads_state_dict(heads)
-    if freeze:
+    tuned = heads.get("tuned_layers") or {}
+    if tuned:
+        load_tuned_layers(rm.backbone, tuned)
+    if freeze or tuned:
         rm.freeze_backbone()
     rm.to(device)
     rm.eval()
@@ -324,6 +349,254 @@ def train_heads_cached(
     return history
 
 
+def update_holdout_watch(
+    acc: Optional[float],
+    best_acc: Optional[float],
+    stale: int,
+    *,
+    step: int,
+    min_step: int,
+    patience: int,
+) -> Tuple[Optional[float], int, bool, bool]:
+    """返回 (best_acc, stale, should_stop, improved)。耐心只在 min_step 之后生效。"""
+    if acc is None:
+        return best_acc, stale, False, False
+    improved = best_acc is None or float(acc) > float(best_acc)
+    if improved:
+        return float(acc), 0, False, True
+    stale = int(stale) + 1
+    stop = int(patience) > 0 and int(step) >= int(min_step) and stale >= int(patience)
+    return best_acc, stale, stop, False
+
+
+def _token_id_cache(
+    tokenizer,
+    sides: Dict[str, Dict[str, Any]],
+    *,
+    max_length: int,
+    system_prompt: str,
+) -> Dict[str, List[int]]:
+    cache: Dict[str, List[int]] = {}
+    for key, side in sides.items():
+        ids, _ = _tokenize_side(tokenizer, side, max_length, system_prompt)
+        cache[key] = list(ids)
+    logger.info("tokenized %s completions", len(cache))
+    return cache
+
+
+def _scores_for_pairs(
+    rm: DualHeadRewardModel,
+    token_cache: Dict[str, List[int]],
+    pairs: Sequence[Dict[str, Any]],
+    *,
+    device: torch.device,
+    pad_id: int,
+    n_unfreeze: int,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    rows: List[List[int]] = []
+    for pair in pairs:
+        rows.append(token_cache[_side_key(pair["chosen"])])
+        rows.append(token_cache[_side_key(pair["rejected"])])
+    input_ids, attn = _pad_ids(rows, pad_id)
+    hidden = last_token_from_inner(
+        rm, input_ids.to(device), attn.to(device), n_unfreeze,
+    )
+    r_q, r_l = rm.scores_from_hidden(hidden)
+    return r_q[0::2], r_l[0::2], r_q[1::2], r_l[1::2]
+
+
+@torch.no_grad()
+def eval_pairs_tokens(
+    rm: DualHeadRewardModel,
+    token_cache: Dict[str, List[int]],
+    pairs: Sequence[Dict[str, Any]],
+    *,
+    device: torch.device,
+    pad_id: int,
+    n_unfreeze: int,
+    lambda_l: float,
+    lambda_o: float,
+    lambda_gap: float,
+    batch: int,
+) -> Dict[str, float]:
+    if not pairs:
+        return {}
+    rm.head_q.eval()
+    rm.head_l.eval()
+    set_suffix_train(rm.backbone, n_unfreeze, train=False)
+    stats_rows: List[Dict[str, float]] = []
+    for start in range(0, len(pairs), max(1, batch)):
+        chunk = pairs[start : start + max(1, batch)]
+        rqw, rlw, rql, rll = _scores_for_pairs(
+            rm, token_cache, chunk, device=device, pad_id=pad_id, n_unfreeze=n_unfreeze,
+        )
+        _, stats = odin_rm_loss(
+            rqw, rlw, rql, rll,
+            _token_counts(chunk, "chosen", device),
+            _token_counts(chunk, "rejected", device),
+            _teacher_scores(chunk, "chosen", device),
+            _teacher_scores(chunk, "rejected", device),
+            head_q=rm.head_q, head_l=rm.head_l,
+            lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
+        )
+        stats_rows.append(stats)
+    return _mean_stats(stats_rows)
+
+
+def _restore_best(
+    rm: DualHeadRewardModel,
+    best: Dict[str, Any],
+) -> None:
+    rm.load_heads_state_dict(best)
+    load_tuned_layers(rm.backbone, best.get("tuned_layers") or {})
+
+
+def train_unfrozen_suffix(
+    rm: DualHeadRewardModel,
+    token_cache: Dict[str, List[int]],
+    train_pairs: List[Dict[str, Any]],
+    hold_pairs: List[Dict[str, Any]],
+    *,
+    device: torch.device,
+    pad_id: int,
+    n_unfreeze: int,
+    tuned_names: Sequence[str],
+    epochs: float,
+    batch: int,
+    lr: float,
+    layer_lr: float,
+    lambda_l: float,
+    lambda_o: float,
+    lambda_gap: float,
+    log_every: int,
+    patience_evals: int,
+    min_epochs: float,
+    seed: int,
+    metrics_path: Optional[Path] = None,
+    checkpoint_dir: Optional[Path] = None,
+    backbone_path: str = "",
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """最后 n 层和两个头一起训。留出 acc_q 变好就落盘，耐心用尽则停并恢复最好的一次。"""
+    rng = random.Random(seed)
+    head_params = [p for p in list(rm.head_q.parameters()) + list(rm.head_l.parameters()) if p.requires_grad]
+    layer_params = [p for p in rm.backbone.parameters() if p.requires_grad]
+    opt = torch.optim.AdamW(
+        [
+            {"params": head_params, "lr": lr},
+            {"params": layer_params, "lr": layer_lr},
+        ],
+        lr=lr,
+    )
+    n = len(train_pairs)
+    steps_per_epoch = max(1, math.ceil(n / max(1, batch)))
+    total_steps = max(1, int(round(float(epochs) * steps_per_epoch)))
+    min_step = max(1, int(round(float(min_epochs) * steps_per_epoch)))
+    history: List[Dict[str, Any]] = []
+    step = 0
+    best_acc: Optional[float] = None
+    best_step = 0
+    stale = 0
+    best_blob: Optional[Dict[str, Any]] = None
+    logger.info(
+        "解开最后 %s 层：头 lr=%s 层 lr=%s 最多 %s 步，%s 步后连续 %s 次留出评估不升就停",
+        n_unfreeze, lr, layer_lr, total_steps, min_step, patience_evals,
+    )
+
+    def _remember(acc: float) -> None:
+        nonlocal best_blob
+        best_blob = {
+            "head_q": {k: v.detach().cpu().clone() for k, v in rm.head_q.state_dict().items()},
+            "head_l": {k: v.detach().cpu().clone() for k, v in rm.head_l.state_dict().items()},
+            "tuned_layers": tuned_layer_state(rm.backbone, list(tuned_names)),
+        }
+        if checkpoint_dir is not None:
+            save_rm(
+                rm, checkpoint_dir,
+                backbone_path=backbone_path,
+                freeze_backbone=True,
+                tuned_names=tuned_names,
+                unfreeze_layers=n_unfreeze,
+                extra={
+                    "unfreeze_layers": n_unfreeze,
+                    "best_step": step,
+                    "best_holdout_acc_q": acc,
+                    "layer_lr": layer_lr,
+                },
+            )
+
+    while step < total_steps:
+        order = list(range(n))
+        rng.shuffle(order)
+        for start in range(0, n, max(1, batch)):
+            if step >= total_steps:
+                break
+            set_suffix_train(rm.backbone, n_unfreeze, train=True)
+            rm.head_q.train()
+            rm.head_l.train()
+            idx = order[start : start + max(1, batch)]
+            chunk = [train_pairs[i] for i in idx]
+            rqw, rlw, rql, rll = _scores_for_pairs(
+                rm, token_cache, chunk, device=device, pad_id=pad_id, n_unfreeze=n_unfreeze,
+            )
+            loss, stats = odin_rm_loss(
+                rqw, rlw, rql, rll,
+                _token_counts(chunk, "chosen", device),
+                _token_counts(chunk, "rejected", device),
+                _teacher_scores(chunk, "chosen", device),
+                _teacher_scores(chunk, "rejected", device),
+                head_q=rm.head_q, head_l=rm.head_l,
+                lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
+            )
+            opt.zero_grad(set_to_none=True)
+            loss.backward()
+            opt.step()
+            step += 1
+            if step % max(1, log_every) != 0 and step != 1 and step != total_steps:
+                continue
+            hold = eval_pairs_tokens(
+                rm, token_cache, hold_pairs,
+                device=device, pad_id=pad_id, n_unfreeze=n_unfreeze,
+                lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
+                batch=max(1, batch),
+            )
+            acc = hold.get("acc_q")
+            best_acc, stale, stop, improved = update_holdout_watch(
+                acc, best_acc, stale, step=step, min_step=min_step, patience=patience_evals,
+            )
+            if improved and acc is not None:
+                best_step = step
+                _remember(float(acc))
+                logger.info("留出 acc_q=%.4f，保存 step %s", float(acc), step)
+            row = {"step": step, "train": stats, "holdout": hold, "best_step": best_step, "best_acc_q": best_acc}
+            history.append(row)
+            if metrics_path is not None:
+                append_metrics(
+                    metrics_path,
+                    {
+                        "stage": "rm",
+                        "event": "step",
+                        "global_step": step,
+                        "best_step": best_step,
+                        "best_holdout_acc_q": best_acc,
+                        **{f"train_{k}": v for k, v in stats.items()},
+                        **{f"holdout_{k}": v for k, v in hold.items()},
+                    },
+                )
+            logger.info("step %s train=%s holdout=%s", step, stats, hold)
+            if stop:
+                logger.info(
+                    "留出 acc_q 连续 %s 次没有超过 %.4f（step %s），停在 step %s",
+                    stale, float(best_acc or 0.0), best_step, step,
+                )
+                if best_blob is not None:
+                    _restore_best(rm, best_blob)
+                return history, {"best_step": best_step, "best_holdout_acc_q": best_acc, "stopped_early": True}
+    if best_blob is not None:
+        _restore_best(rm, best_blob)
+        logger.info("训练结束，恢复留出 acc_q 最好的 step %s（%.4f）", best_step, float(best_acc or 0.0))
+    return history, {"best_step": best_step, "best_holdout_acc_q": best_acc, "stopped_early": False}
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(description="训 ODIN 双头 RM（默认只训两个头）")
@@ -352,9 +625,33 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--system-prompt", type=str, default="")
     p.add_argument(
+        "--unfreeze-layers",
+        type=int,
+        default=int(od.get("unfreeze-layers") if od.get("unfreeze-layers") is not None else DEFAULT_UNFREEZE_LAYERS),
+        help="只训练基座最后几层和最终 norm。0 表示整座冻住、只训两个头",
+    )
+    p.add_argument(
+        "--layer-lr",
+        type=float,
+        default=float(od.get("layer-lr") if od.get("layer-lr") is not None else DEFAULT_LAYER_LR),
+        help="解开层的学习率。两个头仍用 --lr",
+    )
+    p.add_argument(
+        "--patience-evals",
+        type=int,
+        default=int(od.get("patience-evals") if od.get("patience-evals") is not None else DEFAULT_PATIENCE_EVALS),
+        help="留出 acc_q 连续这么多次评估没有提升就停。0 表示只在结束时恢复最好的一次",
+    )
+    p.add_argument(
+        "--min-epochs",
+        type=float,
+        default=float(od.get("min-epochs") if od.get("min-epochs") is not None else DEFAULT_MIN_EPOCHS),
+        help="这么多 epoch 之前不因耐心提前停",
+    )
+    p.add_argument(
         "--unfreeze-backbone",
         action="store_true",
-        help="全参微调 backbone（显存大；默认冻住只训头）",
+        help="全参微调 backbone（显存大；本脚本不接这条路径）",
     )
     args = p.parse_args()
 
@@ -383,7 +680,10 @@ def main() -> None:
     model_id = args.model.strip() or default_odin_rm_model()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dtype = _dtype(args.dtype)
-    logger.info("backbone=%s device=%s freeze=%s", model_id, device, not args.unfreeze_backbone)
+    logger.info(
+        "backbone=%s device=%s unfreeze_layers=%s",
+        model_id, device, args.unfreeze_layers,
+    )
 
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     if tokenizer.pad_token is None:
@@ -398,36 +698,69 @@ def main() -> None:
     if hasattr(backbone.config, "use_cache"):
         backbone.config.use_cache = False
     rm = DualHeadRewardModel(backbone)
-    freeze = not args.unfreeze_backbone
-    if freeze:
-        rm.freeze_backbone()
     rm.to(device)
-
-    if not freeze:
+    if args.unfreeze_backbone:
         raise SystemExit(
-            "全参反传尚未接到本脚本主循环；请去掉 --unfreeze-backbone，"
-            "用冻 backbone + 缓存 hidden 的默认路径。"
+            "全参反传尚未接到本脚本主循环。用 --unfreeze-layers 2 只解开最后两层。"
         )
+    n_unfreeze = max(0, int(args.unfreeze_layers))
+    opened = unfreeze_last_layers(rm.backbone, n_unfreeze)
+    tuned_names = [name for name, param in rm.backbone.named_parameters() if param.requires_grad]
+    if opened:
+        logger.info("可训基座参数 %s 个（最后 %s 层 + norm）", len(tuned_names), opened)
 
     _attach_token_counts(train_pairs + hold_pairs, tokenizer)
     sides = _collect_unique_sides(train_pairs + hold_pairs)
-    cache = encode_hidden_cache(
-        rm, tokenizer, sides,
-        max_length=args.max_length, device=device,
-        system_prompt=args.system_prompt, encode_batch=args.encode_batch,
-    )
     metrics_jsonl = args.out / "metrics.jsonl"
-    history = train_heads_cached(
-        rm, cache, train_pairs, hold_pairs,
-        device=device, epochs=args.epochs, batch=args.batch, lr=args.lr,
-        lambda_l=args.lambda_l, lambda_o=args.lambda_o, lambda_gap=args.lambda_gap,
-        log_every=args.log_every, seed=args.seed,
-        metrics_path=metrics_jsonl,
-    )
+    best_info: Dict[str, Any] = {}
+    if opened:
+        if not hold_pairs:
+            logger.warning("没有留出对，无法按 acc_q 早停，将跑满 epoch 并保存最后一步")
+        token_cache = _token_id_cache(
+            tokenizer, sides, max_length=args.max_length, system_prompt=args.system_prompt,
+        )
+        history, best_info = train_unfrozen_suffix(
+            rm, token_cache, train_pairs, hold_pairs,
+            device=device, pad_id=int(tokenizer.pad_token_id or 0),
+            n_unfreeze=opened, tuned_names=tuned_names,
+            epochs=args.epochs, batch=args.batch, lr=args.lr, layer_lr=args.layer_lr,
+            lambda_l=args.lambda_l, lambda_o=args.lambda_o, lambda_gap=args.lambda_gap,
+            log_every=args.log_every,
+            patience_evals=args.patience_evals if hold_pairs else 0,
+            min_epochs=args.min_epochs, seed=args.seed,
+            metrics_path=metrics_jsonl, checkpoint_dir=args.out, backbone_path=model_id,
+        )
+        hold_final = eval_pairs_tokens(
+            rm, token_cache, hold_pairs or train_pairs[: min(64, len(train_pairs))],
+            device=device, pad_id=int(tokenizer.pad_token_id or 0), n_unfreeze=opened,
+            lambda_l=args.lambda_l, lambda_o=args.lambda_o, lambda_gap=args.lambda_gap,
+            batch=args.batch,
+        )
+    else:
+        rm.freeze_backbone()
+        cache = encode_hidden_cache(
+            rm, tokenizer, sides,
+            max_length=args.max_length, device=device,
+            system_prompt=args.system_prompt, encode_batch=args.encode_batch,
+        )
+        history = train_heads_cached(
+            rm, cache, train_pairs, hold_pairs,
+            device=device, epochs=args.epochs, batch=args.batch, lr=args.lr,
+            lambda_l=args.lambda_l, lambda_o=args.lambda_o, lambda_gap=args.lambda_gap,
+            log_every=args.log_every, seed=args.seed,
+            metrics_path=metrics_jsonl,
+        )
+        hold_final = eval_pairs_cached(
+            rm, cache, hold_pairs or train_pairs[: min(64, len(train_pairs))],
+            device=device, lambda_l=args.lambda_l, lambda_o=args.lambda_o, lambda_gap=args.lambda_gap,
+            batch=args.batch,
+        )
     save_rm(
         rm, args.out,
         backbone_path=model_id,
         freeze_backbone=True,
+        tuned_names=tuned_names,
+        unfreeze_layers=opened,
         extra={
             "lambda_l": args.lambda_l,
             "lambda_o": args.lambda_o,
@@ -435,15 +768,17 @@ def main() -> None:
             "min_margin": args.min_margin,
             "epochs": args.epochs,
             "lr": args.lr,
+            "layer_lr": args.layer_lr,
+            "unfreeze_layers": opened,
+            "patience_evals": args.patience_evals,
+            "min_epochs": args.min_epochs,
             "train_pairs": len(train_pairs),
             "holdout_pairs": len(hold_pairs),
+            "best_step": best_info.get("best_step"),
+            "best_holdout_acc_q": best_info.get("best_holdout_acc_q"),
+            "stopped_early": best_info.get("stopped_early"),
             "history": history[-20:],
         },
-    )
-    hold_final = eval_pairs_cached(
-        rm, cache, hold_pairs or train_pairs[: min(64, len(train_pairs))],
-        device=device, lambda_l=args.lambda_l, lambda_o=args.lambda_o, lambda_gap=args.lambda_gap,
-        batch=args.batch,
     )
     (args.out / "train_metrics.json").write_text(
         json.dumps({"holdout_or_train_probe": hold_final, "history": history}, ensure_ascii=False, indent=2),

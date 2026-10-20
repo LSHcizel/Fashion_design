@@ -7,7 +7,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Tuple
+from contextlib import contextmanager
+from typing import Any, Dict, Iterator, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -217,3 +218,120 @@ class DualHeadRewardModel(nn.Module):
     def load_heads_state_dict(self, blob: Dict[str, Any]) -> None:
         self.head_q.load_state_dict(blob["head_q"])
         self.head_l.load_state_dict(blob["head_l"])
+
+
+def transformer_stack(backbone: nn.Module) -> Tuple[nn.Module, nn.ModuleList, Optional[nn.Module]]:
+    """返回 (含 layers 的模块, decoder 层, 最终 norm)。"""
+    inner = backbone
+    if hasattr(backbone, "model") and hasattr(getattr(backbone, "model"), "layers"):
+        inner = backbone.model
+    elif not hasattr(backbone, "layers"):
+        raise RuntimeError("找不到 decoder layers，无法只解开最后几层")
+    layers = inner.layers
+    if not isinstance(layers, nn.ModuleList) or len(layers) < 1:
+        raise RuntimeError("decoder layers 为空，无法只解开最后几层")
+    return inner, layers, getattr(inner, "norm", None)
+
+
+def unfreeze_last_layers(backbone: nn.Module, n_layers: int) -> int:
+    """冻住基座，只打开最后 n 层和最终 norm。返回实际打开的层数。"""
+    for p in backbone.parameters():
+        p.requires_grad_(False)
+    backbone.eval()
+    n = int(n_layers)
+    if n <= 0:
+        return 0
+    _, layers, norm = transformer_stack(backbone)
+    n = min(n, len(layers))
+    for layer in layers[-n:]:
+        layer.train()
+        for p in layer.parameters():
+            p.requires_grad_(True)
+    if norm is not None:
+        norm.train()
+        for p in norm.parameters():
+            p.requires_grad_(True)
+    return n
+
+
+def set_suffix_train(backbone: nn.Module, n_layers: int, *, train: bool) -> None:
+    """前缀保持 eval。train 时最后 n 层和 norm 进入 train。"""
+    backbone.eval()
+    if not train or int(n_layers) <= 0:
+        return
+    _, layers, norm = transformer_stack(backbone)
+    n = min(int(n_layers), len(layers))
+    for layer in layers[-n:]:
+        layer.train()
+    if norm is not None:
+        norm.train()
+
+
+def tuned_layer_state(
+    backbone: nn.Module,
+    names: Optional[list] = None,
+) -> Dict[str, torch.Tensor]:
+    """解开层的参数，留在 CPU 上。names 为空时取当前 requires_grad 的基座参数。"""
+    if names is None:
+        names = [name for name, param in backbone.named_parameters() if param.requires_grad]
+    state = backbone.state_dict()
+    return {name: state[name].detach().cpu().clone() for name in names if name in state}
+
+
+def load_tuned_layers(backbone: nn.Module, state: Dict[str, torch.Tensor]) -> None:
+    if not state:
+        return
+    incompatible = backbone.load_state_dict(state, strict=False)
+    unexpected = list(getattr(incompatible, "unexpected_keys", []) or [])
+    if unexpected:
+        raise RuntimeError(f"解开层的权重对不上基座: {unexpected[:8]}")
+
+
+def _detach_layer_output(output: Any) -> Any:
+    if torch.is_tensor(output):
+        return output.detach()
+    if isinstance(output, tuple) and output and torch.is_tensor(output[0]):
+        return (output[0].detach(),) + tuple(output[1:])
+    return output
+
+
+@contextmanager
+def detach_before_trainable_suffix(backbone: nn.Module, n_layers: int) -> Iterator[None]:
+    """最后 n 层之前断开反传，前面的层只做前向。"""
+    n = int(n_layers)
+    if n <= 0:
+        yield
+        return
+    _, layers, _ = transformer_stack(backbone)
+    n = min(n, len(layers))
+    split = len(layers) - n
+    if split <= 0:
+        yield
+        return
+    handle = layers[split - 1].register_forward_hook(
+        lambda _module, _inputs, output: _detach_layer_output(output)
+    )
+    try:
+        yield
+    finally:
+        handle.remove()
+
+
+def last_token_from_inner(
+    rm: "DualHeadRewardModel",
+    input_ids: torch.Tensor,
+    attention_mask: torch.Tensor,
+    n_unfreeze: int,
+) -> torch.Tensor:
+    """走 decoder，不经过 lm_head。最后 n 层参与反传。"""
+    inner, _, _ = transformer_stack(rm.backbone)
+    with detach_before_trainable_suffix(rm.backbone, n_unfreeze):
+        out = inner(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            use_cache=False,
+        )
+    hidden = getattr(out, "last_hidden_state", None)
+    if hidden is None:
+        hidden = out[0]
+    return last_token_hidden(hidden, attention_mask)

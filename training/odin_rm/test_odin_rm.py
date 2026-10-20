@@ -343,5 +343,94 @@ class OdinLossTests(unittest.TestCase):
         self.assertIsNone(summary["pearson_r_Q_residual_vs_log_len"])
         self.assertGreater(summary["pearson_r_L_vs_log_len"], 0.9)
 
+
+class SuffixTrainTests(unittest.TestCase):
+    def test_unfreeze_opens_only_the_last_layers_and_norm(self) -> None:
+        from torch import nn
+
+        from training.odin_rm.modeling import unfreeze_last_layers
+
+        class Inner(nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.layers = nn.ModuleList([nn.Linear(3, 3) for _ in range(5)])
+                self.norm = nn.LayerNorm(3)
+
+        class Backbone(nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.model = Inner()
+                self.extra = nn.Linear(3, 3)
+
+        backbone = Backbone()
+        opened = unfreeze_last_layers(backbone, 2)
+        self.assertEqual(opened, 2)
+        trainable = {name for name, param in backbone.named_parameters() if param.requires_grad}
+        self.assertTrue(any(name.startswith("model.layers.3.") for name in trainable))
+        self.assertTrue(any(name.startswith("model.layers.4.") for name in trainable))
+        self.assertTrue(any(name.startswith("model.norm.") for name in trainable))
+        self.assertFalse(any(name.startswith("model.layers.2.") for name in trainable))
+        self.assertFalse(any(name.startswith("extra.") for name in trainable))
+
+    def test_backward_stops_before_the_trainable_suffix(self) -> None:
+        import torch
+        from torch import nn
+
+        from training.odin_rm.modeling import DualHeadRewardModel, last_token_from_inner, unfreeze_last_layers
+
+        class Inner(nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.layers = nn.ModuleList([nn.Linear(4, 4) for _ in range(4)])
+                self.norm = nn.Identity()
+
+            def forward(self, input_ids=None, attention_mask=None, use_cache=False):
+                hidden = input_ids.float().unsqueeze(-1).expand(-1, -1, 4).contiguous()
+                for layer in self.layers:
+                    hidden = layer(hidden)
+                return type("Out", (), {"last_hidden_state": self.norm(hidden)})()
+
+        class Backbone(nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.model = Inner()
+
+        backbone = Backbone()
+        unfreeze_last_layers(backbone, 1)
+        for param in backbone.model.layers[0].parameters():
+            param.requires_grad_(True)
+        rm = DualHeadRewardModel(backbone, hidden_size=4)
+        ids = torch.tensor([[1, 2, 3], [4, 5, 0]])
+        mask = torch.tensor([[1, 1, 1], [1, 1, 0]])
+        hidden = last_token_from_inner(rm, ids, mask, 1)
+        hidden.sum().backward()
+        self.assertIsNotNone(backbone.model.layers[-1].weight.grad)
+        self.assertIsNone(backbone.model.layers[0].weight.grad)
+
+    def test_holdout_watch_stops_only_after_the_minimum_step(self) -> None:
+        from training.odin_rm.train_rm import update_holdout_watch
+
+        best, stale, stop, improved = update_holdout_watch(
+            0.70, None, 0, step=10, min_step=100, patience=2,
+        )
+        self.assertTrue(improved)
+        self.assertFalse(stop)
+        best, stale, stop, improved = update_holdout_watch(
+            0.60, best, stale, step=20, min_step=100, patience=2,
+        )
+        self.assertFalse(improved)
+        self.assertFalse(stop)
+        best, stale, stop, improved = update_holdout_watch(
+            0.60, best, stale, step=120, min_step=100, patience=2,
+        )
+        self.assertTrue(stop)
+        self.assertEqual(best, 0.70)
+        best, stale, stop, _ = update_holdout_watch(
+            None, best, 0, step=200, min_step=100, patience=1,
+        )
+        self.assertFalse(stop)
+        self.assertEqual(best, 0.70)
+
+
 if __name__ == "__main__":
     unittest.main()
