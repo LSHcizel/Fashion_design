@@ -208,6 +208,12 @@ class OdinLossTests(unittest.TestCase):
         loss.backward()
         self.assertIsNotNone(next(rm.head_q.parameters()).grad)
         self.assertIsNotNone(next(rm.head_l.parameters()).grad)
+        self.assertTrue(torch.all(rqw > 0).item())
+        self.assertTrue(torch.all(rlw > 0).item())
+        wide = torch.randn(32, 8) * 8
+        q_wide, l_wide = rm.scores_from_hidden(wide)
+        self.assertTrue(torch.all(q_wide > 0).item())
+        self.assertTrue(torch.all(l_wide > 0).item())
 
     def test_ranking_and_gap_stay_on_quality_head(self) -> None:
         try:

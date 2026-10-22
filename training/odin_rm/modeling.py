@@ -2,7 +2,8 @@
 双头奖励模型（ODIN）：共用表征 + 两个线性头 r_Q / r_L。
 
 排序和分差都落在 r_Q 上。长度项是同一侧样本的两两 softplus，λ_L 弱于分差项。
-两个头都做 weight normalization。L(y) 是回复 token 数。策略训练只取 r_Q。
+两个头都做 weight normalization，输出再过 softplus，所以 r_Q 和 r_L 都大于 0。
+L(y) 是回复 token 数。策略训练只取 r_Q。分差损失不看零点，没有这一步两个头会整段漂成负数。
 """
 
 from __future__ import annotations
@@ -206,8 +207,8 @@ class DualHeadRewardModel(nn.Module):
 
     def scores_from_hidden(self, hidden: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         h = hidden.float()
-        r_q = self.head_q(h).squeeze(-1)
-        r_l = self.head_l(h).squeeze(-1)
+        r_q = F.softplus(self.head_q(h).squeeze(-1))
+        r_l = F.softplus(self.head_l(h).squeeze(-1))
         return r_q, r_l
 
     def forward(
