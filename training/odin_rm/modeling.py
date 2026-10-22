@@ -1,7 +1,7 @@
 """
 双头奖励模型（ODIN）：共用表征 + 两个线性头 r_Q / r_L。
 
-排序和分差都落在 r_Q 上。长度相关仍是式 (9)，但 λ_L 弱于分差项。
+排序和分差都落在 r_Q 上。长度项是同一侧样本的两两 softplus，λ_L 弱于分差项。
 两个头都做 weight normalization。L(y) 是回复 token 数。策略训练只取 r_Q。
 """
 
@@ -54,10 +54,29 @@ def length_correlation_loss(
     r_l: torch.Tensor,
     length: torch.Tensor,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """式 (9)：质量头与 token 数去相关，长度头与 token 数正相关。"""
-    rho_q = batch_pearson(r_q, length)
-    rho_l = batch_pearson(r_l, length)
-    return rho_q.abs() - rho_l, rho_q, rho_l
+    """同一侧两两比较。token 更多的样本应有更高的 r_L；r_Q 跟着变高则受罚。
+
+    batch 为 2 时 Pearson 几乎总是 ±1，对分数的梯度是 0。softplus 在两条样本上仍有梯度。
+    返回的 ρ 只用于记录，不进损失。长度相同的对跳过。
+    """
+    q = r_q.reshape(-1).float()
+    ell = r_l.reshape(-1).float()
+    ntok = length.reshape(-1).float()
+    rho_q = batch_pearson(q, ntok).detach()
+    rho_l = batch_pearson(ell, ntok).detach()
+    zero = q.new_zeros(())
+    if q.numel() < 2:
+        return zero.to(dtype=r_q.dtype), rho_q, rho_l
+    ii, jj = torch.triu_indices(q.numel(), q.numel(), offset=1, device=q.device)
+    dlen = ntok[ii] - ntok[jj]
+    usable = dlen.abs() > 0
+    if not bool(usable.any()):
+        return zero.to(dtype=r_q.dtype), rho_q, rho_l
+    sign = torch.sign(dlen[usable])
+    margin_l = (ell[ii] - ell[jj])[usable] * sign
+    margin_q = (q[ii] - q[jj])[usable] * sign
+    loss = F.softplus(-margin_l).mean() + F.softplus(margin_q).mean()
+    return loss.to(dtype=r_q.dtype), rho_q, rho_l
 
 
 def _projection_weight(head: nn.Module) -> torch.Tensor:
@@ -92,7 +111,7 @@ def odin_rm_loss(
     L = L^R + λ_gap L_gap + λ_L L^L(y_w) + λ_L L^L(y_l) + λ_O L^O。
 
     L^R 和 L_gap 只看 r_Q。L_gap 让 r_Q 分差等于 S_fp 分差。
-    L^L 仍是式 (9)，λ_L 小于 λ_gap。
+    L^L 是同一侧的两两 softplus，λ_L 小于 λ_gap。正交项不动。
     """
     q_w = r_q_win.reshape(-1)
     q_l = r_q_lose.reshape(-1)

@@ -79,7 +79,7 @@ def main() -> None:
     p.add_argument("--max-length", type=int, default=2048)
     p.add_argument("--rm-epochs", type=float, default=3.0)
     p.add_argument("--rm-lr", type=float, default=1e-3)
-    p.add_argument("--rm-batch", type=int, default=8)
+    p.add_argument("--rm-batch", type=int, default=4)
     p.add_argument("--encode-batch", type=int, default=1)
     p.add_argument("--score-batch", type=int, default=1)
     p.add_argument("--lambda-l", type=float, default=None, help="空则用 yaml；长度相关权重，默认 0.1")

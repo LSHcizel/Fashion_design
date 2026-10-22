@@ -239,7 +239,8 @@ grpo:
     max-length: 2048
     epochs: 3.0
     lr: 0.001
-    batch-pairs: 8
+    # 解开最后两层时 batch 8 会在 24G 上 OOM。先用 4 试显存。
+    batch-pairs: 4
 
   parallel-k-rewrite:
     # 每条提示的改写条数，与论文 rollout 的 8 对齐。

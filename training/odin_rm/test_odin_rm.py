@@ -257,7 +257,7 @@ class OdinLossTests(unittest.TestCase):
         self.assertAlmostEqual(missed["L_gap"], 0.6 ** 2, places=5)
         self.assertGreater(missed["loss"] - missed["L_R"], matched["loss"] - matched["L_R"])
 
-    def test_length_loss_is_equation_9_on_both_sides(self) -> None:
+    def test_length_loss_is_pairwise_softplus_on_both_sides(self) -> None:
         try:
             import torch
         except ImportError:
@@ -282,12 +282,42 @@ class OdinLossTests(unittest.TestCase):
             head_q=rm.head_q, head_l=rm.head_l, lambda_l=1.0, lambda_o=0.0, lambda_gap=0.0,
         )
         self.assertAlmostEqual(stats["L_L"], float(one + one), places=5)
-        pos, _, _ = length_correlation_loss(lengths, torch.zeros(4), lengths)
-        neg, _, _ = length_correlation_loss(-lengths, torch.zeros(4), lengths)
+        followed, _, _ = length_correlation_loss(lengths, torch.zeros(4), lengths)
+        opposed, _, _ = length_correlation_loss(-lengths, torch.zeros(4), lengths)
         flat, _, _ = length_correlation_loss(torch.tensor([0.2, 0.2, 0.2, 0.2]), torch.zeros(4), lengths)
-        self.assertAlmostEqual(float(pos), float(neg), places=5)
-        self.assertAlmostEqual(float(pos), 1.0, places=5)
-        self.assertLess(float(flat), float(pos))
+        self.assertGreater(float(followed), float(opposed))
+        self.assertLess(float(flat), float(followed))
+        same_len, _, _ = length_correlation_loss(lengths, lengths, torch.ones(4))
+        self.assertEqual(float(same_len), 0.0)
+
+        q = torch.zeros(2, requires_grad=True)
+        ell = torch.zeros(2, requires_grad=True)
+        pair, _, _ = length_correlation_loss(q, ell, torch.tensor([10.0, 30.0]))
+        pair.backward()
+        self.assertLess(float(ell.grad[1]), 0.0)
+        self.assertGreater(float(ell.grad[0]), 0.0)
+        self.assertGreater(float(q.grad[1]), 0.0)
+        self.assertLess(float(q.grad[0]), 0.0)
+
+    def test_holdout_rho_uses_the_whole_set(self) -> None:
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch not installed")
+        from training.odin_rm.modeling import batch_pearson
+        from training.odin_rm.train_rm import write_full_set_rho
+
+        sides = {
+            "a#0": (0.0, 10.0, 10.0),
+            "a#1": (0.0, 20.0, 20.0),
+            "a#2": (1.0, 30.0, 30.0),
+            "a#3": (1.0, 40.0, 40.0),
+        }
+        stats = {"rho_q": 1.0, "rho_l": -1.0}
+        write_full_set_rho(stats, sides)
+        length = torch.tensor([10.0, 20.0, 30.0, 40.0])
+        self.assertAlmostEqual(stats["rho_l"], float(batch_pearson(length, length)), places=5)
+        self.assertLess(abs(stats["rho_q"]), abs(stats["rho_l"]))
 
     def test_orthogonality_is_absolute_weight_dot(self) -> None:
         try:

@@ -26,6 +26,7 @@ from .modeling import (
     LAMBDA_O,
     MIN_SCORE_GAP,
     DualHeadRewardModel,
+    batch_pearson,
     last_token_from_inner,
     load_tuned_layers,
     odin_rm_loss,
@@ -164,6 +165,31 @@ def _mean_stats(rows: List[Dict[str, float]]) -> Dict[str, float]:
     return {k: sum(r[k] for r in rows) / len(rows) for k in keys}
 
 
+def _remember_side_score(
+    bucket: Dict[str, Tuple[float, float, float]],
+    side: Dict[str, Any],
+    r_q: torch.Tensor,
+    r_l: torch.Tensor,
+) -> None:
+    bucket[_side_key(side)] = (
+        float(r_q.detach()),
+        float(r_l.detach()),
+        float(side.get("n_tokens") or 0.0),
+    )
+
+
+def write_full_set_rho(stats: Dict[str, float], sides: Dict[str, Tuple[float, float, float]]) -> None:
+    """用整份去重后的稿算一次 Pearson，盖掉按 batch 平均的 ρ。"""
+    if len(sides) < 2:
+        return
+    rows = list(sides.values())
+    r_q = torch.tensor([row[0] for row in rows])
+    r_l = torch.tensor([row[1] for row in rows])
+    length = torch.tensor([row[2] for row in rows])
+    stats["rho_q"] = float(batch_pearson(r_q, length))
+    stats["rho_l"] = float(batch_pearson(r_l, length))
+
+
 @torch.no_grad()
 def eval_pairs_cached(
     rm: DualHeadRewardModel,
@@ -180,6 +206,7 @@ def eval_pairs_cached(
         return {}
     rm.eval()
     stats_rows: List[Dict[str, float]] = []
+    sides: Dict[str, Tuple[float, float, float]] = {}
     for start in range(0, len(pairs), batch):
         chunk = pairs[start : start + batch]
         h_w = _stack_cached(cache, chunk, "chosen", device)
@@ -196,7 +223,12 @@ def eval_pairs_cached(
             lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
         )
         stats_rows.append(stats)
-    return _mean_stats(stats_rows)
+        for i, pair in enumerate(chunk):
+            _remember_side_score(sides, pair["chosen"], rqw[i], rlw[i])
+            _remember_side_score(sides, pair["rejected"], rql[i], rll[i])
+    summary = _mean_stats(stats_rows)
+    write_full_set_rho(summary, sides)
+    return summary
 
 
 def save_rm(
@@ -291,7 +323,7 @@ def train_heads_cached(
         lr=lr,
     )
     if int(batch) < 2:
-        logger.warning("batch=%s 时 Pearson 相关没有定义，长度损失为 0。论文的 L^L 需要 batch ≥ 2。", batch)
+        logger.warning("batch=%s 时同一侧只有一条稿，长度损失为 0。", batch)
     n = len(train_pairs)
     steps_per_epoch = max(1, math.ceil(n / max(1, batch)))
     total_steps = max(1, int(round(float(epochs) * steps_per_epoch)))
@@ -425,6 +457,7 @@ def eval_pairs_tokens(
     rm.head_l.eval()
     set_suffix_train(rm.backbone, n_unfreeze, train=False)
     stats_rows: List[Dict[str, float]] = []
+    sides: Dict[str, Tuple[float, float, float]] = {}
     for start in range(0, len(pairs), max(1, batch)):
         chunk = pairs[start : start + max(1, batch)]
         rqw, rlw, rql, rll = _scores_for_pairs(
@@ -440,7 +473,12 @@ def eval_pairs_tokens(
             lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
         )
         stats_rows.append(stats)
-    return _mean_stats(stats_rows)
+        for i, pair in enumerate(chunk):
+            _remember_side_score(sides, pair["chosen"], rqw[i], rlw[i])
+            _remember_side_score(sides, pair["rejected"], rql[i], rll[i])
+    summary = _mean_stats(stats_rows)
+    write_full_set_rho(summary, sides)
+    return summary
 
 
 def _restore_best(
@@ -497,6 +535,8 @@ def train_unfrozen_suffix(
     best_step = 0
     stale = 0
     best_blob: Optional[Dict[str, Any]] = None
+    if int(batch) < 2:
+        logger.warning("batch=%s 时同一侧只有一条稿，长度损失为 0。", batch)
     logger.info(
         "解开最后 %s 层：头 lr=%s 层 lr=%s 最多 %s 步，%s 步后连续 %s 次留出评估不升就停",
         n_unfreeze, lr, layer_lr, total_steps, min_step, patience_evals,
@@ -607,7 +647,7 @@ def main() -> None:
     p.add_argument("--model", type=str, default="", help="backbone HF 路径；空则读 yaml odin-rm.model")
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--max-length", type=int, default=int(od.get("max-length") or 2048))
-    p.add_argument("--batch", type=int, default=int(od.get("batch-pairs") or 8), help="头训练的 pair batch（缓存 hidden 后）")
+    p.add_argument("--batch", type=int, default=int(od.get("batch-pairs") or 4), help="头训练的 pair batch（缓存 hidden 后）")
     p.add_argument("--encode-batch", type=int, default=1)
     p.add_argument("--epochs", type=float, default=float(od.get("epochs") or 3.0))
     p.add_argument("--lr", type=float, default=float(od.get("lr") or 1e-3))
