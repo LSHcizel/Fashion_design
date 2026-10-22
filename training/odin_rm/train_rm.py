@@ -318,7 +318,7 @@ def train_heads_cached(
     metrics_path: Optional[Path] = None,
 ) -> List[Dict[str, Any]]:
     rng = random.Random(seed)
-    opt = torch.optim.AdamW(
+    opt = AdamWBf16State(
         [p for p in list(rm.head_q.parameters()) + list(rm.head_l.parameters()) if p.requires_grad],
         lr=lr,
     )
@@ -414,6 +414,61 @@ def _token_id_cache(
         cache[key] = list(ids)
     logger.info("tokenized %s completions", len(cache))
     return cache
+
+
+class AdamWBf16State(torch.optim.Optimizer):
+    """AdamW。动量和方差用 bf16 存放，这一步的更新仍在 fp32 里算完再写回。"""
+
+    def __init__(
+        self,
+        params,
+        lr: float = 1e-3,
+        betas: Tuple[float, float] = (0.9, 0.999),
+        eps: float = 1e-8,
+        weight_decay: float = 0.01,
+    ) -> None:
+        super().__init__(params, {"lr": lr, "betas": betas, "eps": eps, "weight_decay": weight_decay})
+
+    @torch.no_grad()
+    def step(self, closure=None):
+        loss = None
+        if closure is not None:
+            with torch.enable_grad():
+                loss = closure()
+        for group in self.param_groups:
+            beta1, beta2 = group["betas"]
+            lr = float(group["lr"])
+            eps = float(group["eps"])
+            weight_decay = float(group["weight_decay"])
+            for param in group["params"]:
+                grad = param.grad
+                if grad is None:
+                    continue
+                if grad.is_sparse:
+                    raise RuntimeError("AdamWBf16State 不支持稀疏梯度")
+                state = self.state[param]
+                if len(state) == 0:
+                    state["step"] = 0
+                    state["exp_avg"] = torch.zeros_like(param, dtype=torch.bfloat16)
+                    state["exp_avg_sq"] = torch.zeros_like(param, dtype=torch.bfloat16)
+                state["step"] += 1
+                step = int(state["step"])
+                exp_avg = state["exp_avg"].float()
+                exp_avg_sq = state["exp_avg_sq"].float()
+                grad_f = grad.detach().float()
+                exp_avg.mul_(beta1).add_(grad_f, alpha=1.0 - beta1)
+                exp_avg_sq.mul_(beta2).addcmul_(grad_f, grad_f, value=1.0 - beta2)
+                state["exp_avg"].copy_(exp_avg)
+                state["exp_avg_sq"].copy_(exp_avg_sq)
+                bias_correction1 = 1.0 - beta1 ** step
+                bias_correction2 = 1.0 - beta2 ** step
+                denom = exp_avg_sq.sqrt().div_(bias_correction2 ** 0.5).add_(eps)
+                updated = param.detach().float()
+                if weight_decay != 0.0:
+                    updated.mul_(1.0 - lr * weight_decay)
+                updated.addcdiv_(exp_avg, denom, value=-(lr / bias_correction1))
+                param.copy_(updated.to(dtype=param.dtype))
+        return loss
 
 
 def _scores_for_pairs(
@@ -518,7 +573,7 @@ def train_unfrozen_suffix(
     rng = random.Random(seed)
     head_params = [p for p in list(rm.head_q.parameters()) + list(rm.head_l.parameters()) if p.requires_grad]
     layer_params = [p for p in rm.backbone.parameters() if p.requires_grad]
-    opt = torch.optim.AdamW(
+    opt = AdamWBf16State(
         [
             {"params": head_params, "lr": lr},
             {"params": layer_params, "lr": layer_lr},
@@ -538,7 +593,7 @@ def train_unfrozen_suffix(
     if int(batch) < 2:
         logger.warning("batch=%s 时同一侧只有一条稿，长度损失为 0。", batch)
     logger.info(
-        "解开最后 %s 层：头 lr=%s 层 lr=%s 最多 %s 步，%s 步后连续 %s 次留出评估不升就停",
+        "解开最后 %s 层：头 lr=%s 层 lr=%s，动量和方差用 bf16 存放。最多 %s 步，%s 步后连续 %s 次留出评估不升就停",
         n_unfreeze, lr, layer_lr, total_steps, min_step, patience_evals,
     )
 
@@ -817,6 +872,7 @@ def main() -> None:
             "best_step": best_info.get("best_step"),
             "best_holdout_acc_q": best_info.get("best_holdout_acc_q"),
             "stopped_early": best_info.get("stopped_early"),
+            "adam_state_dtype": "bf16",
             "history": history[-20:],
         },
     )

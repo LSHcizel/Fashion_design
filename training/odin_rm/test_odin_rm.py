@@ -443,6 +443,27 @@ class SuffixTrainTests(unittest.TestCase):
         self.assertIsNotNone(backbone.model.layers[-1].weight.grad)
         self.assertIsNone(backbone.model.layers[0].weight.grad)
 
+    def test_adamw_stores_moments_in_bf16(self) -> None:
+        import torch
+
+        from training.odin_rm.train_rm import AdamWBf16State
+
+        torch.manual_seed(0)
+        base = torch.randn(16, 8)
+        grad = torch.randn(16, 8)
+        ref = torch.nn.Parameter(base.clone())
+        got = torch.nn.Parameter(base.clone())
+        ref.grad = grad.clone()
+        got.grad = grad.clone()
+        torch.optim.AdamW([ref], lr=1e-2, weight_decay=0.0).step()
+        opt = AdamWBf16State([got], lr=1e-2, weight_decay=0.0)
+        opt.step()
+        state = opt.state[got]
+        self.assertEqual(state["exp_avg"].dtype, torch.bfloat16)
+        self.assertEqual(state["exp_avg_sq"].dtype, torch.bfloat16)
+        self.assertEqual(state["exp_avg"].element_size(), 2)
+        self.assertTrue(torch.allclose(got.detach(), ref.detach(), rtol=1e-5, atol=1e-5))
+
     def test_holdout_watch_stops_only_after_the_minimum_step(self) -> None:
         from training.odin_rm.train_rm import update_holdout_watch
 
