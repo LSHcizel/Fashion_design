@@ -221,7 +221,7 @@ grpo:
     # 24G 上 7B 全参反传会 OOM；训练脚本默认 LoRA r=16。大卡才加 --full-finetune
 
   # ODIN 档 3：只解开基座最后一层，其余冻住，两个线性头一起训。
-  # λ_L=0.1 弱化长度头，λ_gap=10 把 S_fp 分差守在 r_Q。层学习率 1e-5，头学习率 0.001。
+  # λ_L=0.1 弱化长度头，λ_gap=10 把 S_fp 分差守在 r_Q。层学习率和头学习率都是 1e-5。
   # 只训 1 个 epoch。这一轮跑完后连续 15 步看留出 acc_q，没有更优就停。
   # 只把同组 S_fp 分差大于 0.1 的对纳入训练。不要指向 rewriter。
   # python -m training.odin_rm.run_pipeline --samples training/runs/<id>/samples.jsonl --work-dir training/runs/<id>/odin_rm
@@ -238,7 +238,7 @@ grpo:
     min-margin: 0.1
     max-length: 2048
     epochs: 1.0
-    lr: 0.001
+    lr: 1.0e-5
     # 解开最后两层、batch 4 会在 24G 上 OOM。现只解开最后一层，batch 仍用 4。
     batch-pairs: 4
 

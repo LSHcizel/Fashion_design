@@ -259,6 +259,26 @@ class OdinLossTests(unittest.TestCase):
         self.assertTrue(torch.all(q_wide > 0).item())
         self.assertTrue(torch.all(l_wide > 0).item())
 
+    def test_negative_logit_still_moves_the_score(self) -> None:
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch not installed")
+        from training.odin_rm.modeling import DualHeadRewardModel
+
+        class Tiny(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.config = type("c", (), {"hidden_size": 4})()
+
+        rm = DualHeadRewardModel(Tiny(), hidden_size=4)
+        with torch.no_grad():
+            rm.head_q.bias.fill_(-20.0)
+        score, _ = rm.scores_from_hidden(torch.zeros(2, 4))
+        self.assertTrue(torch.all(score > 0).item())
+        score.sum().backward()
+        self.assertGreater(float(rm.head_q.bias.grad.abs().sum()), 0.5)
+
     def test_ranking_and_gap_stay_on_quality_head(self) -> None:
         try:
             import torch

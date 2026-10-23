@@ -2,8 +2,9 @@
 双头奖励模型（ODIN）：共用表征 + 两个线性头 r_Q / r_L。
 
 排序和分差都落在 r_Q 上。长度项是同一侧样本的两两 softplus，λ_L 弱于分差项。
-两个头都做 weight normalization，输出再过 softplus，所以 r_Q 和 r_L 都大于 0。
-L(y) 是回复 token 数。策略训练只取 r_Q。分差损失不看零点，没有这一步两个头会整段漂成负数。
+两个头都做 weight normalization，线性输出取绝对值，所以 r_Q 和 r_L 都 ≥ 0。
+预激活为负时梯度幅度仍是 1，分差不会停在 0 出不来。
+L(y) 是回复 token 数。策略训练只取 r_Q。
 """
 
 from __future__ import annotations
@@ -78,6 +79,11 @@ def length_correlation_loss(
     margin_q = (q[ii] - q[jj])[usable] * sign
     loss = F.softplus(-margin_l).mean() + F.softplus(margin_q).mean()
     return loss.to(dtype=r_q.dtype), rho_q, rho_l
+
+
+def positive_score(raw: torch.Tensor) -> torch.Tensor:
+    """线性头取绝对值。得分 ≥ 0；负半轴梯度为 -1，跑进负数后仍能把分差拉回来。"""
+    return raw.abs()
 
 
 def _projection_weight(head: nn.Module) -> torch.Tensor:
@@ -220,8 +226,8 @@ class DualHeadRewardModel(nn.Module):
 
     def scores_from_hidden(self, hidden: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         h = hidden.float()
-        r_q = F.softplus(self.head_q(h).squeeze(-1))
-        r_l = F.softplus(self.head_l(h).squeeze(-1))
+        r_q = positive_score(self.head_q(h).squeeze(-1))
+        r_l = positive_score(self.head_l(h).squeeze(-1))
         return r_q, r_l
 
     def forward(

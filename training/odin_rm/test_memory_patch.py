@@ -27,8 +27,8 @@ class Tiny(nn.Module):
         self.head_l = m._weight_norm_linear(8)
     def forward(self, ids, mask):
         h = m.last_token_hidden(self.suffix(self.embed(ids)), mask)
-        return (torch.nn.functional.softplus(self.head_q(h).squeeze(-1)),
-                torch.nn.functional.softplus(self.head_l(h).squeeze(-1)))
+        return (m.positive_score(self.head_q(h).squeeze(-1)),
+                m.positive_score(self.head_l(h).squeeze(-1)))
 
 ROWS = [[1,2,3], [2,4], [5,6,7,8], [9], [10,11], [12,13,14], [15], [16,17,18,19]]
 def encode(pairs):

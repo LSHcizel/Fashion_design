@@ -78,7 +78,7 @@ def main() -> None:
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--max-length", type=int, default=2048)
     p.add_argument("--rm-epochs", type=float, default=1.0)
-    p.add_argument("--rm-lr", type=float, default=1e-3)
+    p.add_argument("--rm-lr", type=float, default=1e-5)
     p.add_argument("--rm-batch", type=int, default=4)
     p.add_argument("--rm-micro-pairs", type=int, default=0, help="每次前向的偏好对数；>0 开启分块检查点")
     p.add_argument("--rm-unfreeze-layers", type=int, default=None, help="显式覆盖 YAML 中的解冻层数")
