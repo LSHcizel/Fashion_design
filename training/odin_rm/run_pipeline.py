@@ -77,9 +77,11 @@ def main() -> None:
     p.add_argument("--model", type=str, default="", help="RM backbone；空则 yaml odin-rm.model")
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--max-length", type=int, default=2048)
-    p.add_argument("--rm-epochs", type=float, default=3.0)
+    p.add_argument("--rm-epochs", type=float, default=1.0)
     p.add_argument("--rm-lr", type=float, default=1e-3)
     p.add_argument("--rm-batch", type=int, default=4)
+    p.add_argument("--rm-micro-pairs", type=int, default=0, help="每次前向的偏好对数；>0 开启分块检查点")
+    p.add_argument("--rm-unfreeze-layers", type=int, default=None, help="显式覆盖 YAML 中的解冻层数")
     p.add_argument("--encode-batch", type=int, default=1)
     p.add_argument("--score-batch", type=int, default=1)
     p.add_argument("--lambda-l", type=float, default=None, help="空则用 yaml；长度相关权重，默认 0.1")
@@ -160,6 +162,8 @@ def main() -> None:
             str(args.rm_lr),
             "--batch",
             str(args.rm_batch),
+            "--micro-pairs",
+            str(args.rm_micro_pairs),
             "--encode-batch",
             str(args.encode_batch),
             "--holdout-frac",
@@ -173,7 +177,7 @@ def main() -> None:
             "--min-margin",
             str(min_margin),
             "--unfreeze-layers",
-            str(int(od.get("unfreeze-layers") if od.get("unfreeze-layers") is not None else 2)),
+            str(args.rm_unfreeze_layers if args.rm_unfreeze_layers is not None else int(od.get("unfreeze-layers") if od.get("unfreeze-layers") is not None else 1)),
             "--layer-lr",
             str(float(od.get("layer-lr") if od.get("layer-lr") is not None else 1e-5)),
             "--patience-evals",

@@ -34,13 +34,14 @@ from .modeling import (
     tuned_layer_state,
     unfreeze_last_layers,
 )
+from .memory import checkpointed_pair_scores
 from .pairs import build_preference_pairs, pair_in_rm_training
 
 logger = logging.getLogger(__name__)
 
 HEADS_NAME = "odin_heads.pt"
 RM_CONFIG_NAME = "odin_rm_config.json"
-DEFAULT_UNFREEZE_LAYERS = 2
+DEFAULT_UNFREEZE_LAYERS = 1
 DEFAULT_LAYER_LR = 1e-5
 DEFAULT_PATIENCE_EVALS = 15
 DEFAULT_MIN_EPOCHS = 1.0
@@ -339,6 +340,7 @@ def train_heads_cached(
                 break
             idx = order[start : start + max(1, batch)]
             chunk = [train_pairs[i] for i in idx]
+            opt.zero_grad(set_to_none=True)
             h_w = _stack_cached(cache, chunk, "chosen", device)
             h_l = _stack_cached(cache, chunk, "rejected", device)
             rqw, rlw = rm.scores_from_hidden(h_w)
@@ -352,9 +354,10 @@ def train_heads_cached(
                 head_q=rm.head_q, head_l=rm.head_l,
                 lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
             )
-            opt.zero_grad(set_to_none=True)
             loss.backward()
             opt.step()
+            opt.zero_grad(set_to_none=True)
+            del loss, rqw, rlw, rql, rll
             step += 1
             if step % max(1, log_every) == 0 or step == 1 or step == total_steps:
                 hold = eval_pairs_cached(
@@ -379,6 +382,22 @@ def train_heads_cached(
                 rm.head_q.train()
                 rm.head_l.train()
     return history
+
+
+def rm_step_budget(
+    n_pairs: int,
+    batch: int,
+    epochs: float,
+    min_epochs: float,
+    patience_steps: int,
+) -> Tuple[int, int, int]:
+    """返回 (一轮步数, 最早可停步, 总步数)。总步数 = 轮数上限 + 轮后的连续观察步。"""
+    epoch_steps = max(1, math.ceil(int(n_pairs) / max(1, int(batch))))
+    scheduled = max(1, int(round(float(epochs) * epoch_steps)))
+    min_step = max(1, int(round(float(min_epochs) * epoch_steps)))
+    min_step = min(min_step, scheduled)
+    total = scheduled + max(0, int(patience_steps))
+    return scheduled, min_step, total
 
 
 def update_holdout_watch(
@@ -479,16 +498,24 @@ def _scores_for_pairs(
     device: torch.device,
     pad_id: int,
     n_unfreeze: int,
+    micro_pairs: int = 0,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-    rows: List[List[int]] = []
-    for pair in pairs:
-        rows.append(token_cache[_side_key(pair["chosen"])])
-        rows.append(token_cache[_side_key(pair["rejected"])])
-    input_ids, attn = _pad_ids(rows, pad_id)
-    hidden = last_token_from_inner(
-        rm, input_ids.to(device), attn.to(device), n_unfreeze,
+    def score_chunk(chunk):
+        rows = []
+        for pair in chunk:
+            rows.append(token_cache[_side_key(pair["chosen"])])
+            rows.append(token_cache[_side_key(pair["rejected"])])
+        ids, mask = _pad_ids(rows, pad_id)
+        return ids.to(device), mask.to(device)
+
+    def forward_scores(ids, mask):
+        hidden = last_token_from_inner(rm, ids, mask, n_unfreeze)
+        return rm.scores_from_hidden(hidden)
+
+    # 每块走检查点，损失仍用这一整批的全部分数，包含跨块的长度比对。
+    r_q, r_l = checkpointed_pair_scores(
+        pairs, score_chunk, forward_scores, micro_pairs=micro_pairs,
     )
-    r_q, r_l = rm.scores_from_hidden(hidden)
     return r_q[0::2], r_l[0::2], r_q[1::2], r_l[1::2]
 
 
@@ -505,6 +532,7 @@ def eval_pairs_tokens(
     lambda_o: float,
     lambda_gap: float,
     batch: int,
+    micro_pairs: int = 0,
 ) -> Dict[str, float]:
     if not pairs:
         return {}
@@ -517,6 +545,7 @@ def eval_pairs_tokens(
         chunk = pairs[start : start + max(1, batch)]
         rqw, rlw, rql, rll = _scores_for_pairs(
             rm, token_cache, chunk, device=device, pad_id=pad_id, n_unfreeze=n_unfreeze,
+            micro_pairs=micro_pairs,
         )
         _, stats = odin_rm_loss(
             rqw, rlw, rql, rll,
@@ -568,6 +597,7 @@ def train_unfrozen_suffix(
     metrics_path: Optional[Path] = None,
     checkpoint_dir: Optional[Path] = None,
     backbone_path: str = "",
+    micro_pairs: int = 0,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """最后 n 层和两个头一起训。留出 acc_q 变好就落盘，耐心用尽则停并恢复最好的一次。"""
     rng = random.Random(seed)
@@ -581,9 +611,9 @@ def train_unfrozen_suffix(
         lr=lr,
     )
     n = len(train_pairs)
-    steps_per_epoch = max(1, math.ceil(n / max(1, batch)))
-    total_steps = max(1, int(round(float(epochs) * steps_per_epoch)))
-    min_step = max(1, int(round(float(min_epochs) * steps_per_epoch)))
+    scheduled, min_step, total_steps = rm_step_budget(
+        n, batch, epochs, min_epochs, patience_evals,
+    )
     history: List[Dict[str, Any]] = []
     step = 0
     best_acc: Optional[float] = None
@@ -593,8 +623,9 @@ def train_unfrozen_suffix(
     if int(batch) < 2:
         logger.warning("batch=%s 时同一侧只有一条稿，长度损失为 0。", batch)
     logger.info(
-        "解开最后 %s 层：头 lr=%s 层 lr=%s，动量和方差用 bf16 存放。最多 %s 步，%s 步后连续 %s 次留出评估不升就停",
-        n_unfreeze, lr, layer_lr, total_steps, min_step, patience_evals,
+        "解开最后 %s 层：头 lr=%s 层 lr=%s，动量和方差用 bf16 存放。"
+        "先跑满 %s 步（%s 个 epoch），之后连续 %s 步留出 acc_q 不升就停，最多 %s 步",
+        n_unfreeze, lr, layer_lr, scheduled, epochs, patience_evals, total_steps,
     )
 
     def _remember(acc: float) -> None:
@@ -630,8 +661,10 @@ def train_unfrozen_suffix(
             rm.head_l.train()
             idx = order[start : start + max(1, batch)]
             chunk = [train_pairs[i] for i in idx]
+            opt.zero_grad(set_to_none=True)
             rqw, rlw, rql, rll = _scores_for_pairs(
                 rm, token_cache, chunk, device=device, pad_id=pad_id, n_unfreeze=n_unfreeze,
+                micro_pairs=micro_pairs,
             )
             loss, stats = odin_rm_loss(
                 rqw, rlw, rql, rll,
@@ -642,22 +675,31 @@ def train_unfrozen_suffix(
                 head_q=rm.head_q, head_l=rm.head_l,
                 lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
             )
-            opt.zero_grad(set_to_none=True)
             loss.backward()
             opt.step()
+            opt.zero_grad(set_to_none=True)
+            del loss, rqw, rlw, rql, rll
             step += 1
-            if step % max(1, log_every) != 0 and step != 1 and step != total_steps:
+            in_tail = step > scheduled
+            on_schedule = (
+                step % max(1, log_every) == 0 or step == 1 or step == scheduled or step == total_steps
+            )
+            if not on_schedule and not in_tail:
                 continue
             hold = eval_pairs_tokens(
                 rm, token_cache, hold_pairs,
                 device=device, pad_id=pad_id, n_unfreeze=n_unfreeze,
                 lambda_l=lambda_l, lambda_o=lambda_o, lambda_gap=lambda_gap,
-                batch=max(1, batch),
+                batch=max(1, batch), micro_pairs=micro_pairs,
             )
             acc = hold.get("acc_q")
             best_acc, stale, stop, improved = update_holdout_watch(
                 acc, best_acc, stale, step=step, min_step=min_step, patience=patience_evals,
             )
+            if step <= scheduled:
+                stop = False
+            if step == scheduled:
+                stale = 0
             if improved and acc is not None:
                 best_step = step
                 _remember(float(acc))
@@ -680,7 +722,7 @@ def train_unfrozen_suffix(
             logger.info("step %s train=%s holdout=%s", step, stats, hold)
             if stop:
                 logger.info(
-                    "留出 acc_q 连续 %s 次没有超过 %.4f（step %s），停在 step %s",
+                    "留出 acc_q 连续 %s 步没有超过 %.4f（step %s），停在 step %s",
                     stale, float(best_acc or 0.0), best_step, step,
                 )
                 if best_blob is not None:
@@ -703,8 +745,9 @@ def main() -> None:
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--max-length", type=int, default=int(od.get("max-length") or 2048))
     p.add_argument("--batch", type=int, default=int(od.get("batch-pairs") or 4), help="头训练的 pair batch（缓存 hidden 后）")
+    p.add_argument("--micro-pairs", type=int, default=0, help="0: 原整批前向；>0: 每块偏好对数，检查点重计算并保留整批损失")
     p.add_argument("--encode-batch", type=int, default=1)
-    p.add_argument("--epochs", type=float, default=float(od.get("epochs") or 3.0))
+    p.add_argument("--epochs", type=float, default=float(od.get("epochs") or 1.0))
     p.add_argument("--lr", type=float, default=float(od.get("lr") or 1e-3))
     p.add_argument("--lambda-l", type=float, default=float(od.get("lambda-l") if od.get("lambda-l") is not None else LAMBDA_L))
     p.add_argument("--lambda-o", type=float, default=float(od.get("lambda-o") if od.get("lambda-o") is not None else LAMBDA_O))
@@ -735,13 +778,13 @@ def main() -> None:
         "--patience-evals",
         type=int,
         default=int(od.get("patience-evals") if od.get("patience-evals") is not None else DEFAULT_PATIENCE_EVALS),
-        help="留出 acc_q 连续这么多次评估没有提升就停。0 表示只在结束时恢复最好的一次",
+        help="一轮跑完后，留出 acc_q 连续这么多步没有更优就停。0 表示轮后不再加观察步",
     )
     p.add_argument(
         "--min-epochs",
         type=float,
         default=float(od.get("min-epochs") if od.get("min-epochs") is not None else DEFAULT_MIN_EPOCHS),
-        help="这么多 epoch 之前不因耐心提前停",
+        help="这么多 epoch 之前不因耐心提前停。与 --epochs 相同则先跑满这一轮",
     )
     p.add_argument(
         "--unfreeze-backbone",
@@ -749,6 +792,8 @@ def main() -> None:
         help="全参微调 backbone（显存大；本脚本不接这条路径）",
     )
     args = p.parse_args()
+    if args.micro_pairs < 0:
+        p.error("--micro-pairs must be >= 0")
 
     if args.pairs is None and args.samples is None:
         raise SystemExit("需要 --pairs 或 --samples")
@@ -796,7 +841,7 @@ def main() -> None:
     rm.to(device)
     if args.unfreeze_backbone:
         raise SystemExit(
-            "全参反传尚未接到本脚本主循环。用 --unfreeze-layers 2 只解开最后两层。"
+            "全参反传尚未接到本脚本主循环。用 --unfreeze-layers 1 只解开最后一层。"
         )
     n_unfreeze = max(0, int(args.unfreeze_layers))
     opened = unfreeze_last_layers(rm.backbone, n_unfreeze)
@@ -824,12 +869,13 @@ def main() -> None:
             patience_evals=args.patience_evals if hold_pairs else 0,
             min_epochs=args.min_epochs, seed=args.seed,
             metrics_path=metrics_jsonl, checkpoint_dir=args.out, backbone_path=model_id,
+            micro_pairs=args.micro_pairs,
         )
         hold_final = eval_pairs_tokens(
             rm, token_cache, hold_pairs or train_pairs[: min(64, len(train_pairs))],
             device=device, pad_id=int(tokenizer.pad_token_id or 0), n_unfreeze=opened,
             lambda_l=args.lambda_l, lambda_o=args.lambda_o, lambda_gap=args.lambda_gap,
-            batch=args.batch,
+            batch=args.batch, micro_pairs=args.micro_pairs,
         )
     else:
         rm.freeze_backbone()
@@ -873,6 +919,7 @@ def main() -> None:
             "best_holdout_acc_q": best_info.get("best_holdout_acc_q"),
             "stopped_early": best_info.get("stopped_early"),
             "adam_state_dtype": "bf16",
+            "micro_pairs": args.micro_pairs,
             "history": history[-20:],
         },
     )

@@ -1,4 +1,8 @@
-"""从 K 路 samples.jsonl 造同组比较对（老师 = 该条改写自己的裁判 S_fp）。"""
+"""从 K 路 samples.jsonl 造同组比较对（老师 = 该条自己的裁判 S_fp）。
+
+改写之间可以成对，原文和改写也可以成对。原文在样本里标成 baseline_reference，
+不进 SFT/GRPO，但 RM 仍用它和同组改写比 S_fp。
+"""
 
 from __future__ import annotations
 
@@ -64,18 +68,45 @@ def pairs_from_group(
     return _pairs_within_one_group(next(iter(buckets.values())), min_margin=min_margin)
 
 
+def _is_baseline_original(rec: Dict[str, Any]) -> bool:
+    try:
+        if int(rec.get("candidate_index", 0)) < 0:
+            return True
+    except (TypeError, ValueError):
+        pass
+    meta = rec.get("parallel_sampling") or {}
+    return bool(meta.get("injected_original") or meta.get("reference_only"))
+
+
+def eligible_for_rm_pair(rec: Dict[str, Any]) -> bool:
+    """改写看 include_in_training。原文只因对照基线被排除时，仍可与改写成对。"""
+    if include_in_training(rec):
+        return True
+    if not _is_baseline_original(rec):
+        return False
+    tf = rec.get("training_filter") or {}
+    reasons = set(tf.get("exclude_reasons") or [])
+    if reasons - {"baseline_reference"}:
+        return False
+    if tf.get("rewrite_error") or (rec.get("parallel_sampling") or {}).get("rewrite_error"):
+        return False
+    if not str(rec.get("completion") or "").strip():
+        return False
+    return teacher_score(rec) is not None
+
+
 def _pairs_within_one_group(
     records: Sequence[Dict[str, Any]],
     *,
     min_margin: float,
 ) -> List[Dict[str, Any]]:
-    """同一 group 内两两比较。S_fp 分差不大于 min_margin 的对丢弃。高分一侧是 chosen。"""
+    """同一 group 内两两比较，含原文与改写。S_fp 分差不大于 min_margin 的对丢弃。高分一侧是 chosen。"""
     group_ids = {str(rec.get("group_id") or "") for rec in records}
     if len(group_ids) != 1:
         raise ValueError("比较对不能跨 group_id")
     scored: List[Tuple[float, Dict[str, Any]]] = []
     for rec in records:
-        if not include_in_training(rec):
+        if not eligible_for_rm_pair(rec):
             continue
         s = teacher_score(rec)
         if s is None:

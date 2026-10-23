@@ -158,6 +158,10 @@ def odin_rm_loss(
         "rho_l_lose": float(rho_l_l.detach()),
         "acc_sum": acc_sum,
         "acc_q": acc_q,
+        "q_min": float(torch.cat((q_w, q_l)).detach().min()),
+        "q_max": float(torch.cat((q_w, q_l)).detach().max()),
+        "q_std": float(torch.cat((q_w, q_l)).detach().float().std(unbiased=False)),
+        "q_gap_abs_max": float(gap_q.detach().abs().max()),
     }
     return total, stats
 
@@ -191,12 +195,21 @@ class DualHeadRewardModel(nn.Module):
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
     ) -> torch.Tensor:
-        out = self.backbone(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            output_hidden_states=True,
-            use_cache=False,
-        )
+        # 有 decoder 栈时只走 inner，不算出词表 logits，也不把每一层 hidden 都留下来。
+        try:
+            inner, _, _ = transformer_stack(self.backbone)
+        except RuntimeError:
+            inner = None
+        if inner is not None:
+            out = inner(
+                input_ids=input_ids, attention_mask=attention_mask,
+                output_hidden_states=False, output_attentions=False, use_cache=False,
+            )
+        else:
+            out = self.backbone(
+                input_ids=input_ids, attention_mask=attention_mask,
+                output_hidden_states=True, use_cache=False,
+            )
         hidden = getattr(out, "last_hidden_state", None)
         if hidden is None:
             states = getattr(out, "hidden_states", None)
@@ -349,6 +362,8 @@ def last_token_from_inner(
         out = inner(
             input_ids=input_ids,
             attention_mask=attention_mask,
+            output_hidden_states=False,
+            output_attentions=False,
             use_cache=False,
         )
     hidden = getattr(out, "last_hidden_state", None)

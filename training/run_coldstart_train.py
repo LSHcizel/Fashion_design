@@ -67,8 +67,10 @@ def main() -> None:
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--max-length", type=int, default=2048)
     p.add_argument("--score-batch", type=int, default=1)
-    p.add_argument("--rm-epochs", type=float, default=3.0)
+    p.add_argument("--rm-epochs", type=float, default=1.0)
     p.add_argument("--rm-batch", type=int, default=4)
+    p.add_argument("--rm-micro-pairs", type=int, default=0, help="每次前向的偏好对数；>0 开启分块检查点")
+    p.add_argument("--rm-unfreeze-layers", type=int, default=None, help="显式覆盖 YAML 中的解冻层数")
     p.add_argument("--batch", type=int, default=1)
     p.add_argument("--grad-accum", type=int, default=8)
     p.add_argument("--grpo-rounds", type=int, default=None)
@@ -152,7 +154,11 @@ def main() -> None:
             str(args.rm_epochs),
             "--rm-batch",
             str(args.rm_batch),
+            "--rm-micro-pairs",
+            str(args.rm_micro_pairs),
         ]
+        if args.rm_unfreeze_layers is not None:
+            odin_cmd.extend(["--rm-unfreeze-layers", str(args.rm_unfreeze_layers)])
         logger.info("第 2 步：双头 RM → %s", odin_work)
         _run(odin_cmd, dry_run=args.dry_run)
         if not args.dry_run and not (phase_a.is_file() and phase_b.is_file()):

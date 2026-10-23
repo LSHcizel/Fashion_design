@@ -92,6 +92,50 @@ class PairBuildingTests(unittest.TestCase):
         self.assertEqual(opened[0]["pair_kind"], "score")
         self.assertEqual(opened[0]["chosen"]["candidate_index"], 0)
 
+    def _original(self, gid: str, score: float, text: str = "the original draft") -> dict:
+        rec = _rec(gid, -1, score, text)
+        rec["training_filter"] = {
+            "include_in_training": False,
+            "exclude_reasons": ["baseline_reference"],
+        }
+        rec["parallel_sampling"] = {
+            "injected_original": True,
+            "reference_only": True,
+            "dedupe_kept": True,
+        }
+        return rec
+
+    def test_original_and_rewrite_form_a_pair(self) -> None:
+        original = self._original("g", 0.40)
+        high = _rec("g", 0, 0.90, "rewritten high")
+        close = _rec("g", 1, 0.45, "rewritten close")
+        pairs = pairs_from_group([original, high, close])
+        sides = {
+            (p["chosen"]["candidate_index"], p["rejected"]["candidate_index"])
+            for p in pairs
+        }
+        self.assertEqual(sides, {(0, -1), (0, 1)})
+        original_pair = next(p for p in pairs if -1 in (
+            p["chosen"]["candidate_index"], p["rejected"]["candidate_index"],
+        ))
+        self.assertEqual(original_pair["chosen"]["candidate_index"], 0)
+        self.assertEqual(original_pair["rejected"]["candidate_index"], -1)
+        self.assertGreater(original_pair["teacher_margin"], 0.1)
+
+    def test_original_can_be_the_higher_scoring_side(self) -> None:
+        original = self._original("g", 0.80)
+        low = _rec("g", 0, 0.20, "worse rewrite")
+        pairs = pairs_from_group([original, low])
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual(pairs[0]["chosen"]["candidate_index"], -1)
+        self.assertEqual(pairs[0]["rejected"]["candidate_index"], 0)
+
+    def test_original_with_another_exclude_reason_stays_out(self) -> None:
+        original = self._original("g", 0.80)
+        original["training_filter"]["exclude_reasons"].append("empty_completion")
+        low = _rec("g", 0, 0.20, "worse rewrite")
+        self.assertEqual(pairs_from_group([original, low]), [])
+
 
 class RewardWritebackTests(unittest.TestCase):
     def test_r_q_becomes_grpo_scalar(self) -> None:
@@ -420,7 +464,7 @@ class SuffixTrainTests(unittest.TestCase):
                 self.layers = nn.ModuleList([nn.Linear(4, 4) for _ in range(4)])
                 self.norm = nn.Identity()
 
-            def forward(self, input_ids=None, attention_mask=None, use_cache=False):
+            def forward(self, input_ids=None, attention_mask=None, use_cache=False, **kwargs):
                 hidden = input_ids.float().unsqueeze(-1).expand(-1, -1, 4).contiguous()
                 for layer in self.layers:
                     hidden = layer(hidden)
@@ -463,6 +507,14 @@ class SuffixTrainTests(unittest.TestCase):
         self.assertEqual(state["exp_avg_sq"].dtype, torch.bfloat16)
         self.assertEqual(state["exp_avg"].element_size(), 2)
         self.assertTrue(torch.allclose(got.detach(), ref.detach(), rtol=1e-5, atol=1e-5))
+
+    def test_one_epoch_then_fifteen_step_watch(self) -> None:
+        from training.odin_rm.train_rm import rm_step_budget
+
+        scheduled, min_step, total = rm_step_budget(11324, 4, 1.0, 1.0, 15)
+        self.assertEqual(scheduled, 2831)
+        self.assertEqual(min_step, 2831)
+        self.assertEqual(total, 2846)
 
     def test_holdout_watch_stops_only_after_the_minimum_step(self) -> None:
         from training.odin_rm.train_rm import update_holdout_watch

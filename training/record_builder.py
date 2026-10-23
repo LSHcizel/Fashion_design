@@ -153,6 +153,7 @@ def build_training_record(
         training_filter["include_in_training"] = False
         training_filter["exclude_reasons"].append("rewrite_exception")
     if (parallel_meta or {}).get("reference_only"):
+        # SFT/GRPO 不把原文当待模仿稿。RM 组对时仍会把它和同组改写配成偏好对。
         training_filter["include_in_training"] = False
         training_filter["exclude_reasons"].append("baseline_reference")
     if (parallel_meta or {}).get("low_meaningful") or is_low_meaningful_completion(completion_text):
