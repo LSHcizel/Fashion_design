@@ -126,6 +126,7 @@ class FashionWorkflow:
         num_looks=1,
         text_only_mode: bool = False,
         text_evaluator_config: TextEvaluatorConfig | None = None,
+        skip_description_rewrite: bool = False,
     ):
         """
         初始化时尚设计工作流
@@ -153,6 +154,7 @@ class FashionWorkflow:
         self.num_chapters = num_chapters
         self.num_looks = num_looks
         self.text_only_mode = bool(text_only_mode)
+        self.skip_description_rewrite = bool(skip_description_rewrite)
         self.model_backbone = agent_model_backbone
         self.notes = notes
         self.human_in_loop_flag = human_in_loop_flag if human_in_loop_flag else {
@@ -295,6 +297,8 @@ class FashionWorkflow:
         # 向后兼容：旧的 pkl 可能没有新增字段/Agent，这里补齐，避免后续调用报错
         if not hasattr(workflow, "text_only_mode"):
             workflow.text_only_mode = False
+        if not hasattr(workflow, "skip_description_rewrite"):
+            workflow.skip_description_rewrite = False
         if not hasattr(workflow, "_discarded_sub_themes"):
             workflow._discarded_sub_themes = []
         if not hasattr(workflow, "brand"):
@@ -1088,6 +1092,7 @@ class FashionWorkflow:
                     look_desc = LookDescriptionAgent._strip_key_elements_section(
                         extract_prompt(resp, "LOOK_DESCRIPTION")
                     )
+                    # 评分前的品牌调性改写。淘汰重生成这条路径不再做质量改写。
                     look_desc = self._apply_brand_tone_rewrite(look_desc)
                     self.look_stylist.look_descriptions.append(look_desc)
                     
@@ -1769,7 +1774,7 @@ class FashionWorkflow:
         result["quality_axis_score"] = (eval_result.get("scores") or {}).get("quality_score", {}).get("penalized_score")
 
     def _apply_brand_tone_rewrite(self, description: str) -> str:
-        """第二改写器：已生成的 description，在确切品牌和主题下按调性局部改写。"""
+        """评分前的品牌调性改写。不读分数；评分和质量改写都使用返回的这段。"""
         brand = str(getattr(self, "brand", None) or "").strip()
         theme = str(
             getattr(self, "_current_sub_theme_name", None)
@@ -1777,6 +1782,8 @@ class FashionWorkflow:
             or ""
         ).strip()
         text = str(description or "").strip()
+        if getattr(self, "skip_description_rewrite", False):
+            return description
         if not brand or not theme or not text:
             return description
         try:
@@ -1869,7 +1876,7 @@ class FashionWorkflow:
             return
 
         if self.verbose:
-            print(f"  [TextEval] Look {look_number} gates failed; K-rewrite via rewriter-llm ...")
+            print(f"  [TextEval] Look {look_number} gates failed; quality rewrite via rewriter-llm ...")
         gate_config = self._text_gate_config()
         try:
             evaluator = build_parallel_k_evaluator()
@@ -1897,12 +1904,6 @@ class FashionWorkflow:
             candidates=parallel.get("candidates") or [],
             penalty_gate_max=gate_config["penalty_gate_max"],
         )
-        temps = [
-            c.get("temperature")
-            for c in (parallel.get("candidates") or [])
-            if c.get("dedupe_kept") is not False
-        ]
-        result["k_rewrite_temperatures"] = temps
         if chosen is None:
             if self.verbose:
                 print(
@@ -1972,9 +1973,9 @@ class FashionWorkflow:
         对单个 look 描述执行文本评判（双门限与 spec 中评分准则）。
 
         1. evaluator 未启用 → 透传
-        2. 评原文；双门限均通过 → 保留原文本
-        3. 未通过且 ``keep_on_gate_fail`` → 保留原文，不改写，仍纳入本章
-        4. 未通过且 ``rewrite_on_gate_fail`` → 8001 第一轮 K 路改写；总分高于原文且惩罚不超过门限的候选都可采纳，取得分最高的一条并回写
+        2. 评品牌调性改写后的文本；双门限均通过 → 保留该文本
+        3. 未通过且 ``keep_on_gate_fail`` → 保留该文本，不做质量改写，仍纳入本章
+        4. 未通过且 ``rewrite_on_gate_fail`` → 按这次评分做 K 路质量改写；总分高于该文本且惩罚不超过门限的候选都可采纳，取得分最高的一条并回写
         5. 没有这样的候选，或改写器不可用 → 不回写。该 look 不纳入本章；同章 look 都不被采纳时才废弃子主题
         """
         cfg = self.evaluator_config
@@ -2143,6 +2144,7 @@ class FashionWorkflow:
                     look_desc = LookDescriptionAgent._strip_key_elements_section(
                         extract_prompt(resp, "LOOK_DESCRIPTION")
                     )
+                    # 第一轮：品牌调性改写。随后评分，门限不过再做基于评分的质量改写。
                     look_desc = self._apply_brand_tone_rewrite(look_desc)
                     look_descriptions.append(look_desc)
                     self.look_stylist.look_descriptions.append(look_desc)
@@ -2277,6 +2279,7 @@ class FashionWorkflow:
                     look_desc = LookDescriptionAgent._strip_key_elements_section(
                         extract_prompt(resp, "LOOK_DESCRIPTION")
                     )
+                    # 评分前的品牌调性改写。这条旧路径不接质量改写。
                     look_desc = self._apply_brand_tone_rewrite(look_desc)
                     look_descriptions.append(look_desc)
                     self.look_stylist.look_descriptions.append(look_desc)

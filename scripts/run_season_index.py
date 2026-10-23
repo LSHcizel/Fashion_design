@@ -175,6 +175,7 @@ def run_one(
     index_root: Path,
     num_chapters: int,
     num_looks: int,
+    skip_description_rewrite: bool = False,
 ) -> Path:
     # 内容只来自 index 及其品牌目录，不使用 config 的 brand / theme / description。
     brand_dir = index_root / str(row["dir"])
@@ -194,6 +195,9 @@ def run_one(
         f"\n=== {house} | {season} | chapters={num_chapters} looks={num_looks} ===\n"
         f"输出: {workflow_dir}"
     )
+    evaluator = _evaluator(args)
+    if skip_description_rewrite:
+        evaluator.enabled = False
     workflow = FashionWorkflow(
         design_target_prompt=design_target,
         theme=theme,
@@ -217,7 +221,8 @@ def run_one(
         num_chapters=num_chapters,
         num_looks=num_looks,
         text_only_mode=True,
-        text_evaluator_config=_evaluator(args),
+        text_evaluator_config=evaluator,
+        skip_description_rewrite=skip_description_rewrite,
     )
     workflow.perform_research()
     return Path(workflow_dir)
