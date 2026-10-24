@@ -1745,19 +1745,12 @@ class FashionWorkflow:
 
     def _fill_result_from_eval(self, result: dict, eval_result: dict) -> None:
         ts = float(eval_result.get("total_score", 0.0) or 0.0)
-        qs = float(
-            (eval_result.get("scores") or {})
-            .get("quality_score", {})
-            .get("penalized_score", 0.0)
-            or 0.0
-        )
-        pt = float(
-            (eval_result.get("scores") or {})
-            .get("quality_score", {})
-            .get("penalties", {})
-            .get("total_penalty", 0.0)
-            or 0.0
-        )
+        qual = (eval_result.get("scores") or {}).get("quality_score") or {}
+        qs = float(qual.get("penalized_score", 0.0) or 0.0)
+        positive = qual.get("positive_score")
+        if positive is None:
+            positive = qual.get("base_score", qs)
+        pt = float((qual.get("penalties") or {}).get("total_penalty", 0.0) or 0.0)
         gates = eval_result.get("gates") or {}
         both_passed = bool(gates.get("both_passed")) or (
             bool((gates.get("score_gate") or {}).get("passed", False))
@@ -1765,6 +1758,9 @@ class FashionWorkflow:
         )
         result["total_score"] = ts
         result["penalized_score"] = qs
+        result["quality_positive_score"] = float(positive or 0.0)
+        result["quality_negative_k"] = int(qual.get("negative_k") or 0)
+        result["quality_negative_slots"] = list(qual.get("negative_slots") or [])
         result["total_penalty"] = pt
         result["both_gates_passed"] = both_passed
         result["passed"] = both_passed
@@ -1809,9 +1805,7 @@ class FashionWorkflow:
     ) -> str:
         from plugins.parallel_k_rewrite.k_candidate_generator import (
             REWRITE_BRAND_LOGO_LOCK,
-            REWRITE_ELEMENT_RECONSTRUCTION,
             REWRITE_STYLE_CONCEPT_LOCK,
-            REWRITE_WHOLE_LOOK_SCOPE,
             format_exposed_repair_brief,
         )
 
@@ -1823,16 +1817,13 @@ class FashionWorkflow:
         if sub:
             bits.append(f"Chapter: {sub}")
         bits.append(
-            "Extract theme and design concept from the look description, keep them consistent, "
-            "then you may change overall clothing (color, pairing, detail design) to raise "
-            "DesignMerit. Visible ideas are not limited to a fixed count; each idea must serve "
-            "that extracted theme and concept. Resolve exposed consistency problems and lower "
-            "exposed penalty deductions. Do not treat a collection-shared interchangeable "
-            "garment formula as the identity."
+            "Keep the theme and the identifying features. "
+            "You may add or delete, expand an element already in the look, "
+            "or add a moderate new element that fits this brand and this theme, "
+            "in one wearable front-facing outfit. "
+            "A repair brief names contradictions and penalties and does not assign one legal edit."
         )
         bits.append(REWRITE_STYLE_CONCEPT_LOCK)
-        bits.append(REWRITE_WHOLE_LOOK_SCOPE)
-        bits.append(REWRITE_ELEMENT_RECONSTRUCTION)
         bits.append(REWRITE_BRAND_LOGO_LOCK)
         repair = format_exposed_repair_brief(baseline_eval, source_text=source_text)
         if repair:
@@ -2055,7 +2046,9 @@ class FashionWorkflow:
                 status = "PASS" if both_passed else "FAIL"
                 print(
                     f"  [TextEval] Look {look_number} initial eval: "
-                    f"total={result['total_score']:.3f} quality={result['penalized_score']:.3f} "
+                    f"total={result['total_score']:.3f} "
+                    f"quality={result['quality_positive_score']:.3f}"
+                    f"-k{result['quality_negative_k']}={result['penalized_score']:.3f} "
                     f"penalty={result['total_penalty']:.3f} → [{status}]"
                 )
 

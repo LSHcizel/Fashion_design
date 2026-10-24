@@ -31,60 +31,53 @@ if TYPE_CHECKING:
 
 
 REWRITE_STYLE_CONCEPT_LOCK = (
-    "THEME AND CONCEPT LOCK: First extract the theme and the design concept already present "
-    "in SOURCE (collection story, dualities, aesthetic register, and design intent). "
-    "If SOURCE names a theme and concept and then also describes garments from a different "
-    "theme or concept, keep only the stated theme and concept. Delete or replace those "
-    "conflicting garments. Do not treat that second register as part of the concept you must "
-    "preserve. Do not switch to a different theme or a different concept. "
-    "The rewrite does not change this theme."
+    "THEME AND CONCEPT: Extract the theme and the design concept already in SOURCE. "
+    "Keep that theme. Keep the identifying features already in SOURCE: "
+    "a construction, a trim path, a closure, a surface, or a silhouette idea. "
+    "Do not switch to a different theme or concept. "
+    "A moderate new element that fits this brand and this theme is allowed."
 )
 
 REWRITE_WHOLE_LOOK_SCOPE = (
-    "WHOLE-LOOK CHANGE (allowed, inside theme/concept): You MAY replace the current clothes "
-    "with a fuller outfit of the SAME extracted theme and concept — including color and palette, "
-    "garment pairing, silhouette, layering, and detail design. Fuller means a more complete "
-    "wearable look the theme can claim, still one photograph. "
-    "When a DELETE list is attached, every garment already in SOURCE that is not on that list stays. "
-    "Out of scope: leaving the theme or design concept, or jumping to a competing register."
+    "ONE OUTFIT: You may add or delete. "
+    "You may expand the description of elements already in SOURCE. "
+    "You may add a moderate new element that fits this brand and this theme. "
+    "Color, cloth, garment pairing, length, and shoes may change. "
+    "Resolve a contradiction into one sleeve grammar, one bottom, one pair of shoes, "
+    "one neckline, one closure, and one length. Choose the resolution yourself."
 )
 
 REWRITE_ELEMENT_RECONSTRUCTION = (
-    "ELEMENT RECONSTRUCTION: Make the source photographable, and you may carry it into a fuller "
-    "design when that design still comes from the extracted theme and concept. "
-    "Unify conflicts into one sleeve, one bottom, one shoe, one neckline, one length, "
-    "one closure, one shell. Expand a crop into the full figure from head to shoes. "
-    "If the source is seen from behind, describe the front. "
-    "A garment that is not on the DELETE list stays. "
-    "Do not replace the look with a collection-shared interchangeable garment formula, "
-    "and do not leave the extracted theme and concept."
+    "VISIBLE FACTS: Write what one camera can photograph, from head to shoes. "
+    "Garment, then silhouette, then cloth and color, then shoes. "
+    "Each sentence adds a new visible fact. Name the cloth directly. "
+    "The identifying features stay visible. "
+    "You may write an element already in SOURCE in fuller detail. "
+    "A moderate new element that fits this brand and this theme may be included."
 )
 
 REWRITE_DESIGN_MERIT = (
-    "SCORE AND PRESENTATION: Try to raise what the scorer measures. "
-    "Raise coverage of visible garment facts, and raise every quality-axis dimension: "
-    "BindingAccuracy, one value per garment part; LanguageClarity, clear counts and references; "
-    "StructuralClarity, garment then silhouette then cloth and color then shoes; "
-    "GenerationReadiness, sentences a camera can render; ConcisenessAndDensity, visible clothes "
-    "before mood; InformationDensity, each sentence adds a new visible fact; DesignMerit, one "
-    "feature that still identifies the look after color and cloth change, placed on the garment, "
-    "and still a wearable, fully dressed piece of this theme. Do not treat DesignMerit as the only target. "
-    "Exposed skin does not improve any score. "
-    "Lower penalties: one consistent outfit, wearable construction, no formula sentence, "
-    "no collage or crop or non-visual essay. "
-    "Write one Vogue runway frame. One woman faces the camera. Full figure from head to shoes. "
-    "The fuller clothes must still be reasonable to wear and must come from SOURCE's theme and concept. "
-    "Do not invent a house logo or monogram. Do not write a close crop or a rear view. "
-    "Name the cloth directly. Do not write looks like, appears to be, tinsel-like, or chainmail-like "
-    "unless that is the actual cloth. Compress promenade, salon, and stance commentary. "
-    "When a repair brief lists exposed consistency problems or penalty deductions, resolve those "
-    "consistency problems and lower those penalty scores in this rewrite."
+    "SCORE DIRECTION: Raise visible garment facts and the identifying features on a garment. "
+    "A fuller description of an element already in SOURCE is allowed. "
+    "A moderate new element that fits this brand and this theme is allowed. "
+    "A second outfit lowers the score. A moderate new element on this one outfit does not. "
+    "A formula sentence, a non-visual essay, unworn construction, "
+    "a collage, a crop, or a rear view lowers the score. "
+    "Exposed skin does not raise the score. "
+    "A repair brief names contradictions and penalties. It does not assign one legal edit."
 )
 
 _CONSISTENCY_METRICS = (
-    ("bilateral_coherence", "left-right consistency"),
     ("spatial_coherence", "spatial / layering consistency"),
 )
+_NEGATIVE_SLOT_LABELS = {
+    "sleeve": "two sleeve grammars",
+    "bottom": "two bottoms",
+    "shoe": "two shoe types",
+    "binding": "two bindings on one garment",
+    "theme": "garments from a second theme",
+    "repair": "repair narration in the paragraph",
+}
 _PENALTY_LABELS = {
     "generation_content_penalty": "non-visual or redundant content",
     "consistency_penalty": "trunk consistency",
@@ -395,10 +388,10 @@ def format_exposed_repair_brief(
     evaluation: Optional[Dict[str, Any]],
     source_text: str = "",
 ) -> str:
-    """把原文评判里已暴露的一致性问题和惩罚扣分写成改写必须处理的简报。"""
-    target = format_conflict_target(source_text) if (source_text or "").strip() else ""
+    """把已暴露的一致性问题和惩罚扣分写成简报，不指定留哪一侧。"""
+    del source_text
     if not isinstance(evaluation, dict):
-        return target
+        return ""
 
     consistency_lines: List[str] = []
     metric_results = evaluation.get("metric_results") or {}
@@ -440,23 +433,33 @@ def format_exposed_repair_brief(
             if key == "consistency_penalty":
                 consistency_lines.append(line)
 
-    if not consistency_lines and not penalty_lines and not target:
+    qual = (evaluation.get("scores") or {}).get("quality_score") or {}
+    slots = [str(name) for name in (qual.get("negative_slots") or [])]
+    try:
+        negative_k = int(qual.get("negative_k") if qual.get("negative_k") is not None else len(slots))
+    except (TypeError, ValueError):
+        negative_k = len(slots)
+
+    if not consistency_lines and not penalty_lines and not slots:
         return ""
 
     parts = [
-        "REPAIR BRIEF (from the current evaluation of SOURCE; required):",
+        "REPAIR BRIEF (from the current evaluation of SOURCE):",
+        "These notes name contradictions and penalty deductions. They do not assign one legal edit.",
         "Write the paragraph in English. Do not copy these notes into it.",
-        "Delete the other set of clothes and strictly unify into one set: "
-        "one footwear family, and one contradictory binding removed.",
     ]
-    if target:
-        parts.insert(1, target)
     if consistency_lines:
         parts.append("EXPOSED CONSISTENCY:")
         parts.extend(consistency_lines)
     if penalty_lines:
         parts.append("EXPOSED PENALTY DEDUCTIONS:")
         parts.extend(penalty_lines)
+    if slots:
+        parts.append(
+            f"QUALITY DEDUCTION: k={negative_k}, subtract {negative_k / 5:.1f} from the positive quality score."
+        )
+        for name in slots:
+            parts.append(f"- {name}: {_NEGATIVE_SLOT_LABELS.get(name, name)}")
     return "\n".join(parts)
 
 REWRITE_BRAND_LOGO_LOCK = (
@@ -479,7 +482,8 @@ REWRITE_SINGLE_FRAME = (
     "No collage, no flat lay, no product shot, no second view, no rear view, and no text in the image. "
     "Do not write a Look number or a look title. "
     "Do not write if removed, its own garment, complete the look, or finish the look. "
-    "An inner layer stays visible in the opening of this same front view. Accessories stay on the body. "
+    "When an opening shows an inner layer, describe that layer in this same front view. "
+    "Accessories stay on the body. "
     "Do not copy the single-frame instruction line into the paragraph."
 )
 
@@ -492,32 +496,21 @@ REWRITE_CLOTHED = (
 )
 
 REWRITE_CONSISTENCY_REPAIR = (
-    "STRICT UNIFICATION. Delete the other set of clothes and strictly unify into one set: "
-    "one sleeve grammar, one bottom, one footwear family, one neckline, one length, one closure, one shell. "
-    "When KEEP and DELETE lines or a LEFT-RIGHT EXAMPLE or a SAME-ELEMENT EXAMPLE are attached, "
-    "copy that edit. Keep one side of each contradiction, and keep every other garment already in SOURCE. "
-    "Do not copy the example's clothes. "
-    "A DELETE line must not appear on another garment. "
-    "A fluent sentence that still contains both sets is a failed rewrite. "
-    "Keep one binding and delete the contradictory binding. "
-    "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem on the kept garment "
-    "is placement, not a second garment. "
-    "Do not write or between two bottoms, two shoes, two necklines, or two sleeve states. "
-    "Do not keep the deleted set with while, transitions to, or on the right. "
-    "The paragraph is only what the camera sees. Do not write conflicting, replace, delete, restore, or do not."
+    "ONE OUTFIT: Resolve contradictions into one sleeve grammar, one bottom, one pair of shoes, "
+    "one neckline, one closure, and one length. Choose the resolution yourself. "
+    "A brooch, an off-center bow, one slit, a wrap, a drape, or an uneven hem "
+    "is placement on that outfit, not a second garment. "
+    "The paragraph is only what the camera sees."
 )
 
 REWRITE_SHARED_STRATEGY = (
-    "SHARED STRATEGY (theme/concept lock + logo lock; whole-look change inside that lock): "
-    "1) Extract theme and concept from SOURCE only — there is no separate chapter brief. "
-        "2) You may write a fuller outfit inside the extracted theme and concept, as one "
-        "front-facing full-figure photograph. When a DELETE list is attached, every "
-        "garment already in SOURCE that is not on that list stays. Do not keep a second sleeve, "
-        "bottom, shoe, or another theme's garment in order to make the look fuller. "
-    "3) Keep any original house logo/monogram as the same brand mark (placement/scale may change). "
-    "4) Output one coherent English paragraph. "
-    "5) If a repair brief is attached, follow its KEEP and DELETE lines and lower its exposed penalty deductions. "
-    "6) Obey the consistency repair above."
+    "SHARED RULES: Every candidate uses this same prompt. "
+    "Keep the theme, the concept, and the identifying features in SOURCE. "
+    "You may add or delete, expand an element already there, "
+    "or add a moderate new element that fits this brand and this theme. "
+    "Write one front-facing, clothed, full-figure photograph. "
+    "Keep an original house mark as the same mark. "
+    "Output one English paragraph."
 )
 
 # Backward-compatible name used by workflow extra_context.
@@ -534,10 +527,8 @@ def build_rewrite_user_prompt(
     user = (
         "PARALLEL REWRITE TASK\n"
         f"You are producing rewrite candidate #{candidate_index + 1} of {k} for the SAME source. "
-        "Candidates are sampled separately at different temperatures.\n"
-        "The SOURCE TEXT below is complete. Any BUSINESS CONTEXT below is complete. "
-        "Read both in full so you can see which element contradicts another. "
-        "Keep one side of each contradiction. Keep every other garment already in SOURCE.\n\n"
+        "All candidates share this prompt and one sampling temperature. The rewrite rules stay the same.\n"
+        "The SOURCE TEXT below is the look to rewrite. Any BUSINESS CONTEXT below is shared.\n\n"
         f"SOURCE TEXT TO REWRITE:\n{source_text.strip()}\n\n"
     )
     if extra_context.strip():
@@ -547,30 +538,14 @@ def build_rewrite_user_prompt(
         )
     user += (
         "RULES FOR THE TEXT ABOVE:\n"
-        "Write one natural runway photograph. A fuller design is allowed only inside SOURCE's theme and concept.\n\n"
-        f"{REWRITE_CONSISTENCY_REPAIR}\n\n"
-        f"{REWRITE_SINGLE_FRAME}\n"
-        f"{REWRITE_CLOTHED}\n\n"
-        f"{REWRITE_SHARED_STRATEGY}\n"
+        "Write one English paragraph. Do not write Chinese. No markdown, numbering, or commentary.\n\n"
         f"{REWRITE_STYLE_CONCEPT_LOCK}\n"
         f"{REWRITE_WHOLE_LOOK_SCOPE}\n"
-        f"{REWRITE_BRAND_LOGO_LOCK}\n"
         f"{REWRITE_ELEMENT_RECONSTRUCTION}\n"
-        f"{REWRITE_DESIGN_MERIT}\n\n"
-        "OUTPUT RULES:\n"
-        "1. Output exactly one English paragraph: the optimized fashion image prompt only. Do not write Chinese.\n"
-        "2. No markdown fences, no numbering, no preamble or commentary.\n"
-        "3. After the other set of clothes is deleted, write the full figure from the outside in, then the shoes.\n"
-        "4. A fuller outfit is allowed only inside SOURCE's theme and concept.\n"
-        "5. If SOURCE or business context has a house logo/monogram, keep that same brand mark "
-        "(placement and size may change; never another house).\n"
-        "6. If a repair brief is present, resolve every listed consistency problem and lower every listed penalty.\n"
-        "7. Omit the contradictory side. Keep every other garment already in SOURCE. "
-        "Omitting the other set is required.\n"
-        "8. One moment, one body, one camera in front of her face. She faces the camera. "
-        "Front view only, not from behind. No Look number, no collage, no flat lay, "
-        "no product shot, no rear view, and no off-body catalog sentence.\n"
-        "9. Keep the chest, torso, and legs clothed. An opening shows a shirt, a camisole, or a bodice, not bare skin.\n"
+        f"{REWRITE_SINGLE_FRAME}\n"
+        f"{REWRITE_CLOTHED}\n"
+        f"{REWRITE_BRAND_LOGO_LOCK}\n"
+        f"{REWRITE_DESIGN_MERIT}\n"
     )
     return user
 
@@ -603,6 +578,23 @@ def _dedupe_by_normalized_text(
     return kept, removed
 
 
+# 一组共用一个温度。上沿 1.0，避免再叠别的采样项。
+_SHARED_TEMPERATURE_DEFAULT = 0.9
+_SHARED_TEMPERATURE_CAP = 1.0
+
+
+def shared_rewrite_temperature(pk: Optional[Dict[str, Any]] = None) -> float:
+    """读取 ``grpo.parallel-k-rewrite.temperature``。8 路用同一个值。"""
+    if pk is None:
+        pk = grpo_parallel_k_rewrite_config()
+    raw = pk.get("temperature", _SHARED_TEMPERATURE_DEFAULT)
+    try:
+        val = float(raw)
+    except (TypeError, ValueError):
+        val = _SHARED_TEMPERATURE_DEFAULT
+    return round(min(_SHARED_TEMPERATURE_CAP, max(0.0, val)), 2)
+
+
 def _default_evaluator() -> "DesignTextEvaluator":
     from ..local_llm import build_parallel_k_evaluator
 
@@ -618,8 +610,10 @@ def _one_rewrite(
     temperature_floor: float,
     temperature_step: float,
     temperature_cap: float,
+    sampling: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Any]:
-    """Worker：单次生成一条候选。"""
+    """Worker：单次生成一条候选。只传温度，不传 top_p 或 penalty。"""
+    del sampling
     t = min(temperature_cap, temperature_floor + candidate_index * temperature_step)
     user = build_rewrite_user_prompt(
         source_text,
@@ -831,7 +825,7 @@ def generate_k_parallel_rewrites(
     max_workers :
         改写线程池大小；默认 ``min(k, 64)``。
     temperature_floor / temperature_step / temperature_cap :
-        按 candidate_index 递进温度；各路独立选择识别性想法，不预分配种类。
+        配置里的 ``temperature`` 会覆盖这三项。8 路使用同一个温度，不传 top_p 或 penalty。
     evaluate_candidates :
         为 True（默认）时，对去重保留的候选调用 `evaluate_text`，门限与分数与
         `plugins/text_description_evaluator` 完全一致；False 则仅生成文本（旧行为）。
@@ -853,12 +847,11 @@ def generate_k_parallel_rewrites(
         k = int(_pk.get("k", 8))
     if k < 1:
         raise ValueError("k must be >= 1")
-    if "temperature-floor" in _pk:
-        temperature_floor = float(_pk["temperature-floor"])
-    if "temperature-step" in _pk:
-        temperature_step = float(_pk["temperature-step"])
-    if "temperature-cap" in _pk:
-        temperature_cap = float(_pk["temperature-cap"])
+    if "temperature" in _pk:
+        shared_t = shared_rewrite_temperature(_pk)
+        temperature_floor = shared_t
+        temperature_step = 0.0
+        temperature_cap = shared_t
     if max_workers is None and _pk.get("max-workers") is not None:
         max_workers = int(_pk["max-workers"])
     if eval_max_workers is None and _pk.get("eval-max-workers") is not None:
@@ -991,6 +984,15 @@ def build_candidate_group_payload(
                 {
                     "total_score": ev.get("total_score"),
                     "S_fp": ev.get("total_score"),
+                    "quality_positive_score": (ev.get("scores") or {})
+                    .get("quality_score", {})
+                    .get("positive_score"),
+                    "quality_negative_k": (ev.get("scores") or {})
+                    .get("quality_score", {})
+                    .get("negative_k"),
+                    "quality_negative_slots": (ev.get("scores") or {})
+                    .get("quality_score", {})
+                    .get("negative_slots"),
                     "score_gate_passed": sg.get("passed"),
                     "penalty_gate_passed": pg.get("passed"),
                     "total_penalty": (ev.get("scores") or {})

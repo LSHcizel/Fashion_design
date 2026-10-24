@@ -47,8 +47,8 @@ def iter_positive_sources(root: Path) -> Iterable[Dict[str, Any]]:
             "path": str(path.relative_to(REPO)).replace("\\", "/"),
             "text": text,
             "business_context": (
-                "Chanel Cruise / Pre-Summer 2027 look. Preserve identifying design "
-                "(surface field, edge-path trim, inner garment readable when outer is open). "
+                "Chanel Cruise / Pre-Summer 2027 look. Keep the theme and the identifying features. "
+                "A moderate new element that fits this brand and this theme is allowed. "
                 "Do not collapse into a collection-shared interchangeable garment formula."
             ),
         }
@@ -86,9 +86,9 @@ def iter_negative_sources(roots: List[Path]) -> Iterable[Dict[str, Any]]:
                 "business_context": (
                     "This draft uses a collection-shared wardrobe grammar "
                     "(interchangeable trunk formula, numbered sections, "
-                    "theme dualities). Rewrite into one grounded T2I paragraph. "
-                    "Do not invent unstated garments. Do not keep a shared series formula "
-                    "as the identifying idea."
+                    "theme dualities). Rewrite into one T2I paragraph. "
+                    "A moderate new element that fits this brand and this theme is allowed. "
+                    "Do not keep a shared series formula as the identifying idea."
                 ),
             }
 
@@ -176,9 +176,9 @@ def iter_consistency_defect_sources(root: Path) -> Iterable[Dict[str, Any]]:
             "text": text,
             "business_context": (
                 "Consistency-defect look. Keep the theme and concept named in SOURCE. "
-                "Delete the conflict in SOURCE: a left-right garment split, a same-element contradiction, "
-                "or a garment from a different theme or concept. "
-                "Do not keep the deleted garment as an inner layer. "
+                "Resolve a conflict in SOURCE when one is present: a left-right garment split, "
+                "a same-element contradiction, or a garment from a different theme or concept. "
+                "A moderate new element that fits this brand and this theme is allowed. "
                 "Write the rewrite in English. Do not translate a Chinese note into the paragraph."
             ),
         }

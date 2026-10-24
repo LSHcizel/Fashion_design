@@ -67,6 +67,9 @@ def _compact_scores_for_training(evaluation: Optional[Dict[str, Any]]) -> Option
         "coverage_axis_score": (cov.get("score") if isinstance(cov, dict) else None),
         "quality_penalized_score": q.get("penalized_score"),
         "quality_base_score": q.get("base_score"),
+        "quality_positive_score": q.get("positive_score", q.get("base_score")),
+        "quality_negative_k": q.get("negative_k"),
+        "quality_negative_slots": q.get("negative_slots"),
         "total_penalty": pen.get("total_penalty"),
         "weights": sc.get("weights"),
         "module_scores": module_scores,
@@ -227,6 +230,9 @@ def iter_records_from_parallel_result(
         rc = ev.get("r_content") if isinstance(ev, dict) else None
         meta = {
             "temperature": c.get("temperature"),
+            "top_p": c.get("top_p"),
+            "presence_penalty": c.get("presence_penalty"),
+            "repetition_penalty": c.get("repetition_penalty"),
             "dedupe_kept": c.get("dedupe_kept", True),
             "dedupe_reason": c.get("dedupe_reason"),
             "rewrite_error": c.get("error"),

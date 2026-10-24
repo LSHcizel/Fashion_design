@@ -1,4 +1,4 @@
-"""设计与冲突的划分，以及冲突对总分上限的影响。"""
+"""设计与冲突的划分，以及矛盾格对质量分的扣减。"""
 
 from __future__ import annotations
 
@@ -8,9 +8,11 @@ from pathlib import Path
 from plugins.text_description_evaluator.design_text_evaluator_api import (
     apply_consistency_penalty_floor,
     compute_design_merit_metric_caps,
-    conflict_quality_cap,
+    conflict_negative_k,
+    conflict_negative_slots,
     detect_consistency_conflicts,
     list_design_identifying_signatures,
+    quality_after_negative,
 )
 
 REPO = Path(__file__).resolve().parents[2]
@@ -79,17 +81,18 @@ class ConflictDefinitionTests(unittest.TestCase):
         caps = compute_design_merit_metric_caps(text)["caps"]
         self.assertNotIn("design_distinctiveness", caps)
 
-    def test_conflict_caps_design_even_when_an_edge_remains(self) -> None:
+    def test_conflict_does_not_cap_design_when_an_edge_remains(self) -> None:
         text = (
             "Dense floral appliqué runs along the neckline and both front edges. "
             "The left half is matte black wool with a set-in sleeve. "
             "The right half is silk and sequin with a bishop sleeve."
         )
         found = detect_consistency_conflicts(text)
-        self.assertTrue(found["active"])
-        caps = compute_design_merit_metric_caps(text)["caps"]
-        self.assertEqual(caps["design_distinctiveness"]["cap"], 0.25)
-        self.assertEqual(caps["design_signal_purity"]["cap"], 0.25)
+        self.assertEqual(conflict_negative_slots(found), ["sleeve"])
+        payload = compute_design_merit_metric_caps(text)
+        self.assertIn("edge_path", payload["signatures"])
+        self.assertNotIn("design_distinctiveness", payload["caps"])
+        self.assertNotIn("design_signal_purity", payload["caps"])
 
     def test_or_choice_one_shoulder_and_repair_voice_are_conflicts(self) -> None:
         skirt_or_trouser = (
@@ -161,12 +164,21 @@ class ConflictDefinitionTests(unittest.TestCase):
                 "and hem that brushes the floor, over fitted black shorts."
             ),
         }
+        expected = {
+            "sides": {"bottom", "shoe"},
+            "sleeves": {"sleeve"},
+            "collar": {"binding"},
+            "neck_and_hem": {"binding"},
+            "shell": {"binding"},
+            "theme": {"theme"},
+            "squared_neck": {"binding"},
+            "hip_and_floor": {"binding"},
+        }
         for name, text in dirty.items():
             found = detect_consistency_conflicts(text)
             self.assertTrue(found["active"], name)
-            self.assertEqual(conflict_quality_cap(found), 0.25)
-        clear = conflict_quality_cap({"active": False})
-        self.assertIsNone(clear)
+            self.assertEqual(set(conflict_negative_slots(found)), expected[name], name)
+        self.assertEqual(conflict_negative_k({"active": False}), 0)
         split_across_sentences = {
             "two bottoms": (
                 "A black box jacket with a wide notched lapel, cropped to the hip, over fitted black shorts. "
@@ -185,7 +197,83 @@ class ConflictDefinitionTests(unittest.TestCase):
         for name, text in split_across_sentences.items():
             found = detect_consistency_conflicts(text)
             self.assertTrue(found["active"], name)
-            self.assertEqual(conflict_quality_cap(found), 0.25)
+            self.assertEqual(conflict_negative_k(found), 1, name)
+
+    def test_short_is_shorts_only_when_it_is_the_noun(self) -> None:
+        bag = (
+            "A denim mini skirt sits over black tights, with a long pale skirt falling to near floor length. "
+            "A crocodile handbag with short handles is carried at the left side."
+        )
+        self.assertFalse(detect_consistency_conflicts(bag)["active"])
+        garment = (
+            "A denim mini skirt sits over black tights. "
+            "The other leg is a navy short, carried at the left side."
+        )
+        found = detect_consistency_conflicts(garment)
+        self.assertTrue(found["active"])
+        self.assertIn("leg", found["zones"])
+
+    def test_accessory_and_added_design_asymmetry_do_not_cap_quality(self) -> None:
+        text = (
+            "A black wool jacket with set-in sleeves is worn over one black wool skirt and black pumps. "
+            "A silk brooch sits on the left side, and a beaded tassel hangs on the right side. "
+            "New floral appliqué runs only along the left front edge."
+        )
+        found = detect_consistency_conflicts(text)
+        self.assertFalse(found["zones"], found["reason"])
+        self.assertEqual(conflict_negative_k(found), 0)
+        theme = "The inner layer features a harlequin bodice and a jeweled mask."
+        theme_found = detect_consistency_conflicts(theme)
+        self.assertEqual(conflict_negative_slots(theme_found), ["theme"])
+        caps = compute_design_merit_metric_caps(theme)["caps"]
+        self.assertNotIn("design_distinctiveness", caps)
+
+    def test_negative_term_steps_by_one_fifth(self) -> None:
+        clear = {"active": False, "zone_elements": {}, "binding_elements": {}}
+        closure = {
+            "active": True,
+            "zone_elements": {},
+            "binding_elements": {"closure": 1},
+            "foreign_terms": [],
+            "repair_voice": False,
+            "two_sleeve_states": False,
+        }
+        sleeve_and_bottom = {
+            "active": True,
+            "zone_elements": {"sleeve": 1, "leg": 1},
+            "binding_elements": {},
+            "foreign_terms": [],
+            "repair_voice": False,
+            "two_sleeve_states": False,
+        }
+        sleeve_also_bound = {
+            "active": True,
+            "zone_elements": {"sleeve": 1},
+            "binding_elements": {"sleeve": 1},
+            "foreign_terms": [],
+            "repair_voice": False,
+            "two_sleeve_states": True,
+        }
+        repair_only = {
+            "active": True,
+            "zone_elements": {},
+            "binding_elements": {},
+            "foreign_terms": [],
+            "repair_voice": True,
+            "two_sleeve_states": False,
+        }
+        self.assertEqual(quality_after_negative(0.9, clear), 0.9)
+        self.assertEqual(conflict_negative_slots(closure), ["binding"])
+        self.assertEqual(quality_after_negative(0.9, closure), 0.7)
+        self.assertEqual(conflict_negative_slots(sleeve_and_bottom), ["sleeve", "bottom"])
+        self.assertEqual(quality_after_negative(0.9, sleeve_and_bottom), 0.5)
+        self.assertEqual(conflict_negative_slots(sleeve_also_bound), ["sleeve"])
+        self.assertEqual(conflict_negative_slots(repair_only), ["repair"])
+        q_pos = 0.9
+        one = quality_after_negative(q_pos, closure)
+        two = quality_after_negative(q_pos, sleeve_and_bottom)
+        self.assertAlmostEqual(0.8 * (one - two), 0.16)
+        self.assertEqual(quality_after_negative(0.1, sleeve_and_bottom), 0.0)
 
     def test_penalty_floor_does_not_enter_total_score(self) -> None:
         penalties = {
@@ -209,6 +297,8 @@ class ConflictDefinitionTests(unittest.TestCase):
         apply_consistency_penalty_floor(penalties, found)
         self.assertGreaterEqual(penalties["consistency_penalty"], 0.75)
         self.assertGreaterEqual(penalties["coordination_penalty"], 0.75)
+        self.assertGreater(penalties["total_penalty"], 0.2)
+        self.assertEqual(conflict_negative_slots(found), ["theme"])
 
 
 if __name__ == "__main__":

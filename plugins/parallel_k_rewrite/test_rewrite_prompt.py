@@ -45,43 +45,47 @@ class RewritePromptPolicyTests(unittest.TestCase):
         )
         self.assertIn("rewrite candidate #3 of 10", prompt)
         self.assertIn("SOURCE TEXT TO REWRITE:", prompt)
-        self.assertLess(prompt.index("SOURCE TEXT TO REWRITE:"), prompt.index("THEME AND CONCEPT LOCK"))
-        self.assertLess(prompt.index("Chapter: salon-to-beach"), prompt.index("THEME AND CONCEPT LOCK"))
-        self.assertIn("A cropped navy jacket", prompt[: prompt.index("THEME AND CONCEPT LOCK")])
+        self.assertLess(prompt.index("SOURCE TEXT TO REWRITE:"), prompt.index("THEME AND CONCEPT"))
+        self.assertLess(prompt.index("Chapter: salon-to-beach"), prompt.index("THEME AND CONCEPT"))
+        self.assertIn("A cropped navy jacket", prompt[: prompt.index("THEME AND CONCEPT")])
         self.assertIn("Chapter: salon-to-beach", prompt)
-        self.assertIn("THEME AND CONCEPT LOCK", prompt)
-        self.assertIn("WHOLE-LOOK CHANGE", prompt)
-        self.assertIn("ELEMENT RECONSTRUCTION", prompt)
+        self.assertIn("THEME AND CONCEPT", prompt)
+        self.assertIn("ONE OUTFIT", prompt)
+        self.assertIn("VISIBLE FACTS", prompt)
         self.assertIn("BRAND LOGO LOCK", prompt)
         self.assertNotIn("BRAND STYLE CARD", prompt)
         self.assertNotIn("REWRITE DIRECTION", prompt)
         self.assertIn("MUST NOT replace it with another brand", prompt)
-        self.assertIn("A fuller design is allowed", prompt)
-        self.assertIn("one natural runway photograph", prompt)
-        self.assertIn("SAME extracted theme and concept", prompt)
+        self.assertIn("Choose the resolution yourself", prompt)
         self.assertIn("Do not write Chinese", prompt)
-        self.assertIn("full figure from head to shoes", prompt)
-        self.assertIn("quality-axis dimension", prompt)
-        self.assertIn("InformationDensity", prompt)
-        self.assertNotIn("raise DesignMerit", prompt)
-        self.assertIn("one footwear family", prompt)
-        self.assertIn("contradictory binding", prompt)
+        self.assertIn("head to shoes", prompt)
+        self.assertIn("one sampling temperature", prompt)
+        self.assertIn("does not assign one legal edit", prompt)
         self.assertIn("SINGLE FRAME", prompt)
         self.assertIn("CLOTHED RUNWAY", prompt)
-        self.assertIn("not bare skin", prompt)
+        self.assertIn("bare chest", prompt)
         self.assertIn("one camera in front of her face", prompt)
         self.assertIn("Front view only, not from behind", prompt)
-        self.assertIn("No Look number", prompt)
+        self.assertIn("Look number", prompt)
         self.assertIn("different theme or concept", prompt)
-        self.assertIn("failed rewrite", prompt)
-        self.assertIn("Delete the other set of clothes", prompt)
-        self.assertIn("strictly unify into one set", prompt)
-        self.assertIn("color and palette", prompt)
         self.assertIn("garment pairing", prompt)
-        self.assertIn("detail design", prompt)
-        self.assertIn("transitions to", prompt)
-        self.assertIn("Omitting the other set is required", prompt)
-        self.assertNotIn("do not drop a kept garment", prompt)
+        self.assertIn("add or delete", prompt)
+        self.assertIn("expand the description", prompt)
+        self.assertIn("moderate new element", prompt)
+        self.assertNotIn("below is complete", prompt)
+        self.assertNotIn("another show", prompt)
+        self.assertNotIn("An inner layer stays visible", prompt)
+        self.assertNotIn("business note to preserve", prompt)
+        self.assertNotIn("moderately rebuild", prompt)
+        self.assertNotIn("paraphrase of SOURCE", prompt)
+        self.assertNotIn("Do not restate SOURCE", prompt)
+        self.assertNotIn("InformationDensity", prompt)
+        self.assertNotIn("quality-axis dimension", prompt)
+        self.assertNotIn("LEFT-RIGHT EXAMPLE", prompt)
+        self.assertNotIn("SAME-ELEMENT EXAMPLE", prompt)
+        self.assertNotIn("copy that edit", prompt)
+        self.assertNotIn("KEEP THIS SIDE", prompt)
+        self.assertNotIn("Keep every other garment already in SOURCE", prompt)
         self.assertNotIn("THIS CANDIDATE'S TASK", prompt)
         self.assertNotIn("Assigned identifying-idea kind", prompt)
         self.assertNotIn("surface_field", prompt)
@@ -99,54 +103,50 @@ class RewritePromptPolicyTests(unittest.TestCase):
             self.assertIn(marker, prompt)
             bodies.append(prompt.replace(marker, "rewrite candidate #N of 10"))
         self.assertEqual(len(set(bodies)), 1)
-        self.assertIn("different temperatures", prompts[0])
+        self.assertIn("one sampling temperature", prompts[0])
+        self.assertIn("The rewrite rules stay the same", prompts[0])
 
     def test_policy_constants_lock_theme_logo_and_allow_whole_look_change(self) -> None:
-        self.assertIn("extract the theme and the design concept", REWRITE_STYLE_CONCEPT_LOCK)
-        self.assertIn("fuller design", REWRITE_ELEMENT_RECONSTRUCTION)
+        self.assertIn("Extract the theme and the design concept", REWRITE_STYLE_CONCEPT_LOCK)
+        self.assertIn("camera can photograph", REWRITE_ELEMENT_RECONSTRUCTION)
         self.assertNotIn("raise DesignMerit", REWRITE_ELEMENT_RECONSTRUCTION)
-        self.assertIn("color and palette", REWRITE_WHOLE_LOOK_SCOPE)
         self.assertIn("garment pairing", REWRITE_WHOLE_LOOK_SCOPE)
-        self.assertIn("detail design", REWRITE_WHOLE_LOOK_SCOPE)
-        self.assertIn("SAME extracted theme and concept", REWRITE_WHOLE_LOOK_SCOPE)
+        self.assertIn("Choose the resolution yourself", REWRITE_WHOLE_LOOK_SCOPE)
         self.assertIn("different theme or concept", REWRITE_STYLE_CONCEPT_LOCK)
         self.assertIn("SAME house", REWRITE_BRAND_LOGO_LOCK)
         self.assertIn("MUST NOT replace it with another brand", REWRITE_BRAND_LOGO_LOCK)
-        self.assertIn("does not change this theme", REWRITE_STYLE_CONCEPT_LOCK)
+        self.assertIn("Keep that theme", REWRITE_STYLE_CONCEPT_LOCK)
+        self.assertIn("identifying features", REWRITE_STYLE_CONCEPT_LOCK)
+        self.assertIn("add or delete", REWRITE_WHOLE_LOOK_SCOPE)
+        self.assertIn("expand the description", REWRITE_WHOLE_LOOK_SCOPE)
         self.assertNotIn("BRAND STYLE CARD", REWRITE_STYLE_CONCEPT_LOCK)
 
     def test_optimizer_system_prompt_matches_policy(self) -> None:
         prompt = SYS_PROMPT.read_text(encoding="utf-8")
-        self.assertIn("Extract the theme and the design concept", prompt)
-        self.assertIn("Element reconstruction pass", prompt)
-        self.assertIn("collection-shared, interchangeable trunk-garment formula", prompt)
-        self.assertIn("Brand logo lock", prompt)
-        self.assertIn("Element reconstruction pass", prompt)
+        self.assertIn("Keep the theme and design concept already in the source", prompt)
+        self.assertIn("add or delete", prompt)
+        self.assertIn("expand the description", prompt)
+        self.assertIn("moderate new element", prompt)
+        self.assertNotIn("another show's clothes", prompt)
+        self.assertNotIn("business note says to preserve", prompt)
+        self.assertNotIn("moderately rebuild", prompt)
+        self.assertNotIn("paraphrase of the source", prompt)
+        self.assertNotIn("Do not paraphrase SOURCE", prompt)
+        self.assertIn("Choose the resolution yourself", prompt)
+        self.assertIn("another house's logo", prompt)
         self.assertNotIn("BRAND STYLE CARD", prompt)
-        self.assertNotIn("Brand-style pass", prompt)
-        self.assertIn("not a quota and not an assignment", prompt)
-        self.assertIn("quality-axis dimension", prompt)
-        self.assertIn("DesignMerit is one of those dimensions", prompt)
-        self.assertNotIn("raise DesignMerit", prompt)
-        self.assertIn("Do not write Chinese", prompt)
-        self.assertIn("One moment, one body, one camera", prompt)
-        self.assertIn("Do not write a Look number", prompt)
-        self.assertIn("Repair pass", prompt)
-        self.assertIn("one footwear family", prompt)
-        self.assertIn("delete the other set of clothes", prompt)
-        self.assertIn("strictly unify into one set", prompt)
-        self.assertIn("different theme or concept", prompt)
-        self.assertIn("must not replace it with another brand", prompt)
-        self.assertIn("color/palette, garment pairing", prompt)
-        self.assertIn("still belong to the extracted theme and concept", prompt)
-        self.assertNotIn("DesignMerit can rise", prompt)
-        self.assertIn("Drop the contradictory side", prompt)
-        self.assertIn("Keeping both sides is a failed rewrite", prompt)
-        self.assertIn("Keep every other garment already in the source", prompt)
-        self.assertIn("SAME-ELEMENT EXAMPLE", prompt)
-        self.assertIn("LEFT-RIGHT EXAMPLE", prompt)
-        self.assertNotIn("do not drop a kept garment", prompt)
-        self.assertNotIn("assigned a specific identifying-idea kind", prompt)
+        self.assertNotIn("quality-axis dimension", prompt)
+        self.assertNotIn("BindingAccuracy", prompt)
+        self.assertIn("or Chinese", prompt)
+        self.assertIn("Front view, full figure from head to shoes", prompt)
+        self.assertIn("Look number", prompt)
+        self.assertIn("does not assign one legal edit", prompt)
+        self.assertIn("one pair of shoes", prompt)
+        self.assertIn("Exposed skin does not raise", prompt)
+        self.assertNotIn("LEFT-RIGHT EXAMPLE", prompt)
+        self.assertNotIn("SAME-ELEMENT EXAMPLE", prompt)
+        self.assertNotIn("copy that edit", prompt)
+        self.assertNotIn("DELETE list", prompt)
         for phrase in _COMBO_PHRASES:
             self.assertNotIn(phrase, prompt)
 
@@ -215,20 +215,42 @@ class RewritePromptPolicyTests(unittest.TestCase):
             }
         )
         self.assertIn("EXPOSED CONSISTENCY", brief)
-        self.assertIn("bilateral_coherence", brief)
+        self.assertNotIn("bilateral_coherence", brief)
         self.assertIn("consistency_penalty", brief)
         self.assertNotIn("spatial_coherence", brief)
         self.assertIn("EXPOSED PENALTY DEDUCTIONS", brief)
-        self.assertIn("one footwear family", brief)
-        self.assertIn("contradictory binding", brief)
+        self.assertIn("do not assign one legal edit", brief)
         self.assertIn("coordination_penalty", brief)
+        deducted = format_exposed_repair_brief(
+            {
+                "scores": {
+                    "quality_score": {
+                        "negative_k": 2,
+                        "negative_slots": ["sleeve", "bottom"],
+                        "penalties": {"items": {}},
+                    }
+                }
+            }
+        )
+        self.assertIn("QUALITY DEDUCTION: k=2", deducted)
+        self.assertIn("two sleeve grammars", deducted)
+        self.assertIn("two bottoms", deducted)
         self.assertNotIn("formula_template_penalty", brief)
+        self.assertNotIn("KEEP THIS SIDE", brief)
+        self.assertNotIn("LEFT-RIGHT EXAMPLE", brief)
         self.assertEqual(format_exposed_repair_brief({}), "")
         self.assertEqual(format_exposed_repair_brief(None), "")
-        targeted = format_exposed_repair_brief(
+        self.assertEqual(
+            format_exposed_repair_brief(
+                None,
+                source_text="The left sleeve is matte wool. The right sleeve is silk.",
+            ),
+            "",
+        )
+        scored = format_exposed_repair_brief(
             {
                 "metric_results": {
-                    "bilateral_coherence": {
+                    "spatial_coherence": {
                         "applicable": True,
                         "score_value": 0.25,
                         "reason": "虽然左右是两套衣服，但每边只写了一种材质。",
@@ -236,143 +258,13 @@ class RewritePromptPolicyTests(unittest.TestCase):
                 },
                 "scores": {"quality_score": {"penalties": {"items": {}}}},
             },
-            source_text=(
-                "The left sleeve is matte wool. The right sleeve is silk and sequin. "
-                "Tiers of scarlet flamenco ruffles replace the skirt."
-            ),
+            source_text="The left sleeve is matte wool. The right sleeve is silk.",
         )
-        self.assertIn("TARGETED DELETE", targeted)
-        self.assertIn("KEEP THIS SIDE OF THE CONTRADICTION", targeted)
-        self.assertIn("keep every other garment already in SOURCE", targeted)
-        self.assertIn("matte wool", targeted)
-        self.assertIn("DELETE THESE GARMENTS", targeted)
-        self.assertIn("silk and sequin", targeted)
-        self.assertIn("flamenco", targeted)
-        self.assertIn("must not appear in the paragraph", targeted)
-        self.assertNotIn("虽然左右", targeted)
-        choice = format_exposed_repair_brief(
-            None,
-            source_text="Finish with simple black flats or low pumps.",
-        )
-        self.assertIn("Or-choice in shoe", choice)
-        shoulder = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "A single long cream sleeve, while the other side is sleeveless "
-                "for an asymmetric one-shoulder effect."
-            ),
-        )
-        self.assertIn("TARGETED DELETE", shoulder)
-        self.assertNotIn("LEFT-RIGHT EXAMPLE", shoulder)
-        self.assertNotIn("at the same time", shoulder)
-        self.assertNotIn("Two sleeve states", shoulder)
-        narration = format_exposed_repair_brief(
-            None,
-            source_text="A black trouser to replace the conflicting bottom.",
-        )
-        self.assertIn("Repair narration", narration)
-        same = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "The neckline is square to scoop between narrow black straps, "
-                "and the same neckline is a high stand collar."
-            ),
-        )
-        self.assertIn("SAME-ELEMENT EXAMPLE", same)
-        self.assertIn("also functions as", same)
-        self.assertIn("Delete every later binding", same)
-        self.assertIn("another garment", same)
-        self.assertIn("high stand collar", same)
-        self.assertIn("KEEP THIS SIDE OF THE CONTRADICTION", same)
-        self.assertNotIn("one closure, and one shell", same)
-        moved = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "Concept: a narrow ink coat frames warm grey slim wool trousers. "
-                "Its hem brushes the calf, and the same hem is cropped to the waist. "
-                "The cloth is matte wool-gabardine, and that same shell is liquid mirror sequin."
-            ),
-        )
-        self.assertIn("cropped to the waist", moved)
-        self.assertIn("liquid mirror sequin", moved)
-        self.assertIn("brushes the calf", moved)
-        sleeve = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "At the same time the left sleeve is a long cream sleeve with a bold red cuff, "
-                "while the right arm of the same top is sleeveless. "
-                "The left shoe is a red patent slingback pump; the right shoe is a cream satin ballet flat."
-            ),
-        )
-        self.assertIn("LEFT-RIGHT EXAMPLE", sleeve)
-        self.assertIn("KEEP THIS SIDE OF THE CONTRADICTION", sleeve)
-        shared = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "Dense floral appliqué runs along the neckline, with a red crochet bag. "
-                "The left leg is a black wool trouser. The right leg is a red silk culotte."
-            ),
-        )
-        self.assertIn("red crochet bag", shared)
-        self.assertIn("black wool trouser", shared)
-        self.assertIn("red silk culotte", shared)
-        self.assertIn("long cream sleeve with a bold red cuff", sleeve)
-        self.assertIn("Do not write left or right", sleeve)
-        self.assertNotIn("sleeves on both arms", sleeve)
-        self.assertNotIn("if the two sleeves", sleeve)
-        self.assertNotIn("if the two legs", sleeve)
-        self.assertNotIn("if the two feet", sleeve)
-        foreign = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "When it opens, the inner layer is a harlequin bodice and crystal stilettos."
-            ),
-        )
-        self.assertIn("crystal stilettos", foreign)
-        self.assertIn("Do not rename a deleted garment", foreign)
-        heels = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "Theme: daytime bouclé. Concept: a boxy cream tweed jacket and a straight cream tweed skirt. "
-                "Over that day set the body is dressed for a different concept: "
-                "a gold-brocade coronation robe and gold kid coronation heels. "
-                "Matte day tweed and a coronation court do not share a theme."
-            ),
-        )
-        self.assertIn("cream tweed jacket", heels)
-        self.assertIn("gold kid coronation heels", heels)
-        self.assertNotIn("LEFT-RIGHT EXAMPLE", heels)
-        self.assertNotIn("SAME-ELEMENT EXAMPLE", heels)
-        self.assertNotIn("do not share a theme", heels)
-        jacket = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "The left half of the same jacket is matte wool. "
-                "The right half of the same jacket is silk and sequin."
-            ),
-        )
-        self.assertIn("LEFT-RIGHT EXAMPLE", jacket)
-        self.assertNotIn("SAME-ELEMENT EXAMPLE", jacket)
-        hem = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "Concept: a straight hem just below the knee, with pale aqua feather trim. "
-                "The same hem sweeps the floor in a train. "
-                "Feather trim is drawn along whichever opening is named."
-            ),
-        )
-        self.assertIn("- sweeps the floor in a train", hem)
-        self.assertNotIn("- The same hem", hem)
-        self.assertNotIn("whichever", hem)
-        sleeves = format_exposed_repair_brief(
-            None,
-            source_text=(
-                "Its sleeves are straight and loose, and those same sleeves are sleeveless armholes."
-            ),
-        )
-        self.assertIn("SAME-ELEMENT EXAMPLE", sleeves)
-        self.assertNotIn("LEFT-RIGHT EXAMPLE", sleeves)
-        self.assertNotIn("at the same time", sleeves)
+        self.assertIn("spatial_coherence", scored)
+        self.assertNotIn("虽然左右", scored)
+        self.assertNotIn("KEEP THIS SIDE", scored)
+        self.assertNotIn("DELETE THESE GARMENTS", scored)
+        self.assertNotIn("LEFT-RIGHT EXAMPLE", scored)
 
 
 if __name__ == "__main__":

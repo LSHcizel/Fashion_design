@@ -112,9 +112,9 @@ def iter_inverse_batch2(root: Path, limit: int = 800) -> list[dict[str, Any]]:
                     "path": rel,
                     "text": text,
                     "business_context": (
-                        "Runway inverse parse. Preserve identifying design "
-                        "(surface field, edge-path trim, inner garment when outer is open). "
-                        "Rewrite into one grounded T2I paragraph if needed."
+                        "Runway inverse parse. Keep the theme and the identifying features. "
+                        "A moderate new element that fits this brand and this theme is allowed. "
+                        "Rewrite into one T2I paragraph if needed."
                     ),
                 },
                 kind=KIND_INVERSE,

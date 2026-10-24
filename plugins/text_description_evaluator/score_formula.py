@@ -14,8 +14,10 @@ from typing import Any, Dict, List, Optional
 FORMULA_SYMBOLS: Dict[str, str] = {
     "C": "覆盖度轴得分，适用 coverage 指标的算术平均",
     "Q_u": "质量轴未加权均分",
+    "Q+": "质量正向分，模块加权均分",
     "Q_w": "质量模块加权均分",
     "Q": "质量有效分 quality_effective",
+    "k": "矛盾格数，最多 5",
     "w_c": "覆盖度轴权重（spec score_axes.coverage_score.weight）",
     "w_q": "质量轴权重（spec score_axes.quality_score.weight）",
     "w_i": "各 quality 子模块权重（spec quality_module_weights）",
@@ -306,8 +308,8 @@ def refresh_score_formula_r_content(evaluation: Dict[str, Any]) -> None:
 def _formula_chain_symbolic() -> List[str]:
     return [
         "C = (1/n_c) · Σ coverage_i",
-        "Q_w = (Σ w_i · m_i) / (Σ w_i)",
-        "Q = min(Q_w, cap_q)",
+        "Q+ = (Σ w_i · m_i) / (Σ w_i)",
+        "Q = min(clip(Q+ - k/5, 0, 1), cap_q)",
         "s_fp_base = min(w_c · C + w_q · Q, cap_t)",
         "S_fp = s_fp_base",
         "R_content = s_fp_base（单条）；GRPO 组内 clip(s_fp_base - β · z_len, 0, 1)",
@@ -331,6 +333,8 @@ def build_score_formula_breakdown(
     fashion_prompt_score: float,
     r_content: Dict[str, Any],
     module_scores: Optional[Dict[str, Any]] = None,
+    negative_k: int = 0,
+    negative_slots: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     w_cov = float(weights.get("coverage", 0.2))
     w_qual = float(weights.get("quality", 0.8))
@@ -347,9 +351,11 @@ def build_score_formula_breakdown(
     tau_p = float(gates.get("penalty_gate_max", 0.2))
 
     cap_reasons: List[str] = []
-    if module_scores:
-        if module_scores.get("BindingAccuracy", {}).get("score", 1.0) < 0.5:
-            cap_reasons.append("BindingAccuracy 模块分 < 0.5 → cap_q 收紧")
+    if negative_k:
+        names = ", ".join(negative_slots or [])
+        cap_reasons.append(f"矛盾格 k={negative_k}" + (f"（{names}）" if names else "") + "，Q 扣 k/5")
+    if quality_cap < 1.0:
+        cap_reasons.append("拼贴、平铺或 Look 编号仍把质量压到 cap_q")
 
     uncapped = _r(w_cov * coverage_score + w_qual * quality_effective, 4)
     length_component = float(length_disentangle.get("length_component") or 0.0)
@@ -360,6 +366,7 @@ def build_score_formula_breakdown(
     parameters = {
         "w_c": w_cov,
         "w_q": w_qual,
+        "k": int(negative_k),
         "cap_q": _r(quality_cap),
         "cap_t": _r(total_cap),
         "a": a,
@@ -383,18 +390,23 @@ def build_score_formula_breakdown(
         {
             "step": 2,
             "id": "quality_weighted",
-            "label_zh": "质量模块加权 Q_w",
-            "formula": "Q_w = (Σ w_i · m_i) / (Σ w_i)",
+            "label_zh": "质量正向分 Q+",
+            "formula": "Q+ = (Σ w_i · m_i) / (Σ w_i)",
             "value": _r(quality_weighted),
-            "substitution": {"Q_w": _r(quality_weighted)},
+            "substitution": {"Q+": _r(quality_weighted)},
         },
         {
             "step": 3,
             "id": "quality_effective",
             "label_zh": "质量有效分 Q",
-            "formula": "Q = min(Q_w, cap_q)",
+            "formula": "Q = min(clip(Q+ - k/5, 0, 1), cap_q)",
             "value": _r(quality_effective),
-            "substitution": {"Q_w": _r(quality_weighted), "cap_q": _r(quality_cap), "Q": _r(quality_effective)},
+            "substitution": {
+                "Q+": _r(quality_weighted),
+                "k": int(negative_k),
+                "cap_q": _r(quality_cap),
+                "Q": _r(quality_effective),
+            },
             "cap_reasons": cap_reasons or None,
         },
         {

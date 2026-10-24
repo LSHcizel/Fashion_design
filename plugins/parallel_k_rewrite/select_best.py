@@ -117,7 +117,7 @@ def pick_rewrite_if_better(
     penalty_gate_max: float = DEFAULT_PENALTY_GATE_MAX,
 ) -> Optional[Dict[str, Any]]:
     """
-    第一轮改写后，总分高于原文且惩罚不超过门限的候选都可采纳。
+    质量改写后，总分高于原文且惩罚不超过门限的候选都可采纳。
     在其中取得分最高的一条；总分相同则取惩罚更低的一条。
     没有这样的候选则不替换原文。
     """

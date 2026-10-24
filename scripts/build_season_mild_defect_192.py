@@ -181,9 +181,8 @@ def _business_context(row: dict[str, Any], defect_zh: str) -> str:
         f"Same subtheme/chapter as the source look. "
         f"The source has one slight consistency or binding conflict: {defect_zh}. "
         "Keep the theme and concept named in SOURCE. "
-        "Delete the conflict in SOURCE: a left-right split on one zone, a second binding on the same "
-        "garment, an or-choice between two garments, or a second sleeve state. "
-        "Do not keep the deleted binding as an inner layer. "
+        "Resolve that slight conflict into the one outfit. "
+        "A moderate new element that fits this brand and this theme is allowed. "
         "Write the rewrite in English. Do not invent another house's logo."
     )
 

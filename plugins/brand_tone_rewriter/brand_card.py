@@ -1,4 +1,7 @@
-"""品牌习惯卡：只作为第二改写器读取已有设计的资料，不再写进第一改写器。"""
+"""本地季主题索引里的习惯卡。
+
+品牌调性改写不再读取这里。第一轮的卡由一次联网检索生成；这里只保留给对照和测试。
+"""
 
 from __future__ import annotations
 
@@ -243,7 +246,7 @@ def brand_preference_items(
 
 
 def format_existing_designs(house: str, items: Sequence[Dict[str, str]]) -> str:
-    """把这家已有的四段做法列给第二改写器，不写成第一改写器的品牌卡。"""
+    """把这家已有的四段做法列给品牌调性改写，不写进基于评分的质量改写。"""
     if not house or not items:
         return ""
     lines = [f"House: {house}", "Existing designs on file:"]

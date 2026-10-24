@@ -102,8 +102,9 @@ def pack(
                     "look": look_n,
                     "business_context": (
                         f"{house} {season}. Theme: {theme}. "
-                        "Preserve identifying design inside this house theme; "
-                        "rewrite into one grounded T2I paragraph if used for K-rewrite training."
+                        "Keep the theme and the identifying features. "
+                        "A moderate new element that fits this brand and this theme is allowed. "
+                        "Rewrite into one T2I paragraph if used for K-rewrite training."
                     ),
                 }
             )

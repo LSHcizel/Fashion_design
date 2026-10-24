@@ -353,6 +353,7 @@ APPLICABILITY_HINTS = {
     "when_craft_or_embellishment_is_salient": "Applicable when the text mentions craft, embellishment, trim path, appliqué, braid, quilting, embroidery, deconstruction, patch decoration, OR treats seam topstitching, piping, binding, hidden placket, or brand hardware as a visual feature. In the latter case, score as factory finishing unless it is an identifying surface or edge path.",
 }
 
+# 质量轴参照档。实际分数可落在相邻两档之间，不再收成这五个数。
 QUALITY_ALLOWED_SCORES = [0.0, 0.25, 0.5, 0.75, 1.0]
 QUALITY_FULL_HIT_THRESHOLD = 0.75
 DESIGN_MERIT_DIMENSIONS = {
@@ -388,11 +389,13 @@ DESIGN_MERIT_JUDGE_GUIDE = (
     "Precise names do not raise the score. "
     "The same low band covers a collection-shared interchangeable trunk-garment formula. "
     "Factory finishing beside an operation that changes the photograph does not by itself force 0.25.\n"
-    "CONFLICT is not design. Cap the metric at 0.25, and do not keep it high because the facts are specific: "
-    "two sleeve grammars, two bottoms, or two shoe types; "
-    "one garment with two bindings for neckline, sleeve, length, closure, or shell; "
-    "or a garment from another theme (bridal, coronation, flamenco, mourning, masquerade, "
-    "morning dress, rococo, or the same kind of foreign register), including as an inner layer. "
+    "CONFLICT is not an identifying operation. "
+    "Do not score two sleeve grammars, two bottoms, two shoe types, or two bindings on one garment "
+    "as the operation that makes the photograph. "
+    "Do not lower these axes because that contradiction remains; the quality total subtracts it separately. "
+    "Accessories, trims, and newly added design points may be asymmetric. "
+    "That asymmetry is not a second trunk and must not cap the quality score. "
+    "A garment from another theme does not by itself cap these axes. "
     "Two trunks colliding in volume is not that identifying operation.\n"
     "Do not copy one score onto every axis. "
     "Do not lower merely for a coat, cropped jacket, or shorts as a category. Ignore T2I preamble.\n"
@@ -432,6 +435,8 @@ _COMBO_EXEMPT_METRICS = frozenset(
         "design_signal_purity",
     }
 )
+# short 只有单独作名词时才是短裤（a navy short）。后面还跟着名词时是形容词，如 short handles。
+_SHORTS_GARMENT = r"shorts|\bshort\b(?!\s+[A-Za-z])"
 _DESIGN_IDENTIFYING_SIGNATURES = (
     (
         "edge_path",
@@ -466,7 +471,7 @@ _DESIGN_IDENTIFYING_SIGNATURES = (
             r"opens (?:fully )?over|"
             r"open-front \w+(?:/\w+)?(?: \w+){0,4} worn over|"
             r"frames a)\s+.{0,120}?"
-            r"(shorts?|dress|skirt|vest|tunic|bike|cycling|stripe|top|shirt|blouse|layer)",
+            rf"({_SHORTS_GARMENT}|dress|skirt|vest|tunic|bike|cycling|stripe|top|shirt|blouse|layer)",
             re.I,
         ),
     ),
@@ -542,11 +547,18 @@ def _design_merit_exempt_metrics(signatures: List[str]) -> Set[str]:
 
 
 # 左右对打：只认成对的左/右身体分区，并且两侧服装词不同。
+# side / 侧 是落点（包在左侧），不是上装的半边。半边要同一句里真有上下装或鞋才算主干。
 _LR_SIDE = re.compile(
-    r"\b(left|right)\s+(half|side|sleeve|arm|leg|foot|shoe)\b",
+    r"\b(left|right)\s+(half|sleeve|arm|leg|foot|shoe)\b",
     re.I,
 )
-_CN_LR_SIDE = re.compile(r"(左|右)(半边|半侧|半|侧|袖|臂|腿|脚|鞋)")
+_CN_LR_SIDE = re.compile(r"(左|右)(半边|半侧|半|袖|臂|腿|脚|鞋)")
+_TRUNK_HEAD = re.compile(
+    rf"\b(?:jackets?|coats?|blazers?|dresses|gowns?|blouses?|shirts?|tops?|knits?|sweaters?|"
+    rf"skirts?|trousers?|pants?|{_SHORTS_GARMENT}|sleeves?|shoes?|boots?|pumps?|sandals?)\b",
+    re.I,
+)
+_HALF_MARK = {"half", "半", "半边", "半侧"}
 _LR_ZONE = {
     "half": "sleeve",
     "side": "sleeve",
@@ -577,9 +589,17 @@ _ZONE_TOKEN = re.compile(
 # 同件互斥：原文用 “the same coat/hem/shell …” 把第二个绑定接上去。
 _SAME_BINDING = re.compile(
     r"\b(?:the same|that same|those same)\s+"
-    r"(?:jacket|coat|dress|hem|shell|neckline|sleeve|sleeves|garment|lower garment)\b",
+    r"(jacket|coat|dress|hem|shell|neckline|sleeve|sleeves|garment|lower garment)\b",
     re.I,
 )
+_SAME_NOUN_ELEMENT = {
+    "hem": "length",
+    "shell": "shell",
+    "neckline": "neckline",
+    "sleeve": "sleeve",
+    "sleeves": "sleeve",
+    "lower garment": "leg",
+}
 _BINDING_PAIRS = (
     (
         re.compile(r"(concealed (?:button )?placket|hidden placket|暗门襟)", re.I),
@@ -601,12 +621,13 @@ _BINDING_PAIRS = (
         re.compile(r"(long set-in sleeves|long sleeves|set-in sleeves|长袖|长直筒袖)", re.I),
     ),
 )
+_BINDING_PAIR_ELEMENT = ("closure", "neckline", "neckline", "sleeve")
 _CN_BOTH_BINDINGS = re.compile(r"既[^。]{0,16}又")
 # 用 or 并列两个不能同时穿的品类。材质不确定（silk or crepe）不在这三栏里。
 _OR_SPLIT = re.compile(r"\s+\bor\b\s+", re.I)
 _SLOT_TOKEN = {
     "bottom": re.compile(
-        r"\b(skirts?|trousers?|pants?|shorts?(?!\s+(?:sleeve|draped|drape|cap|hair))|culottes?|palazzos?|harems?)\b",
+        rf"\b(skirts?|trousers?|pants?|{_SHORTS_GARMENT}|culottes?|palazzos?|harems?)\b",
         re.I,
     ),
     "shoe": re.compile(
@@ -648,15 +669,29 @@ _FOREIGN_THEME = re.compile(
 )
 CONSISTENCY_PENALTY_FLOOR = 0.75
 CONSISTENCY_PENALTY_SEVERE = 1.0
-# 冲突还在时，质量项是总分里的 0.8 加成，封在这里，脏稿的 S_fp 起不来。
+# 拼贴、平铺、Look 编号仍把质量压在这一档。矛盾改由 k/5 从质量总分扣。
 CONFLICT_QUALITY_CAP = 0.25
+# 同一要素多一次矛盾，只把该要素的占比再抬一点，避免重复计数打成台阶。
+_ELEMENT_HIT_DEPTH = 0.18
+_ELEMENT_HIT_DEPTH_MAX = 1.35
+# 这些权重加总为 1，表示一套穿着里各部位的视觉占比。local 是归不进具体部位的同件互斥。
+_ELEMENT_WEIGHT = {
+    "sleeve": 0.24,
+    "leg": 0.28,
+    "shoe": 0.12,
+    "neckline": 0.10,
+    "length": 0.12,
+    "closure": 0.07,
+    "shell": 0.07,
+    "local": 0.10,
+}
 _SIDE_MARK = re.compile(
     r"\b(left|right)\s+(half|side|sleeve|arm|leg|foot|shoe)\b"
     r"|\bon the (left|right)\b(?!\s+front\b)",
     re.I,
 )
 _BOTTOM_WORD = re.compile(
-    r"\b(skirts?|trousers?|pants?|shorts?(?!\s+(?:sleeve|draped|drape|cap|hair))|culottes?|palazzos?|harems?)\b",
+    rf"\b(skirts?|trousers?|pants?|{_SHORTS_GARMENT}|culottes?|palazzos?|harems?)\b",
     re.I,
 )
 _SHOE_WORD = re.compile(
@@ -692,15 +727,10 @@ _HEM_LENGTHS = (
     )),
 )
 _OUTER_LENGTH_OWNER = re.compile(r"\b(?:jacket|coat|dress|hem)\b", re.I)
-_BOTTOM_LENGTH_OWNER = re.compile(r"\b(?:skirts?|trousers?|pants?|shorts?|gown)\b", re.I)
-_CONFLICT_QUALITY_METRICS = (
-    "generation_readiness",
-    "design_distinctiveness",
-    "silhouette_combination_originality",
-    "design_signal_purity",
+_BOTTOM_LENGTH_OWNER = re.compile(
+    rf"\b(?:skirts?|trousers?|pants?|{_SHORTS_GARMENT}|gown)\b",
+    re.I,
 )
-
-
 def _slot_lemma(slot: str, token: str) -> str:
     word = token.lower()
     if slot == "bottom":
@@ -870,11 +900,122 @@ def _sleeve_grammars_conflict(body: str) -> bool:
     return sum(int(flag) for flag in (short, long, bare)) >= 2
 
 
-def conflict_quality_cap(conflicts: Dict[str, Any]) -> Optional[float]:
-    """冲突还在时，压低进入总分的质量加成。"""
-    if not conflicts.get("active"):
-        return None
-    return CONFLICT_QUALITY_CAP
+def _sentence_around(body: str, pos: int) -> str:
+    start = 0
+    for index in range(pos, -1, -1):
+        if body[index] in ".!?;\n。":
+            start = index + 1
+            break
+    end = len(body)
+    for index in range(pos, len(body)):
+        if body[index] in ".!?;\n。":
+            end = index
+            break
+    return body[start:end]
+
+
+def _hit_count(value: Any) -> int:
+    try:
+        return max(0, int(value))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _merge_element_hits(*groups: Dict[str, Any]) -> Dict[str, int]:
+    merged: Dict[str, int] = {}
+    for group in groups:
+        for name, hits in (group or {}).items():
+            count = _hit_count(hits)
+            if count > 0 and name in _ELEMENT_WEIGHT:
+                merged[name] = merged.get(name, 0) + count
+    return merged
+
+
+def _element_groups(conflicts: Dict[str, Any]) -> tuple:
+    """返回 (左右身份部位, 同件绑定部位)。旧结果没有这两栏时，从 zones 回推。"""
+    zone = conflicts.get("zone_elements")
+    binding = conflicts.get("binding_elements")
+    if isinstance(zone, dict) or isinstance(binding, dict):
+        return (
+            _merge_element_hits(zone if isinstance(zone, dict) else {}),
+            _merge_element_hits(binding if isinstance(binding, dict) else {}),
+        )
+    zone_hits: Dict[str, int] = {}
+    binding_hits: Dict[str, int] = {}
+    for name in conflicts.get("zones") or []:
+        if name in ("sleeve", "leg", "shoe"):
+            zone_hits[name] = zone_hits.get(name, 0) + 1
+    if conflicts.get("two_sleeve_states"):
+        zone_hits["sleeve"] = zone_hits.get("sleeve", 0) + 1
+    for slot in conflicts.get("alternative_slots") or []:
+        if slot == "bottom":
+            zone_hits["leg"] = zone_hits.get("leg", 0) + 1
+        elif slot == "shoe":
+            zone_hits["shoe"] = zone_hits.get("shoe", 0) + 1
+        elif slot == "neckline":
+            binding_hits["neckline"] = binding_hits.get("neckline", 0) + 1
+    bindings = _hit_count(conflicts.get("same_element_bindings"))
+    if bindings and not binding_hits:
+        binding_hits["local"] = bindings
+    return zone_hits, binding_hits
+
+
+def conflict_share(conflicts: Dict[str, Any], *, kind: str = "all") -> float:
+    """冲突部位权重之和，夹在 0 到 1。kind 为 zone、binding 或 all。"""
+    zone_hits, binding_hits = _element_groups(conflicts)
+    if kind == "zone":
+        chosen = zone_hits
+    elif kind == "binding":
+        chosen = binding_hits
+    else:
+        chosen = _merge_element_hits(zone_hits, binding_hits)
+    total = 0.0
+    for name, hits in chosen.items():
+        weight = _ELEMENT_WEIGHT.get(name, 0.0)
+        if hits <= 0 or weight <= 0:
+            continue
+        depth = min(_ELEMENT_HIT_DEPTH_MAX, 1.0 + _ELEMENT_HIT_DEPTH * (hits - 1))
+        total += weight * depth
+    return min(1.0, total)
+
+
+_NEGATIVE_SLOT_LIMIT = 5
+
+
+def conflict_negative_slots(conflicts: Dict[str, Any]) -> List[str]:
+    """惩罚门里的矛盾收成最多五格。改写说明只在没有任何服装格时占一格。"""
+    slots: List[str] = []
+    zone_hits, binding_hits = _element_groups(conflicts or {})
+    if zone_hits.get("sleeve") or (conflicts or {}).get("two_sleeve_states"):
+        slots.append("sleeve")
+    if zone_hits.get("leg"):
+        slots.append("bottom")
+    if zone_hits.get("shoe"):
+        slots.append("shoe")
+    binding_attrs = ("neckline", "length", "closure", "shell", "local")
+    if any(binding_hits.get(name) for name in binding_attrs):
+        slots.append("binding")
+    elif binding_hits.get("sleeve") and "sleeve" not in slots:
+        slots.append("binding")
+    if (conflicts or {}).get("foreign_terms"):
+        slots.append("theme")
+    if (conflicts or {}).get("repair_voice") and not slots:
+        slots.append("repair")
+    return slots[:_NEGATIVE_SLOT_LIMIT]
+
+
+def conflict_negative_k(conflicts: Dict[str, Any]) -> int:
+    return len(conflict_negative_slots(conflicts))
+
+
+def quality_after_negative(positive: float, conflicts: Dict[str, Any]) -> float:
+    """Q = clip(Q+ - k/5, 0, 1)。k 是矛盾格数。"""
+    try:
+        q_pos = float(positive)
+    except (TypeError, ValueError):
+        q_pos = 0.0
+    k = conflict_negative_k(conflicts)
+    return round(max(0.0, min(1.0, q_pos - k / _NEGATIVE_SLOT_LIMIT)), 4)
 
 
 def _length_owner(sentence: str, start: int, end: int) -> str:
@@ -953,6 +1094,60 @@ def _unlayered_bottom_pair(body: str) -> bool:
     return len(all_lemmas - layered_together) >= 2
 
 
+def _add_element_hit(hits: Dict[str, int], name: str, count: int = 1) -> None:
+    if count > 0 and name in _ELEMENT_WEIGHT:
+        hits[name] = hits.get(name, 0) + count
+
+
+def _collect_binding_elements(body: str) -> Dict[str, int]:
+    """同件互斥落到领、袖、长度、门襟、壳面。同一对只计一次。"""
+    hits: Dict[str, int] = {}
+    sentences = re.split(r"[。.!?\n]", body)
+    for index, (left_pat, right_pat) in enumerate(_BINDING_PAIRS):
+        found = any(left_pat.search(sentence) and right_pat.search(sentence) for sentence in sentences)
+        if not found and index < 3:
+            for left in left_pat.finditer(body):
+                window = body[max(0, left.start() - 320): min(len(body), left.end() + 320)]
+                if right_pat.search(window):
+                    found = True
+                    break
+        if found:
+            _add_element_hit(hits, _BINDING_PAIR_ELEMENT[index])
+    shell = False
+    length_hits = 0
+    for sentence in sentences:
+        if (
+            not shell
+            and _SHELL_VERSION.search(sentence)
+            and re.search(r"sequin", sentence, re.I)
+            and re.search(r"wool|gabardine", sentence, re.I)
+        ):
+            shell = True
+        if (
+            re.search(r"\bhem\b", sentence, re.I)
+            and _SHORT_HEM.search(sentence)
+            and _FLOOR_HEM.search(sentence)
+        ) or _two_lengths_one_piece(sentence):
+            length_hits += 1
+    if shell:
+        _add_element_hit(hits, "shell")
+    if length_hits == 0:
+        for short in _SHORT_HEM.finditer(body):
+            window = body[max(0, short.start() - 400): min(len(body), short.end() + 400)]
+            if re.search(r"\bhem\b", window, re.I) and _FLOOR_HEM.search(window):
+                length_hits = 1
+                break
+    if length_hits:
+        _add_element_hit(hits, "length", length_hits)
+    for match in _SAME_BINDING.finditer(body):
+        element = _SAME_NOUN_ELEMENT.get(match.group(1).lower())
+        if element and element not in hits:
+            _add_element_hit(hits, element)
+    if not hits and (_CN_BOTH_BINDINGS.search(body) or _SAME_BINDING.search(body)):
+        _add_element_hit(hits, "local")
+    return hits
+
+
 def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
     """区分设计与冲突。
 
@@ -970,10 +1165,16 @@ def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
         zones[zone].setdefault(side, set()).update(tokens)
 
     for match in _LR_SIDE.finditer(body):
-        _note(_LR_ZONE[match.group(2).lower()], match.group(1).lower(), match.end())
+        kind = match.group(2).lower()
+        if kind in _HALF_MARK and not _TRUNK_HEAD.search(_sentence_around(body, match.start())):
+            continue
+        _note(_LR_ZONE[kind], match.group(1).lower(), match.end())
     for match in _CN_LR_SIDE.finditer(body):
+        kind = match.group(2)
+        if kind in _HALF_MARK and not _TRUNK_HEAD.search(_sentence_around(body, match.start())):
+            continue
         side = "left" if match.group(1) == "左" else "right"
-        _note(_LR_ZONE[match.group(2)], side, match.end())
+        _note(_LR_ZONE[kind], side, match.end())
 
     split_zones: List[str] = []
     for zone, sides in zones.items():
@@ -1032,7 +1233,22 @@ def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
         reasons.append("two sleeve states")
     if repair_voice:
         reasons.append("repair narration")
-    return {
+    zone_elements: Dict[str, int] = {}
+    for zone in split_zones:
+        _add_element_hit(zone_elements, zone)
+    if two_sleeve_states:
+        _add_element_hit(zone_elements, "sleeve")
+    binding_elements = _collect_binding_elements(body)
+    for slot in alternatives:
+        if slot == "bottom":
+            _add_element_hit(zone_elements, "leg")
+        elif slot == "shoe":
+            _add_element_hit(zone_elements, "shoe")
+        elif slot == "neckline":
+            _add_element_hit(binding_elements, "neckline")
+    if same_hits and not binding_elements:
+        _add_element_hit(binding_elements, "local")
+    found = {
         "active": active,
         "severe": severe,
         "zones": split_zones,
@@ -1041,8 +1257,15 @@ def detect_consistency_conflicts(text: str) -> Dict[str, Any]:
         "alternative_slots": alternatives,
         "two_sleeve_states": two_sleeve_states,
         "repair_voice": repair_voice,
+        "zone_elements": zone_elements,
+        "binding_elements": binding_elements,
         "reason": "; ".join(reasons),
     }
+    found["conflict_share"] = round(conflict_share(found), 4)
+    if found["conflict_share"]:
+        reasons.append(f"conflict share {found['conflict_share']:.2f}")
+        found["reason"] = "; ".join(reasons)
+    return found
 
 
 def _layout_board_body(text: str) -> str:
@@ -1165,36 +1388,8 @@ def apply_consistency_penalty_floor(penalties: Dict[str, Any], conflicts: Dict[s
 
 
 def apply_conflict_quality_caps(metric_results: Dict[str, Any], conflicts: Dict[str, Any]) -> None:
-    """冲突还在时，相关质量分在代码里封顶，不靠裁判记住提示。"""
-    if not conflicts.get("active"):
-        return
-    binding_cap = 0.0 if int(conflicts.get("same_element_bindings") or 0) >= 2 else 0.25
-    caps = {name: 0.25 for name in _CONFLICT_QUALITY_METRICS}
-    if int(conflicts.get("same_element_bindings") or 0) > 0:
-        caps["attribute_entity_binding"] = binding_cap
-    for name, cap in caps.items():
-        row = metric_results.get(name)
-        if not isinstance(row, dict) or not row.get("applicable"):
-            continue
-        try:
-            score = float(row.get("score_value"))
-        except (TypeError, ValueError):
-            continue
-        if score <= cap:
-            continue
-        row["score_value"] = cap
-        row["hit"] = 1 if cap >= QUALITY_FULL_HIT_THRESHOLD else 0
-        row["reason"] = (row.get("reason") or "") + f" [stays at {cap:g}: consistency conflict is not design]"
-    density = metric_results.get("information_density")
-    if isinstance(density, dict) and density.get("applicable"):
-        try:
-            density_score = float(density.get("score_value"))
-        except (TypeError, ValueError):
-            density_score = 0.0
-        if density_score > 0.5:
-            density["score_value"] = 0.5
-            density["hit"] = 1 if 0.5 >= QUALITY_FULL_HIT_THRESHOLD else 0
-            density["reason"] = (density.get("reason") or "") + " [stays at 0.5: a second identity is not an extra imageable fact]"
+    """矛盾不再封顶子维度。质量总分用 quality_after_negative 扣 k/5。"""
+    del metric_results, conflicts
 
 
 def compute_design_merit_metric_caps(
@@ -1203,16 +1398,15 @@ def compute_design_merit_metric_caps(
 ) -> Dict[str, Dict[str, Any]]:
     """Per-axis floors: identifying ideas stay high; shared series grammar stays low.
 
-    A consistency conflict is not an identifying idea, so it caps the idea axes
-    even when a surface, an edge, or a same-theme inner is also present.
     Factory finishing on one identity does not force the 0.25 floor.
+    A trunk contradiction is subtracted from the quality total and does not cap these axes.
     """
     signatures = list_design_identifying_signatures(text)
     cues = list_design_merit_cue_families(text)
     conflict = conflicts if conflicts is not None else detect_consistency_conflicts(text)
-    exempt = set() if conflict.get("active") else _design_merit_exempt_metrics(signatures)
-    has_any_sig = bool(signatures) and not conflict.get("active")
-    has_combo_sig = "second_identity" in signatures and not conflict.get("active")
+    exempt = _design_merit_exempt_metrics(signatures)
+    has_any_sig = bool(signatures)
+    has_combo_sig = "second_identity" in signatures
     shared_wardrobe = cues["ordinary_dressing"] or cues["series_formula"]
     caps: Dict[str, Dict[str, Any]] = {}
 
@@ -1253,17 +1447,6 @@ def compute_design_merit_metric_caps(
             DESIGN_MERIT_AUX_CAP_PURITY_THEME,
             "theme or series narrative without an identifying idea",
         )
-
-    if conflict.get("active"):
-        for metric in (
-            "design_distinctiveness",
-            "silhouette_combination_originality",
-            "design_signal_purity",
-        ):
-            caps[metric] = {
-                "cap": DESIGN_MERIT_AUX_CAP_PURITY_THEME,
-                "reason": "consistency conflict is not an identifying idea",
-            }
 
     return {
         "caps": caps,
@@ -1428,15 +1611,15 @@ Judging principles:
 3. Only mark hit=1 when the text clearly supports it. Do not hallucinate missing facts.
 4. applicable decides whether a metric should enter scoring for this text. If applicable is false, hit must be null.
 5. evidence should quote short spans from the original text whenever possible. Each evidence array has at most 3 short quotes (under 20 words each); do not enumerate the whole look.
-6. When bilateral differences exist, distinguish trunk from accessories. Trunk = all clothing that defines the worn look: outerwear, inner/base tops, bottoms, and footwear. If the text still gives the trunk two sleeve grammars, two leg garments, or two shoe types, bilateral_coherence must be at most 0.5; if two or more of those zones remain, at most 0.25. Calling the split cohesive or deconstructed does not raise the score. Score 0.75 or above only when sleeve, bottom, and shoe are each one identity. A small placement on one side of that same garment is not a second identity and must not lower the score. A single-breasted closure is not a left-right defect. A same-element contradiction (one garment, two incompatible bindings for neckline, sleeve, length, closure, or shell material) scores attribute_entity_binding, generation_readiness, and design_signal_purity at most 0.25 until one binding remains. Two or more conflicting bindings score attribute_entity_binding 0.0. Clear or Chinese wording does not raise these scores. Garments from a different theme or concept that are still in the text, including as an inner layer, a second subject, or a cohesive contrast, score design_distinctiveness, silhouette_combination_originality, design_signal_purity, and generation_readiness at most 0.25. Do not treat that clash as an identifying idea or as a readable inner identity. These caps override the dimension rubric, a visible-facts floor, and any instruction to keep a specific description high. Mild accessory-only differences are lenient only when the trunk is already one identity.
+6. Sleeve splits, two bottoms, two shoe types, two bindings on one garment, and a second theme are subtracted from the quality total in code. Do not lower design_distinctiveness, visual_observation_grounding, design_signal_purity, generation_readiness, information_density, or spatial_coherence because those contradictions remain. multi_garment_binding still scores whether an attribute is attached to the wrong garment. Accessory, trim, and added-design asymmetry is not a trunk contradiction. A small placement on one side of the same garment is not a second identity. A single-breasted closure is not a left-right defect.
 7. When spatial relations exist, judge whether layering, inside-outside, front-back, and attachment positions remain visually coherent and imageable.
 8. For visibility priority, reward texts that emphasize visible, image-dominant details over hidden interior or low-visibility details.
-9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale. An explicit score cap in a metric rule overrides that rubric.
+9. For quality_score metrics other than DesignMerit, use the provided quality_dimension and quality_scoring_rubric as the primary grading standard, not only the generic scale. The rubric levels 0, 0.25, 0.5, 0.75, and 1.0 are anchors. Return a score from 0 to 1 in steps of 0.01, on an anchor or between two anchors. An explicit score cap in a metric rule still overrides the rubric.
 10. For DesignMerit, score only the identifying idea (module guide). Completeness, precision, and imageability are other modules. Ignore T2I preamble.
 11. For ConcisenessAndDensity (visibility_priority), prioritize **visible, image-dominant garment facts** over hidden details, model pose/stance/psychology, and abstract field/identity commentary. The standard single-frame line and the old T2I preamble are fixed boilerplate—ignore them; never penalize them alone. A Look number, a collage, a flat lay, a product shot, or an off-body catalog clause in the paragraph ("if removed", "its own garment") is not boilerplate: generation_readiness and visibility_priority stay at most 0.25 while it remains. Shoes or accessories still on the body, including a closer such as "finish the look" or "complete the look", are not that clause and do not cap the quality axes.
-12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable as one worn photograph**. Do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich. Imaging-rich wording does not override a same-element, theme-clash, or single-frame score cap. A Look title, collage, flat lay, product shot, second view, or off-body garment keeps generation_readiness at most 0.25.
+12. For StructuralClarity and GenerationReadiness, judge whether garment information is semantically ordered and **directly usable as one worn photograph**. Do NOT lower scores solely because the text uses numbered sections or bullet lists if the underlying content is imaging-rich. Imaging-rich wording does not override a same-element or single-frame score cap. Accessory, trim, and added-design asymmetry does not cap the quality axis. A Look title, collage, flat lay, product shot, second view, or off-body garment keeps generation_readiness at most 0.25.
 13. For coverage_score metrics, follow each metric's rule field strictly: when a rule requires compound coverage (e.g. construction_technique needs named craft plus approximate body/garment zone; bag or footwear need at least two of three listed facets when applicable; color_relationship_logic needs a color relationship such as dominance, contrast, or tonal layering—not merely listing hue names), hit=1 only if those facets are clearly satisfied in the text. For belt: applicable only when an actual belt/sash/waist-strap/harness accessory is present or described; structural waist emphasis from garment cut alone (defined waist, peplum, seaming, proportion) does not make belt applicable and must not be scored as a belt miss.
-14. For information_density, score whether each clause adds a new imageable fact. Do not score character count: shorter is not higher, longer is not lower. High density keeps the identifying anchors (craft path, the surface that makes this look recognizable, inside-outside layering) and does not restate them. Dropping those anchors to get a shorter paragraph caps the score at 0.5. A near-copy or a fact rewritten in new words is restatement, not a new fact. One closing palette/mood sentence does not lower the score. Two identities or a same-element contradiction still in the text caps the score at 0.5.
+14. For information_density, score whether each clause adds a new imageable fact. Do not score character count: shorter is not higher, longer is not lower. High density keeps the identifying anchors (craft path, the surface that makes this look recognizable, inside-outside layering) and does not restate them. Dropping those anchors to get a shorter paragraph caps the score at 0.5. A near-copy or a fact rewritten in new words is restatement, not a new fact. One closing palette/mood sentence does not lower the score. Do not lower this score because a trunk contradiction or a same-element contradiction remains. Accessory, trim, or added-design asymmetry does not.
 15. Output strict JSON only. Do not output markdown fences or extra commentary.
 
 Return format:
@@ -1671,6 +1854,9 @@ Return format:
         user_prompt: str,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
+        top_p: Optional[float] = None,
+        presence_penalty: Optional[float] = None,
+        repetition_penalty: Optional[float] = None,
     ) -> str:
         return self._request_completion(
             system_prompt=system_prompt,
@@ -1678,6 +1864,9 @@ Return format:
             response_format=None,
             temperature=temperature,
             max_tokens=max_tokens,
+            top_p=top_p,
+            presence_penalty=presence_penalty,
+            repetition_penalty=repetition_penalty,
         )
 
     def generate_multimodal(
@@ -1715,9 +1904,12 @@ Return format:
             if module_name == "DesignMerit":
                 scale_rules = DESIGN_MERIT_JUDGE_GUIDE + "\n"
             else:
+                anchors = ", ".join(f"{score:g}" for score in QUALITY_ALLOWED_SCORES)
                 scale_rules = (
                     "Scoring scale for each quality metric:\n"
-                    "- Use the metric-specific five-level rubric in quality_scoring_rubric as the first reference.\n"
+                    "- Use the metric-specific rubric in quality_scoring_rubric as the anchor reference.\n"
+                    f"- Anchors are {anchors}. They are not the only legal scores.\n"
+                    "- Return a score from 0 to 1 in steps of 0.01. If the text sits between two anchors, score between them.\n"
                     "- Also obey explicit score caps in each metric's rule field when present.\n"
                     "- 1.0 = near-perfect for that metric and quality dimension\n"
                     "- 0.75 = strong with only minor issues for that metric\n"
@@ -1734,13 +1926,13 @@ Return format:
                     "- Do not penalize length while new imageable facts are still being added.\n"
                     "- Restating the same fact, or a near-copy of the source, is not a new fact.\n"
                     "- One closing palette/mood sentence does not lower the score.\n"
-                    "- Two identities or a same-element contradiction still in the text: at most 0.5.\n"
+                    "- Do not lower this score because a trunk contradiction or a same-element contradiction remains. Accessory, trim, or added-design asymmetry does not lower it.\n"
                 )
             elif module_name in ("ConcisenessAndDensity", "GenerationReadiness", "StructuralClarity"):
                 scale_rules += (
                     f"\n{module_name} module — T2I content priority (ignore layout):\n"
                     "- High: sentences map to visible pixels (garment form, material, color, trim path, layering, accessory placement).\n"
-                    "- generation_readiness stays at most 0.25 while a same-element contradiction or a second theme's garments remain. Specific visible facts do not raise it.\n"
+                    "- Do not lower generation_readiness because a trunk contradiction or a same-element contradiction remains. Accessory, trim, and added-design asymmetry does not lower it.\n"
                     "- generation_readiness and visibility_priority stay at most 0.25 while the paragraph still has a Look number, a collage, a flat lay, a product shot, a second view, or an off-body catalog clause (if removed, its own garment). The official single-frame first line does not count. A closer such as finish the look or complete the look, with the shoes still on the body, does not cap these axes.\n"
                     "- Low: model stance/pose, abstract salon/promenade/identity essay dominating over visible facts.\n"
                     "- IGNORE the official single-frame line and the old T2I preamble: Please generate female models and the matching clothing for them.\n"
@@ -1760,7 +1952,8 @@ Return format:
         if module_name == "DesignMerit":
             requirements = (
                 "Requirements:\n"
-                "1. Judge applicability first; if applicable, score 1.0 / 0.75 / 0.5 / 0.25 / 0.0.\n"
+                "1. Judge applicability first. If applicable, score from 0 to 1 in steps of 0.01. "
+                "The levels 0, 0.25, 0.5, 0.75, and 1.0 are anchors; a score may sit between them.\n"
                 "2. Semantic judging, not keyword matching. Return JSON only.\n\n"
             )
         else:
@@ -1777,8 +1970,9 @@ Return format:
             scale_rules += (
                 "\nFew-shot template:\n"
                 "- Items under few_shot are calibration examples. Do not score them as the text under evaluation.\n"
-                "- Match the example with the same pattern, then use that score.\n"
-                "- Do not score above an example that shows the same defect.\n"
+                "- Match the example with the same pattern. Its score is an anchor, not a required copy.\n"
+                "- Place this text on that anchor, or between it and the next anchor, when the text is only partly like the example.\n"
+                "- Do not move into a higher anchor than an example that shows the same defect.\n"
                 "- A shorter paragraph is not by itself a higher score.\n"
             )
         extra = f"{extra_guidance.strip()}\n\n" if extra_guidance and extra_guidance.strip() else ""
@@ -1810,6 +2004,7 @@ Return format:
         top_p: Optional[float] = None,
         seed: Optional[int] = None,
         repetition_penalty: Optional[float] = None,
+        presence_penalty: Optional[float] = None,
     ) -> str:
         if isinstance(user_content, str):
             user_message: Dict[str, Any] = {"role": "user", "content": user_content}
@@ -1829,6 +2024,8 @@ Return format:
             payload["seed"] = seed
         if repetition_penalty is not None:
             payload["repetition_penalty"] = repetition_penalty
+        if presence_penalty is not None:
+            payload["presence_penalty"] = presence_penalty
         if response_format is not None:
             payload["response_format"] = response_format
 
@@ -2076,7 +2273,8 @@ Return format:
         except (TypeError, ValueError):
             numeric = 0.0
         if axis_name == "quality_score":
-            return min(QUALITY_ALLOWED_SCORES, key=lambda item: abs(item - numeric))
+            numeric = max(0.0, min(1.0, numeric))
+            return round(numeric, 2)
         return 1.0 if numeric >= 0.5 else 0.0
 
     def _normalize_quality_penalties(self, parsed: Dict) -> Dict:
@@ -2309,7 +2507,6 @@ class DesignTextEvaluator:
         layout = detect_layout_board(raw_text)
         quality_penalties = apply_consistency_penalty_floor(quality_penalties, conflicts)
         quality_penalties = apply_layout_board_penalty_floor(quality_penalties, layout)
-        apply_conflict_quality_caps(metric_results, conflicts)
         apply_layout_board_quality_caps(metric_results, layout)
         module_scores = self._aggregate_module_scores(metric_results)
         axis_scores = self._aggregate_axis_scores(metric_results)
@@ -2318,16 +2515,15 @@ class DesignTextEvaluator:
 
         char_len = len(eval_prose) if eval_prose else len(raw_text)
 
+        negative_slots = conflict_negative_slots(conflicts)
+        negative_k = len(negative_slots)
+        quality_positive = round(float(quality_weighted), 4)
+        quality_effective = quality_after_negative(quality_positive, conflicts)
         quality_cap = 1.0
-        if module_scores.get("BindingAccuracy", {}).get("score", 1.0) < 0.5:
-            quality_cap = min(quality_cap, 0.6)
-        addition_cap = conflict_quality_cap(conflicts)
-        if addition_cap is not None:
-            quality_cap = min(quality_cap, addition_cap)
         if layout.get("active"):
             quality_cap = min(quality_cap, CONFLICT_QUALITY_CAP)
+            quality_effective = round(min(quality_effective, quality_cap), 4)
         # penalties 不参与 S_fp / R_content；仅用于 penalty_gate（见 spec score_composition）。
-        quality_effective = round(min(quality_weighted, quality_cap), 4)
 
         axes_cfg = self.spec.get("score_axes") or {}
         weights = {
@@ -2390,6 +2586,10 @@ class DesignTextEvaluator:
                 "quality_score": {
                     **axis_scores["quality_score"],
                     "base_score": quality_weighted,
+                    "positive_score": quality_positive,
+                    "negative_k": negative_k,
+                    "negative_slots": negative_slots,
+                    "negative_term": round(negative_k / _NEGATIVE_SLOT_LIMIT, 4),
                     "axis_score_unweighted": quality_axis_score,
                     "penalized_score": quality_effective,
                     "penalties": quality_penalties,
@@ -2440,6 +2640,8 @@ class DesignTextEvaluator:
             fashion_prompt_score=fashion_prompt_score,
             r_content=out["r_content"],
             module_scores=module_scores,
+            negative_k=negative_k,
+            negative_slots=negative_slots,
         )
         return out
 

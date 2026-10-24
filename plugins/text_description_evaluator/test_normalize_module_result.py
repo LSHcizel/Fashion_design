@@ -24,6 +24,14 @@ class CoerceJudgeResultsTests(unittest.TestCase):
         self.assertEqual(items[0]["metric"], "belt")
         self.assertFalse(items[0]["applicable"])
 
+    def test_quality_score_keeps_values_between_anchors(self) -> None:
+        judge = ApiLLMJudge(api_key="local", api_base="http://127.0.0.1:8000/v1", model="dummy")
+        self.assertEqual(judge._normalize_score(0.62, "quality_score"), 0.62)
+        self.assertEqual(judge._normalize_score(0.8, "quality_score"), 0.8)
+        self.assertEqual(judge._normalize_score(1.4, "quality_score"), 1.0)
+        self.assertEqual(judge._normalize_score(-0.2, "quality_score"), 0.0)
+        self.assertEqual(judge._normalize_score(0.4, "coverage_score"), 0.0)
+
     def test_normalize_does_not_crash_on_string_results(self) -> None:
         judge = ApiLLMJudge(api_key="local", api_base="http://127.0.0.1:8000/v1", model="dummy")
         specs = [{"metric": "silhouette_clarity"}, {"metric": "color_logic"}]

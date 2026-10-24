@@ -38,6 +38,9 @@ def summarize_evaluation_row(
         "coverage_axis_score": cov.get("score"),
         "quality_axis_score_raw": qual.get("score"),
         "quality_base_score": qual.get("base_score"),
+        "quality_positive_score": qual.get("positive_score", qual.get("base_score")),
+        "quality_negative_k": qual.get("negative_k"),
+        "quality_negative_slots": qual.get("negative_slots"),
         "quality_penalized_score": qual.get("penalized_score"),
         "s_fp_base": scores.get("s_fp_base"),
         "length_disentangle_applied": (scores.get("length_disentangle") or {}).get("applied"),
@@ -162,7 +165,12 @@ AXIS_ZH_LABELS: Dict[str, str] = {
 }
 
 COVERAGE_AXIS_SCORING_NOTE = "每项命中 1 分、未命中 0 分，只对适用指标取平均"
-QUALITY_AXIS_SCORING_NOTE = "各指标五档计分（0 / 0.25 / 0.5 / 0.75 / 1.0），模块分 = 适用指标算术平均"
+QUALITY_AXIS_SCORING_NOTE = (
+    "五档 0 / 0.25 / 0.5 / 0.75 / 1.0 只作参照，实际分数可落在相邻两档之间，精确到 0.01。模块分 = 适用指标算术平均。"
+    "Q+ 是模块加权均分。Q = clip(Q+ − k/5, 0, 1)。"
+    "k 是矛盾格：袖、下装、鞋、同件互斥、另一主题，最多 5。"
+    "拼贴、平铺、Look 编号仍把 Q 压到 0.25。"
+)
 
 MODULE_SCORE_LEGEND = (
     "维度｜适用｜命中｜模块分 — "
@@ -248,6 +256,7 @@ METRIC_COVERAGE_MODULE: Dict[str, str] = {
 QUALITY_MODULE_ZH_LABELS: Dict[str, str] = {
     "DesignMerit": "设计价值",
     "ConcisenessAndDensity": "可见性优先级",
+    "InformationDensity": "信息密度",
     "GenerationReadiness": "生成适配",
     "BindingAccuracy": "属性绑定",
     "LanguageClarity": "语言清晰",
@@ -257,6 +266,7 @@ QUALITY_MODULE_ZH_LABELS: Dict[str, str] = {
 QUALITY_MODULE_ORDER: tuple[str, ...] = (
     "DesignMerit",
     "ConcisenessAndDensity",
+    "InformationDensity",
     "GenerationReadiness",
     "BindingAccuracy",
     "LanguageClarity",
@@ -274,11 +284,9 @@ QUALITY_MODULE_METRICS: Dict[str, tuple[str, ...]] = {
     "ConcisenessAndDensity": ("visibility_priority",),
     "GenerationReadiness": (
         "generation_readiness",
-        "bilateral_coherence",
         "spatial_coherence",
     ),
     "BindingAccuracy": (
-        "attribute_entity_binding",
         "multi_garment_binding",
     ),
     "LanguageClarity": (
@@ -458,8 +466,10 @@ def render_evaluation_markdown(
             f"- **Judge model:** {full.get('judge_model', '')}",
             f"- **Total score (S_fp):** {full.get('total_score')} ({full.get('score_band', '')})",
             f"- **Coverage axis:** {cov.get('score')}",
-            f"- **Quality axis (weighted / effective):** "
-            f"{qual.get('base_score')} / {qual.get('penalized_score')}",
+            f"- **Quality axis (Q+ / k / Q):** "
+            f"{qual.get('positive_score', qual.get('base_score'))} / "
+            f"{qual.get('negative_k', 0)} {qual.get('negative_slots') or []} / "
+            f"{qual.get('penalized_score')}",
             f"- **Penalties (mean, gate-only):** {pen.get('total_penalty')} "
             f"(does not reduce S_fp{' or R_content' if include_r_content else ''})",
         ])

@@ -136,8 +136,8 @@ text-evaluator:
   design-merit-top-p: 1.0
   design-merit-seed: 7
 
-  # optimize 内部双门限（两门均通过则早停）
-  # 注意：与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json optimization_gates 保持一致
+  # 双门限与 plugins/text_description_evaluator/fashion_prompt_optimizer_spec.json 一致。
+  # 质量分 Q = clip(Q+ − k/5, 0, 1)。k 是矛盾格，不进惩罚平均。惩罚不扣总分。
   score-gate-min: 0.8
   penalty-gate-max: 0.2
   # 双门限失败时用 8001 改写器做第一轮 K 路改写。
@@ -249,9 +249,9 @@ grpo:
     max-workers: 32
     # 评分与改写重叠：一条改写完成就送评分器，最多 32 路同时打分。
     eval-max-workers: 32
-    temperature-floor: 0.35
-    temperature-step: 0.07
-    temperature-cap: 0.90
+    # 8 路共用同一提示词、同一温度。不传 top-p、presence-penalty、repetition-penalty。
+    # 上沿 1.0：0.9 仍贴在一起时只把这一项改到 1.0。
+    temperature: 0.9
     evaluate-candidates: true
     eval-source-prefix: parallel_k
     # 改写 → rewriter-llm；评判 → local-llm 基座（冻结，提供 R_content / 评分详情）
